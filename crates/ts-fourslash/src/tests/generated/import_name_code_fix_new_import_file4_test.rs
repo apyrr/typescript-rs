@@ -1,0 +1,37 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_import_name_code_fix_new_import_file4() {
+    let mut t = TestingT;
+    run_test_import_name_code_fix_new_import_file4(&mut t);
+}
+
+fn run_test_import_name_code_fix_new_import_file4(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r"[|let t: A/*0*/.B.I;|]
+// @Filename: ./module.ts
+export namespace A {
+   export namespace B {
+       export interface I { }
+   }
+}";
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.verify_import_fix_at_position(
+        t,
+        &vec![
+            r#"import { A } from "./module";
+
+let t: A.B.I;"#
+                .to_string(),
+        ],
+        None,
+    );
+    done();
+}

@@ -1,0 +1,50 @@
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
+[workspace.dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = { version = "1.0.149", features = ["preserve_order"] }
+smol_str = "0.3.6"
+internment = { version = "0.8.6", features = ["arc"] }
+regex = "1"
+itertools = "0.14.0"
+log = "0.4.29"
+lsp_types = { version = "0.1.0", package = "emmy_lsp_types" }
+lsp-server = "0.7.9"
+tokio-util = "0.7.18"
+tokio = { version = "1.52", features = ["full"] }
+notify = { version = "8.2.0", features = ["serde"] }
+walkdir = "2.5.0"
+ignore = "0.4"
+dirs = "6"
+url = "2.5.8"
+clap = { version = "4.6.1", features = ["derive", "wrap_help"] }
+mimalloc = "0.1.50"
+fern = "0.7.1"
+chrono = "0.4.44"
+googletest = "0.14.2"
+flagset = "0.4.7"
+thiserror = "2.0.18"
+base64 = "0.22.1"
+xxhash-rust = { version = "0.8.15", features = ["xxh3"] }
+flate2 = "1.1.5"
+quick-xml = { version = "0.38.4", features = ["serialize"] }
+filetime = "0.2"
+smallvec = "1.15.1"
+indexmap = "2.12.1"
+gxhash = "3.5.0"
+
+[profile.dev]
+opt-level = 1
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+opt-level = 1
+debug = 0
+
+[profile.release]
+# Keep optimized release binaries useful for perf/addr2line.
+debug = "full"
+split-debuginfo = "off"
+strip = "none"

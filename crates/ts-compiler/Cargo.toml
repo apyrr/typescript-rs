@@ -1,0 +1,31 @@
+[package]
+name = "ts-compiler"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde_json = { workspace = true }
+ts-ast = { path = "../ts-ast" }
+ts-binder = { path = "../ts-binder" }
+ts-checker = { path = "../ts-checker" }
+ts-collections = { path = "../ts-collections" }
+ts-core = { path = "../ts-core" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-json = { path = "../ts-json" }
+ts-locale = { path = "../ts-locale" }
+ts-module = { path = "../ts-module" }
+ts-modulespecifiers = { path = "../ts-modulespecifiers" }
+ts-outputpaths = { path = "../ts-outputpaths" }
+ts-packagejson = { path = "../ts-packagejson" }
+ts-parser = { path = "../ts-parser" }
+ts-printer = { path = "../ts-printer" }
+ts-scanner = { path = "../ts-scanner" }
+ts-sourcemap = { path = "../ts-sourcemap" }
+ts-stringutil = { path = "../ts-stringutil" }
+ts-symlinks = { path = "../ts-symlinks" }
+ts-tracing = { path = "../ts-tracing" }
+ts-transformers = { path = "../ts-transformers" }
+ts-tsoptions = { path = "../ts-tsoptions" }
+ts-tspath = { path = "../ts-tspath" }
+ts-vfs = { path = "../ts-vfs" }
+xxhash-rust = { workspace = true }

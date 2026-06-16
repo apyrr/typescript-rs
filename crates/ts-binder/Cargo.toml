@@ -1,0 +1,19 @@
+[package]
+name = "ts-binder"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+indexmap = { workspace = true }
+ts-ast = { path = "../ts-ast" }
+ts-collections = { path = "../ts-collections" }
+ts-core = { path = "../ts-core" }
+ts-debug = { path = "../ts-debug" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-parser = { path = "../ts-parser" }
+ts-scanner = { path = "../ts-scanner" }
+ts-tspath = { path = "../ts-tspath" }
+ts-vfs = { path = "../ts-vfs" }
+
+[dev-dependencies]
+ts-testutil = { path = "../ts-testutil" }

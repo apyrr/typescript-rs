@@ -1,0 +1,39 @@
+[package]
+name = "ts-testutil"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+race = []
+projecttestutil = [
+    "dep:ts-glob",
+    "dep:ts-project",
+]
+
+[dependencies]
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ts-bundled = { path = "../ts-bundled" }
+ts-ast = { path = "../ts-ast" }
+ts-checker = { path = "../ts-checker" }
+ts-compiler = { path = "../ts-compiler" }
+ts-collections = { path = "../ts-collections" }
+ts-core = { path = "../ts-core" }
+ts-diagnosticwriter = { path = "../ts-diagnosticwriter" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-jsonrpc = { path = "../ts-jsonrpc" }
+ts-locale = { path = "../ts-locale" }
+ts-lsproto = { path = "../ts-lsproto" }
+ts-outputpaths = { path = "../ts-outputpaths" }
+ts-parser = { path = "../ts-parser" }
+ts-stringutil = { path = "../ts-stringutil" }
+ts-repo = { path = "../ts-repo" }
+ts-scanner = { path = "../ts-scanner" }
+ts-sourcemap = { path = "../ts-sourcemap" }
+ts-tsoptions = { path = "../ts-tsoptions" }
+ts-tspath = { path = "../ts-tspath" }
+ts-vfs = { path = "../ts-vfs" }
+ts-glob = { path = "../ts-glob", optional = true }
+ts-project = { path = "../ts-project", optional = true }
+xxhash-rust = { workspace = true }

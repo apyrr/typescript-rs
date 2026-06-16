@@ -1,0 +1,25 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_squiggle_unclosed_string_literal() {
+    let mut t = TestingT;
+    run_test_squiggle_unclosed_string_literal(&mut t);
+}
+
+fn run_test_squiggle_unclosed_string_literal(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r#"var x = /*1*/"asd
+/*2*/var y = 2;"#;
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.verify_error_exists_after_marker_name("1");
+    f.verify_no_error_exists_after_marker_name("2");
+    f.verify_number_of_errors_in_current_file(1);
+    done();
+}

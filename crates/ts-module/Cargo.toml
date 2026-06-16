@@ -1,0 +1,17 @@
+[package]
+name = "ts-module"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+regex = { workspace = true }
+serde_json = { workspace = true }
+ts-ast = { path = "../ts-ast" }
+ts-collections = { path = "../ts-collections" }
+ts-core = { path = "../ts-core" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-outputpaths = { path = "../ts-outputpaths" }
+ts-packagejson = { path = "../ts-packagejson" }
+ts-semver = { path = "../ts-semver" }
+ts-tspath = { path = "../ts-tspath" }
+ts-vfs = { path = "../ts-vfs" }

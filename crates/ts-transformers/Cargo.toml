@@ -1,0 +1,20 @@
+[package]
+name = "ts-transformers"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ts-ast = { path = "../ts-ast" }
+ts-binder = { path = "../ts-binder" }
+ts-core = { path = "../ts-core" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-debug = { path = "../ts-debug" }
+ts-evaluator = { path = "../ts-evaluator" }
+ts-nodebuilder = { path = "../ts-nodebuilder" }
+ts-outputpaths = { path = "../ts-outputpaths" }
+ts-parser = { path = "../ts-parser" }
+ts-printer = { path = "../ts-printer" }
+ts-scanner = { path = "../ts-scanner" }
+ts-tspath = { path = "../ts-tspath" }
+
+[dev-dependencies]

@@ -1,0 +1,10 @@
+[package]
+name = "ts-symlinks"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ts-ast = { path = "../ts-ast" }
+ts-core = { path = "../ts-core" }
+ts-module = { path = "../ts-module" }
+ts-tspath = { path = "../ts-tspath" }

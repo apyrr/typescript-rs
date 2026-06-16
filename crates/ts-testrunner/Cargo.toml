@@ -1,0 +1,23 @@
+[package]
+name = "ts-testrunner"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+link_store_stats = ["ts-core/link_store_stats"]
+
+[dependencies]
+ts-core = { path = "../ts-core" }
+ts-repo = { path = "../ts-repo" }
+ts-scanner = { path = "../ts-scanner" }
+ts-testutil = { path = "../ts-testutil" }
+ts-tsoptions = { path = "../ts-tsoptions" }
+ts-tspath = { path = "../ts-tspath" }
+ts-vfs = { path = "../ts-vfs" }
+
+[build-dependencies]
+ts-tsoptions = { path = "../ts-tsoptions" }
+
+[[test]]
+name = "upstream_compiler_baselines"
+path = "tests/upstream_compiler_baselines.rs"

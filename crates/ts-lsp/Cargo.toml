@@ -1,0 +1,35 @@
+[package]
+name = "ts-lsp"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = []
+pprof = ["dep:ts-pprof"]
+
+[dependencies]
+lsp-server = { workspace = true }
+lsp_types_full = { package = "lsp-types", version = "0.97.0" }
+lsp_types = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+ts-bundled = { path = "../ts-bundled" }
+ts-api = { path = "../ts-api" }
+ts-collections = { path = "../ts-collections" }
+ts-core = { path = "../ts-core" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-json = { path = "../ts-json" }
+ts-jsonrpc = { path = "../ts-jsonrpc" }
+ts-locale = { path = "../ts-locale" }
+ts-ls = { path = "../ts-ls" }
+ts-lsproto = { path = "../ts-lsproto" }
+ts-pprof = { path = "../ts-pprof", optional = true }
+ts-project = { path = "../ts-project" }
+ts-tspath = { path = "../ts-tspath" }
+ts-vfs = { path = "../ts-vfs" }
+url = { workspace = true }
+
+[dev-dependencies]
+regex = { workspace = true }
+ts-testutil = { path = "../ts-testutil", features = ["projecttestutil"] }

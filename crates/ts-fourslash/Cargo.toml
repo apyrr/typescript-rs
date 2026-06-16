@@ -1,0 +1,24 @@
+[package]
+name = "ts-fourslash"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+generated-fourslash = []
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+lsp_types_full = { package = "lsp-types", version = "0.97.0" }
+ts-compiler = { path = "../ts-compiler" }
+ts-core = { path = "../ts-core" }
+ts-collections = { path = "../ts-collections" }
+ts-json = { path = "../ts-json" }
+ts-ls = { path = "../ts-ls" }
+ts-lsp = { path = "../ts-lsp" }
+ts-lsproto = { path = "../ts-lsproto" }
+ts-modulespecifiers = { path = "../ts-modulespecifiers" }
+ts-project = { path = "../ts-project" }
+ts-testutil = { path = "../ts-testutil" }
+ts-testrunner = { path = "../ts-testrunner" }
+ts-tspath = { path = "../ts-tspath" }

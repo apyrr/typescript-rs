@@ -1,0 +1,36 @@
+[package]
+name = "ts-api"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+base64 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+ts-ast = { path = "../ts-ast" }
+ts-astnav = { path = "../ts-astnav" }
+ts-bundled = { path = "../ts-bundled" }
+ts-checker = { path = "../ts-checker" }
+ts-collections = { path = "../ts-collections" }
+ts-compiler = { path = "../ts-compiler" }
+ts-core = { path = "../ts-core" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-jsnum = { path = "../ts-jsnum" }
+ts-json = { path = "../ts-json" }
+ts-jsonrpc = { path = "../ts-jsonrpc" }
+ts-locale = { path = "../ts-locale" }
+ts-lsproto = { path = "../ts-lsproto" }
+ts-ls = { path = "../ts-ls" }
+ts-nodebuilder = { path = "../ts-nodebuilder" }
+ts-printer = { path = "../ts-printer" }
+ts-project = { path = "../ts-project" }
+ts-tsoptions = { path = "../ts-tsoptions" }
+ts-tspath = { path = "../ts-tspath" }
+ts-vfs = { path = "../ts-vfs" }
+interprocess = "2.4.2"
+
+[dev-dependencies]
+ts-parser = { path = "../ts-parser" }
+ts-repo = { path = "../ts-repo" }
+ts-testutil = { path = "../ts-testutil" }

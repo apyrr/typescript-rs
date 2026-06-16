@@ -1,0 +1,48 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_completion_list_at_beginning_of_file01() {
+    let mut t = TestingT;
+    run_test_completion_list_at_beginning_of_file01(&mut t);
+}
+
+fn run_test_completion_list_at_beginning_of_file01(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r"/*1*/
+var x = 0, y = 1, z = 2;
+enum E {
+    A, B, C
+}";
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.verify_completions(
+        t,
+        MarkerInput::Name("1".to_string()),
+        Some(&CompletionsExpectedList {
+            is_incomplete: false,
+            item_defaults: Some(CompletionsExpectedItemDefaults {
+                commit_characters: Some(default_commit_characters()),
+                edit_range: ExpectedCompletionEditRange::Ignored,
+            }),
+            items: Some(CompletionsExpectedItems {
+                includes: vec![
+                    CompletionsExpectedItem::Label("x".to_string()),
+                    CompletionsExpectedItem::Label("y".to_string()),
+                    CompletionsExpectedItem::Label("z".to_string()),
+                    CompletionsExpectedItem::Label("E".to_string()),
+                ],
+                excludes: Vec::new(),
+                exact: Vec::new(),
+                unsorted: Vec::new(),
+            }),
+            user_preferences: None,
+        }),
+    );
+    done();
+}

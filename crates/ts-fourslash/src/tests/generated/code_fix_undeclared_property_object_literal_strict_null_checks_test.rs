@@ -1,0 +1,28 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_code_fix_undeclared_property_object_literal_strict_null_checks() {
+    let mut t = TestingT;
+    run_test_code_fix_undeclared_property_object_literal_strict_null_checks(&mut t);
+}
+
+fn run_test_code_fix_undeclared_property_object_literal_strict_null_checks(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r#"// @strictNullChecks: true
+[|class A {
+    constructor() {
+        let e: any = 10;
+        this.x = { a: 10, b: "hello", c: undefined, d: null, e: e };
+    }
+}|]"#;
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.verify_range_after_code_fix(t, "\nclass A {\n    x: { a: number; b: string; c: undefined; d: null; e: any; };\n    \n    constructor() {\n        let e: any = 10;\n        this.x = { a: 10, b: \"hello\", c: undefined, d: null, e: e };\n    }\n}\n", false, 0, 0);
+    done();
+}

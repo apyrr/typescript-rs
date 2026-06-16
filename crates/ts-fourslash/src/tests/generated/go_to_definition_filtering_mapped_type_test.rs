@@ -1,0 +1,24 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_go_to_definition_filtering_mapped_type() {
+    let mut t = TestingT;
+    run_test_go_to_definition_filtering_mapped_type(&mut t);
+}
+
+fn run_test_go_to_definition_filtering_mapped_type(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r"const obj = { /*def*/a: 1, b: 2 };
+const filtered: { [P in keyof typeof obj as P extends 'b' ? never : P]: 0; } = { a: 0 };
+filtered.[|/*ref*/a|];";
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.verify_baseline_go_to_definition(t, &["ref".to_string()]);
+    done();
+}

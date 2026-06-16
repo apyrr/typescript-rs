@@ -1,0 +1,8 @@
+[package]
+name = "ts-project-support"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ts-collections = { path = "../ts-collections" }
+ts-tspath = { path = "../ts-tspath" }

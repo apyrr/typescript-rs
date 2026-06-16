@@ -1,0 +1,20 @@
+[package]
+name = "ts-diagnostics"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "generate"
+path = "src/generate.rs"
+
+[dependencies]
+flate2 = { workspace = true }
+quick-xml = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ts-collections = { path = "../ts-collections" }
+ts-core = { path = "../ts-core" }
+ts-json = { path = "../ts-json" }
+ts-locale = { path = "../ts-locale" }
+ts-repo = { path = "../ts-repo" }

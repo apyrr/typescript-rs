@@ -1,0 +1,15 @@
+[package]
+name = "ts-lsproto"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+lsp_types_full = { package = "lsp-types", version = "0.97.0" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ts-bundled = { path = "../ts-bundled" }
+ts-core = { path = "../ts-core" }
+ts-json = { path = "../ts-json" }
+ts-jsonrpc = { path = "../ts-jsonrpc" }
+ts-tspath = { path = "../ts-tspath" }
+url = { workspace = true }

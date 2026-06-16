@@ -1,0 +1,37 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_signature_help_tagged_templates1() {
+    let mut t = TestingT;
+    run_test_signature_help_tagged_templates1(&mut t);
+}
+
+fn run_test_signature_help_tagged_templates1(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r#"function f(templateStrings, x, y, z) { return 10; }
+function g(templateStrings, x, y, z) { return ""; }
+
+f ` + "`" + `/*1*/ qwe/*2*/rty /*3*/$/*4*/{ 123 }/*5*/ as/*6*/df /*7*/$/*8*/{   41234   }/*9*/  zxc/*10*/vb /*11*/$/*12*/{ g ` + "`" + `    ` + "`" + ` }/*13*/  /*14*/  /*15*/` + "`" + `"#;
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    for marker in f.marker_names() {
+        f.go_to_marker(t, &marker);
+        f.verify_signature_help_options(
+            t,
+            VerifySignatureHelpOptions {
+                text: Some("f(templateStrings: any, x: any, y: any, z: any): number".to_string()),
+                parameter_name: Some("templateStrings".to_string()),
+                parameter_span: Some("templateStrings: any".to_string()),
+                parameter_count: Some(4),
+                overloads_count: 0,
+            },
+        );
+    }
+    done();
+}

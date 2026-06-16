@@ -1,0 +1,45 @@
+[package]
+name = "ts-ls"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+lsp_types_full = { package = "lsp-types", version = "0.97.0" }
+ts-ast = { path = "../ts-ast" }
+ts-astnav = { path = "../ts-astnav" }
+ts-binder = { path = "../ts-binder" }
+ts-bundled = { path = "../ts-bundled" }
+ts-checker = { path = "../ts-checker" }
+ts-collections = { path = "../ts-collections" }
+ts-compiler = { path = "../ts-compiler" }
+ts-core = { path = "../ts-core" }
+ts-debug = { path = "../ts-debug" }
+ts-diagnosticwriter = { path = "../ts-diagnosticwriter" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-evaluator = { path = "../ts-evaluator" }
+ts-format = { path = "../ts-format" }
+ts-json = { path = "../ts-json" }
+ts-jsnum = { path = "../ts-jsnum" }
+ts-locale = { path = "../ts-locale" }
+ts-lsproto = { path = "../ts-lsproto" }
+ts-module = { path = "../ts-module" }
+ts-modulespecifiers = { path = "../ts-modulespecifiers" }
+ts-nodebuilder = { path = "../ts-nodebuilder" }
+ts-outputpaths = { path = "../ts-outputpaths" }
+ts-packagejson = { path = "../ts-packagejson" }
+ts-parser = { path = "../ts-parser" }
+ts-printer = { path = "../ts-printer" }
+ts-project-support = { path = "../ts-project-support" }
+ts-scanner = { path = "../ts-scanner" }
+ts-sourcemap = { path = "../ts-sourcemap" }
+ts-stringutil = { path = "../ts-stringutil" }
+ts-symlinks = { path = "../ts-symlinks" }
+ts-tspath = { path = "../ts-tspath" }
+ts-tsoptions = { path = "../ts-tsoptions" }
+ts-vfs = { path = "../ts-vfs" }
+
+[dev-dependencies]
+ts-project = { path = "../ts-project" }
+ts-testutil = { path = "../ts-testutil", features = ["projecttestutil"] }

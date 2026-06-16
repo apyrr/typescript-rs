@@ -1,0 +1,18 @@
+[package]
+name = "ts-format"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true }
+ts-ast = { path = "../ts-ast" }
+ts-astnav = { path = "../ts-astnav" }
+ts-core = { path = "../ts-core" }
+ts-lsproto = { path = "../ts-lsproto" }
+ts-scanner = { path = "../ts-scanner" }
+ts-stringutil = { path = "../ts-stringutil" }
+
+[dev-dependencies]
+ts-parser = { path = "../ts-parser" }
+ts-printer = { path = "../ts-printer" }
+ts-repo = { path = "../ts-repo" }

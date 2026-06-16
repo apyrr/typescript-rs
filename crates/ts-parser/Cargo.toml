@@ -1,0 +1,20 @@
+[package]
+name = "ts-parser"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+smallvec = { workspace = true }
+ts-ast = { path = "../ts-ast" }
+ts-collections = { path = "../ts-collections" }
+ts-core = { path = "../ts-core" }
+ts-debug = { path = "../ts-debug" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-scanner = { path = "../ts-scanner" }
+ts-tspath = { path = "../ts-tspath" }
+
+[dev-dependencies]
+ts-repo = { path = "../ts-repo" }
+ts-testrunner = { path = "../ts-testrunner" }
+ts-testutil = { path = "../ts-testutil" }
+ts-vfs = { path = "../ts-vfs" }

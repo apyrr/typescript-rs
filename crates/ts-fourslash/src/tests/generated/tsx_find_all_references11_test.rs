@@ -1,0 +1,44 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_tsx_find_all_references11() {
+    let mut t = TestingT;
+    run_test_tsx_find_all_references11(&mut t);
+}
+
+fn run_test_tsx_find_all_references11(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r"//@Filename: file.tsx
+// @jsx: preserve
+// @noLib: true
+declare namespace JSX {
+    interface Element { }
+    interface IntrinsicElements {
+    }
+    interface ElementAttributesProperty { props; }
+}
+interface ClickableProps {
+    children?: string;
+    className?: string;
+}
+interface ButtonProps extends ClickableProps {
+    onClick(event?: React.MouseEvent<HTMLButtonElement>): void;
+}
+interface LinkProps extends ClickableProps {
+    goTo: string;
+}
+declare function MainButton(buttonProps: ButtonProps): JSX.Element;
+declare function MainButton(linkProps: LinkProps): JSX.Element;
+declare function MainButton(props: ButtonProps | LinkProps): JSX.Element;
+let opt = <MainButton /*1*/wrong />;";
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.verify_baseline_find_all_references(t, &["1".to_string()]);
+    done();
+}

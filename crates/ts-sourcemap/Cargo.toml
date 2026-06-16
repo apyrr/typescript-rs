@@ -1,0 +1,12 @@
+[package]
+name = "ts-sourcemap"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+base64 = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+ts-core = { path = "../ts-core" }
+ts-scanner = { path = "../ts-scanner" }
+ts-tspath = { path = "../ts-tspath" }

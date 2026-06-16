@@ -1,0 +1,15 @@
+[package]
+name = "ts-bundled"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = []
+noembed = []
+
+[dependencies]
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ts-tspath = { path = "../ts-tspath" }
+ts-vfs = { path = "../ts-vfs" }

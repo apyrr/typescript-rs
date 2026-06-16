@@ -1,0 +1,18 @@
+[package]
+name = "ts-modulespecifiers"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+regex = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ts-ast = { path = "../ts-ast" }
+ts-collections = { path = "../ts-collections" }
+ts-core = { path = "../ts-core" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-module = { path = "../ts-module" }
+ts-packagejson = { path = "../ts-packagejson" }
+ts-symlinks = { path = "../ts-symlinks" }
+ts-tsoptions = { path = "../ts-tsoptions" }
+ts-tspath = { path = "../ts-tspath" }

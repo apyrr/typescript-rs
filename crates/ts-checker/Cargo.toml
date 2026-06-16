@@ -1,0 +1,30 @@
+[package]
+name = "ts-checker"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ts-ast = { path = "../ts-ast" }
+ts-astnav = { path = "../ts-astnav" }
+ts-binder = { path = "../ts-binder" }
+ts-collections = { path = "../ts-collections" }
+ts-core = { path = "../ts-core" }
+ts-debug = { path = "../ts-debug" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-evaluator = { path = "../ts-evaluator" }
+ts-jsnum = { path = "../ts-jsnum" }
+ts-module = { path = "../ts-module" }
+ts-modulespecifiers = { path = "../ts-modulespecifiers" }
+ts-nodebuilder = { path = "../ts-nodebuilder" }
+ts-parser = { path = "../ts-parser" }
+ts-printer = { path = "../ts-printer" }
+ts-pseudochecker = { path = "../ts-pseudochecker" }
+ts-scanner = { path = "../ts-scanner" }
+ts-stringutil = { path = "../ts-stringutil" }
+ts-tracing = { path = "../ts-tracing" }
+ts-tsoptions = { path = "../ts-tsoptions" }
+ts-tspath = { path = "../ts-tspath" }
+serde_json = { workspace = true }
+indexmap = { workspace = true }
+smallvec = { workspace = true }
+xxhash-rust = { workspace = true }

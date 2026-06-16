@@ -1,0 +1,15 @@
+[package]
+name = "ts-core"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+link_store_stats = []
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+ts-collections = { path = "../ts-collections" }
+ts-json = { path = "../ts-json" }
+ts-stringutil = { path = "../ts-stringutil" }
+ts-tspath = { path = "../ts-tspath" }

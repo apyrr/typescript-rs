@@ -1,0 +1,29 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_export_in_labeled_statement() {
+    let mut t = TestingT;
+    run_test_export_in_labeled_statement(&mut t);
+}
+
+fn run_test_export_in_labeled_statement(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r"// @Filename: a.ts
+subTitle:
+[|export|] const title: string";
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.verify_baseline_document_highlights_with_options(
+        t,
+        None,
+        vec![f.ranges()[0].file_name().to_string()],
+        vec![MarkerOrRangeOrName::Range(f.ranges()[0].clone())],
+    );
+    done();
+}

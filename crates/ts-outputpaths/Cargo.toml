@@ -1,0 +1,9 @@
+[package]
+name = "ts-outputpaths"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ts-ast = { path = "../ts-ast" }
+ts-core = { path = "../ts-core" }
+ts-tspath = { path = "../ts-tspath" }

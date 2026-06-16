@@ -1,0 +1,34 @@
+[package]
+name = "ts-execute"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = []
+pprof = ["dep:ts-pprof"]
+
+[dependencies]
+chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ts-ast = { path = "../ts-ast" }
+ts-binder = { path = "../ts-binder" }
+ts-checker = { path = "../ts-checker" }
+ts-collections = { path = "../ts-collections" }
+ts-compiler = { path = "../ts-compiler" }
+ts-core = { path = "../ts-core" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-diagnosticwriter = { path = "../ts-diagnosticwriter" }
+ts-format = { path = "../ts-format" }
+ts-json = { path = "../ts-json" }
+ts-locale = { path = "../ts-locale" }
+ts-ls = { path = "../ts-ls" }
+ts-outputpaths = { path = "../ts-outputpaths" }
+ts-parser = { path = "../ts-parser" }
+ts-pprof = { path = "../ts-pprof", optional = true }
+ts-testutil = { path = "../ts-testutil" }
+ts-tracing = { path = "../ts-tracing" }
+ts-tsoptions = { path = "../ts-tsoptions" }
+ts-tspath = { path = "../ts-tspath" }
+ts-vfs = { path = "../ts-vfs" }
+xxhash-rust = { workspace = true }

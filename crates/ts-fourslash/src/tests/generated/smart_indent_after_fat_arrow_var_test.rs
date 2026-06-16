@@ -1,0 +1,24 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_smart_indent_after_fat_arrow_var() {
+    let mut t = TestingT;
+    run_test_smart_indent_after_fat_arrow_var(&mut t);
+}
+
+fn run_test_smart_indent_after_fat_arrow_var(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r"var x = r => r => r;
+/**/";
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.go_to_marker(t, "");
+    f.verify_indentation(t, 0);
+    done();
+}

@@ -1,0 +1,11 @@
+[package]
+name = "ts-scanner"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ts-ast = { path = "../ts-ast" }
+ts-collections = { path = "../ts-collections" }
+ts-core = { path = "../ts-core" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-jsnum = { path = "../ts-jsnum" }

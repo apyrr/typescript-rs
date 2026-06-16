@@ -1,0 +1,7 @@
+[package]
+name = "ts-tspath"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ts-stringutil = { path = "../ts-stringutil" }

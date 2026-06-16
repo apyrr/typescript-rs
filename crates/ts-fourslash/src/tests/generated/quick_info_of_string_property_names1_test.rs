@@ -1,0 +1,40 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_quick_info_of_string_property_names1() {
+    let mut t = TestingT;
+    run_test_quick_info_of_string_property_names1(&mut t);
+}
+
+fn run_test_quick_info_of_string_property_names1(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r#"interface foo {
+    "foo bar": string;
+}
+var f: foo;
+var /*1*/r = f['foo bar'];
+class bar {
+    'hello world': number;
+    '1': string;
+    constructor() {
+        bar['hello world'] = 3;
+    }
+}
+var b: bar;
+var /*2*/r2 = b["hello world"];
+var /*3*/r4 = b['1'];
+var /*4*/r5 = b[1];"#;
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.verify_quick_info_at(t, "1", "var r: string", "");
+    f.verify_quick_info_at(t, "2", "var r2: number", "");
+    f.verify_quick_info_at(t, "3", "var r4: string", "");
+    f.verify_quick_info_at(t, "4", "var r5: string", "");
+    done();
+}

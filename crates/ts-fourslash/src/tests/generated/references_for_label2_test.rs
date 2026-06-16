@@ -1,0 +1,26 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_references_for_label2() {
+    let mut t = TestingT;
+    run_test_references_for_label2(&mut t);
+}
+
+fn run_test_references_for_label2(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r#"var label = "label";
+while (true) {
+    if (false) break /**/label;
+    if (true) continue label;
+}"#;
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.verify_baseline_find_all_references(t, &["".to_string()]);
+    done();
+}

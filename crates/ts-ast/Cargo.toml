@@ -1,0 +1,16 @@
+[package]
+name = "ts-ast"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true }
+smallvec = { workspace = true }
+indexmap = { workspace = true }
+smol_str = { workspace = true }
+ts-collections = { path = "../ts-collections" }
+ts-core = { path = "../ts-core" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-locale = { path = "../ts-locale" }
+ts-tspath = { path = "../ts-tspath" }
+xxhash-rust = { workspace = true }

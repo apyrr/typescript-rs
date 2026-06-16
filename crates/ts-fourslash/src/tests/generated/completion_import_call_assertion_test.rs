@@ -1,0 +1,28 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_completion_import_call_assertion() {
+    let mut t = TestingT;
+    run_test_completion_import_call_assertion(&mut t);
+}
+
+fn run_test_completion_import_call_assertion(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r#"// @target: esnext
+// @module: esnext
+// @filename: main.ts
+import("./other.json", {/*0*/});
+import("./other.json", { asse/*1*/});
+// @filename: other.json
+{}"#;
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.verify_baseline_completions(t, &[]);
+    done();
+}

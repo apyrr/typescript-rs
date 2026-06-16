@@ -1,0 +1,12 @@
+[package]
+name = "ts-vfs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dirs = { workspace = true }
+filetime = { workspace = true }
+rustix = { version = "1.1.4", features = ["fs"] }
+ts-core = { path = "../ts-core" }
+ts-tspath = { path = "../ts-tspath" }
+xxhash-rust = { workspace = true }

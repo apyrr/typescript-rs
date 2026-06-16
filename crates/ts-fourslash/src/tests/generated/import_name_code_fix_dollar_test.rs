@@ -1,0 +1,37 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_import_name_code_fix_dollar() {
+    let mut t = TestingT;
+    run_test_import_name_code_fix_dollar(&mut t);
+}
+
+fn run_test_import_name_code_fix_dollar(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r#"// @module: esnext
+// @moduleResolution: bundler
+// @Filename: /node_modules/qwik/index.d.ts
+export declare const $: any;
+// @Filename: /index.ts
+import {} from "qwik";
+$/**/"#;
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.go_to_marker(t, "");
+    f.verify_import_fix_at_position(
+        t,
+        &vec![
+            r#"import { $ } from "qwik";
+$"#
+            .to_string(),
+        ],
+        None,
+    );
+    done();
+}

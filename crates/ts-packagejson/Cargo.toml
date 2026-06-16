@@ -1,0 +1,13 @@
+[package]
+name = "ts-packagejson"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+ts-collections = { path = "../ts-collections" }
+ts-core = { path = "../ts-core" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-semver = { path = "../ts-semver" }
+ts-tspath = { path = "../ts-tspath" }

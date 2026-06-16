@@ -1,0 +1,12 @@
+[package]
+name = "ts-diagnosticwriter"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ts-ast = { path = "../ts-ast" }
+ts-core = { path = "../ts-core" }
+ts-diagnostics = { path = "../ts-diagnostics" }
+ts-locale = { path = "../ts-locale" }
+ts-scanner = { path = "../ts-scanner" }
+ts-tspath = { path = "../ts-tspath" }

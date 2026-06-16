@@ -1,0 +1,16 @@
+[package]
+name = "ts-astnav"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true }
+ts-ast = { path = "../ts-ast" }
+ts-core = { path = "../ts-core" }
+ts-json = { path = "../ts-json" }
+ts-parser = { path = "../ts-parser" }
+ts-repo = { path = "../ts-repo" }
+ts-scanner = { path = "../ts-scanner" }
+
+[dev-dependencies]
+ts-testutil = { path = "../ts-testutil" }

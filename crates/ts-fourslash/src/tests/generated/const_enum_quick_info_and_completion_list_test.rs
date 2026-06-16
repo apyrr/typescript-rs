@@ -1,0 +1,50 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_const_enum_quick_info_and_completion_list() {
+    let mut t = TestingT;
+    run_test_const_enum_quick_info_and_completion_list(&mut t);
+}
+
+fn run_test_const_enum_quick_info_and_completion_list(t: &mut TestingT) {
+    skip_if_failing(t);
+    let content = r"const enum /*1*/e {
+    a,
+    b,
+    c
+}
+/*2*/e.a;";
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.verify_completions(
+        t,
+        MarkerInput::Name("2".to_string()),
+        Some(&CompletionsExpectedList {
+            is_incomplete: false,
+            item_defaults: Some(CompletionsExpectedItemDefaults {
+                commit_characters: Some(default_commit_characters()),
+                edit_range: ExpectedCompletionEditRange::Ignored,
+            }),
+            items: Some(CompletionsExpectedItems {
+                includes: vec![CompletionsExpectedItem::Item(lsproto::CompletionItem {
+                    label: "e".to_string(),
+                    detail: Some("const enum e".to_string()),
+                    ..Default::default()
+                })],
+                excludes: Vec::new(),
+                exact: Vec::new(),
+                unsorted: Vec::new(),
+            }),
+            user_preferences: None,
+        }),
+    );
+    f.verify_quick_info_at(t, "1", "const enum e", "");
+    f.verify_quick_info_at(t, "2", "const enum e", "");
+    done();
+}

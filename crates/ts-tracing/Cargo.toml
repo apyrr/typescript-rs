@@ -1,0 +1,13 @@
+[package]
+name = "ts-tracing"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+ts-ast = { path = "../ts-ast" }
+ts-scanner = { path = "../ts-scanner" }
+ts-tspath = { path = "../ts-tspath" }
+ts-vfs = { path = "../ts-vfs" }
+xxhash-rust = { workspace = true }
