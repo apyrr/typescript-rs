@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_indexed_access_type() {
 }
 
 fn run_test_quickinfo_verbosity_indexed_access_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityIndexedAccessType") {
+        return;
+    }
     let content = r#"interface T2 {
 	"string key": string;
 	"number key": number;

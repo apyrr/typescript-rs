@@ -14,7 +14,9 @@ pub fn test_go_to_definition_expando_element_access() {
 }
 
 fn run_test_go_to_definition_expando_element_access(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionExpandoElementAccess") {
+        return;
+    }
     let content = r#"function f() {}
 f[/*0*/"x"] = 0;
 f[[|/*1*/"x"|]] = 1;"#;

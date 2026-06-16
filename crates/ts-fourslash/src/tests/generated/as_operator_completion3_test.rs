@@ -14,7 +14,9 @@ pub fn test_as_operator_completion3() {
 }
 
 fn run_test_as_operator_completion3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAsOperatorCompletion3") {
+        return;
+    }
     let content = r"type T = number;
 var x;
 var y = x as /**/ // comment";

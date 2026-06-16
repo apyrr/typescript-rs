@@ -14,7 +14,9 @@ pub fn test_formatting_after_chained_fat_arrow() {
 }
 
 fn run_test_formatting_after_chained_fat_arrow(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingAfterChainedFatArrow") {
+        return;
+    }
     let content = r"var x = n => p => {
     while (true) {
         void 0;

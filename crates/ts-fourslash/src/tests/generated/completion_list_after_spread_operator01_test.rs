@@ -14,7 +14,9 @@ pub fn test_completion_list_after_spread_operator01() {
 }
 
 fn run_test_completion_list_after_spread_operator01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAfterSpreadOperator01") {
+        return;
+    }
     let content = r"let v = [1,2,3,4];
 let x = [.../**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

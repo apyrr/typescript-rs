@@ -14,13 +14,15 @@ pub fn test_navigate_items_const() {
 }
 
 fn run_test_navigate_items_const(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigateItemsConst") {
+        return;
+    }
     let content = r#"// @noLib: true
 const [|{| "name": "c", "kind": "const" |}c = 10|];
 function foo() {
     const [|{| "name": "d", "kind": "const", "containerName": "foo", "containerKind": "function" |}d = 10|];
 }"#;
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     for range in f.ranges() {
         f.verify_workspace_symbol(&[workspace_symbol_case_from_range_with_pattern(
             &range,

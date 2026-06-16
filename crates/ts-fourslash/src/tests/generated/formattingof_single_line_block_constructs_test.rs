@@ -14,7 +14,9 @@ pub fn test_formattingof_single_line_block_constructs() {
 }
 
 fn run_test_formattingof_single_line_block_constructs(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingofSingleLineBlockConstructs") {
+        return;
+    }
     let content = r"namespace InternalModule/*1*/{}
 interface MyInterface/*2*/{}
 enum E/*3*/{}

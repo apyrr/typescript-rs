@@ -14,7 +14,9 @@ pub fn test_references_in_empty_file() {
 }
 
 fn run_test_references_in_empty_file(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesInEmptyFile") {
+        return;
+    }
     let content = r"// @lib: es5
 /*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

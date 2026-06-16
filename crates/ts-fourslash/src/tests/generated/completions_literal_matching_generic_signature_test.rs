@@ -14,7 +14,9 @@ pub fn test_completions_literal_matching_generic_signature() {
 }
 
 fn run_test_completions_literal_matching_generic_signature(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsLiteralMatchingGenericSignature") {
+        return;
+    }
     let content = r#"// @Filename: /a.tsx
 declare function bar1<P extends "" | "bar" | "baz">(p: P): void;
 

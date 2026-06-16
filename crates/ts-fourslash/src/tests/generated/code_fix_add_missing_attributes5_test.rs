@@ -14,7 +14,9 @@ pub fn test_code_fix_add_missing_attributes5() {
 }
 
 fn run_test_code_fix_add_missing_attributes5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddMissingAttributes5") {
+        return;
+    }
     let content = r#"// @jsx: preserve
 // @filename: foo.tsx
 interface P {

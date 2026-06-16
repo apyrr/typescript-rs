@@ -14,7 +14,9 @@ pub fn test_format_named_export_import() {
 }
 
 fn run_test_format_named_export_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatNamedExportImport") {
+        return;
+    }
     let content = r#"/*selectionStart*/
 export {   x, y    as     yy, z       }       from        "foo"/*export1*/
 export{x, y as yy, z}from"bar"/*export2*/

@@ -14,11 +14,13 @@ pub fn test_code_fix_require_in_ts5() {
 }
 
 fn run_test_code_fix_require_in_ts5(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"// @Filename: /a.ts
+    if should_skip_if_failing("TestCodeFixRequireInTs5") {
+        return;
+    }
+    let content = r"// @Filename: /a.ts
 const a = 1;
 const b = 2;
-const foo = require(` + "`" + `foo${a}${b}` + "`" + `);"#;
+const foo = require(`foo${a}${b}`);";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_code_fix_not_available(t, &[]);
     done();

@@ -14,7 +14,9 @@ pub fn test_references_for_index_property2() {
 }
 
 fn run_test_references_for_index_property2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForIndexProperty2") {
+        return;
+    }
     let content = r#"var a;
 a["/*1*/blah"];"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

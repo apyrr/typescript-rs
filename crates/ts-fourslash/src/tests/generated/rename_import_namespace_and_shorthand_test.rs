@@ -14,7 +14,9 @@ pub fn test_rename_import_namespace_and_shorthand() {
 }
 
 fn run_test_rename_import_namespace_and_shorthand(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameImportNamespaceAndShorthand") {
+        return;
+    }
     let content = r#"[|import * as [|{| "contextRangeIndex": 0 |}foo|] from 'bar';|]
 const bar = { [|foo|] };"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

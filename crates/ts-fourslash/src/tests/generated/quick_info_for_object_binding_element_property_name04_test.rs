@@ -14,7 +14,9 @@ pub fn test_quick_info_for_object_binding_element_property_name04() {
 }
 
 fn run_test_quick_info_for_object_binding_element_property_name04(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForObjectBindingElementPropertyName04") {
+        return;
+    }
     let content = r"interface Recursive {
     next?: Recursive;
     value: any;

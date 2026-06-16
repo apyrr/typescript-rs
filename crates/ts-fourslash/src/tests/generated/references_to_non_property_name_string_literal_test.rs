@@ -14,7 +14,9 @@ pub fn test_references_to_non_property_name_string_literal() {
 }
 
 fn run_test_references_to_non_property_name_string_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesToNonPropertyNameStringLiteral") {
+        return;
+    }
     let content = r#"// @lib: es5
 const str: string = "hello/*1*/";"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

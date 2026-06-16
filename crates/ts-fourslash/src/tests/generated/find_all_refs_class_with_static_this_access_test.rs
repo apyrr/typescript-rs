@@ -14,7 +14,9 @@ pub fn test_find_all_refs_class_with_static_this_access() {
 }
 
 fn run_test_find_all_refs_class_with_static_this_access(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsClassWithStaticThisAccess") {
+        return;
+    }
     let content = r#"[|class /*0*/[|{| "isWriteAccess": true, "isDefinition": true, "contextRangeIndex": 0 |}C|] {
     static s() {
         /*1*/[|this|];

@@ -14,7 +14,9 @@ pub fn test_contextually_typed_object_literal_method_declaration_param01() {
 }
 
 fn run_test_contextually_typed_object_literal_method_declaration_param01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestContextuallyTypedObjectLiteralMethodDeclarationParam01") {
+        return;
+    }
     let content = r#"// @noImplicitAny: true
 interface A {
     numProp: number;

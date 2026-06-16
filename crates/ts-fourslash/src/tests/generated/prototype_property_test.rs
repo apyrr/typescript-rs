@@ -14,7 +14,9 @@ pub fn test_prototype_property() {
 }
 
 fn run_test_prototype_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestPrototypeProperty") {
+        return;
+    }
     let content = r"class A {}
 A./*1*/prototype;
 A./*2*/";

@@ -14,7 +14,9 @@ pub fn test_no_completion_list_on_comments_inside_object_literals() {
 }
 
 fn run_test_no_completion_list_on_comments_inside_object_literals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNoCompletionListOnCommentsInsideObjectLiterals") {
+        return;
+    }
     let content = r"namespace ObjectLiterals {
 	interface MyPoint {
 		x1: number;

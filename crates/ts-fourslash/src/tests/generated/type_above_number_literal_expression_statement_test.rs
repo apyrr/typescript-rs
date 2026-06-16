@@ -14,7 +14,9 @@ pub fn test_type_above_number_literal_expression_statement() {
 }
 
 fn run_test_type_above_number_literal_expression_statement(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTypeAboveNumberLiteralExpressionStatement") {
+        return;
+    }
     let content = r"
 // foo
 1;";

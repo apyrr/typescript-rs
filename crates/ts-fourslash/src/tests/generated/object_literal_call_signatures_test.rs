@@ -14,7 +14,9 @@ pub fn test_object_literal_call_signatures() {
 }
 
 fn run_test_object_literal_call_signatures(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestObjectLiteralCallSignatures") {
+        return;
+    }
     let content = r"// @strict: false
 var /*1*/x: {
     func1(x: number): number;         // Method signature

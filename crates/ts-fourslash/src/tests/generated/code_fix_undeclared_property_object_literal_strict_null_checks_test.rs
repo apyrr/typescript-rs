@@ -14,7 +14,9 @@ pub fn test_code_fix_undeclared_property_object_literal_strict_null_checks() {
 }
 
 fn run_test_code_fix_undeclared_property_object_literal_strict_null_checks(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixUndeclaredPropertyObjectLiteralStrictNullChecks") {
+        return;
+    }
     let content = r#"// @strictNullChecks: true
 [|class A {
     constructor() {

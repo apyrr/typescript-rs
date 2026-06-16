@@ -14,7 +14,9 @@ pub fn test_document_highlights02() {
 }
 
 fn run_test_document_highlights02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlights02") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @Filename: a.ts
 function [|foo|] () {

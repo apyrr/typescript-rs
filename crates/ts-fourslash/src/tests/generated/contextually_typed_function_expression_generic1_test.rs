@@ -14,7 +14,9 @@ pub fn test_contextually_typed_function_expression_generic1() {
 }
 
 fn run_test_contextually_typed_function_expression_generic1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestContextuallyTypedFunctionExpressionGeneric1") {
+        return;
+    }
     let content = r"interface Comparable<T> {
    compareTo(other: T): T;
 }

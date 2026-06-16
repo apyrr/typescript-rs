@@ -14,7 +14,9 @@ pub fn test_get_occurrences_class_expression_this() {
 }
 
 fn run_test_get_occurrences_class_expression_this(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesClassExpressionThis") {
+        return;
+    }
     let content = r"var x = class C {
     public x;
     public y;

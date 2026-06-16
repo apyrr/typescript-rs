@@ -14,7 +14,9 @@ pub fn test_inlay_hints_interactive_function_parameter_types5() {
 }
 
 fn run_test_inlay_hints_interactive_function_parameter_types5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInteractiveFunctionParameterTypes5") {
+        return;
+    }
     let content = r"const foo: 1n = 1n;
 export function fn(b = foo) {}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

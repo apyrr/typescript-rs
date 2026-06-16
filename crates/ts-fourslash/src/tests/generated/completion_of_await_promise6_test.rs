@@ -14,7 +14,9 @@ pub fn test_completion_of_await_promise6() {
 }
 
 fn run_test_completion_of_await_promise6(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionOfAwaitPromise6") {
+        return;
+    }
     let content = r"// @lib: es2015
 async function foo(x: Promise<string>) {
    [|x./**/|]

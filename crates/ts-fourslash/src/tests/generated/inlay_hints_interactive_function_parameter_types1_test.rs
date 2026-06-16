@@ -14,7 +14,9 @@ pub fn test_inlay_hints_interactive_function_parameter_types1() {
 }
 
 fn run_test_inlay_hints_interactive_function_parameter_types1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInteractiveFunctionParameterTypes1") {
+        return;
+    }
     let content = r" type F1 = (a: string, b: number) => void
  const f1: F1 = (a, b) => { }
  const f2: F1 = (a, b: number) => { }

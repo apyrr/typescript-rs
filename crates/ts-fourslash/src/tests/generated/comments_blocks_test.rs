@@ -14,7 +14,9 @@ pub fn test_comments_blocks() {
 }
 
 fn run_test_comments_blocks(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCommentsBlocks") {
+        return;
+    }
     let content = r"/*1*/// 1
 var x,
     /*2*/// 2

@@ -14,7 +14,9 @@ pub fn test_refactor_convert_to_es_module_not_at_top_level() {
 }
 
 fn run_test_refactor_convert_to_es_module_not_at_top_level(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRefactorConvertToEsModule_notAtTopLevel") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @target: esnext
 // @Filename: /a.js

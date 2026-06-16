@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_barrel_export() {
 }
 
 fn run_test_import_name_code_fix_barrel_export(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_barrelExport") {
+        return;
+    }
     let content = r#"// @module: commonjs
 // @Filename: /foo/a.ts
 export const A = 0;

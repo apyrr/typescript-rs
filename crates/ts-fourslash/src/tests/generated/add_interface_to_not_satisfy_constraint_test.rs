@@ -14,7 +14,9 @@ pub fn test_add_interface_to_not_satisfy_constraint() {
 }
 
 fn run_test_add_interface_to_not_satisfy_constraint(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAddInterfaceToNotSatisfyConstraint") {
+        return;
+    }
     let content = r"interface A {
 	a: number;
 }

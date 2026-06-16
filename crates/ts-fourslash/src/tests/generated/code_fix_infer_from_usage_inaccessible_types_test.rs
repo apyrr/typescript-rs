@@ -14,7 +14,9 @@ pub fn test_code_fix_infer_from_usage_inaccessible_types() {
 }
 
 fn run_test_code_fix_infer_from_usage_inaccessible_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixInferFromUsageInaccessibleTypes") {
+        return;
+    }
     let content = r"// @strict: false
 // @noImplicitAny: true
 function f1(a) { a; }

@@ -14,7 +14,9 @@ pub fn test_completion_with_namespace_inside_function() {
 }
 
 fn run_test_completion_with_namespace_inside_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionWithNamespaceInsideFunction") {
+        return;
+    }
     let content = r"function f() {
     namespace n {
         interface I {

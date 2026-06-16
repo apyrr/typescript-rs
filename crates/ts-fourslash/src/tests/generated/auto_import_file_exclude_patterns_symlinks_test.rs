@@ -14,7 +14,9 @@ pub fn test_auto_import_file_exclude_patterns_symlinks() {
 }
 
 fn run_test_auto_import_file_exclude_patterns_symlinks(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportFileExcludePatterns_symlinks") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @module: commonjs
 // @Filename: /home/src/workspaces/project/node_modules/.store/@remix-run-server-runtime-virtual-c72daf0d/package/package.json

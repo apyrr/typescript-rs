@@ -14,7 +14,9 @@ pub fn test_get_occurrences_async_await() {
 }
 
 fn run_test_get_occurrences_async_await(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesAsyncAwait") {
+        return;
+    }
     let content = r"[|async|] function f() {
  [|await|] 100;
  [|a/**/wait|] [|await|] 200;

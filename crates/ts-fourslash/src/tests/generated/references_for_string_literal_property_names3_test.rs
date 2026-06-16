@@ -14,7 +14,9 @@ pub fn test_references_for_string_literal_property_names3() {
 }
 
 fn run_test_references_for_string_literal_property_names3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForStringLiteralPropertyNames3") {
+        return;
+    }
     let content = r#"class Foo2 {
     /*1*/get "/*2*/42"() { return 0; }
     /*3*/set /*4*/42(n) { }

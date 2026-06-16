@@ -14,7 +14,9 @@ pub fn test_formatting_on_enter() {
 }
 
 fn run_test_formatting_on_enter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnEnter") {
+        return;
+    }
     let content = r"class foo { }
 class bar {/**/ }
 // new line here";

@@ -14,7 +14,9 @@ pub fn test_signature_help_at_eof2() {
 }
 
 fn run_test_signature_help_at_eof2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpAtEOF2") {
+        return;
+    }
     let content = r"console.log()
 /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

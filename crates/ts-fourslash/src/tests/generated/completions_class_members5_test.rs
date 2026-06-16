@@ -14,7 +14,9 @@ pub fn test_completions_class_members5() {
 }
 
 fn run_test_completions_class_members5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsClassMembers5") {
+        return;
+    }
     let content = r"export const SOME_CONSTANT = 'SOME_TEXT';
 export class Base {
     [SOME_CONSTANT]: boolean;

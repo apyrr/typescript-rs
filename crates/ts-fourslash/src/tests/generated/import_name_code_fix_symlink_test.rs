@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_symlink() {
 }
 
 fn run_test_import_name_code_fix_symlink(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_symlink") {
+        return;
+    }
     let content = r#"// @moduleResolution: bundler
 // @noLib: true
 // @Filename: /node_modules/real/index.d.ts

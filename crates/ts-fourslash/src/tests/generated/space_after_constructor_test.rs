@@ -14,7 +14,9 @@ pub fn test_space_after_constructor() {
 }
 
 fn run_test_space_after_constructor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSpaceAfterConstructor") {
+        return;
+    }
     let content = r"export class myController {
     private _processId;
     constructor (processId: number) {/*1*/

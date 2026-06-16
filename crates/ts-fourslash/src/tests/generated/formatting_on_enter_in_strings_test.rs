@@ -14,7 +14,9 @@ pub fn test_formatting_on_enter_in_strings() {
 }
 
 fn run_test_formatting_on_enter_in_strings(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnEnterInStrings") {
+        return;
+    }
     let content = r#"var x = /*1*/"unclosed string literal\/*2*/"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "2");

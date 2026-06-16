@@ -14,7 +14,9 @@ pub fn test_get_occurrences_if_else() {
 }
 
 fn run_test_get_occurrences_if_else(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIfElse") {
+        return;
+    }
     let content = r"[|if|] (true) {
     if (false) {
     }

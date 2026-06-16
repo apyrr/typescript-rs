@@ -14,7 +14,9 @@ pub fn test_rename_numerical_index_single_quoted() {
 }
 
 fn run_test_rename_numerical_index_single_quoted(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameNumericalIndexSingleQuoted") {
+        return;
+    }
     let content = r"const foo = { [|0|]: true };
 foo[[|0|]];";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_completion_list_on_aliases3() {
 }
 
 fn run_test_completion_list_on_aliases3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOnAliases3") {
+        return;
+    }
     let content = r"declare module 'foobar' {
     interface Q { x: number; }
 }

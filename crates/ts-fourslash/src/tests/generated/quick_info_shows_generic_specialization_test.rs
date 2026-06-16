@@ -14,7 +14,9 @@ pub fn test_quick_info_shows_generic_specialization() {
 }
 
 fn run_test_quick_info_shows_generic_specialization(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoShowsGenericSpecialization") {
+        return;
+    }
     let content = r"class A<T> { }
 var /**/foo = new A<number>();";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_completion_at_dotted_namespace() {
 }
 
 fn run_test_completion_at_dotted_namespace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionAtDottedNamespace") {
+        return;
+    }
     let content = r"namespace wwer./**/w";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(

@@ -14,7 +14,9 @@ pub fn test_auto_import_type_import3() {
 }
 
 fn run_test_auto_import_type_import3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportTypeImport3") {
+        return;
+    }
     let content = r"// @verbatimModuleSyntax: true
 // @target: esnext
 // @Filename: /foo.ts

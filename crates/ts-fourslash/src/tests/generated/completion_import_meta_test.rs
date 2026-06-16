@@ -14,7 +14,9 @@ pub fn test_completion_import_meta() {
 }
 
 fn run_test_completion_import_meta(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionImportMeta") {
+        return;
+    }
     let content = r"// @lib: es5
 // @Filename: a.ts
 import./*1*/

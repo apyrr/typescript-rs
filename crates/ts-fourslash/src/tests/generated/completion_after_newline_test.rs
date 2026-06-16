@@ -14,7 +14,9 @@ pub fn test_completion_after_newline() {
 }
 
 fn run_test_completion_after_newline(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionAfterNewline") {
+        return;
+    }
     let content = r"// @lib: es5
 let foo /*1*/
 /*2*/

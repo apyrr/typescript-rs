@@ -14,7 +14,9 @@ pub fn test_smart_selection_lone_variable_declaration() {
 }
 
 fn run_test_smart_selection_lone_variable_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_loneVariableDeclaration") {
+        return;
+    }
     let content = r"const /**/x = 3;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_selection_ranges(t, &[]);

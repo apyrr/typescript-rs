@@ -14,7 +14,9 @@ pub fn test_go_to_definition_expando_class1() {
 }
 
 fn run_test_go_to_definition_expando_class1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionExpandoClass1") {
+        return;
+    }
     let content = r"// @strict: true
 // @allowJs: true
 // @checkJs: true

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_alias() {
 }
 
 fn run_test_go_to_definition_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionAlias") {
+        return;
+    }
     let content = r#"// @Filename: b.ts
 import /*alias1Definition*/alias1 = require("fileb");
 namespace Module {

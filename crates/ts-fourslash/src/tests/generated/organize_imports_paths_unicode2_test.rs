@@ -14,7 +14,9 @@ pub fn test_organize_imports_paths_unicode2() {
 }
 
 fn run_test_organize_imports_paths_unicode2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsPathsUnicode2") {
+        return;
+    }
     let content = r#"import * as a2 from "./a2";
 import * as a100 from "./a100";
 import * as a1 from "./a1";

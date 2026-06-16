@@ -14,10 +14,12 @@ pub fn test_formatting_multiline_template_literals() {
 }
 
 fn run_test_formatting_multiline_template_literals(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"/*1*/new Error(` + "`" + `Failed to expand glob: ${projectSpec.filesGlob}
+    if should_skip_if_failing("TestFormattingMultilineTemplateLiterals") {
+        return;
+    }
+    let content = r"/*1*/new Error(`Failed to expand glob: ${projectSpec.filesGlob}
 /*2*/                at projectPath : ${projectFile}
-/*3*/                with error: ${ex.message}` + "`" + `)"#;
+/*3*/                with error: ${ex.message}`)";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");
     f.go_to_marker(t, "1");

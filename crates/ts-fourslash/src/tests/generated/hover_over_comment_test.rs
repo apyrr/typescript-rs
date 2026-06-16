@@ -14,7 +14,9 @@ pub fn test_hover_over_comment() {
 }
 
 fn run_test_hover_over_comment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestHoverOverComment") {
+        return;
+    }
     let content = r"export function f() {}
 //foo
 /**///moo";

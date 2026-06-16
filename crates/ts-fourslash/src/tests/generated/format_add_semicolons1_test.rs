@@ -14,7 +14,9 @@ pub fn test_format_add_semicolons1() {
 }
 
 fn run_test_format_add_semicolons1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatAddSemicolons1") {
+        return;
+    }
     let content = r#"console.log(1)
 console.log(2)
 const x = function() { }

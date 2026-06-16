@@ -14,7 +14,9 @@ pub fn test_signature_help_object_literal() {
 }
 
 fn run_test_signature_help_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpObjectLiteral") {
+        return;
+    }
     let content = r#"var objectLiteral = { n: 5, s: "", f: (a: number, b: string) => "" };
 objectLiteral.f(/*objectLiteral1*/4, /*objectLiteral2*/"");"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

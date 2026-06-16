@@ -14,7 +14,9 @@ pub fn test_inlay_hints_interactive_parameter_names_with_comments() {
 }
 
 fn run_test_inlay_hints_interactive_parameter_names_with_comments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInteractiveParameterNamesWithComments") {
+        return;
+    }
     let content = r"const fn = (x: any) => { }
 fn(/* nobody knows exactly what this param is */ 42);
 function foo (aParameter: number, bParameter: number, cParameter: number) { }

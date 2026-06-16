@@ -14,7 +14,9 @@ pub fn test_completion_property_from_constraint() {
 }
 
 fn run_test_completion_property_from_constraint(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionPropertyFromConstraint") {
+        return;
+    }
     let content = r"interface Styles {
   alignContent: string | null;
   alignItems: string | null;

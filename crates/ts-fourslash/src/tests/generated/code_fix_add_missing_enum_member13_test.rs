@@ -14,7 +14,9 @@ pub fn test_code_fix_add_missing_enum_member13() {
 }
 
 fn run_test_code_fix_add_missing_enum_member13(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddMissingEnumMember13") {
+        return;
+    }
     let content = r"enum E { A, B }
 declare var a: E;
 a.C;";

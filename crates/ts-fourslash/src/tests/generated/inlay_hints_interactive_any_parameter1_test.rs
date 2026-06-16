@@ -14,7 +14,9 @@ pub fn test_inlay_hints_interactive_any_parameter1() {
 }
 
 fn run_test_inlay_hints_interactive_any_parameter1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInteractiveAnyParameter1") {
+        return;
+    }
     let content = r"function foo (v: any) {}
 foo(1);
 foo('');

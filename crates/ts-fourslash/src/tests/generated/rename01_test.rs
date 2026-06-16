@@ -14,7 +14,9 @@ pub fn test_rename01() {
 }
 
 fn run_test_rename01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRename01") {
+        return;
+    }
     let content = r#"// @lib: es5
 ///<reference path="./Bar.ts" />
 [|function [|{| "contextRangeIndex": 0 |}Bar|]() {

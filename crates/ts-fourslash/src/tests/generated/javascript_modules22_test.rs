@@ -14,7 +14,9 @@ pub fn test_javascript_modules22() {
 }
 
 fn run_test_javascript_modules22(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJavascriptModules22") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @module: commonjs
 // @allowSyntheticDefaultImports: false

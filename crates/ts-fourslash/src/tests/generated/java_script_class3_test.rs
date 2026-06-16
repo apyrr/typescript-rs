@@ -14,7 +14,9 @@ pub fn test_java_script_class3() {
 }
 
 fn run_test_java_script_class3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJavaScriptClass3") {
+        return;
+    }
     let content = r"// @allowNonTsExtensions: true
 // @Filename: Foo.js
 class Foo {

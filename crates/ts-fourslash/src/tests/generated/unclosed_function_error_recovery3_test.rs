@@ -14,7 +14,9 @@ pub fn test_unclosed_function_error_recovery3() {
 }
 
 fn run_test_unclosed_function_error_recovery3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnclosedFunctionErrorRecovery3") {
+        return;
+    }
     let content = r"// @allowUnreachableCode: true
        class alpha { static beta() return 5; } }
  /**/  var gamma = alpha.beta() * 5;             ";

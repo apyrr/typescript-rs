@@ -14,7 +14,9 @@ pub fn test_quick_info_in_optional_chain() {
 }
 
 fn run_test_quick_info_in_optional_chain(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoInOptionalChain") {
+        return;
+    }
     let content = r#"// @strict: true
 interface A {
   arr: string[];

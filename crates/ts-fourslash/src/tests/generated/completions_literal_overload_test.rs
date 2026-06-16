@@ -14,7 +14,9 @@ pub fn test_completions_literal_overload() {
 }
 
 fn run_test_completions_literal_overload(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsLiteralOverload") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: /a.tsx
 interface Events {

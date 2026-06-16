@@ -14,7 +14,9 @@ pub fn test_non_existing_import() {
 }
 
 fn run_test_non_existing_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNonExistingImport") {
+        return;
+    }
     let content = r"// @lib: es5
 namespace m {
     import foo = module(_foo);

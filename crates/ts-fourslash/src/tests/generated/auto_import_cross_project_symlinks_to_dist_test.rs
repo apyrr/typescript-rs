@@ -14,7 +14,9 @@ pub fn test_auto_import_cross_project_symlinks_to_dist() {
 }
 
 fn run_test_auto_import_cross_project_symlinks_to_dist(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportCrossProject_symlinks_toDist") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/packages/app/package.json
 { "name": "app", "dependencies": { "dep": "*" } }
 // @Filename: /home/src/workspaces/project/packages/app/tsconfig.json

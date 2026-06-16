@@ -14,7 +14,9 @@ pub fn test_indent_new_expression_no_braces() {
 }
 
 fn run_test_indent_new_expression_no_braces(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIndentNewExpressionNoBraces") {
+        return;
+    }
     let content = r"new Foo/*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

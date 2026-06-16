@@ -14,7 +14,9 @@ pub fn test_code_fix_remove_unnecessary_await_not_available_on_return() {
 }
 
 fn run_test_code_fix_remove_unnecessary_await_not_available_on_return(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixRemoveUnnecessaryAwait_notAvailableOnReturn") {
+        return;
+    }
     let content = r"// @target: esnext
 async function fn(): Promise<number> {
   return 0;

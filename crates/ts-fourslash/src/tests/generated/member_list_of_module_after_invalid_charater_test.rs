@@ -14,7 +14,9 @@ pub fn test_member_list_of_module_after_invalid_charater() {
 }
 
 fn run_test_member_list_of_module_after_invalid_charater(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListOfModuleAfterInvalidCharater") {
+        return;
+    }
     let content = r"namespace testModule {
     export var foo = 1;
 }

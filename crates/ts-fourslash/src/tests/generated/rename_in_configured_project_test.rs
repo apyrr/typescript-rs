@@ -14,7 +14,9 @@ pub fn test_rename_in_configured_project() {
 }
 
 fn run_test_rename_in_configured_project(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameInConfiguredProject") {
+        return;
+    }
     let content = r#"// @Filename: referencesForGlobals_1.ts
 [|var [|{| "contextRangeIndex": 0 |}globalName|] = 0;|]
 // @Filename: referencesForGlobals_2.ts

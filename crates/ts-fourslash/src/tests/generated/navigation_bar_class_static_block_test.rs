@@ -14,7 +14,9 @@ pub fn test_navigation_bar_class_static_block() {
 }
 
 fn run_test_navigation_bar_class_static_block(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarClassStaticBlock") {
+        return;
+    }
     let content = r"class C {
   static {
     let x;

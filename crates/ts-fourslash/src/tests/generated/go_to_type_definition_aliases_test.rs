@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition_aliases() {
 }
 
 fn run_test_go_to_type_definition_aliases(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinitionAliases") {
+        return;
+    }
     let content = r#"// @Filename: goToTypeDefinitioAliases_module1.ts
 interface /*definition*/I {
     p;

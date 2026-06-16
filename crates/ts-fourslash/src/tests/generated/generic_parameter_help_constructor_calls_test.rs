@@ -14,7 +14,9 @@ pub fn test_generic_parameter_help_constructor_calls() {
 }
 
 fn run_test_generic_parameter_help_constructor_calls(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericParameterHelpConstructorCalls") {
+        return;
+    }
     let content = r"interface IFoo { }
 
 class testClass<T extends IFoo, U, M extends IFoo> {

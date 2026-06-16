@@ -14,16 +14,18 @@ pub fn test_navigation_bar_anonymous_class_and_function_expressions3() {
 }
 
 fn run_test_navigation_bar_anonymous_class_and_function_expressions3(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"describe('foo', () => {
-    test(` + "`" + `a ${1} b ${2}` + "`" + `, () => {})
+    if should_skip_if_failing("TestNavigationBarAnonymousClassAndFunctionExpressions3") {
+        return;
+    }
+    let content = r"describe('foo', () => {
+    test(`a ${1} b ${2}`, () => {})
 })
 
 const a = 1;
 const b = 2;
 describe('foo', () => {
-    test(` + "`" + `a ${a} b {b}` + "`" + `, () => {})
-})"#;
+    test(`a ${a} b {b}`, () => {})
+})";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_document_symbol(t);
     done();

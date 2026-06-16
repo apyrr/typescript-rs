@@ -14,7 +14,9 @@ pub fn test_find_all_references_dynamic_import2() {
 }
 
 fn run_test_find_all_references_dynamic_import2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllReferencesDynamicImport2") {
+        return;
+    }
     let content = r#"// @Filename: foo.ts
 [|export function /*1*/[|{| "isWriteAccess": true, "isDefinition": true, "contextRangeIndex": 0 |}bar|]() { return "bar"; }|]
 var x = import("./foo");

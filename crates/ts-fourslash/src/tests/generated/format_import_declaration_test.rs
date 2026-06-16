@@ -14,7 +14,9 @@ pub fn test_format_import_declaration() {
 }
 
 fn run_test_format_import_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatImportDeclaration") {
+        return;
+    }
     let content = r"namespace Foo {/*1*/
 }/*2*/
 

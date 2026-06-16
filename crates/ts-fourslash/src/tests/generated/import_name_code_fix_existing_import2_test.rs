@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_existing_import2() {
 }
 
 fn run_test_import_name_code_fix_existing_import2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixExistingImport2") {
+        return;
+    }
     let content = r#"import * as ns from "./module";
 // Comment
 f1/*0*/();

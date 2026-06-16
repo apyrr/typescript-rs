@@ -14,7 +14,9 @@ pub fn test_quick_info_named_tuple_members() {
 }
 
 fn run_test_quick_info_named_tuple_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoNamedTupleMembers") {
+        return;
+    }
     let content = r"export type /*1*/Segment = [length: number, count: number];";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_quick_info_at(t, "1", "type Segment = [length: number, count: number]", "");

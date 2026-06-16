@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_require_import_vs_require_module_target() {
 }
 
 fn run_test_import_name_code_fix_require_import_vs_require_module_target(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_require_importVsRequire_moduleTarget") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @checkJs: true
 // @module: es2015

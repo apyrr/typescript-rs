@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_type_param_instantiate_error() {
 }
 
 fn run_test_code_fix_class_implement_interface_type_param_instantiate_error(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceTypeParamInstantiateError") {
+        return;
+    }
     let content = r"interface I<T extends string> {
    x: T;
 }

@@ -14,7 +14,9 @@ pub fn test_semantic_modern_classification_constructor_types() {
 }
 
 fn run_test_semantic_modern_classification_constructor_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemanticModernClassificationConstructorTypes") {
+        return;
+    }
     let content = r"// @lib: es5
 Object.create(null);
 const x = Promise.resolve(Number.MAX_VALUE);

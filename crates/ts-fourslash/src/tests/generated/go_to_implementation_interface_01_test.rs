@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_interface_01() {
 }
 
 fn run_test_go_to_implementation_interface_01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationInterface_01") {
+        return;
+    }
     let content = r"interface Fo/*interface_definition*/o { hello(): void }
 
 class [|SuperBar|] implements Foo {

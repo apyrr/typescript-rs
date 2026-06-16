@@ -14,7 +14,9 @@ pub fn test_formatting_nested_scopes() {
 }
 
 fn run_test_formatting_nested_scopes(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingNestedScopes") {
+        return;
+    }
     let content = r#"/*1*/        namespace      My.App      {
 /*2*/export      var appModule =      angular.module("app", [
 /*3*/            ]).config([() =>            {

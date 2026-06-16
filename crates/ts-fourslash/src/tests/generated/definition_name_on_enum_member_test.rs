@@ -14,7 +14,9 @@ pub fn test_definition_name_on_enum_member() {
 }
 
 fn run_test_definition_name_on_enum_member(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDefinitionNameOnEnumMember") {
+        return;
+    }
     let content = r"enum e {
     firstMember,
     secondMember,

@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_type_only() {
 }
 
 fn run_test_import_name_code_fix_type_only(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_typeOnly") {
+        return;
+    }
     let content = r"// @module: esnext
 // @verbatimModuleSyntax: true
 // @Filename: types.ts

@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_enum() {
 }
 
 fn run_test_quickinfo_verbosity_enum(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityEnum") {
+        return;
+    }
     let content = r#"// @filename: a.ts
 export {};
 enum Color/*c*/ {

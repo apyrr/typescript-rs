@@ -14,7 +14,9 @@ pub fn test_smart_indent_statement_with() {
 }
 
 fn run_test_smart_indent_statement_with(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentStatementWith") {
+        return;
+    }
     let content = r"function Foo() {
     var obj = { a: 'foo' };
     with (obj) {

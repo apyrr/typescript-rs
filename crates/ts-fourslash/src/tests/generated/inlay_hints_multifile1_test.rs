@@ -14,7 +14,9 @@ pub fn test_inlay_hints_multifile1() {
 }
 
 fn run_test_inlay_hints_multifile1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsMultifile1") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 export interface Foo { a: string }
 // @Filename: /b.ts

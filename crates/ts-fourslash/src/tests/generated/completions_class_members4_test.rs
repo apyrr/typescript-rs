@@ -14,7 +14,9 @@ pub fn test_completions_class_members4() {
 }
 
 fn run_test_completions_class_members4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsClassMembers4") {
+        return;
+    }
     let content = r"// @filename: /foo.ts
 export class Observable<T> {
     pipe(): Observable<T>;

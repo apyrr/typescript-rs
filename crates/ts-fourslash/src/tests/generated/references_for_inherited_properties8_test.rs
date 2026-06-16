@@ -14,7 +14,9 @@ pub fn test_references_for_inherited_properties8() {
 }
 
 fn run_test_references_for_inherited_properties8(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForInheritedProperties8") {
+        return;
+    }
     let content = r"interface C extends D {
     /*d*/propD: number;
 }

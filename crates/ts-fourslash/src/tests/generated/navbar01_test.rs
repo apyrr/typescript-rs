@@ -14,7 +14,9 @@ pub fn test_navbar01() {
 }
 
 fn run_test_navbar01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavbar01") {
+        return;
+    }
     let content = r"// @lib: es5
 // Interface
 interface IPoint {

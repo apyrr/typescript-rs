@@ -14,7 +14,9 @@ pub fn test_references_in_empty_file_with_multiple_projects() {
 }
 
 fn run_test_references_in_empty_file_with_multiple_projects(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesInEmptyFileWithMultipleProjects") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/a/tsconfig.json
 { "files": ["a.ts"], "compilerOptions": { "lib": ["es5"] } }
 // @Filename: /home/src/workspaces/project/a/a.ts

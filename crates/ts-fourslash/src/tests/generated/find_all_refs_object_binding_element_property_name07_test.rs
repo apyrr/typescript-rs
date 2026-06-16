@@ -14,7 +14,9 @@ pub fn test_find_all_refs_object_binding_element_property_name07() {
 }
 
 fn run_test_find_all_refs_object_binding_element_property_name07(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsObjectBindingElementPropertyName07") {
+        return;
+    }
     let content = r"let p, b;
 
 p, [{ /*1*/a: p, b }] = [{ a: 10, b: true }];";

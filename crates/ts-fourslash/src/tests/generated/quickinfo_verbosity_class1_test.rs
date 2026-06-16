@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_class1() {
 }
 
 fn run_test_quickinfo_verbosity_class1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityClass1") {
+        return;
+    }
     let content = r#"{
     class Foo {
         a!: "a" | "c";

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_variable_assignment() {
 }
 
 fn run_test_go_to_definition_variable_assignment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionVariableAssignment") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @checkJs: true
 // @filename: foo.js

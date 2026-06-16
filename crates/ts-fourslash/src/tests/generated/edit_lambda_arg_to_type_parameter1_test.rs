@@ -14,7 +14,9 @@ pub fn test_edit_lambda_arg_to_type_parameter1() {
 }
 
 fn run_test_edit_lambda_arg_to_type_parameter1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestEditLambdaArgToTypeParameter1") {
+        return;
+    }
     let content = r"class C<T> {
     foo(x: T) {
         return (a: number/*1*/) => x;

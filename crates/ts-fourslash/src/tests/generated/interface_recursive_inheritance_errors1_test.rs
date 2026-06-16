@@ -14,7 +14,9 @@ pub fn test_interface_recursive_inheritance_errors1() {
 }
 
 fn run_test_interface_recursive_inheritance_errors1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInterfaceRecursiveInheritanceErrors1") {
+        return;
+    }
     let content = r"interface i8 extends i9 { }
 interface i9 /*1*/extends i8{ }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

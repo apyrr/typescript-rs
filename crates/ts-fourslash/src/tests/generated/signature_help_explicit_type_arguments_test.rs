@@ -14,7 +14,9 @@ pub fn test_signature_help_explicit_type_arguments() {
 }
 
 fn run_test_signature_help_explicit_type_arguments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpExplicitTypeArguments") {
+        return;
+    }
     let content = r"declare function f<T = boolean, U = string>(x: T, y: U): T;
 f<number, string>(/*1*/);
 f(/*2*/);

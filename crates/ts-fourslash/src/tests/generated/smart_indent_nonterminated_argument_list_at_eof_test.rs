@@ -14,7 +14,9 @@ pub fn test_smart_indent_nonterminated_argument_list_at_eof() {
 }
 
 fn run_test_smart_indent_nonterminated_argument_list_at_eof(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentNonterminatedArgumentListAtEOF") {
+        return;
+    }
     let content = r"function foo(a,
 /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

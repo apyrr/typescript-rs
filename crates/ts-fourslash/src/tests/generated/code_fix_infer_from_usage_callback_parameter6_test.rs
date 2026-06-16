@@ -1,0 +1,28 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_code_fix_infer_from_usage_callback_parameter6() {
+    let mut t = TestingT;
+    run_test_code_fix_infer_from_usage_callback_parameter6(&mut t);
+}
+
+fn run_test_code_fix_infer_from_usage_callback_parameter6(t: &mut TestingT) {
+    if should_skip_if_failing("TestCodeFixInferFromUsageCallbackParameter6") {
+        return;
+    }
+    let content = r"// @allowJs: true
+// @checkJs: true
+// @noImplicitAny: false
+// @filename: /foo.js
+const foo = [(/** @type {number} */ x) => x + 1];";
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.verify_code_fix_not_available(t, &[]);
+    done();
+}

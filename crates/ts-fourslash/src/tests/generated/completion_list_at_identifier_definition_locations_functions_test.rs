@@ -14,7 +14,9 @@ pub fn test_completion_list_at_identifier_definition_locations_functions() {
 }
 
 fn run_test_completion_list_at_identifier_definition_locations_functions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtIdentifierDefinitionLocations_functions") {
+        return;
+    }
     let content = r"var aa = 1;
 function /*functionName1*/
 function a/*functionName2*/";

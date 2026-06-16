@@ -14,7 +14,9 @@ pub fn test_get_edits_for_file_rename_not_affected_by_js_file() {
 }
 
 fn run_test_get_edits_for_file_rename_not_affected_by_js_file(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetEditsForFileRename_notAffectedByJsFile") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 export const x = 0;
 // @Filename: /a.js

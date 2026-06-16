@@ -14,7 +14,9 @@ pub fn test_hover_over_private_name() {
 }
 
 fn run_test_hover_over_private_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestHoverOverPrivateName") {
+        return;
+    }
     let content = r#"class A {
     #f/*1*/oo = 3;
     #b/*2*/ar: number;

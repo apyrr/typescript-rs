@@ -14,7 +14,9 @@ pub fn test_reference_in_parameter_property_declaration() {
 }
 
 fn run_test_reference_in_parameter_property_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferenceInParameterPropertyDeclaration") {
+        return;
+    }
     let content = r#"// @Filename: file1.ts
 class Foo {
     constructor(private /*1*/privateParam: number,

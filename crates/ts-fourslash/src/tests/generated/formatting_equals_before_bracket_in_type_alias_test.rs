@@ -14,7 +14,9 @@ pub fn test_formatting_equals_before_bracket_in_type_alias() {
 }
 
 fn run_test_formatting_equals_before_bracket_in_type_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingEqualsBeforeBracketInTypeAlias") {
+        return;
+    }
     let content = r"type X    =     [number]/*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

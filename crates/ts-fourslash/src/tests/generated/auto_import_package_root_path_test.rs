@@ -14,7 +14,9 @@ pub fn test_auto_import_package_root_path() {
 }
 
 fn run_test_auto_import_package_root_path(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportPackageRootPath") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: /node_modules/pkg/package.json
 {

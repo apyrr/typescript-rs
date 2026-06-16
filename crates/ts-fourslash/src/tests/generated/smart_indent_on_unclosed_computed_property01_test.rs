@@ -14,7 +14,9 @@ pub fn test_smart_indent_on_unclosed_computed_property01() {
 }
 
 fn run_test_smart_indent_on_unclosed_computed_property01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentOnUnclosedComputedProperty01") {
+        return;
+    }
     let content = r#"var x = {
     [1123123123132
 {| "indent": 4 |}

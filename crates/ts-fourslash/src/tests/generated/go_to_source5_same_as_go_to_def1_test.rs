@@ -14,7 +14,9 @@ pub fn test_go_to_source5_same_as_go_to_def1() {
 }
 
 fn run_test_go_to_source5_same_as_go_to_def1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToSource5_sameAsGoToDef1") {
+        return;
+    }
     let content = r"// @lib: es5
 // @Filename: /home/src/workspaces/project/a.ts
 export const /*end*/a = 'a';

@@ -14,7 +14,9 @@ pub fn test_non_js_declaration_file_path_completions() {
 }
 
 fn run_test_non_js_declaration_file_path_completions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNonJsDeclarationFilePathCompletions") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @allowArbitraryExtensions: true
 // @Filename: /home/src/workspaces/project/mod.d.html.ts

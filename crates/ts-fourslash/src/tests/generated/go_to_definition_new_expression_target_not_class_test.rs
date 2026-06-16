@@ -14,7 +14,9 @@ pub fn test_go_to_definition_new_expression_target_not_class() {
 }
 
 fn run_test_go_to_definition_new_expression_target_not_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionNewExpressionTargetNotClass") {
+        return;
+    }
     let content = r"class C2 {
 }
 let /*I*/I: {

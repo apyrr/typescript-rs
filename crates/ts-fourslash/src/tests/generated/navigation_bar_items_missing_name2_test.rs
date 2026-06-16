@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_missing_name2() {
 }
 
 fn run_test_navigation_bar_items_missing_name2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsMissingName2") {
+        return;
+    }
     let content = r"/**
  * This is a class.
  */

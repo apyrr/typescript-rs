@@ -14,7 +14,9 @@ pub fn test_code_fix_infer_from_usage_no_crash_on_missing_parens() {
 }
 
 fn run_test_code_fix_infer_from_usage_no_crash_on_missing_parens(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixInferFromUsage_noCrashOnMissingParens") {
+        return;
+    }
     let content = r"// @noImplicitAny: true
 // @target: esnext
 class C {

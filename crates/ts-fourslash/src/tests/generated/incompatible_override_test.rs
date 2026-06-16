@@ -14,7 +14,9 @@ pub fn test_incompatible_override() {
 }
 
 fn run_test_incompatible_override(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIncompatibleOverride") {
+        return;
+    }
     let content = r"// @strict: false
 class Foo { xyz: string; }
 class Bar extends Foo { /*1*/xyz/*2*/: number = 1; }
@@ -25,9 +27,9 @@ class /*5*/Baf/*6*/ extends Foo {
    }
 }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
-    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"), 0);
-    f.verify_error_exists_between_markers(&f.marker_by_name("3"), &f.marker_by_name("4"), 0);
-    f.verify_error_exists_between_markers(&f.marker_by_name("5"), &f.marker_by_name("6"), 0);
+    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"));
+    f.verify_error_exists_between_markers(&f.marker_by_name("3"), &f.marker_by_name("4"));
+    f.verify_error_exists_between_markers(&f.marker_by_name("5"), &f.marker_by_name("6"));
     f.verify_number_of_errors_in_current_file(3);
     done();
 }

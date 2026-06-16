@@ -14,7 +14,9 @@ pub fn test_completion_list_module_members() {
 }
 
 fn run_test_completion_list_module_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListModuleMembers") {
+        return;
+    }
     let content = r" namespace Module {
      var innerVariable = 1;
      function innerFunction() { }

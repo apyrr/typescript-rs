@@ -14,7 +14,9 @@ pub fn test_go_to_definition_private_name() {
 }
 
 fn run_test_go_to_definition_private_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionPrivateName") {
+        return;
+    }
     let content = r#"class A {
     [|/*pnMethodDecl*/#method|]() { }
     [|/*pnFieldDecl*/#foo|] = 3;

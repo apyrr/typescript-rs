@@ -14,7 +14,9 @@ pub fn test_completion_list_in_object_binding_pattern01() {
 }
 
 fn run_test_completion_list_in_object_binding_pattern01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInObjectBindingPattern01") {
+        return;
+    }
     let content = r"interface I {
     property1: number;
     property2: string;

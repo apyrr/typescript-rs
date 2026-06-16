@@ -14,7 +14,9 @@ pub fn test_code_fix_implicit_this_ts_cant_fix_non_function() {
 }
 
 fn run_test_code_fix_implicit_this_ts_cant_fix_non_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixImplicitThis_ts_cantFixNonFunction") {
+        return;
+    }
     let content = r"// @noImplicitThis: true
 this;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

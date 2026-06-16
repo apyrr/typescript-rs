@@ -14,7 +14,9 @@ pub fn test_smart_indent_inside_block_inside_case() {
 }
 
 fn run_test_smart_indent_inside_block_inside_case(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentInsideBlockInsideCase") {
+        return;
+    }
     let content = r"namespace SwitchTest {
     var a = 3;
 

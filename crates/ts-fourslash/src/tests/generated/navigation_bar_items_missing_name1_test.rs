@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_missing_name1() {
 }
 
 fn run_test_navigation_bar_items_missing_name1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsMissingName1") {
+        return;
+    }
     let content = r"export function
 class C {
     foo() {}

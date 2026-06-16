@@ -14,7 +14,9 @@ pub fn test_find_all_refs_class_expression1() {
 }
 
 fn run_test_find_all_refs_class_expression1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsClassExpression1") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: /a.js
 module.exports = class /*0*/A {};

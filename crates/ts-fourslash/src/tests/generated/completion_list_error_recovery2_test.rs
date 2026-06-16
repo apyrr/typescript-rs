@@ -14,7 +14,9 @@ pub fn test_completion_list_error_recovery2() {
 }
 
 fn run_test_completion_list_error_recovery2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListErrorRecovery2") {
+        return;
+    }
     let content = r#"class Foo { static bar() { return "x"; } }
 var baz = Foo/**/;
 /*1*/baz.concat("y");"#;

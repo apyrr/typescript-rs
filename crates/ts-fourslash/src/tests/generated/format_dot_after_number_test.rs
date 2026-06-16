@@ -14,7 +14,9 @@ pub fn test_format_dot_after_number() {
 }
 
 fn run_test_format_dot_after_number(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatDotAfterNumber") {
+        return;
+    }
     let content = r"1+ 2 .toString() +3/*1*/
 1+ 2. .toString() +3/*2*/
 1+ 2.0 .toString() +3/*3*/

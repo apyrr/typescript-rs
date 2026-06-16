@@ -14,7 +14,9 @@ pub fn test_no_quick_info_for_label() {
 }
 
 fn run_test_no_quick_info_for_label(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNoQuickInfoForLabel") {
+        return;
+    }
     let content = r"/*1*/label : while(true){
     break /*2*/label;
 }";

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_in_member_declaration() {
 }
 
 fn run_test_go_to_definition_in_member_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionInMemberDeclaration") {
+        return;
+    }
     let content = r"interface /*interfaceDefinition*/IFoo { method1(): number; }
 
 class /*classDefinition*/Foo implements IFoo {

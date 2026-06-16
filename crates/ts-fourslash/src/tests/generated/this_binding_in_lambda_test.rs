@@ -14,7 +14,9 @@ pub fn test_this_binding_in_lambda() {
 }
 
 fn run_test_this_binding_in_lambda(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestThisBindingInLambda") {
+        return;
+    }
     let content = r"class Greeter {
     constructor() { 
 		[].forEach((anything)=>{

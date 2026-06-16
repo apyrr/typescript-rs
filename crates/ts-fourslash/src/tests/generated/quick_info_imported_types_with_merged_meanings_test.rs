@@ -14,7 +14,9 @@ pub fn test_quick_info_imported_types_with_merged_meanings() {
 }
 
 fn run_test_quick_info_imported_types_with_merged_meanings(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoImportedTypesWithMergedMeanings") {
+        return;
+    }
     let content = r"// @Filename: quickInfoImportedTypesWithMergedMeanings.ts
 export namespace Original { }
 export type Original<T> = () => T;

@@ -14,7 +14,9 @@ pub fn test_smart_indent_nested_module() {
 }
 
 fn run_test_smart_indent_nested_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentNestedModule") {
+        return;
+    }
     let content = r#"namespace Foo {
     namespace Foo2 {
         {| "indentation": 8 |}

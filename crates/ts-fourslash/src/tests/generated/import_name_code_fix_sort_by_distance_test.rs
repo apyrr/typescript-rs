@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_sort_by_distance() {
 }
 
 fn run_test_import_name_code_fix_sort_by_distance(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_sortByDistance") {
+        return;
+    }
     let content = r#"// @module: commonjs
 // @Filename: /src/admin/utils/db/db.ts
 export const db = {};

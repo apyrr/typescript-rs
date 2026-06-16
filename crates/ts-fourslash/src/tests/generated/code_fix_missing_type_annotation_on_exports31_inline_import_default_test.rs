@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports31_inline_import_default(
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports31_inline_import_default(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports31-inline-import-default") {
+        return;
+    }
     let content = r#"// @isolatedDeclarations: true
 // @declaration: true
 // @Filename: /person-code.ts

@@ -14,7 +14,9 @@ pub fn test_completion_list_after_numeric_literal() {
 }
 
 fn run_test_completion_list_after_numeric_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAfterNumericLiteral") {
+        return;
+    }
     let content = r"// @Filename: f1.ts
 0./*dotOnNumberExpressions1*/
 // @Filename: f2.ts

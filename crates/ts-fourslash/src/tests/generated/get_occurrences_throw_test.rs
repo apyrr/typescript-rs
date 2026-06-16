@@ -14,7 +14,9 @@ pub fn test_get_occurrences_throw() {
 }
 
 fn run_test_get_occurrences_throw(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesThrow") {
+        return;
+    }
     let content = r#"function f(a: number) {
     try {
         throw "Hello";

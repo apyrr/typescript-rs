@@ -14,7 +14,9 @@ pub fn test_go_to_definition_return5() {
 }
 
 fn run_test_go_to_definition_return5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionReturn5") {
+        return;
+    }
     let content = r"function foo() {
     class Foo {
         static { [|/*start*/return|]; }

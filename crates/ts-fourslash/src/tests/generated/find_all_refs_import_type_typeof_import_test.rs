@@ -14,7 +14,9 @@ pub fn test_find_all_refs_import_type_typeof_import() {
 }
 
 fn run_test_find_all_refs_import_type_typeof_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefs_importType_typeofImport") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 export const x = 0;
 // @Filename: /b.ts

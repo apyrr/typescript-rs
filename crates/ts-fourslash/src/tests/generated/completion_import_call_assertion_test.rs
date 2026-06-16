@@ -14,7 +14,9 @@ pub fn test_completion_import_call_assertion() {
 }
 
 fn run_test_completion_import_call_assertion(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionImportCallAssertion") {
+        return;
+    }
     let content = r#"// @target: esnext
 // @module: esnext
 // @filename: main.ts

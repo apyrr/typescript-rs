@@ -14,7 +14,9 @@ pub fn test_unused_locals_in_function2() {
 }
 
 fn run_test_unused_locals_in_function2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedLocalsInFunction2") {
+        return;
+    }
     let content = r"// @noUnusedLocals: true
 function greeter() {
     [| var x, y = 0; |]

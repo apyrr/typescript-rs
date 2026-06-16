@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_functions() {
 }
 
 fn run_test_navigation_bar_items_functions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsFunctions") {
+        return;
+    }
     let content = r"function foo() {
     var x = 10;
     function bar() {

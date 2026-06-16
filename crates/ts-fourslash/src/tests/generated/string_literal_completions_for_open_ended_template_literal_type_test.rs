@@ -14,9 +14,11 @@ pub fn test_string_literal_completions_for_open_ended_template_literal_type() {
 }
 
 fn run_test_string_literal_completions_for_open_ended_template_literal_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestStringLiteralCompletionsForOpenEndedTemplateLiteralType") {
+        return;
+    }
     let content = r#"// @stableTypeOrdering: true
-function conversionTest(groupName: | "downcast" | "dataDowncast" | "editingDowncast" | ` + "`" + `${string}Downcast` + "`" + ` & {}) {}
+function conversionTest(groupName: | "downcast" | "dataDowncast" | "editingDowncast" | `${string}Downcast` & {}) {}
 conversionTest("/**/");"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(

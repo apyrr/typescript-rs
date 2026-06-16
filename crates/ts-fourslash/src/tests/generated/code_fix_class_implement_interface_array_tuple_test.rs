@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_array_tuple() {
 }
 
 fn run_test_code_fix_class_implement_interface_array_tuple(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceArrayTuple") {
+        return;
+    }
     let content = r"interface I {
     x: number[];
     y: Array<number>;

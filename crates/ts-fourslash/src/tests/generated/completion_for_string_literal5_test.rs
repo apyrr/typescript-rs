@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal5() {
 }
 
 fn run_test_completion_for_string_literal5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteral5") {
+        return;
+    }
     let content = r#"// @stableTypeOrdering: true
 interface Foo {
     foo: string;

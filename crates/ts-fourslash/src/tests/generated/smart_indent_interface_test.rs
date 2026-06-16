@@ -14,7 +14,9 @@ pub fn test_smart_indent_interface() {
 }
 
 fn run_test_smart_indent_interface(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentInterface") {
+        return;
+    }
     let content = r#"interface Foo {
     {| "indentation" : 4 |}
     x: number;

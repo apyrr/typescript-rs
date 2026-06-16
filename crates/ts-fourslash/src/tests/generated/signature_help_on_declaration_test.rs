@@ -14,7 +14,9 @@ pub fn test_signature_help_on_declaration() {
 }
 
 fn run_test_signature_help_on_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpOnDeclaration") {
+        return;
+    }
     let content = r"function f</**/
 x";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_code_fix_spelling2() {
 }
 
 fn run_test_code_fix_spelling2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixSpelling2") {
+        return;
+    }
     let content = r"[|function foo<T extends number | string>(x: T) {
     return x.toStrang();
 }|]";

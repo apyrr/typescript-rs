@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_modules2() {
 }
 
 fn run_test_navigation_bar_items_modules2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsModules2") {
+        return;
+    }
     let content = r"namespace Test.A { }
 
 namespace Test.B {

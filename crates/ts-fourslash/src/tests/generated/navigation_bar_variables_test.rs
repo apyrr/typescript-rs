@@ -14,7 +14,9 @@ pub fn test_navigation_bar_variables() {
 }
 
 fn run_test_navigation_bar_variables(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarVariables") {
+        return;
+    }
     let content = r"var x = 0;
 let y = 1;
 const z = 2;

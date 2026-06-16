@@ -14,7 +14,9 @@ pub fn test_formatting_void() {
 }
 
 fn run_test_formatting_void(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingVoid") {
+        return;
+    }
     let content = r"/*1*/  var x: () =>           void    ;
 /*2*/  var y:     void    ;
 /*3*/  function test(a:void,b:string){}

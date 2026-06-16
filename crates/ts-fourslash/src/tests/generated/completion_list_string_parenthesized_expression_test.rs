@@ -14,7 +14,9 @@ pub fn test_completion_list_string_parenthesized_expression() {
 }
 
 fn run_test_completion_list_string_parenthesized_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListStringParenthesizedExpression") {
+        return;
+    }
     let content = r#"const foo = {
     a: 1,
     b: 1,

@@ -14,7 +14,9 @@ pub fn test_rename_label3() {
 }
 
 fn run_test_rename_label3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameLabel3") {
+        return;
+    }
     let content = r"/**/loop:
 for (let i = 0; i <= 10; i++) {
    if (i === 0) continue loop;

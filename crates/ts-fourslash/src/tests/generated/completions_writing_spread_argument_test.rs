@@ -14,7 +14,9 @@ pub fn test_completions_writing_spread_argument() {
 }
 
 fn run_test_completions_writing_spread_argument(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsWritingSpreadArgument") {
+        return;
+    }
     let content = r"// @lib: es5
 
 const [] = [Math.min(./*marker*/)]

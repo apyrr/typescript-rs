@@ -14,7 +14,9 @@ pub fn test_add_method_to_interface1() {
 }
 
 fn run_test_add_method_to_interface1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAddMethodToInterface1") {
+        return;
+    }
     let content = r"interface Comparable<T> {
 /*1*/}
 interface Comparer {

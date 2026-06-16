@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports34_object_spread() {
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports34_object_spread(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports34-object-spread") {
+        return;
+    }
     let content = r#"// @isolatedDeclarations: true
 // @declaration: true
 // @Filename: /code.ts

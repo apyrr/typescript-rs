@@ -14,7 +14,9 @@ pub fn test_completion_list_at_identifier_definition_locations_enums() {
 }
 
 fn run_test_completion_list_at_identifier_definition_locations_enums(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtIdentifierDefinitionLocations_enums") {
+        return;
+    }
     let content = r"var aa = 1;
 enum /*enumName1*/
 enum a/*enumName2*/

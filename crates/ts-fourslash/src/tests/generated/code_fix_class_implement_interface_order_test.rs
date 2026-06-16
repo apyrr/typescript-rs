@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_order() {
 }
 
 fn run_test_code_fix_class_implement_interface_order(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterface_order") {
+        return;
+    }
     let content = r"interface IFoo {
   bar(): void;
 }

@@ -14,7 +14,9 @@ pub fn test_completion_list_for_transitively_exported_members04() {
 }
 
 fn run_test_completion_list_for_transitively_exported_members04(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListForTransitivelyExportedMembers04") {
+        return;
+    }
     let content = r#"// @Filename: A.ts
 export interface I1 { one: number }
 export interface I2 { two: string }

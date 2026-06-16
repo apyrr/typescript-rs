@@ -14,7 +14,9 @@ pub fn test_find_all_refs_with_leading_underscore_names1() {
 }
 
 fn run_test_find_all_refs_with_leading_underscore_names1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsWithLeadingUnderscoreNames1") {
+        return;
+    }
     let content = r"class Foo {
     /*1*/public /*2*/_bar() { return 0; }
 }

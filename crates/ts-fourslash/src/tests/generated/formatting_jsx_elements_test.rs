@@ -14,7 +14,9 @@ pub fn test_formatting_jsx_elements() {
 }
 
 fn run_test_formatting_jsx_elements(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingJsxElements") {
+        return;
+    }
     let content = r#"//@Filename: file.tsx
 function foo0() {
     return (

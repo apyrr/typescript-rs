@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_uri_style_node_core_modules3() {
 }
 
 fn run_test_import_name_code_fix_uri_style_node_core_modules3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_uriStyleNodeCoreModules3") {
+        return;
+    }
     let content = r#"// @module: commonjs
 // @Filename: /node_modules/@types/node/index.d.ts
 declare module "path" { function join(...segments: readonly string[]): string; }

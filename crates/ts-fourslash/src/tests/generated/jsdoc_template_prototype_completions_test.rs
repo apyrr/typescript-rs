@@ -1,0 +1,52 @@
+#![allow(non_snake_case)]
+#![allow(unused_imports)]
+
+use crate::generated_prelude::*;
+use ts_core as core;
+use ts_ls as lsutil;
+use ts_lsproto as lsproto;
+use ts_modulespecifiers as modulespecifiers;
+
+#[test]
+pub fn test_jsdoc_template_prototype_completions() {
+    let mut t = TestingT;
+    run_test_jsdoc_template_prototype_completions(&mut t);
+}
+
+fn run_test_jsdoc_template_prototype_completions(t: &mut TestingT) {
+    if should_skip_if_failing("TestJsdocTemplatePrototypeCompletions") {
+        return;
+    }
+    let content = r"// @checkJs: true
+// @filename: index.js
+https://github.com/microsoft/TypeScript/issues/11492
+/** @constructor */
+function Foo() {}
+/**
+ * @template T
+ * @param {T} bar
+ * @returns {T}
+ */
+Foo.prototype.foo = function (bar) {};
+new Foo().foo({ id: 1234 })./**/";
+    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    f.verify_completions(
+        t,
+        MarkerInput::Name("".to_string()),
+        Some(&CompletionsExpectedList {
+            is_incomplete: false,
+            item_defaults: Some(CompletionsExpectedItemDefaults {
+                commit_characters: Some(default_commit_characters()),
+                edit_range: ExpectedCompletionEditRange::Ignored,
+            }),
+            items: Some(CompletionsExpectedItems {
+                includes: Vec::new(),
+                excludes: Vec::new(),
+                exact: vec![CompletionsExpectedItem::Label("id".to_string())],
+                unsorted: Vec::new(),
+            }),
+            user_preferences: None,
+        }),
+    );
+    done();
+}

@@ -14,7 +14,9 @@ pub fn test_completions_commit_characters_export_import_clause() {
 }
 
 fn run_test_completions_commit_characters_export_import_clause(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsCommitCharactersExportImportClause") {
+        return;
+    }
     let content = r#"// @filename: a.ts
 const xx: string = "aa";
 function ff(): void {}

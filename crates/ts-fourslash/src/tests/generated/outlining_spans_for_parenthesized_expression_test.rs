@@ -14,7 +14,9 @@ pub fn test_outlining_spans_for_parenthesized_expression() {
 }
 
 fn run_test_outlining_spans_for_parenthesized_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOutliningSpansForParenthesizedExpression") {
+        return;
+    }
     let content = r"const a = [|(
     true
         ? true

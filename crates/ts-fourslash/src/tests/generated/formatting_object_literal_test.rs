@@ -14,7 +14,9 @@ pub fn test_formatting_object_literal() {
 }
 
 fn run_test_formatting_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingObjectLiteral") {
+        return;
+    }
     let content = r#"var clear = {
 "a": 1/**/
 }"#;

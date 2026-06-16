@@ -14,7 +14,9 @@ pub fn test_auto_import_sort_case_sensitivity1() {
 }
 
 fn run_test_auto_import_sort_case_sensitivity1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportSortCaseSensitivity1") {
+        return;
+    }
     let content = r#"// @Filename: /exports1.ts
 export const a = 0;
 export const A = 1;

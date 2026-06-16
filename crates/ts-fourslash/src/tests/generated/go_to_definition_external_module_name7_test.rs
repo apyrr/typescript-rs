@@ -14,7 +14,9 @@ pub fn test_go_to_definition_external_module_name7() {
 }
 
 fn run_test_go_to_definition_external_module_name7(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionExternalModuleName7") {
+        return;
+    }
     let content = r#"// @Filename: b.ts
 import {Foo, Bar} from [|'e/*1*/'|];
 // @Filename: a.ts

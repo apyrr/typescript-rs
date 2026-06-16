@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_static_instance_method_inheritance() {
 }
 
 fn run_test_find_all_refs_for_static_instance_method_inheritance(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForStaticInstanceMethodInheritance") {
+        return;
+    }
     let content = r"class X{
 	/*0*/foo(): void{}
 }

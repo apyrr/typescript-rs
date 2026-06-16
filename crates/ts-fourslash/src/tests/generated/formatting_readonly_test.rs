@@ -14,7 +14,9 @@ pub fn test_formatting_readonly() {
 }
 
 fn run_test_formatting_readonly(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingReadonly") {
+        return;
+    }
     let content = r"class C {
   readonly    property1: {};/*1*/
   public readonly   property2: {};/*2*/

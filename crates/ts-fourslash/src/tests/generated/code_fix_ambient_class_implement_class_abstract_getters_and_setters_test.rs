@@ -14,7 +14,9 @@ pub fn test_code_fix_ambient_class_implement_class_abstract_getters_and_setters(
 }
 
 fn run_test_code_fix_ambient_class_implement_class_abstract_getters_and_setters(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAmbientClassImplementClassAbstractGettersAndSetters") {
+        return;
+    }
     let content = r"abstract class A {
     abstract get a(): string;
     abstract set a(newName: string);

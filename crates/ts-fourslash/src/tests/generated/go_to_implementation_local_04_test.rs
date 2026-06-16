@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_local_04() {
 }
 
 fn run_test_go_to_implementation_local_04(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationLocal_04") {
+        return;
+    }
     let content = r"function [|he/*local_var*/llo|]() {}
 
 hello();

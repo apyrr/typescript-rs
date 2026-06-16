@@ -14,7 +14,9 @@ pub fn test_quick_info_type_argument_inference_with_method_without_body() {
 }
 
 fn run_test_quick_info_type_argument_inference_with_method_without_body(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoTypeArgumentInferenceWithMethodWithoutBody") {
+        return;
+    }
     let content = r"interface ProxyHandler<T extends object> {
     getPrototypeOf?(target: T): object | null;
 }

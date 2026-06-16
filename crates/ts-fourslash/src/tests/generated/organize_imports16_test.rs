@@ -14,7 +14,9 @@ pub fn test_organize_imports16() {
 }
 
 fn run_test_organize_imports16(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImports16") {
+        return;
+    }
     let content = r#"import { a, A, b } from "foo";
 interface Use extends A {}
 console.log(a, b);"#;

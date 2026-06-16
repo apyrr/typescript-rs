@@ -14,7 +14,9 @@ pub fn test_format_multiple_function_arguments() {
 }
 
 fn run_test_format_multiple_function_arguments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatMultipleFunctionArguments") {
+        return;
+    }
     let content = r"
  someRandomFunction({
    prop1: 1,

@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_enum4() {
 }
 
 fn run_test_quick_info_display_parts_enum4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsEnum4") {
+        return;
+    }
     let content = r#"const enum Foo {
 	"\t" = 9,
 	"\u007f" = 127,

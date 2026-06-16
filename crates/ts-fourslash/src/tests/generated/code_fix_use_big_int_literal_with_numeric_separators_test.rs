@@ -14,7 +14,9 @@ pub fn test_code_fix_use_big_int_literal_with_numeric_separators() {
 }
 
 fn run_test_code_fix_use_big_int_literal_with_numeric_separators(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixUseBigIntLiteralWithNumericSeparators") {
+        return;
+    }
     let content = r"6_402_373_705_728_000;  // 18! < 2 ** 53
 0x16_BE_EC_CA_73_00_00; // 18! < 2 ** 53";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_index_not_for_classic_resolution() {
 }
 
 fn run_test_import_name_code_fix_new_import_index_not_for_classic_resolution(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportIndex_notForClassicResolution") {
+        return;
+    }
     let content = r"// @moduleResolution: classic
 // @Filename: /a/index.ts
 export const foo = 0;

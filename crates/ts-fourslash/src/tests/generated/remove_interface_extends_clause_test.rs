@@ -14,7 +14,9 @@ pub fn test_remove_interface_extends_clause() {
 }
 
 fn run_test_remove_interface_extends_clause(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRemoveInterfaceExtendsClause") {
+        return;
+    }
     let content = r"interface IFoo<T> { }
 interface Array<T> /**/extends IFoo<T> { }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

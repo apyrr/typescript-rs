@@ -14,7 +14,9 @@ pub fn test_get_occurrences_loop_break_continue3() {
 }
 
 fn run_test_get_occurrences_loop_break_continue3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesLoopBreakContinue3") {
+        return;
+    }
     let content = r"var arr = [1, 2, 3, 4];
 label1: for (var n in arr) {
     break;

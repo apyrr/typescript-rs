@@ -14,7 +14,9 @@ pub fn test_completion_list_in_middle_of_identifier_in_arrow_function01() {
 }
 
 fn run_test_completion_list_in_middle_of_identifier_in_arrow_function01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInMiddleOfIdentifierInArrowFunction01") {
+        return;
+    }
     let content = r"xyz => x/*1*/y";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(

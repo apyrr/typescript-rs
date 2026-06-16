@@ -16,7 +16,11 @@ pub fn test_code_fix_missing_type_annotation_on_exports42_static_readonly_class_
 fn run_test_code_fix_missing_type_annotation_on_exports42_static_readonly_class_symbol(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestCodeFixMissingTypeAnnotationOnExports42-static-readonly-class-symbol",
+    ) {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 // @lib: es2019

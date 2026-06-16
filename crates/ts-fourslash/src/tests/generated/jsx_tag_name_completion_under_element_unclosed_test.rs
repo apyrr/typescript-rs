@@ -14,7 +14,9 @@ pub fn test_jsx_tag_name_completion_under_element_unclosed() {
 }
 
 fn run_test_jsx_tag_name_completion_under_element_unclosed(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsxTagNameCompletionUnderElementUnclosed") {
+        return;
+    }
     let content = r#"//@Filename: file.tsx
 declare namespace JSX {
     interface IntrinsicElements {

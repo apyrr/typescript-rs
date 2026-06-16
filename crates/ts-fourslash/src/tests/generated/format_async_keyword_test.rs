@@ -14,7 +14,9 @@ pub fn test_format_async_keyword() {
 }
 
 fn run_test_format_async_keyword(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatAsyncKeyword") {
+        return;
+    }
     let content = r"/*1*/let x = async         () => 1;
 /*2*/let y = async() => 1;
 /*3*/let z = async    function   () { return 1; };";

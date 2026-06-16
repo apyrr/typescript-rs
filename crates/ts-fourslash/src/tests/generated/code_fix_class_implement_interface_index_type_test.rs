@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_index_type() {
 }
 
 fn run_test_code_fix_class_implement_interface_index_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceIndexType") {
+        return;
+    }
     let content = r"interface I<X> {
     x: keyof X;
 }

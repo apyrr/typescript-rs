@@ -14,7 +14,9 @@ pub fn test_signature_help_expanded_rest_tuples() {
 }
 
 fn run_test_signature_help_expanded_rest_tuples(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpExpandedRestTuples") {
+        return;
+    }
     let content = r#"export function complex(item: string, another: string, ...rest: [] | [settings: object, errorHandler: (err: Error) => void] | [errorHandler: (err: Error) => void, ...mixins: object[]]) {
     
 }

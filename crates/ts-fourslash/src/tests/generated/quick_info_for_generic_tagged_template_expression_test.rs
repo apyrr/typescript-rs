@@ -14,20 +14,22 @@ pub fn test_quick_info_for_generic_tagged_template_expression() {
 }
 
 fn run_test_quick_info_for_generic_tagged_template_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForGenericTaggedTemplateExpression") {
+        return;
+    }
     let content = r#"interface T1 {}
 class T2 {}
 type T3 = "a" | "b";
 
 declare function foo<T>(strings: TemplateStringsArray, ...values: T[]): void;
 
-/*1*/foo<number>` + "`" + `` + "`" + `;
-/*2*/foo<string | number>` + "`" + `` + "`" + `;
-/*3*/foo<{ a: number }>` + "`" + `` + "`" + `;
-/*4*/foo<T1>` + "`" + `` + "`" + `;
-/*5*/foo<T2>` + "`" + `` + "`" + `;
-/*6*/foo<T3>` + "`" + `` + "`" + `;
-/*7*/foo` + "`" + `` + "`" + `;"#;
+/*1*/foo<number>``;
+/*2*/foo<string | number>``;
+/*3*/foo<{ a: number }>``;
+/*4*/foo<T1>``;
+/*5*/foo<T2>``;
+/*6*/foo<T3>``;
+/*7*/foo``;"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_quick_info_at(
         t,

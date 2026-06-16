@@ -14,7 +14,9 @@ pub fn test_external_module_intellisense() {
 }
 
 fn run_test_external_module_intellisense(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExternalModuleIntellisense") {
+        return;
+    }
     let content = r"// @module: commonjs
 // @Filename: externalModuleIntellisense_file0.ts
 export = express;

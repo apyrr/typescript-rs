@@ -14,7 +14,9 @@ pub fn test_quick_info_nested_export_equal_export_default() {
 }
 
 fn run_test_quick_info_nested_export_equal_export_default(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoNestedExportEqualExportDefault") {
+        return;
+    }
     let content = r"export = (state, messages) => {
    export/*1*/ default/*2*/ {
    }

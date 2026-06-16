@@ -14,7 +14,9 @@ pub fn test_signature_help_in_complete_generics_call() {
 }
 
 fn run_test_signature_help_in_complete_generics_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpInCompleteGenericsCall") {
+        return;
+    }
     let content = r"function foo<T>(x: number, callback: (x: T) => number) {
 }
 foo(/*1*/";

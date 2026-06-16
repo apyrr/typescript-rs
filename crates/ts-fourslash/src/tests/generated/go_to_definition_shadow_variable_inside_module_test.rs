@@ -14,7 +14,9 @@ pub fn test_go_to_definition_shadow_variable_inside_module() {
 }
 
 fn run_test_go_to_definition_shadow_variable_inside_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionShadowVariableInsideModule") {
+        return;
+    }
     let content = r"namespace shdModule {
     var /*shadowVariableDefinition*/shdVar;
     /*shadowVariableReference*/shdVar = 1;

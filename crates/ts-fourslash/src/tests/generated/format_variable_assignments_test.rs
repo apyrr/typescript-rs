@@ -14,7 +14,9 @@ pub fn test_format_variable_assignments() {
 }
 
 fn run_test_format_variable_assignments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatVariableAssignments") {
+        return;
+    }
     let content = r"let t: number;
 t
 /*nextlineWithEqual*/=2+2;

@@ -14,7 +14,9 @@ pub fn test_unused_imports2_fs() {
 }
 
 fn run_test_unused_imports2_fs(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedImports2FS") {
+        return;
+    }
     let content = r#"// @noUnusedLocals: true
 // @Filename: file2.ts
 [|import {test} from "./file1"

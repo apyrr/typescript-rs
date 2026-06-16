@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_comments() {
 }
 
 fn run_test_code_fix_class_implement_interface_comments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceComments") {
+        return;
+    }
     let content = r"// @lib: es2017
 namespace N {
     /**enum prefix */

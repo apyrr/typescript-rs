@@ -14,7 +14,9 @@ pub fn test_references_bloom_filters() {
 }
 
 fn run_test_references_bloom_filters(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesBloomFilters") {
+        return;
+    }
     let content = r#"// @Filename: declaration.ts
 var container = { /*1*/searchProp : 1 };
 // @Filename: expression.ts

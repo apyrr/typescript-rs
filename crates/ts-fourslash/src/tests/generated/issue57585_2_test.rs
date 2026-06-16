@@ -14,7 +14,9 @@ pub fn test_issue57585_2() {
 }
 
 fn run_test_issue57585_2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIssue57585-2") {
+        return;
+    }
     let content = r"// @strict: true
 // @target: esnext
 // @lib: esnext

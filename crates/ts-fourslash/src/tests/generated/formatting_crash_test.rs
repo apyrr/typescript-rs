@@ -14,7 +14,9 @@ pub fn test_formatting_crash() {
 }
 
 fn run_test_formatting_crash(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingCrash") {
+        return;
+    }
     let content = r"/**/module Default{ 
 }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports27_non_exported_bidings()
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports27_non_exported_bidings(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports27-non-exported-bidings") {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 let p = { x: 1, y: 2}

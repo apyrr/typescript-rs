@@ -14,7 +14,9 @@ pub fn test_rename_across_multiple_projects() {
 }
 
 fn run_test_rename_across_multiple_projects(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameAcrossMultipleProjects") {
+        return;
+    }
     let content = r#"//@Filename: a.ts
 [|var [|{| "contextRangeIndex": 0 |}x|]: number;|]
 //@Filename: b.ts

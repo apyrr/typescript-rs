@@ -14,7 +14,9 @@ pub fn test_completion_list_on_method_parameter_name() {
 }
 
 fn run_test_completion_list_on_method_parameter_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOnMethodParameterName") {
+        return;
+    }
     let content = r"class A {
     foo(nu/**/: number) {
     }

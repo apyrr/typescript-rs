@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_ambient3() {
 }
 
 fn run_test_import_name_code_fix_new_import_ambient3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportAmbient3") {
+        return;
+    }
     let content = r#"let a = "I am a non-trivial statement that appears before imports";
 import d from "other-ambient-module"
 import * as ns from "yet-another-ambient-module"

@@ -14,7 +14,9 @@ pub fn test_rename_inherited_properties3() {
 }
 
 fn run_test_rename_inherited_properties3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameInheritedProperties3") {
+        return;
+    }
     let content = r#"interface interface1 extends interface1 {
    [|[|{| "contextRangeIndex": 0 |}propName|]: string;|]
 }

@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_type_in_other_file() {
 }
 
 fn run_test_code_fix_class_implement_interface_type_in_other_file(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterface_typeInOtherFile") {
+        return;
+    }
     let content = r#"// @Filename: /I.ts
 export interface J {}
 export interface I {

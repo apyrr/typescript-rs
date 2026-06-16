@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_property() {
 }
 
 fn run_test_code_fix_class_implement_interface_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceProperty") {
+        return;
+    }
     let content = r"// @lib: es2017
 enum E { a,b,c }
 interface I {

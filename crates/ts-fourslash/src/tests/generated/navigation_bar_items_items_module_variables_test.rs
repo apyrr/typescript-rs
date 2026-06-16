@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_items_module_variables() {
 }
 
 fn run_test_navigation_bar_items_items_module_variables(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsItemsModuleVariables") {
+        return;
+    }
     let content = r"// @Filename: navigationItemsModuleVariables_0.ts
  /*file1*/
 namespace Module1 {

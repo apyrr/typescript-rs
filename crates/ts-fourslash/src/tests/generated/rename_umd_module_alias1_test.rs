@@ -14,7 +14,9 @@ pub fn test_rename_umd_module_alias1() {
 }
 
 fn run_test_rename_umd_module_alias1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameUMDModuleAlias1") {
+        return;
+    }
     let content = r#"// @Filename: 0.d.ts
 export function doThing(): string;
 export function doTheOtherThing(): void;

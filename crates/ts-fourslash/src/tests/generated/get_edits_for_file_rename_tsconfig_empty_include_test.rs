@@ -14,7 +14,9 @@ pub fn test_get_edits_for_file_rename_tsconfig_empty_include() {
 }
 
 fn run_test_get_edits_for_file_rename_tsconfig_empty_include(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetEditsForFileRename_tsconfig_empty_include") {
+        return;
+    }
     let content = r#"// @Filename: /a/foo.ts
 const x = 1
 // @Filename: /a/tsconfig.json

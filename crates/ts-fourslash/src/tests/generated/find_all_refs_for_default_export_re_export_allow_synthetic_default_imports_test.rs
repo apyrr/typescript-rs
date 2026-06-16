@@ -16,7 +16,11 @@ pub fn test_find_all_refs_for_default_export_re_export_allow_synthetic_default_i
 fn run_test_find_all_refs_for_default_export_re_export_allow_synthetic_default_imports(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestFindAllRefsForDefaultExport_reExport_allowSyntheticDefaultImports",
+    ) {
+        return;
+    }
     let content = r#"// @allowSyntheticDefaultImports: true
 // @module: commonjs
 // @Filename: /export.ts

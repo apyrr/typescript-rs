@@ -14,7 +14,9 @@ pub fn test_signature_help_iterator_next() {
 }
 
 fn run_test_signature_help_iterator_next(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpIteratorNext") {
+        return;
+    }
     let content = r"// @lib: esnext
 declare const iterator: Iterator<string, void, number>;
 

@@ -14,7 +14,9 @@ pub fn test_completion_import_meta_with_global_declaration() {
 }
 
 fn run_test_completion_import_meta_with_global_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionImportMetaWithGlobalDeclaration") {
+        return;
+    }
     let content = r"// @Filename: a.ts
 import./*1*/
 // @Filename: b.ts

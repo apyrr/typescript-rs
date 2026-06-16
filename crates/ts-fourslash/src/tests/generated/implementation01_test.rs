@@ -14,7 +14,9 @@ pub fn test_implementation01() {
 }
 
 fn run_test_implementation01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImplementation01") {
+        return;
+    }
     let content = r"// @lib: es5
 interface Fo/*1*/o {}
 class /*2*/Bar implements Foo {}";

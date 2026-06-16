@@ -14,7 +14,9 @@ pub fn test_go_to_definition_union_type_property_discriminated() {
 }
 
 fn run_test_go_to_definition_union_type_property_discriminated(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionUnionTypeProperty_discriminated") {
+        return;
+    }
     let content = r#"type U = A | B;
 
 interface A {

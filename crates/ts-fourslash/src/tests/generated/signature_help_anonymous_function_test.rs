@@ -14,7 +14,9 @@ pub fn test_signature_help_anonymous_function() {
 }
 
 fn run_test_signature_help_anonymous_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpAnonymousFunction") {
+        return;
+    }
     let content = r#"var anonymousFunctionTest = function(n: number, s: string): (a: number, b: string) => string {
     return null;
 }

@@ -14,7 +14,9 @@ pub fn test_references_for_type_keywords() {
 }
 
 fn run_test_references_for_type_keywords(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForTypeKeywords") {
+        return;
+    }
     let content = r"interface I {}
 function f<T /*typeParam_extendsKeyword*/extends I>() {}
 type A1<T, U> = T /*conditionalType_extendsKeyword*/extends U ? 1 : 0;

@@ -14,7 +14,9 @@ pub fn test_string_property_names1() {
 }
 
 fn run_test_string_property_names1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestStringPropertyNames1") {
+        return;
+    }
     let content = r#"export interface Album {
    "artist": number;
 }

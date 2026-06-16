@@ -14,7 +14,9 @@ pub fn test_completions_overriding_method15() {
 }
 
 fn run_test_completions_overriding_method15(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsOverridingMethod15") {
+        return;
+    }
     let content = r"// @newline: LF
 declare class B {
     get foo(): any;

@@ -14,7 +14,9 @@ pub fn test_quick_info_inherit_doc4() {
 }
 
 fn run_test_quick_info_inherit_doc4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoInheritDoc4") {
+        return;
+    }
     let content = r"// @Filename: quickInfoInheritDoc4.ts
 var A: any;
 

@@ -16,7 +16,9 @@ pub fn test_quick_info_display_parts_type_parameter_in_function_like_in_type_ali
 fn run_test_quick_info_display_parts_type_parameter_in_function_like_in_type_alias(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsTypeParameterInFunctionLikeInTypeAlias") {
+        return;
+    }
     let content = r"type MixinCtor<A> = new () => /*0*/A & { constructor: MixinCtor</*1*/A> };
 type MixinCtor<A> = new () => A & { constructor: { constructor: MixinCtor</*2*/A> } };";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

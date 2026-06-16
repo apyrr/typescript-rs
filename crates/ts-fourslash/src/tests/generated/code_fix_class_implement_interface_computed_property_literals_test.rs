@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_computed_property_literals() {
 }
 
 fn run_test_code_fix_class_implement_interface_computed_property_literals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceComputedPropertyLiterals") {
+        return;
+    }
     let content = r#"interface I {
     ["foo"](o: any): boolean;
     ["x"]: boolean;

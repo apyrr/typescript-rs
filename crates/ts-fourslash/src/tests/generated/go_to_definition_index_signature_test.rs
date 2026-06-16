@@ -14,16 +14,18 @@ pub fn test_go_to_definition_index_signature() {
 }
 
 fn run_test_go_to_definition_index_signature(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"interface I {
+    if should_skip_if_failing("TestGoToDefinitionIndexSignature") {
+        return;
+    }
+    let content = r"interface I {
     /*defI*/[x: string]: boolean;
 }
 interface J {
     /*defJ*/[x: string]: number;
 }
 interface K {
-    /*defa*/[x: ` + "`" + `a${string}` + "`" + `]: string;
-    /*defb*/[x: ` + "`" + `${string}b` + "`" + `]: string;
+    /*defa*/[x: `a${string}`]: string;
+    /*defb*/[x: `${string}b`]: string;
 }
 declare const i: I;
 i.[|/*useI*/foo|];
@@ -32,7 +34,7 @@ ij.[|/*useIJ*/foo|];
 declare const k: K;
 k.[|/*usea*/a|];
 k.[|/*useb*/b|];
-k.[|/*useab*/ab|];"#;
+k.[|/*useab*/ab|];";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_go_to_definition(
         t,

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_imported_names5() {
 }
 
 fn run_test_go_to_definition_imported_names5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionImportedNames5") {
+        return;
+    }
     let content = r#"// @Filename: b.ts
 export {Class as [|/*classAliasDefinition*/ClassAlias|]} from "./a";
 // @Filename: a.ts

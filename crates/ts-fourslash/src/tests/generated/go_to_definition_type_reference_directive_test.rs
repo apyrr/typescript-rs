@@ -14,7 +14,9 @@ pub fn test_go_to_definition_type_reference_directive() {
 }
 
 fn run_test_go_to_definition_type_reference_directive(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionTypeReferenceDirective") {
+        return;
+    }
     let content = r#"// @typeRoots: src/types
 // @Filename: src/types/lib/index.d.ts
 /*0*/declare let $: {x: number};

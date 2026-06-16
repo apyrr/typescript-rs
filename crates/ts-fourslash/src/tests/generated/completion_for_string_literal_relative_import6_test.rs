@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal_relative_import6() {
 }
 
 fn run_test_completion_for_string_literal_relative_import6(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteralRelativeImport6") {
+        return;
+    }
     let content = r#"// @rootDirs: /repo/src1,/repo/src2/,/repo/generated1,/repo/generated2/
 // @Filename: /repo/src1/test1.ts
 import * as foo1 from "./dir//*import_as1*/

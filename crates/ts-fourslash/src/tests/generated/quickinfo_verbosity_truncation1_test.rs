@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_truncation1() {
 }
 
 fn run_test_quickinfo_verbosity_truncation1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityTruncation1") {
+        return;
+    }
     let content = r"type Str = string | {};
 type FooType = Str | number;
 type Sym = symbol | (() => void);

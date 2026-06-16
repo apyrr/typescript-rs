@@ -14,7 +14,9 @@ pub fn test_auto_formatting_on_pasting() {
 }
 
 fn run_test_auto_formatting_on_pasting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoFormattingOnPasting") {
+        return;
+    }
     let content = r"namespace TestModule {
 /**/
 }";

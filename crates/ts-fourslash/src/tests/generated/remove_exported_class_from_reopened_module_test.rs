@@ -14,7 +14,9 @@ pub fn test_remove_exported_class_from_reopened_module() {
 }
 
 fn run_test_remove_exported_class_from_reopened_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRemoveExportedClassFromReopenedModule") {
+        return;
+    }
     let content = r"namespace multiM { }
 
 namespace multiM {

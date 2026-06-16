@@ -14,14 +14,16 @@ pub fn test_indirect_js_require_rename() {
 }
 
 fn run_test_indirect_js_require_rename(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"// @allowJs: true
+    if should_skip_if_failing("TestIndirectJsRequireRename") {
+        return;
+    }
+    let content = r"// @allowJs: true
 // @Filename: /bin/serverless.js
-require('../lib/classes/Error').log/**/Warning(` + "`" + `CLI triage crashed with: ${error.stack}` + "`" + `);
+require('../lib/classes/Error').log/**/Warning(`CLI triage crashed with: ${error.stack}`);
 // @Filename: /lib/plugins/aws/package/compile/events/httpApi/index.js
 const { logWarning } = require('../../../../../../classes/Error');
 // @Filename: /lib/classes/Error.js
-module.exports.logWarning = message => { };"#;
+module.exports.logWarning = message => { };";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");
     f.verify_baseline_find_all_references(t, &["".to_string()]);

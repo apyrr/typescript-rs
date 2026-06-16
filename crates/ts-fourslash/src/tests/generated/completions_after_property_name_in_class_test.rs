@@ -14,7 +14,9 @@ pub fn test_completions_after_property_name_in_class() {
 }
 
 fn run_test_completions_after_property_name_in_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsAfterPropertyNameInClass") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @filename: /a.js
 class C1 {

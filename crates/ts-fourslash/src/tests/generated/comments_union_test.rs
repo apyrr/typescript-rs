@@ -14,7 +14,9 @@ pub fn test_comments_union() {
 }
 
 fn run_test_comments_union(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCommentsUnion") {
+        return;
+    }
     let content = r"var a: Array<string> | Array<number>;
 a./*1*/length";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_format_after_paste_in_string() {
 }
 
 fn run_test_format_after_paste_in_string(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatAfterPasteInString") {
+        return;
+    }
     let content = r"/*2*/const x = f('aa/*1*/a').x()";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

@@ -14,7 +14,9 @@ pub fn test_organize_imports_unicode3() {
 }
 
 fn run_test_organize_imports_unicode3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsUnicode3") {
+        return;
+    }
     let content = r"import {
     B,
     À,

@@ -14,7 +14,9 @@ pub fn test_formatting_spaces_after_constructor() {
 }
 
 fn run_test_formatting_spaces_after_constructor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingSpacesAfterConstructor") {
+        return;
+    }
     let content = r"/*1*/class test { constructor                   () { } }
 /*2*/class test { constructor                   () { } }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_inlay_hints_overload_call2() {
 }
 
 fn run_test_inlay_hints_overload_call2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsOverloadCall2") {
+        return;
+    }
     let content = r"type HasID = {
     id: number;
 }

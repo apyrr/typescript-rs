@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_default_export09() {
 }
 
 fn run_test_find_all_refs_for_default_export09(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForDefaultExport09") {
+        return;
+    }
     let content = r#"// @filename: /tsconfig.json
 {
     "compilerOptions": {

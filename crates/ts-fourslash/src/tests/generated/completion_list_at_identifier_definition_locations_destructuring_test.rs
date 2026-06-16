@@ -14,7 +14,9 @@ pub fn test_completion_list_at_identifier_definition_locations_destructuring() {
 }
 
 fn run_test_completion_list_at_identifier_definition_locations_destructuring(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtIdentifierDefinitionLocations_destructuring") {
+        return;
+    }
     let content = r"// @Filename: a.ts
 var [x/*variable1*/
 // @Filename: b.ts

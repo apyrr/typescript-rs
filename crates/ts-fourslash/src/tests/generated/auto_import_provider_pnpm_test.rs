@@ -14,7 +14,9 @@ pub fn test_auto_import_provider_pnpm() {
 }
 
 fn run_test_auto_import_provider_pnpm(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportProvider_pnpm") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/tsconfig.json
 { "compilerOptions": { "module": "commonjs", "lib": ["es5"] } }
 // @Filename: /home/src/workspaces/project/package.json

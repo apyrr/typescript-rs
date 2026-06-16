@@ -14,7 +14,9 @@ pub fn test_formatting_of_module_export() {
 }
 
 fn run_test_formatting_of_module_export(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOfModuleExport") {
+        return;
+    }
     let content = r"namespace MemoryAnalyzer {
     export namespace Foo.Charting { }
     /**/";

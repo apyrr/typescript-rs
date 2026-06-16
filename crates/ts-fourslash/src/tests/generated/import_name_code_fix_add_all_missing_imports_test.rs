@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_add_all_missing_imports() {
 }
 
 fn run_test_import_name_code_fix_add_all_missing_imports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_add_all_missing_imports") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 export const a: number;
 // @Filename: /b.ts

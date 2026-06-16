@@ -14,7 +14,9 @@ pub fn test_formatting_for_in() {
 }
 
 fn run_test_formatting_for_in(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingForIn") {
+        return;
+    }
     let content = r"/**/for (var i    in[]   )  {}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");

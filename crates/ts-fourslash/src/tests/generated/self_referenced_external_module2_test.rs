@@ -14,7 +14,9 @@ pub fn test_self_referenced_external_module2() {
 }
 
 fn run_test_self_referenced_external_module2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSelfReferencedExternalModule2") {
+        return;
+    }
     let content = r"// @Filename: app.ts
 export import A = require('./app2');
 export var I = 1;

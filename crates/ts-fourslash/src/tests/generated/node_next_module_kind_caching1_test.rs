@@ -14,7 +14,9 @@ pub fn test_node_next_module_kind_caching1() {
 }
 
 fn run_test_node_next_module_kind_caching1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNodeNextModuleKindCaching1") {
+        return;
+    }
     let content = r#"// @Filename: tsconfig.json
 {
     "compilerOptions": {
@@ -35,7 +37,7 @@ fn run_test_node_next_module_kind_caching1(t: &mut TestingT) {
 // @Filename: src/index.ts
 // The line below should show a "Relative import paths need explicit file
 // extensions..." error in VS Code, but it doesn't. The error is only picked up
-// by ` + "`" + `tsc` + "`" + ` which seems to properly infer the module type.
+// by `tsc` which seems to properly infer the module type.
 import { helloWorld } from './example'
 /**/
 helloWorld()

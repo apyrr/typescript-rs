@@ -14,7 +14,9 @@ pub fn test_tsx_incremental() {
 }
 
 fn run_test_tsx_incremental(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxIncremental") {
+        return;
+    }
     let content = r"/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

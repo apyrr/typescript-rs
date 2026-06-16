@@ -14,7 +14,9 @@ pub fn test_import_types_declaration_diagnostics_no_server_error() {
 }
 
 fn run_test_import_types_declaration_diagnostics_no_server_error(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportTypesDeclarationDiagnosticsNoServerError") {
+        return;
+    }
     let content = r#"// @declaration: true
 // @Filename: node_modules/foo/index.d.ts
 export function f(): I;

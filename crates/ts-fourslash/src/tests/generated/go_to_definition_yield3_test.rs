@@ -14,7 +14,9 @@ pub fn test_go_to_definition_yield3() {
 }
 
 fn run_test_go_to_definition_yield3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionYield3") {
+        return;
+    }
     let content = r"class C {
     notAGenerator() {
       [|/*start1*/yield|] 0;

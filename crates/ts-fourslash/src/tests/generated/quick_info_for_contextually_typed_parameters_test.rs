@@ -14,7 +14,9 @@ pub fn test_quick_info_for_contextually_typed_parameters() {
 }
 
 fn run_test_quick_info_for_contextually_typed_parameters(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForContextuallyTypedParameters") {
+        return;
+    }
     let content = r#"declare function foo1<T>(obj: T, settings: (row: T) => { value: string, func?: Function }): void;
 
 foo1(new Error(),

@@ -14,7 +14,9 @@ pub fn test_code_fix_correct_return_value5() {
 }
 
 fn run_test_code_fix_correct_return_value5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixCorrectReturnValue5") {
+        return;
+    }
     let content = r"function Foo (): void {
     undefined
 }";

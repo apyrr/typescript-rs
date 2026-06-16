@@ -14,7 +14,9 @@ pub fn test_completion_list_in_object_literal_that_is_parameter_of_function_call
 }
 
 fn run_test_completion_list_in_object_literal_that_is_parameter_of_function_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInObjectLiteralThatIsParameterOfFunctionCall") {
+        return;
+    }
     let content = r"function f(a: { xa: number; xb: number; }) { }
 var xc;
 f({

@@ -14,7 +14,9 @@ pub fn test_recursive_generics2() {
 }
 
 fn run_test_recursive_generics2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRecursiveGenerics2") {
+        return;
+    }
     let content = r"class S18<B, B, A, B> extends S18<A[], { S19: A; (): A }[]> { }
 /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

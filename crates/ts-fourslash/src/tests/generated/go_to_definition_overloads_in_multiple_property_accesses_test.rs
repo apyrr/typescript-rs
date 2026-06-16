@@ -14,7 +14,9 @@ pub fn test_go_to_definition_overloads_in_multiple_property_accesses() {
 }
 
 fn run_test_go_to_definition_overloads_in_multiple_property_accesses(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionOverloadsInMultiplePropertyAccesses") {
+        return;
+    }
     let content = r#"namespace A {
     export namespace B {
         export function f(value: number): void;

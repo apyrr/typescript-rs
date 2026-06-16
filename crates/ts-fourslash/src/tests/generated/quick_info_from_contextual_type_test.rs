@@ -14,7 +14,9 @@ pub fn test_quick_info_from_contextual_type() {
 }
 
 fn run_test_quick_info_from_contextual_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoFromContextualType") {
+        return;
+    }
     let content = r"// @Filename: quickInfoExportAssignmentOfGenericInterface_0.ts
 interface I {
     /** Documentation */

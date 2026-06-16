@@ -14,7 +14,9 @@ pub fn test_jsx_with_type_parametershas_instantiated_signature_help() {
 }
 
 fn run_test_jsx_with_type_parametershas_instantiated_signature_help(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsxWithTypeParametershasInstantiatedSignatureHelp") {
+        return;
+    }
     let content = r"declare namespace JSX {
     interface Element {
         render(): Element | string | false;

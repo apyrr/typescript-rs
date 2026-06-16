@@ -16,7 +16,11 @@ pub fn test_code_fix_missing_type_annotation_on_exports40_extract_other_to_varia
 fn run_test_code_fix_missing_type_annotation_on_exports40_extract_other_to_variable(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestCodeFixMissingTypeAnnotationOnExports40-extract-other-to-variable",
+    ) {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 // @lib: es2019

@@ -14,7 +14,9 @@ pub fn test_auto_imports_node_next1() {
 }
 
 fn run_test_auto_imports_node_next1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportsNodeNext1") {
+        return;
+    }
     let content = r#"// @module: node18
 // @Filename: /node_modules/pack/package.json
 {

@@ -14,7 +14,9 @@ pub fn test_type_error_after_string_completions_in_nested_call2() {
 }
 
 fn run_test_type_error_after_string_completions_in_nested_call2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTypeErrorAfterStringCompletionsInNestedCall2") {
+        return;
+    }
     let content = r#"// @stableTypeOrdering: true
 // @strict: true
 

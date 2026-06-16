@@ -14,7 +14,9 @@ pub fn test_get_outlining_for_array_destructuring() {
 }
 
 fn run_test_get_outlining_for_array_destructuring(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOutliningForArrayDestructuring") {
+        return;
+    }
     let content = r"const[| [
     a,
     b,

@@ -14,7 +14,9 @@ pub fn test_signature_help_in_parenthetical() {
 }
 
 fn run_test_signature_help_in_parenthetical(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpInParenthetical") {
+        return;
+    }
     let content = r"class base { constructor (public n: number, public y: string) { } }
 (new base(/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

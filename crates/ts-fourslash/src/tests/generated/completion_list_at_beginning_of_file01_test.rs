@@ -14,7 +14,9 @@ pub fn test_completion_list_at_beginning_of_file01() {
 }
 
 fn run_test_completion_list_at_beginning_of_file01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtBeginningOfFile01") {
+        return;
+    }
     let content = r"/*1*/
 var x = 0, y = 1, z = 2;
 enum E {

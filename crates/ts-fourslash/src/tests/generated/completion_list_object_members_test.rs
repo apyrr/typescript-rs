@@ -14,7 +14,9 @@ pub fn test_completion_list_object_members() {
 }
 
 fn run_test_completion_list_object_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListObjectMembers") {
+        return;
+    }
     let content = r" var object: {
      (bar: any): any;
      new (bar: any): any;

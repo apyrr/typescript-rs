@@ -14,7 +14,9 @@ pub fn test_completions03() {
 }
 
 fn run_test_completions03(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletions03") {
+        return;
+    }
     let content = r#"// @lib: es5
 interface Foo {
    one: any;

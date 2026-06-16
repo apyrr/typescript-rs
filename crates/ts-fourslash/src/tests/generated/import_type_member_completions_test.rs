@@ -14,7 +14,9 @@ pub fn test_import_type_member_completions() {
 }
 
 fn run_test_import_type_member_completions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportTypeMemberCompletions") {
+        return;
+    }
     let content = r#"// @Filename: /ns.ts
 export namespace Foo {
     export namespace Bar {

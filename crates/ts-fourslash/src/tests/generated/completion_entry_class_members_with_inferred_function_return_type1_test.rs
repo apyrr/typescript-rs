@@ -14,7 +14,9 @@ pub fn test_completion_entry_class_members_with_inferred_function_return_type1()
 }
 
 fn run_test_completion_entry_class_members_with_inferred_function_return_type1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionEntryClassMembersWithInferredFunctionReturnType1") {
+        return;
+    }
     let content = r#"// @filename: /tokenizer.ts
 export default abstract class Tokenizer {
   errorBuilder() {

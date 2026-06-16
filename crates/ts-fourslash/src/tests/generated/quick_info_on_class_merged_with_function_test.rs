@@ -14,7 +14,9 @@ pub fn test_quick_info_on_class_merged_with_function() {
 }
 
 fn run_test_quick_info_on_class_merged_with_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnClassMergedWithFunction") {
+        return;
+    }
     let content = r#"namespace Test {
     class Mocked {
         myProp: string;

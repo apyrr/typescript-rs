@@ -14,7 +14,9 @@ pub fn test_auto_import_cross_project_paths_to_dist2() {
 }
 
 fn run_test_auto_import_cross_project_paths_to_dist2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportCrossProject_paths_toDist2") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/common/tsconfig.json
 {
   "compilerOptions": {

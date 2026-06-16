@@ -14,7 +14,9 @@ pub fn test_quick_info_typed_generic_prototype_member() {
 }
 
 fn run_test_quick_info_typed_generic_prototype_member(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoTypedGenericPrototypeMember") {
+        return;
+    }
     let content = r"class C<T> {
    foo(x: T) { }
 }

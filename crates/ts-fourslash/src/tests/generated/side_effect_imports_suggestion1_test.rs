@@ -14,7 +14,9 @@ pub fn test_side_effect_imports_suggestion1() {
 }
 
 fn run_test_side_effect_imports_suggestion1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSideEffectImportsSuggestion1") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @noEmit: true
 // @module: commonjs

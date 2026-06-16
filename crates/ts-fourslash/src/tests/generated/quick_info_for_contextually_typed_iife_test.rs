@@ -14,7 +14,9 @@ pub fn test_quick_info_for_contextually_typed_iife() {
 }
 
 fn run_test_quick_info_for_contextually_typed_iife(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForContextuallyTypedIife") {
+        return;
+    }
     let content = r#"(({ q/*1*/, qq/*2*/ }, x/*3*/, { p/*4*/ }) => {
     var s: number = q/*5*/;
     var t: number = qq/*6*/;

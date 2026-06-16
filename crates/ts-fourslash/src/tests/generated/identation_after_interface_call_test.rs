@@ -14,7 +14,9 @@ pub fn test_identation_after_interface_call() {
 }
 
 fn run_test_identation_after_interface_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIdentationAfterInterfaceCall") {
+        return;
+    }
     let content = r"interface bah {
     (y: number);
     x: number;

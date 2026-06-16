@@ -14,7 +14,9 @@ pub fn test_completion_import_module_specifier_ending_unsupported_extension() {
 }
 
 fn run_test_completion_import_module_specifier_ending_unsupported_extension(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionImportModuleSpecifierEndingUnsupportedExtension") {
+        return;
+    }
     let content = r#"//@Filename:index.css
  body {}
 //@Filename:module.ts

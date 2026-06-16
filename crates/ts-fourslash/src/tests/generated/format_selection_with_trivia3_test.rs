@@ -14,7 +14,9 @@ pub fn test_format_selection_with_trivia3() {
 }
 
 fn run_test_format_selection_with_trivia3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatSelectionWithTrivia3") {
+        return;
+    }
     let content = r"if (true) {
 /*begin*/// test comment
 /*end*/}";

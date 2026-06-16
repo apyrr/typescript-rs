@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_all2() {
 }
 
 fn run_test_import_name_code_fix_all2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_all2") {
+        return;
+    }
     let content = r"// @Filename: /path.ts
 export declare function join(): void;
 // @Filename: /os.ts

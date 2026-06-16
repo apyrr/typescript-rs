@@ -14,7 +14,9 @@ pub fn test_codefix_crash_export_global() {
 }
 
 fn run_test_codefix_crash_export_global(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodefixCrashExportGlobal") {
+        return;
+    }
     let content = r"// @module: commonjs
 // @esModuleInterop: false
 // @allowSyntheticDefaultImports: false

@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_deep_inheritance() {
 }
 
 fn run_test_code_fix_class_implement_deep_inheritance(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementDeepInheritance") {
+        return;
+    }
     let content = r"// @stableTypeOrdering: true
 // @strict: false
 // Referenced throughout the inheritance chain.

@@ -14,7 +14,9 @@ pub fn test_format_implicit_module() {
 }
 
 fn run_test_format_implicit_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatImplicitModule") {
+        return;
+    }
     let content = r"       export class A {
 
        }";

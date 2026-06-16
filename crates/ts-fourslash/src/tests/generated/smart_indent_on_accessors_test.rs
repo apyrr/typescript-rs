@@ -14,7 +14,9 @@ pub fn test_smart_indent_on_accessors() {
 }
 
 fn run_test_smart_indent_on_accessors(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentOnAccessors") {
+        return;
+    }
     let content = r"class Foo {
     get foo(a,
             /*1*/b,/*0*/

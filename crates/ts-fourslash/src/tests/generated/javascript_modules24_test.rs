@@ -14,7 +14,9 @@ pub fn test_javascript_modules24() {
 }
 
 fn run_test_javascript_modules24(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJavascriptModules24") {
+        return;
+    }
     let content = r#"// @Filename: mod.ts
 function foo() { return 42; }
 namespace foo {

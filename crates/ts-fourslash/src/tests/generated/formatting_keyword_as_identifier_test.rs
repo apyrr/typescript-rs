@@ -14,7 +14,9 @@ pub fn test_formatting_keyword_as_identifier() {
 }
 
 fn run_test_formatting_keyword_as_identifier(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingKeywordAsIdentifier") {
+        return;
+    }
     let content = r"declare var module/*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

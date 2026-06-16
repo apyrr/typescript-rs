@@ -14,7 +14,9 @@ pub fn test_member_completion_on_right_side_of_import() {
 }
 
 fn run_test_member_completion_on_right_side_of_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberCompletionOnRightSideOfImport") {
+        return;
+    }
     let content = r"import x = M./**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(t, MarkerInput::Name("".to_string()), None);

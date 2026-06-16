@@ -14,7 +14,9 @@ pub fn test_completions_asserts() {
 }
 
 fn run_test_completions_asserts(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsAsserts") {
+        return;
+    }
     let content = r"declare function assert(argument1: any): asserts a/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(

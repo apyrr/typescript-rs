@@ -14,7 +14,9 @@ pub fn test_get_occurrences_set_and_get3() {
 }
 
 fn run_test_get_occurrences_set_and_get3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesSetAndGet3") {
+        return;
+    }
     let content = r"class Foo {
     set bar(b: any) {
     }

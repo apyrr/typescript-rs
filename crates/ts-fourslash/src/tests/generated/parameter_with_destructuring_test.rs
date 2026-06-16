@@ -14,7 +14,9 @@ pub fn test_parameter_with_destructuring() {
 }
 
 fn run_test_parameter_with_destructuring(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestParameterWithDestructuring") {
+        return;
+    }
     let content = r"const result = [{ a: 'hello' }]
     .map(({ /*1*/a }) => /*2*/a)
     .map(a => a);

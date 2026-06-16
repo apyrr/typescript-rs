@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal_nonrelative_import10() {
 }
 
 fn run_test_completion_for_string_literal_nonrelative_import10(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteralNonrelativeImport10") {
+        return;
+    }
     let content = r#"// @moduleResolution: classic
 // @Filename: dir1/dir2/dir3/dir4/test0.ts
 import * as foo1 from "f/*import_as0*/

@@ -14,7 +14,9 @@ pub fn test_unclosed_string_literal_autoformating() {
 }
 
 fn run_test_unclosed_string_literal_autoformating(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnclosedStringLiteralAutoformating") {
+        return;
+    }
     let content = r#"var x = /*1*/"asd/*2*/
 class Foo {
     /**/"#;

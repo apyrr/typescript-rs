@@ -14,7 +14,9 @@ pub fn test_semantic_classification_alias() {
 }
 
 fn run_test_semantic_classification_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemanticClassificationAlias") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 export type x = number;
 export class y {};

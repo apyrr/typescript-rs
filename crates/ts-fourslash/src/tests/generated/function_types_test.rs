@@ -14,7 +14,9 @@ pub fn test_function_types() {
 }
 
 fn run_test_function_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFunctionTypes") {
+        return;
+    }
     let content = r"// @lib: es5
 // @strict: false
 var f: Function;

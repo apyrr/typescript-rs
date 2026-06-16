@@ -14,7 +14,9 @@ pub fn test_generic_map_typing1() {
 }
 
 fn run_test_generic_map_typing1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericMapTyping1") {
+        return;
+    }
     let content = r"// @strict: false
 interface Iterator_<T, U> {
     (value: T, index: any, list: any): U;

@@ -14,7 +14,9 @@ pub fn test_unused_variable_in_class5() {
 }
 
 fn run_test_unused_variable_in_class5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedVariableInClass5") {
+        return;
+    }
     let content = r"// @noUnusedLocals: true
 // @target: esnext
 declare class greeter {

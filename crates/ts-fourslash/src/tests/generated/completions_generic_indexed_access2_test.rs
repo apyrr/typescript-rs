@@ -14,7 +14,9 @@ pub fn test_completions_generic_indexed_access2() {
 }
 
 fn run_test_completions_generic_indexed_access2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsGenericIndexedAccess2") {
+        return;
+    }
     let content = r#"export type GetMethodsForType<T, G extends string> = { [K in keyof T]:
   T[K] extends () => any ? { name: K, group: G, } : T[K] extends (s: infer U) => any ? { name: K, group: G, payload: U } : never }[keyof T];
 

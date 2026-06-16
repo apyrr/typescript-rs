@@ -14,7 +14,9 @@ pub fn test_code_fix_await_should_not_crash_if_not_in_function() {
 }
 
 fn run_test_code_fix_await_should_not_crash_if_not_in_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAwaitShouldNotCrashIfNotInFunction") {
+        return;
+    }
     let content = r"await a";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_code_fix_not_available(t, &vec!["addMissingAwait".to_string()]);

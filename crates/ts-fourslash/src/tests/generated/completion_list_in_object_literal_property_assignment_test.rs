@@ -14,7 +14,9 @@ pub fn test_completion_list_in_object_literal_property_assignment() {
 }
 
 fn run_test_completion_list_in_object_literal_property_assignment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInObjectLiteralPropertyAssignment") {
+        return;
+    }
     let content = r#"var foo;
 interface I {
     metadata: string;

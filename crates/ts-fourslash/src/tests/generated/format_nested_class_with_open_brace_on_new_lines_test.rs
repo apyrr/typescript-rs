@@ -14,7 +14,9 @@ pub fn test_format_nested_class_with_open_brace_on_new_lines() {
 }
 
 fn run_test_format_nested_class_with_open_brace_on_new_lines(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatNestedClassWithOpenBraceOnNewLines") {
+        return;
+    }
     let content = r"module A
 {
     class B {

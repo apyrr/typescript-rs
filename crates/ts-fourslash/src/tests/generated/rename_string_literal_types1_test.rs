@@ -14,7 +14,9 @@ pub fn test_rename_string_literal_types1() {
 }
 
 fn run_test_rename_string_literal_types1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameStringLiteralTypes1") {
+        return;
+    }
     let content = r#"interface AnimationOptions {
     deltaX: number;
     deltaY: number;

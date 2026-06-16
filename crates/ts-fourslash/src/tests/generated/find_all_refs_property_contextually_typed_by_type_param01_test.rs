@@ -14,7 +14,9 @@ pub fn test_find_all_refs_property_contextually_typed_by_type_param01() {
 }
 
 fn run_test_find_all_refs_property_contextually_typed_by_type_param01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsPropertyContextuallyTypedByTypeParam01") {
+        return;
+    }
     let content = r#"interface IFoo {
     /*1*/a: string;
 }

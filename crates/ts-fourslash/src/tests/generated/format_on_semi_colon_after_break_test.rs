@@ -14,7 +14,9 @@ pub fn test_format_on_semi_colon_after_break() {
 }
 
 fn run_test_format_on_semi_colon_after_break(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatOnSemiColonAfterBreak") {
+        return;
+    }
     let content = r"for (var a in b) {
 break/**/
 }";

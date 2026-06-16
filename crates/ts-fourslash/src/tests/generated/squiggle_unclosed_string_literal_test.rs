@@ -14,7 +14,9 @@ pub fn test_squiggle_unclosed_string_literal() {
 }
 
 fn run_test_squiggle_unclosed_string_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSquiggleUnclosedStringLiteral") {
+        return;
+    }
     let content = r#"var x = /*1*/"asd
 /*2*/var y = 2;"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

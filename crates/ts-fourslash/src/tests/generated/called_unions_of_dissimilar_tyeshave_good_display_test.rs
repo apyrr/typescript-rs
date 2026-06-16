@@ -14,7 +14,9 @@ pub fn test_called_unions_of_dissimilar_tyeshave_good_display() {
 }
 
 fn run_test_called_unions_of_dissimilar_tyeshave_good_display(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCalledUnionsOfDissimilarTyeshaveGoodDisplay") {
+        return;
+    }
     let content = r"declare const callableThing1:
     | ((o1: {x: number}) => void)
     | ((o1: {y: number}) => void)

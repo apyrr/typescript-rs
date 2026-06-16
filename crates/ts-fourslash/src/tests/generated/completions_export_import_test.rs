@@ -14,7 +14,9 @@ pub fn test_completions_export_import() {
 }
 
 fn run_test_completions_export_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsExportImport") {
+        return;
+    }
     let content = r"// @lib: es5
 declare global {
     namespace N {

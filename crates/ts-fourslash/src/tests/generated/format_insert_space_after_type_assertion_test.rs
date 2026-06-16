@@ -14,7 +14,9 @@ pub fn test_format_insert_space_after_type_assertion() {
 }
 
 fn run_test_format_insert_space_after_type_assertion(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatInsertSpaceAfterTypeAssertion") {
+        return;
+    }
     let content = r#"let a = <string> "";
 let b = <number> 1;
 let c = <any[]> [];

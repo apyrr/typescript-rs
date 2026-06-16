@@ -14,7 +14,9 @@ pub fn test_codefix_infer_from_usage_nullish() {
 }
 
 fn run_test_codefix_infer_from_usage_nullish(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodefixInferFromUsageNullish") {
+        return;
+    }
     let content = r"// @strict: false
 // @noImplicitAny: true
 declare const a: string

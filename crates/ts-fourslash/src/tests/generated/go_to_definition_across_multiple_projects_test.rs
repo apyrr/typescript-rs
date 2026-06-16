@@ -14,7 +14,9 @@ pub fn test_go_to_definition_across_multiple_projects() {
 }
 
 fn run_test_go_to_definition_across_multiple_projects(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionAcrossMultipleProjects") {
+        return;
+    }
     let content = r#"//@Filename: a.ts
 var /*def1*/x: number;
 //@Filename: b.ts

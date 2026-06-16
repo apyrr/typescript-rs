@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_auto_imports_re_exports() {
 }
 
 fn run_test_code_fix_class_implement_interface_auto_imports_re_exports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceAutoImportsReExports") {
+        return;
+    }
     let content = r#"// @Filename: node_modules/test-module/index.d.ts
 declare namespace e {
     interface Foo {}

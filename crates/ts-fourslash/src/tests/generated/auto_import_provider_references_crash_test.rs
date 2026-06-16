@@ -14,7 +14,9 @@ pub fn test_auto_import_provider_references_crash() {
 }
 
 fn run_test_auto_import_provider_references_crash(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportProvider_referencesCrash") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/a/package.json
 {}
 // @Filename: /home/src/workspaces/project/a/tsconfig.json

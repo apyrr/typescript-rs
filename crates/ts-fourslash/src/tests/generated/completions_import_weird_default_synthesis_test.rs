@@ -14,7 +14,9 @@ pub fn test_completions_import_weird_default_synthesis() {
 }
 
 fn run_test_completions_import_weird_default_synthesis(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImport_weirdDefaultSynthesis") {
+        return;
+    }
     let content = r"// @module: commonjs
 // @esModuleInterop: false
 // @allowSyntheticDefaultImports: false

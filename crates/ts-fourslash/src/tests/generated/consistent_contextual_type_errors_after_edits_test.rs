@@ -14,7 +14,9 @@ pub fn test_consistent_contextual_type_errors_after_edits() {
 }
 
 fn run_test_consistent_contextual_type_errors_after_edits(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestConsistentContextualTypeErrorsAfterEdits") {
+        return;
+    }
     let content = r"// @strict: false
 class A {
     foo: string;

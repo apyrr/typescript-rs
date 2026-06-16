@@ -14,7 +14,9 @@ pub fn test_get_edits_for_file_rename_tsconfig() {
 }
 
 fn run_test_get_edits_for_file_rename_tsconfig(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetEditsForFileRename_tsconfig") {
+        return;
+    }
     let content = r#"// @Filename: /src/tsconfig.json
 {
     "compilerOptions": {

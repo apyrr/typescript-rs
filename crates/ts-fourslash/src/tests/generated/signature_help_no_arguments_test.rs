@@ -14,7 +14,9 @@ pub fn test_signature_help_no_arguments() {
 }
 
 fn run_test_signature_help_no_arguments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpNoArguments") {
+        return;
+    }
     let content = r"function foo(n: number): string {
 }
 

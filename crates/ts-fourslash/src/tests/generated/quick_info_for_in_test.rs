@@ -14,7 +14,9 @@ pub fn test_quick_info_for_in() {
 }
 
 fn run_test_quick_info_for_in(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForIn") {
+        return;
+    }
     let content = r"var obj;
 for (var /**/p in obj) { }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

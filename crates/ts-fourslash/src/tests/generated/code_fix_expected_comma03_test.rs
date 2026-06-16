@@ -14,7 +14,9 @@ pub fn test_code_fix_expected_comma03() {
 }
 
 fn run_test_code_fix_expected_comma03(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixExpectedComma03") {
+        return;
+    }
     let content = r"class C {
     const example = [|{ one: 1 one }|]
 }";

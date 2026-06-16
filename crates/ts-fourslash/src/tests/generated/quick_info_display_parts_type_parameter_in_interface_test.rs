@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_type_parameter_in_interface() {
 }
 
 fn run_test_quick_info_display_parts_type_parameter_in_interface(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsTypeParameterInInterface") {
+        return;
+    }
     let content = r#"interface /*1*/I</*2*/T> {
     new </*3*/U>(/*4*/a: /*5*/U, /*6*/b: /*7*/T): /*8*/U;
     </*9*/U>(/*10*/a: /*11*/U, /*12*/b: /*13*/T): /*14*/U;

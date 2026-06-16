@@ -14,7 +14,9 @@ pub fn test_formatting_decorators() {
 }
 
 fn run_test_formatting_decorators(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingDecorators") {
+        return;
+    }
     let content = r#"/*1*/        @    decorator1    
 /*2*/            @        decorator2
 /*3*/    @decorator3

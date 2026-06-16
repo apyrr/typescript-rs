@@ -14,7 +14,9 @@ pub fn test_completion_with_dot_followed_by_namespace_keyword() {
 }
 
 fn run_test_completion_with_dot_followed_by_namespace_keyword(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionWithDotFollowedByNamespaceKeyword") {
+        return;
+    }
     let content = r"namespace A {
     function foo() {
         if (true) {

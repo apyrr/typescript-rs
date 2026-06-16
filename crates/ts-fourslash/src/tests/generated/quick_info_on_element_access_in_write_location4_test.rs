@@ -14,7 +14,9 @@ pub fn test_quick_info_on_element_access_in_write_location4() {
 }
 
 fn run_test_quick_info_on_element_access_in_write_location4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnElementAccessInWriteLocation4") {
+        return;
+    }
     let content = r"// @strict: true
 interface Serializer {
   set value(v: string | number | boolean);

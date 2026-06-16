@@ -14,7 +14,9 @@ pub fn test_inlay_hints_property_declarations() {
 }
 
 fn run_test_inlay_hints_property_declarations(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsPropertyDeclarations") {
+        return;
+    }
     let content = r"// @strict: true
 class C {
     a = 1

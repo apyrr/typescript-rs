@@ -14,7 +14,9 @@ pub fn test_quick_info_mapped_type() {
 }
 
 fn run_test_quick_info_mapped_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoMappedType") {
+        return;
+    }
     let content = r#"interface I {
   /** m documentation */ m(): void;
 }

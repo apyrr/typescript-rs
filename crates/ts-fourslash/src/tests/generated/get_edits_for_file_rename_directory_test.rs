@@ -14,7 +14,9 @@ pub fn test_get_edits_for_file_rename_directory() {
 }
 
 fn run_test_get_edits_for_file_rename_directory(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetEditsForFileRename_directory") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 /// <reference path="./src/old/file.ts" />
 import old from "./src/old";

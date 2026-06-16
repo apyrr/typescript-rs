@@ -14,7 +14,9 @@ pub fn test_tsx_completion_on_closing_tag_without_jsx2() {
 }
 
 fn run_test_tsx_completion_on_closing_tag_without_jsx2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxCompletionOnClosingTagWithoutJSX2") {
+        return;
+    }
     let content = r"//@Filename: file.tsx
 var x1 = <div>
    <h1> Hello world </ /*2*/>

@@ -14,7 +14,9 @@ pub fn test_code_fix_unused_interface_in_namespace1() {
 }
 
 fn run_test_code_fix_unused_interface_in_namespace1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixUnusedInterfaceInNamespace1") {
+        return;
+    }
     let content = r"// @noUnusedLocals: true
  [| namespace greeter {
     interface interface1 {

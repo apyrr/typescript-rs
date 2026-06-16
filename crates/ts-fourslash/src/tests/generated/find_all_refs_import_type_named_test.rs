@@ -14,7 +14,9 @@ pub fn test_find_all_refs_import_type_named() {
 }
 
 fn run_test_find_all_refs_import_type_named(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefs_importType_named") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 /*1*/export type /*2*/T = number;
 /*3*/export type /*4*/U = string;

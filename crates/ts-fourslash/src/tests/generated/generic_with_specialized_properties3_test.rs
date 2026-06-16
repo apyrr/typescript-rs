@@ -14,7 +14,9 @@ pub fn test_generic_with_specialized_properties3() {
 }
 
 fn run_test_generic_with_specialized_properties3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericWithSpecializedProperties3") {
+        return;
+    }
     let content = r"interface Foo<T, U> {
     x: Foo<T, U>;
     y: Foo<U, U>;

@@ -14,7 +14,9 @@ pub fn test_verify_single_file_emit_output1() {
 }
 
 fn run_test_verify_single_file_emit_output1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestVerifySingleFileEmitOutput1") {
+        return;
+    }
     let content = r#"// @Filename: verifySingleFileEmitOutput1_file0.ts
 export class A {
 }

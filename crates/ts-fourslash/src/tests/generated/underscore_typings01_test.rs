@@ -14,7 +14,9 @@ pub fn test_underscore_typings01() {
 }
 
 fn run_test_underscore_typings01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnderscoreTypings01") {
+        return;
+    }
     let content = r"interface Iterator_<T, U> {
     (value: T, index: any, list: any): U;
 }

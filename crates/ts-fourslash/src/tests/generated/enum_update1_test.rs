@@ -14,7 +14,9 @@ pub fn test_enum_update1() {
 }
 
 fn run_test_enum_update1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestEnumUpdate1") {
+        return;
+    }
     let content = r"namespace M {
 	export enum E {
 		A = 1,

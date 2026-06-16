@@ -14,7 +14,9 @@ pub fn test_formatting_after_multi_line_string() {
 }
 
 fn run_test_formatting_after_multi_line_string(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingAfterMultiLineString") {
+        return;
+    }
     let content = r#"class foo {
     stop() {
         var s = "hello\/*1*/

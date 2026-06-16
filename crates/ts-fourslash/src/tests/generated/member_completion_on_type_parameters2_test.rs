@@ -14,7 +14,9 @@ pub fn test_member_completion_on_type_parameters2() {
 }
 
 fn run_test_member_completion_on_type_parameters2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberCompletionOnTypeParameters2") {
+        return;
+    }
     let content = r"class A {
     foo(): string { return ''; }
 }

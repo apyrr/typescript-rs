@@ -14,7 +14,9 @@ pub fn test_unclosed_string_literal_error_recovery4() {
 }
 
 fn run_test_unclosed_string_literal_error_recovery4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnclosedStringLiteralErrorRecovery4") {
+        return;
+    }
     let content = r#"function alpha() {
     var x = "x
 /**/var y = "y";

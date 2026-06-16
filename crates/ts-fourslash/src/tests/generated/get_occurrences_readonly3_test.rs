@@ -14,7 +14,9 @@ pub fn test_get_occurrences_readonly3() {
 }
 
 fn run_test_get_occurrences_readonly3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesReadonly3") {
+        return;
+    }
     let content = r#"class C {
   [|readonly|] prop: /**/readonly string[] = [];
   constructor([|readonly|] prop2: string) {

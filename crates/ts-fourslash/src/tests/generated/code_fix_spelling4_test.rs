@@ -14,7 +14,9 @@ pub fn test_code_fix_spelling4() {
 }
 
 fn run_test_code_fix_spelling4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixSpelling4") {
+        return;
+    }
     let content = r"export declare const despite: { the: any };
 
 [|dispite.the|]";

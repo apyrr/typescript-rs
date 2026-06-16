@@ -14,7 +14,9 @@ pub fn test_jsx_spread_reference() {
 }
 
 fn run_test_jsx_spread_reference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsxSpreadReference") {
+        return;
+    }
     let content = r#"//@Filename: file.tsx
 declare namespace JSX {
     interface Element { }

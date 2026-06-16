@@ -14,7 +14,9 @@ pub fn test_format_range_ending_after_comma_of_call() {
 }
 
 fn run_test_format_range_ending_after_comma_of_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatRangeEndingAfterCommaOfCall") {
+        return;
+    }
     let content = r#"someCall(
     /*start*/"firstParameter",/*end*/
     "something else"

@@ -14,7 +14,9 @@ pub fn test_get_occurrences_super_negatives() {
 }
 
 fn run_test_get_occurrences_super_negatives(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesSuperNegatives") {
+        return;
+    }
     let content = r"function f(x = [|super|]) {
     [|super|];
 }

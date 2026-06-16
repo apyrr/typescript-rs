@@ -14,8 +14,10 @@ pub fn test_completion_list_in_type_literal_in_type_parameter18() {
 }
 
 fn run_test_completion_list_in_type_literal_in_type_parameter18(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"class Foo<T extends { x: 'one' | 'two' }> {}
+    if should_skip_if_failing("TestCompletionListInTypeLiteralInTypeParameter18") {
+        return;
+    }
+    let content = r"class Foo<T extends { x: 'one' | 'two' }> {}
 function foo<T extends { x: 'one' | 'two' }>() {}
 declare function tag<T extends { x: 'one' | 'two' }>(x: TemplateStringsArray): void;
 declare function decorator<T extends { x: 'one' | 'two' }>(...args: unknown[]): never
@@ -25,8 +27,8 @@ new Foo<{ x: '/*1*/' }>();
 foo<{ x: '/*2*/' }>();
 foo<{ x: '/*3*/' }>;
 Foo<{ x: '/*4*/' }>;
-tag<{ x: '/*5*/' }>` + "`" + `` + "`" + `;
-class { @decorator<{ x: '/*6*/' }>; method() {} }"#;
+tag<{ x: '/*5*/' }>``;
+class { @decorator<{ x: '/*6*/' }>; method() {} }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(
         t,

@@ -14,7 +14,9 @@ pub fn test_member_list_of_enum_from_external_module() {
 }
 
 fn run_test_member_list_of_enum_from_external_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListOfEnumFromExternalModule") {
+        return;
+    }
     let content = r"// @Filename: memberListOfEnumFromExternalModule_file0.ts
 export enum Topic{ One, Two }
 var topic = Topic.One;

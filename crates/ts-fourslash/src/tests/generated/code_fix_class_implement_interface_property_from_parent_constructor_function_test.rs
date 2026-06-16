@@ -16,7 +16,11 @@ pub fn test_code_fix_class_implement_interface_property_from_parent_constructor_
 fn run_test_code_fix_class_implement_interface_property_from_parent_constructor_function(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestCodeFixClassImplementInterfacePropertyFromParentConstructorFunction",
+    ) {
+        return;
+    }
     let content = r"class A {
     constructor(public x: number) { }
 }

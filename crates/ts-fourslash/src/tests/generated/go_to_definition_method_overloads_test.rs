@@ -14,7 +14,9 @@ pub fn test_go_to_definition_method_overloads() {
 }
 
 fn run_test_go_to_definition_method_overloads(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionMethodOverloads") {
+        return;
+    }
     let content = r#"class MethodOverload {
     static [|/*staticMethodOverload1*/method|]();
     static /*staticMethodOverload2*/method(foo: string);

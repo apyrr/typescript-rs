@@ -14,7 +14,9 @@ pub fn test_quick_info_error_signature_fills_in_type_parameter() {
 }
 
 fn run_test_quick_info_error_signature_fills_in_type_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfo_errorSignatureFillsInTypeParameter") {
+        return;
+    }
     let content = r"declare function f<T>(x: number): T;
 const x/**/ = f();";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

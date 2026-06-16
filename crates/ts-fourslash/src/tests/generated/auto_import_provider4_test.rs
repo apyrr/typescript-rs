@@ -14,7 +14,9 @@ pub fn test_auto_import_provider4() {
 }
 
 fn run_test_auto_import_provider4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportProvider4") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/a/package.json
 { "dependencies": { "b": "*" } }
 // @Filename: /home/src/workspaces/project/a/tsconfig.json

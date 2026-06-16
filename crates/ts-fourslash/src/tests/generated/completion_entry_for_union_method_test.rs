@@ -14,7 +14,9 @@ pub fn test_completion_entry_for_union_method() {
 }
 
 fn run_test_completion_entry_for_union_method(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionEntryForUnionMethod") {
+        return;
+    }
     let content = r"// @lib: es5
 var y: Array<string>|Array<number>;
 y.map/**/(";

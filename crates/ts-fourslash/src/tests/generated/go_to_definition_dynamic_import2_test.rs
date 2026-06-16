@@ -14,7 +14,9 @@ pub fn test_go_to_definition_dynamic_import2() {
 }
 
 fn run_test_go_to_definition_dynamic_import2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionDynamicImport2") {
+        return;
+    }
     let content = r#"// @Filename: foo.ts
 export function /*Destination*/bar() { return "bar"; }
 var x = import("./foo");

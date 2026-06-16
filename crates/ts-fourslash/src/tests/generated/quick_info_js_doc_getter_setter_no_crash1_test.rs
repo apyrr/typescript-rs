@@ -14,7 +14,9 @@ pub fn test_quick_info_js_doc_getter_setter_no_crash1() {
 }
 
 fn run_test_quick_info_js_doc_getter_setter_no_crash1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoJsDocGetterSetterNoCrash1") {
+        return;
+    }
     let content = r#"class A implements A {
   get x(): string { return "" }
 }

@@ -14,7 +14,9 @@ pub fn test_find_all_refs_definition() {
 }
 
 fn run_test_find_all_refs_definition(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsDefinition") {
+        return;
+    }
     let content = r"const /*1*/x = 0;
 /*2*/x;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

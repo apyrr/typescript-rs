@@ -14,7 +14,9 @@ pub fn test_references_bloom_filters3() {
 }
 
 fn run_test_references_bloom_filters3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesBloomFilters3") {
+        return;
+    }
     let content = r#"// @Filename: declaration.ts
 enum Test { /*1*/"/*2*/42" = 1 };
 // @Filename: expression.ts

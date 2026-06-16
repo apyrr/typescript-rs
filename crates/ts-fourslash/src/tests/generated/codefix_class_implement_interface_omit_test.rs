@@ -14,7 +14,9 @@ pub fn test_codefix_class_implement_interface_omit() {
 }
 
 fn run_test_codefix_class_implement_interface_omit(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodefixClassImplementInterface_omit") {
+        return;
+    }
     let content = r#"interface One {
     a: number;
     b: string;

@@ -14,7 +14,9 @@ pub fn test_completions_overriding_properties2() {
 }
 
 fn run_test_completions_overriding_properties2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsOverridingProperties2") {
+        return;
+    }
     let content = r"interface I {
     prop: string;
 }

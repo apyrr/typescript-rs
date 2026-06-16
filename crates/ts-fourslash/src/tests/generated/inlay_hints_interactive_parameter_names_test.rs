@@ -14,7 +14,9 @@ pub fn test_inlay_hints_interactive_parameter_names() {
 }
 
 fn run_test_inlay_hints_interactive_parameter_names(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInteractiveParameterNames") {
+        return;
+    }
     let content = r#" function foo1 (a: number, b: number) {}
  foo1(1, 2);
  function foo2 (a: number, { c }: any) {}
@@ -52,8 +54,8 @@ foo5(
  declare const unknownCall: any;
  unknownCall();
 function trace(message: string) {}
-trace(` + "`" + `${1}` + "`" + `);
-trace(` + "`" + `` + "`" + `);"#;
+trace(`${1}`);
+trace(``);"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_inlay_hints(t);
     done();

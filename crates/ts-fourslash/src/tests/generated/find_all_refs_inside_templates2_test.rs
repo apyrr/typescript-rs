@@ -14,9 +14,11 @@ pub fn test_find_all_refs_inside_templates2() {
 }
 
 fn run_test_find_all_refs_inside_templates2(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"/*1*/function /*2*/f(...rest: any[]) { }
-/*3*/f ` + "`" + `${ /*4*/f } ${ /*5*/f }` + "`" + `"#;
+    if should_skip_if_failing("TestFindAllRefsInsideTemplates2") {
+        return;
+    }
+    let content = r"/*1*/function /*2*/f(...rest: any[]) { }
+/*3*/f `${ /*4*/f } ${ /*5*/f }`";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_find_all_references(
         t,

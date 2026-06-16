@@ -14,7 +14,9 @@ pub fn test_organize_imports_react_jsx_dev() {
 }
 
 fn run_test_organize_imports_react_jsx_dev(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsReactJsxDev") {
+        return;
+    }
     let content = r#"// @allowSyntheticDefaultImports: true
 // @moduleResolution: bundler
 // @noUnusedLocals: true

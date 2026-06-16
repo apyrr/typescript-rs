@@ -14,7 +14,9 @@ pub fn test_formatting_on_statements_with_no_semicolon() {
 }
 
 fn run_test_formatting_on_statements_with_no_semicolon(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnStatementsWithNoSemicolon") {
+        return;
+    }
     let content = r"/*1*/do
      { var a/*2*/
 /*3*/}   while (1)

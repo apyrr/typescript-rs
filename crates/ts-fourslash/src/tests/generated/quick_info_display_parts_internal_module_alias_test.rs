@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_internal_module_alias() {
 }
 
 fn run_test_quick_info_display_parts_internal_module_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsInternalModuleAlias") {
+        return;
+    }
     let content = r"namespace m.m1 {
     export class c {
     }

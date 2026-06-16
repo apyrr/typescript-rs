@@ -14,7 +14,9 @@ pub fn test_code_fix_spelling_case_weight2() {
 }
 
 fn run_test_code_fix_spelling_case_weight2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixSpellingCaseWeight2") {
+        return;
+    }
     let content = r"let ABCDEFGHI = 1;
 let abcdefghij = 1;
 [|abcdefghi|]";

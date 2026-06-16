@@ -14,7 +14,9 @@ pub fn test_inlay_hints_no_variable_type_hints() {
 }
 
 fn run_test_inlay_hints_no_variable_type_hints(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsNoVariableTypeHints") {
+        return;
+    }
     let content = r"const a = 123;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_inlay_hints(t);

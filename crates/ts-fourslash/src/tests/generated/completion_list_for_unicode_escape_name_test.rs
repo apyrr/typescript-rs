@@ -14,7 +14,9 @@ pub fn test_completion_list_for_unicode_escape_name() {
 }
 
 fn run_test_completion_list_for_unicode_escape_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListForUnicodeEscapeName") {
+        return;
+    }
     let content = r"function \u0042 () { /*0*/ }
 export default function \u0043 () {}
 class \u0041 { /*2*/ }

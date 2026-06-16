@@ -14,7 +14,9 @@ pub fn test_function_renaming_error_recovery() {
 }
 
 fn run_test_function_renaming_error_recovery(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFunctionRenamingErrorRecovery") {
+        return;
+    }
     let content = r"class Foo { public bar/*1*//*2*/() { } }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

@@ -14,7 +14,9 @@ pub fn test_smart_indent_on_unclosed_function_declaration04() {
 }
 
 fn run_test_smart_indent_on_unclosed_function_declaration04(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentOnUnclosedFunctionDeclaration04") {
+        return;
+    }
     let content = r"function f<A,B,C>/*1*/(/*2*/a: A, /*3*/b:/*4*/B, c/*5*/, d: C/*6*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

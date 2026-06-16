@@ -14,7 +14,9 @@ pub fn test_format_remove_semicolons4() {
 }
 
 fn run_test_format_remove_semicolons4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatRemoveSemicolons4") {
+        return;
+    }
     let content = r"declare const opt: number | undefined;
 
 const a = 1;

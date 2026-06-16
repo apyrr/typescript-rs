@@ -14,7 +14,9 @@ pub fn test_ambient_shorthand_find_all_refs() {
 }
 
 fn run_test_ambient_shorthand_find_all_refs(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAmbientShorthandFindAllRefs") {
+        return;
+    }
     let content = r#"// @Filename: declarations.d.ts
 declare module "jquery";
 // @Filename: user.ts

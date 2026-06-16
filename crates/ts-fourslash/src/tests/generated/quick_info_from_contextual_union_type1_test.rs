@@ -14,7 +14,9 @@ pub fn test_quick_info_from_contextual_union_type1() {
 }
 
 fn run_test_quick_info_from_contextual_union_type1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoFromContextualUnionType1") {
+        return;
+    }
     let content = r#"// @strict: true
 // based on https://github.com/microsoft/TypeScript/issues/55495
 type X =

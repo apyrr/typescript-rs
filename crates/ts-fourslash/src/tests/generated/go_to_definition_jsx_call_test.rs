@@ -14,7 +14,9 @@ pub fn test_go_to_definition_jsx_call() {
 }
 
 fn run_test_go_to_definition_jsx_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionJsxCall") {
+        return;
+    }
     let content = r"// @filename: ./test.tsx
 interface FC<P = {}> {
     (props: P, context?: any): string;

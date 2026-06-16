@@ -14,7 +14,9 @@ pub fn test_generic_function_signature_help3() {
 }
 
 fn run_test_generic_function_signature_help3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericFunctionSignatureHelp3") {
+        return;
+    }
     let content = r"function foo1<T>(x: number, callback: (y1: T) => number) { }
 function foo2<T>(x: number, callback: (y2: T) => number) { }
 function foo3<T>(x: number, callback: (y3: T) => number) { }

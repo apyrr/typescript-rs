@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal_quote_preference6() {
 }
 
 fn run_test_completion_for_string_literal_quote_preference6(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteral_quotePreference6") {
+        return;
+    }
     let content = r#"type T = "0" | "1";
 const t: T = /**/"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

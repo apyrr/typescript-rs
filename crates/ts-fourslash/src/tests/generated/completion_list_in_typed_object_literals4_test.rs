@@ -14,7 +14,9 @@ pub fn test_completion_list_in_typed_object_literals4() {
 }
 
 fn run_test_completion_list_in_typed_object_literals4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInTypedObjectLiterals4") {
+        return;
+    }
     let content = r#"interface MyPoint {
     x1: number;
     y1: number;

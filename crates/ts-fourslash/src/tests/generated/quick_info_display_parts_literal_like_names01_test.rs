@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_literal_like_names01() {
 }
 
 fn run_test_quick_info_display_parts_literal_like_names01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsLiteralLikeNames01") {
+        return;
+    }
     let content = r#"class C {
     public /*1*/1() { }
     private /*2*/Infinity() { }

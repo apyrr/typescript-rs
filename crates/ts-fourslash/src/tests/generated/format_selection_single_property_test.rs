@@ -14,7 +14,9 @@ pub fn test_format_selection_single_property() {
 }
 
 fn run_test_format_selection_single_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatSelectionSingleProperty") {
+        return;
+    }
     let content = r"console.log({
 }, {
 /*1*/    a: 1,

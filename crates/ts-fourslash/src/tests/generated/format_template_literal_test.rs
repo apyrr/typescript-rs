@@ -14,19 +14,21 @@ pub fn test_format_template_literal() {
 }
 
 fn run_test_format_template_literal(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"var x = ` + "`" + `sadasdasdasdasfegsfd
-/*1*/rasdesgeryt35t35y35 e4 ergt er 35t 3535 ` + "`" + `;
-var y = ` + "`" + `1${2}/*2*/3` + "`" + `;
+    if should_skip_if_failing("TestFormatTemplateLiteral") {
+        return;
+    }
+    let content = r#"var x = `sadasdasdasdasfegsfd
+/*1*/rasdesgeryt35t35y35 e4 ergt er 35t 3535 `;
+var y = `1${2}/*2*/3`;
 
 /*formatStart*/
-let z=    ` + "`" + `foo` + "`" + `;/*3*/
-let w=  ` + "`" + `bar${3}` + "`" + `;/*4*/
+let z=    `foo`;/*3*/
+let w=  `bar${3}`;/*4*/
 String.raw
- ` + "`" + `template` + "`" + `;/*5*/
-String.raw` + "`" + `foo` + "`" + `;/*6*/
-String.raw  ` + "`" + `bar${3}` + "`" + `;/*7*/
-` + "`" + `Write ${   JSON.stringify("")   } and ${    (765)   } and ${   346  }` + "`" + `;/*spaceInside*/
+ `template`;/*5*/
+String.raw`foo`;/*6*/
+String.raw  `bar${3}`;/*7*/
+`Write ${   JSON.stringify("")   } and ${    (765)   } and ${   346  }`;/*spaceInside*/
 /*formatEnd*/"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

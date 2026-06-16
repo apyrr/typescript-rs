@@ -14,7 +14,9 @@ pub fn test_completions_paths_path_mapping_not_in_nested_directory() {
 }
 
 fn run_test_completions_paths_path_mapping_not_in_nested_directory(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsPaths_pathMapping_notInNestedDirectory") {
+        return;
+    }
     let content = r#"// @Filename: /user.ts
 import {} from "something//**/";
 // @Filename: /tsconfig.json

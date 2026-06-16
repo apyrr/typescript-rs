@@ -14,7 +14,9 @@ pub fn test_find_all_refs_mapped_type_non_homomorphic() {
 }
 
 fn run_test_find_all_refs_mapped_type_non_homomorphic(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsMappedType_nonHomomorphic") {
+        return;
+    }
     let content = r#"// @strict: true
 function f(x: { [K in "m"]: number; }) {
     x./*1*/m;

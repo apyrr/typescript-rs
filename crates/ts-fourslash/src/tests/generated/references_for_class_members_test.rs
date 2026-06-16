@@ -14,7 +14,9 @@ pub fn test_references_for_class_members() {
 }
 
 fn run_test_references_for_class_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForClassMembers") {
+        return;
+    }
     let content = r"class Base {
     /*a1*/a: number;
     /*method1*/method(): void { }

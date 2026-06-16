@@ -14,7 +14,9 @@ pub fn test_references_for_inherited_properties10() {
 }
 
 fn run_test_references_for_inherited_properties10(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForInheritedProperties10") {
+        return;
+    }
     let content = r#"interface IFeedbackHandler {
   /*1*/handleAccept?(): void;
   handleReject?(): void;

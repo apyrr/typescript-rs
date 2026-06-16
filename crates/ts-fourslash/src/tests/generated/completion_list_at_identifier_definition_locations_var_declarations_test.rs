@@ -14,7 +14,9 @@ pub fn test_completion_list_at_identifier_definition_locations_var_declarations(
 }
 
 fn run_test_completion_list_at_identifier_definition_locations_var_declarations(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtIdentifierDefinitionLocations_varDeclarations") {
+        return;
+    }
     let content = r"var aa = 1;
 var /*varName1*/
 var a/*varName2*/

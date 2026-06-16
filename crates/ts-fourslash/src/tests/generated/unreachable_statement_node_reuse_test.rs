@@ -14,7 +14,9 @@ pub fn test_unreachable_statement_node_reuse() {
 }
 
 fn run_test_unreachable_statement_node_reuse(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnreachableStatementNodeReuse") {
+        return;
+    }
     let content = r"function test() {
 	return/*a*/abc();
 	return;

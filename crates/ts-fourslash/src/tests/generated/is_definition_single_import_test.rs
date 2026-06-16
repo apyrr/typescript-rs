@@ -14,7 +14,9 @@ pub fn test_is_definition_single_import() {
 }
 
 fn run_test_is_definition_single_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIsDefinitionSingleImport") {
+        return;
+    }
     let content = r#"// @filename: a.ts
 export function /*1*/f() {}
 // @filename: b.ts

@@ -14,7 +14,9 @@ pub fn test_document_highlights_invalid_modifier_locations() {
 }
 
 fn run_test_document_highlights_invalid_modifier_locations(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightsInvalidModifierLocations") {
+        return;
+    }
     let content = r"class C {
     m([|readonly|] p) {}
 }

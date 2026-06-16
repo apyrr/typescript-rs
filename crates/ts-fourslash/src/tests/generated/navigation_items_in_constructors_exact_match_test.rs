@@ -14,14 +14,16 @@ pub fn test_navigation_items_in_constructors_exact_match() {
 }
 
 fn run_test_navigation_items_in_constructors_exact_match(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationItemsInConstructorsExactMatch") {
+        return;
+    }
     let content = r"// @noLib: true
 class Test {
     [|private search1: number;|]
     constructor([|public search2: boolean|], [|readonly search3: string|], search4: string) {
     }
 }";
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_workspace_symbol(&[workspace_symbol_case(
         "search",
         vec![

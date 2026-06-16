@@ -14,7 +14,9 @@ pub fn test_completions_object_literal_union_string_mapping_type() {
 }
 
 fn run_test_completions_object_literal_union_string_mapping_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsObjectLiteralUnionStringMappingType") {
+        return;
+    }
     let content = r#"type UnionType = {
   key1: string;
 } | {

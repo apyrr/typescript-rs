@@ -14,7 +14,9 @@ pub fn test_linked_editing_jsx_tag10() {
 }
 
 fn run_test_linked_editing_jsx_tag10(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestLinkedEditingJsxTag10") {
+        return;
+    }
     let content = r"// @Filename: /jsx0.tsx
 const jsx = </*0*/>
 // @Filename: /jsx1.tsx

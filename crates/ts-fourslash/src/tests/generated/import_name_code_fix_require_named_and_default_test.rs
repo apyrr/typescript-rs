@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_require_named_and_default() {
 }
 
 fn run_test_import_name_code_fix_require_named_and_default(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_require_namedAndDefault") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @checkJs: true
 // @Filename: blah.ts

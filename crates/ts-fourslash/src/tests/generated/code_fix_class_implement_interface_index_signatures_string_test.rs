@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_index_signatures_string() {
 }
 
 fn run_test_code_fix_class_implement_interface_index_signatures_string(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceIndexSignaturesString") {
+        return;
+    }
     let content = r"interface I<X> {
     [Ƚ: string]: X;
 }

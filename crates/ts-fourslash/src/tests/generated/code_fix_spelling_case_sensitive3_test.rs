@@ -14,7 +14,9 @@ pub fn test_code_fix_spelling_case_sensitive3() {
 }
 
 fn run_test_code_fix_spelling_case_sensitive3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixSpellingCaseSensitive3") {
+        return;
+    }
     let content = r"class Node {}
 let node = new Node();
 [|nodes|]";

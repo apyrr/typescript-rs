@@ -14,7 +14,9 @@ pub fn test_find_all_refs_export_default_class_constructor() {
 }
 
 fn run_test_find_all_refs_export_default_class_constructor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsExportDefaultClassConstructor") {
+        return;
+    }
     let content = r"export default class {
     /*1*/constructor() {}
 }";

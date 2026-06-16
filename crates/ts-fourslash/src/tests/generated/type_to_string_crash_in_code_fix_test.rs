@@ -14,7 +14,9 @@ pub fn test_type_to_string_crash_in_code_fix() {
 }
 
 fn run_test_type_to_string_crash_in_code_fix(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTypeToStringCrashInCodeFix") {
+        return;
+    }
     let content = r"// @noImplicitAny: true
 function f([|y |], z = { p: y[";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

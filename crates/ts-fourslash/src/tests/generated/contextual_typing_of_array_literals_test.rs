@@ -14,7 +14,9 @@ pub fn test_contextual_typing_of_array_literals() {
 }
 
 fn run_test_contextual_typing_of_array_literals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestContextualTypingOfArrayLiterals") {
+        return;
+    }
     let content = r"// @strict: false
 class C {
     name: string;

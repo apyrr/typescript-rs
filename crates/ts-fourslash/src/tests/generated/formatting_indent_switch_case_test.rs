@@ -14,7 +14,9 @@ pub fn test_formatting_indent_switch_case() {
 }
 
 fn run_test_formatting_indent_switch_case(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingIndentSwitchCase") {
+        return;
+    }
     let content = r"let foo = 1;
 switch (foo) {
 /*1*/case 0:

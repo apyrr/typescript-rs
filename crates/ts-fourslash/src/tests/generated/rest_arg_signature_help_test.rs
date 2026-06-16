@@ -14,7 +14,9 @@ pub fn test_rest_arg_signature_help() {
 }
 
 fn run_test_rest_arg_signature_help(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRestArgSignatureHelp") {
+        return;
+    }
     let content = r"function f(...x: any[]) { }
 f(/**/);";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

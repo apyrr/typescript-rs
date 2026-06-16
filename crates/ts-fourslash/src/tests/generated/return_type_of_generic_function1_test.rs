@@ -14,7 +14,9 @@ pub fn test_return_type_of_generic_function1() {
 }
 
 fn run_test_return_type_of_generic_function1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReturnTypeOfGenericFunction1") {
+        return;
+    }
     let content = r"interface WrappedArray<T> {
     map<U>(iterator: (value: T) => U, context?: any): U[];
 }

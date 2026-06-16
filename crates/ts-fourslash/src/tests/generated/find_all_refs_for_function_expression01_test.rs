@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_function_expression01() {
 }
 
 fn run_test_find_all_refs_for_function_expression01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForFunctionExpression01") {
+        return;
+    }
     let content = r#"// @Filename: file1.ts
 var foo = /*1*/function /*2*/foo(a = /*3*/foo(), b = () => /*4*/foo) {
     /*5*/foo(/*6*/foo, /*7*/foo);

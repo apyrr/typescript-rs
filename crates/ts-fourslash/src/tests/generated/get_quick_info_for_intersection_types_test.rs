@@ -14,7 +14,9 @@ pub fn test_get_quick_info_for_intersection_types() {
 }
 
 fn run_test_get_quick_info_for_intersection_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetQuickInfoForIntersectionTypes") {
+        return;
+    }
     let content = r"function f(): string & {(): any} {
 	return <any>{};
 }

@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_interface2() {
 }
 
 fn run_test_quickinfo_verbosity_interface2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityInterface2") {
+        return;
+    }
     let content = r#"{
     interface Foo/*1*/ {
         a: "a" | "c";

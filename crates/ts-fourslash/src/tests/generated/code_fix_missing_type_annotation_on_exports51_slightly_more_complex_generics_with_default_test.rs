@@ -17,7 +17,11 @@ pub fn test_code_fix_missing_type_annotation_on_exports51_slightly_more_complex_
 fn run_test_code_fix_missing_type_annotation_on_exports51_slightly_more_complex_generics_with_default(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestCodeFixMissingTypeAnnotationOnExports51-slightly-more-complex-generics-with-default",
+    ) {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 export interface Foo<T, U = T[]> {}

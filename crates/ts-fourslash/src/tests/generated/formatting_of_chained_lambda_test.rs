@@ -14,7 +14,9 @@ pub fn test_formatting_of_chained_lambda() {
 }
 
 fn run_test_formatting_of_chained_lambda(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOfChainedLambda") {
+        return;
+    }
     let content = r"var fn = (x: string) => ()=> alert(x)/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

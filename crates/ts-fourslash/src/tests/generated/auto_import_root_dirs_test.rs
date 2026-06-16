@@ -14,7 +14,9 @@ pub fn test_auto_import_root_dirs() {
 }
 
 fn run_test_auto_import_root_dirs(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportRootDirs") {
+        return;
+    }
     let content = r#"// @Filename: /tsconfig.json
 {
     "compilerOptions": {

@@ -14,7 +14,9 @@ pub fn test_smart_indent_statement_for_of() {
 }
 
 fn run_test_smart_indent_statement_for_of(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentStatementForOf") {
+        return;
+    }
     let content = r"function Foo() {
     for (var i of [])
     {

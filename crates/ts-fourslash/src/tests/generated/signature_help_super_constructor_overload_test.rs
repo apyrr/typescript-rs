@@ -14,7 +14,9 @@ pub fn test_signature_help_super_constructor_overload() {
 }
 
 fn run_test_signature_help_super_constructor_overload(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpSuperConstructorOverload") {
+        return;
+    }
     let content = r#"class SuperOverloadBase {
     constructor();
     constructor(test: string);

@@ -14,7 +14,9 @@ pub fn test_formatting_on_nested_do_while_by_enter() {
 }
 
 fn run_test_formatting_on_nested_do_while_by_enter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnNestedDoWhileByEnter") {
+        return;
+    }
     let content = r"/*2*/do{
 /*3*/do/*1*/{
 /*4*/do{

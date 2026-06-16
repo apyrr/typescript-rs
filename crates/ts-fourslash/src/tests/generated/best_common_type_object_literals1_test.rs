@@ -14,7 +14,9 @@ pub fn test_best_common_type_object_literals1() {
 }
 
 fn run_test_best_common_type_object_literals1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestBestCommonTypeObjectLiterals1") {
+        return;
+    }
     let content = r"var a = { name: 'bob', age: 18 };
 var b = { name: 'jim', age: 20 };
 var /*1*/c = [a, b];

@@ -14,7 +14,9 @@ pub fn test_find_all_refs_with_shorthand_property_assignment2() {
 }
 
 fn run_test_find_all_refs_with_shorthand_property_assignment2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsWithShorthandPropertyAssignment2") {
+        return;
+    }
     let content = r#"var /*0*/dx = "Foo";
 
 namespace M { export var /*1*/dx; }

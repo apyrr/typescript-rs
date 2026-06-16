@@ -14,7 +14,9 @@ pub fn test_rename_rest_binding_element() {
 }
 
 fn run_test_rename_rest_binding_element(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameRestBindingElement") {
+        return;
+    }
     let content = r#"interface I {
     a: number;
     b: number;

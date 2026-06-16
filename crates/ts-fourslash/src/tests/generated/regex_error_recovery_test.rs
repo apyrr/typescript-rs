@@ -14,7 +14,9 @@ pub fn test_regex_error_recovery() {
 }
 
 fn run_test_regex_error_recovery(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRegexErrorRecovery") {
+        return;
+    }
     let content = r#" // test code
 //var x = //**/a/;/*1*/
 //x.exec("bab");

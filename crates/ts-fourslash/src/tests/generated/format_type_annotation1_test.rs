@@ -14,7 +14,9 @@ pub fn test_format_type_annotation1() {
 }
 
 fn run_test_format_type_annotation1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatTypeAnnotation1") {
+        return;
+    }
     let content = r"function foo(x: number, y?: string): number {}
 interface Foo {
     x: number;

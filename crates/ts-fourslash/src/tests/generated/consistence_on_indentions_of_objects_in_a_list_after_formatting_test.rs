@@ -14,7 +14,9 @@ pub fn test_consistence_on_indentions_of_objects_in_a_list_after_formatting() {
 }
 
 fn run_test_consistence_on_indentions_of_objects_in_a_list_after_formatting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestConsistenceOnIndentionsOfObjectsInAListAfterFormatting") {
+        return;
+    }
     let content = r"foo({
 }, {/*1*/
 });/*2*/";

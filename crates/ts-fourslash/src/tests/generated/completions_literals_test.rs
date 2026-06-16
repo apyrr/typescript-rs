@@ -14,7 +14,9 @@ pub fn test_completions_literals() {
 }
 
 fn run_test_completions_literals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsLiterals") {
+        return;
+    }
     let content = r#"const x: 0 | "one" = /**/;
 const y: 0 | "one" | 1n = /*1*/;
 const y2: 0 | "one" | 1n = 'one'/*2*/;"#;

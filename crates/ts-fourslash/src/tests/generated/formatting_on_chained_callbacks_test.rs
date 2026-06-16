@@ -14,7 +14,9 @@ pub fn test_formatting_on_chained_callbacks() {
 }
 
 fn run_test_formatting_on_chained_callbacks(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnChainedCallbacks") {
+        return;
+    }
     let content = r#"Promise
     .resolve()
     .then(() => {/*1*/""/*2*/

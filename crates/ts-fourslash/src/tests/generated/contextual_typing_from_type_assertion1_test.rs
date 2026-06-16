@@ -14,7 +14,9 @@ pub fn test_contextual_typing_from_type_assertion1() {
 }
 
 fn run_test_contextual_typing_from_type_assertion1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestContextualTypingFromTypeAssertion1") {
+        return;
+    }
     let content = r"var f3 = <(x: string) => string> function (/**/x) { return x.toLowerCase(); };";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_quick_info_at(t, "", "(parameter) x: string", "");

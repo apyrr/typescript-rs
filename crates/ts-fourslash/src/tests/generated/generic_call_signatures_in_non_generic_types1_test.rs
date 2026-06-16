@@ -14,7 +14,9 @@ pub fn test_generic_call_signatures_in_non_generic_types1() {
 }
 
 fn run_test_generic_call_signatures_in_non_generic_types1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericCallSignaturesInNonGenericTypes1") {
+        return;
+    }
     let content = r"interface WrappedObject<T> { }
 interface WrappedArray<T> { }
 interface Underscore {

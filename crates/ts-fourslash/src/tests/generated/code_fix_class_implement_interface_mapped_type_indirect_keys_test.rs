@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_mapped_type_indirect_keys() {
 }
 
 fn run_test_code_fix_class_implement_interface_mapped_type_indirect_keys(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceMappedTypeIndirectKeys") {
+        return;
+    }
     let content = r"type Base = { ax: number; ay: string };
 type BaseKeys = keyof Base;
 type MappedIndirect = { [K in BaseKeys]: boolean };

@@ -14,7 +14,9 @@ pub fn test_unused_imports14_fs() {
 }
 
 fn run_test_unused_imports14_fs(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedImports14FS") {
+        return;
+    }
     let content = r"// @noUnusedLocals: true
 // @Filename: file2.ts
 [| import /* 1 */ A /* 2 */, /* 3 */ { /* 4 */ x /* 5 */ } /* 6 */ from './a'; |]

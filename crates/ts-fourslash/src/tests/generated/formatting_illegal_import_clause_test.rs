@@ -14,7 +14,9 @@ pub fn test_formatting_illegal_import_clause() {
 }
 
 fn run_test_formatting_illegal_import_clause(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingIllegalImportClause") {
+        return;
+    }
     let content = r"var expect = require('expect.js');
 import React   from 'react'/*1*/;
 import { mount } from 'enzyme';

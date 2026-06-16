@@ -14,7 +14,9 @@ pub fn test_signature_help_negative_tests() {
 }
 
 fn run_test_signature_help_negative_tests(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpNegativeTests") {
+        return;
+    }
     let content = r"//inside a comment foo(/*insideComment*/
 cl/*invalidContext*/ass InvalidSignatureHelpLocation { }
 InvalidSignatureHelpLocation(/*validContext*/);";

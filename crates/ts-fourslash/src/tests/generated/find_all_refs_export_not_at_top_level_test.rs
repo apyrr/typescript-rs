@@ -14,7 +14,9 @@ pub fn test_find_all_refs_export_not_at_top_level() {
 }
 
 fn run_test_find_all_refs_export_not_at_top_level(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsExportNotAtTopLevel") {
+        return;
+    }
     let content = r"{
     /*1*/export const /*2*/x = 0;
     /*3*/x;

@@ -14,7 +14,9 @@ pub fn test_completions_import_promote_type_only6() {
 }
 
 fn run_test_completions_import_promote_type_only6(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImport_promoteTypeOnly6") {
+        return;
+    }
     let content = r#"// @module: node18
 // @allowImportingTsExtensions: false
 // @Filename: /exports.ts

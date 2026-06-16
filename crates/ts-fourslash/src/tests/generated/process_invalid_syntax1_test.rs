@@ -14,7 +14,9 @@ pub fn test_process_invalid_syntax1() {
 }
 
 fn run_test_process_invalid_syntax1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestProcessInvalidSyntax1") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @Filename: decl.js
 var obj = {};

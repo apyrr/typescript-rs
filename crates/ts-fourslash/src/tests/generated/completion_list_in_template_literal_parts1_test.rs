@@ -14,11 +14,13 @@ pub fn test_completion_list_in_template_literal_parts1() {
 }
 
 fn run_test_completion_list_in_template_literal_parts1(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"// @lib: es5
-/*0*/` + "`" + `  $ { ${/*1*/ 10/*2*/ + 1.1/*3*/ /*4*/} 12312` + "`" + `/*5*/
+    if should_skip_if_failing("TestCompletionListInTemplateLiteralParts1") {
+        return;
+    }
+    let content = r"// @lib: es5
+/*0*/`  $ { ${/*1*/ 10/*2*/ + 1.1/*3*/ /*4*/} 12312`/*5*/
 
-/*6*/` + "`" + `asdasd${/*7*/ 2 + 1.1 /*8*/} 12312 {"#;
+/*6*/`asdasd${/*7*/ 2 + 1.1 /*8*/} 12312 {";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(
         t,

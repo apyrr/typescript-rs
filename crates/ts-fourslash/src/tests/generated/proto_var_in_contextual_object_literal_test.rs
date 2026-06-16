@@ -14,7 +14,9 @@ pub fn test_proto_var_in_contextual_object_literal() {
 }
 
 fn run_test_proto_var_in_contextual_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestProtoVarInContextualObjectLiteral") {
+        return;
+    }
     let content = r#"var o1 : {
     __proto__: number;
     p: number;

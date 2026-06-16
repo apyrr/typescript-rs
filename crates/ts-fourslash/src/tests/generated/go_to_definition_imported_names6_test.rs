@@ -14,7 +14,9 @@ pub fn test_go_to_definition_imported_names6() {
 }
 
 fn run_test_go_to_definition_imported_names6(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionImportedNames6") {
+        return;
+    }
     let content = r#"// @Filename: b.ts
 import [|/*moduleAliasDefinition*/alias|] = require("./a");
 // @Filename: a.ts

@@ -14,7 +14,9 @@ pub fn test_formatting_space_before_function_paren() {
 }
 
 fn run_test_formatting_space_before_function_paren(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingSpaceBeforeFunctionParen") {
+        return;
+    }
     let content = r"/*1*/function foo() { }
 /*2*/function boo  () { }
 /*3*/var bar = function foo() { };

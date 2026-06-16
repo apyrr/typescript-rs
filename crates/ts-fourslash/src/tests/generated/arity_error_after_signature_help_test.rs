@@ -14,7 +14,9 @@ pub fn test_arity_error_after_signature_help() {
 }
 
 fn run_test_arity_error_after_signature_help(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestArityErrorAfterSignatureHelp") {
+        return;
+    }
     let content = r"// @strict: true
 
 declare function f(x: string, y: number): any;
@@ -45,6 +47,6 @@ declare function f(x: string, y: number): any;
         },
     );
     f.verify_code_fix_not_available(t, &[]);
-    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"), 0);
+    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"));
     done();
 }

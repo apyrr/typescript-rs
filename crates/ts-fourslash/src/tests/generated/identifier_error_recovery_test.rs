@@ -14,14 +14,16 @@ pub fn test_identifier_error_recovery() {
 }
 
 fn run_test_identifier_error_recovery(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIdentifierErrorRecovery") {
+        return;
+    }
     let content = r"var /*1*/export/*2*/;
 var foo;
 var /*3*/class/*4*/;
 var bar;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
-    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"), 0);
-    f.verify_error_exists_between_markers(&f.marker_by_name("3"), &f.marker_by_name("4"), 0);
+    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"));
+    f.verify_error_exists_between_markers(&f.marker_by_name("3"), &f.marker_by_name("4"));
     f.verify_number_of_errors_in_current_file(3);
     f.go_to_eof(t);
     f.verify_completions(

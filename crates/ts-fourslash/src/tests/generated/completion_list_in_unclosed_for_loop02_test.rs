@@ -14,7 +14,9 @@ pub fn test_completion_list_in_unclosed_for_loop02() {
 }
 
 fn run_test_completion_list_in_unclosed_for_loop02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInUnclosedForLoop02") {
+        return;
+    }
     let content = r"for (let i = 0; i < 10; i++) /*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(

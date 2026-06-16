@@ -14,7 +14,9 @@ pub fn test_unused_constant_in_function1() {
 }
 
 fn run_test_unused_constant_in_function1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedConstantInFunction1") {
+        return;
+    }
     let content = r#"// @noUnusedLocals: true
 [| function f1 () {
     const x: string = "x";

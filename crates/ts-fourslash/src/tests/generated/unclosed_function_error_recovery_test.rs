@@ -14,7 +14,9 @@ pub fn test_unclosed_function_error_recovery() {
 }
 
 fn run_test_unclosed_function_error_recovery(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnclosedFunctionErrorRecovery") {
+        return;
+    }
     let content = r"function alpha() {
 
 function beta() { /*1*/alpha()/*2*/; }

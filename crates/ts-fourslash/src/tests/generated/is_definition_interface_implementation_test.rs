@@ -14,7 +14,9 @@ pub fn test_is_definition_interface_implementation() {
 }
 
 fn run_test_is_definition_interface_implementation(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIsDefinitionInterfaceImplementation") {
+        return;
+    }
     let content = r"interface I {
     /*1*/M(): void;
 }

@@ -14,7 +14,9 @@ pub fn test_fundule_with_recursive_reference() {
 }
 
 fn run_test_fundule_with_recursive_reference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFunduleWithRecursiveReference") {
+        return;
+    }
     let content = r"namespace M {
     export function C() {}
     export namespace C {

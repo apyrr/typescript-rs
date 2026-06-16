@@ -14,7 +14,9 @@ pub fn test_rename_destructuring_assignment_nested_in_for2() {
 }
 
 fn run_test_rename_destructuring_assignment_nested_in_for2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameDestructuringAssignmentNestedInFor2") {
+        return;
+    }
     let content = r#"// @strict: false
 interface MultiRobot {
     name: string;

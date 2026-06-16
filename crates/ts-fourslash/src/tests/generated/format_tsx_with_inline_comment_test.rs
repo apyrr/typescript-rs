@@ -14,7 +14,9 @@ pub fn test_format_tsx_with_inline_comment() {
 }
 
 fn run_test_format_tsx_with_inline_comment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatTSXWithInlineComment") {
+        return;
+    }
     let content = r"// @Filename: foo.tsx
 const a = <div>
     // <a />

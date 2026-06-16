@@ -14,7 +14,9 @@ pub fn test_navigation_bar_function_like_property_assignments() {
 }
 
 fn run_test_navigation_bar_function_like_property_assignments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarFunctionLikePropertyAssignments") {
+        return;
+    }
     let content = r"var functions = {
     a: 0,
     b: function () { },

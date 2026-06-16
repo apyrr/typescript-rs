@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_intersection1() {
 }
 
 fn run_test_quickinfo_verbosity_intersection1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityIntersection1") {
+        return;
+    }
     let content = r#"{
     type Foo = { a: "a" | "c" };
     type Bar = { a: "a" | "b" };

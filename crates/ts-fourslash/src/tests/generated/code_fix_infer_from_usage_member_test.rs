@@ -14,7 +14,9 @@ pub fn test_code_fix_infer_from_usage_member() {
 }
 
 fn run_test_code_fix_infer_from_usage_member(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixInferFromUsageMember") {
+        return;
+    }
     let content = r"// @noImplicitAny: true
 class C {
     [|p;|]

@@ -14,7 +14,9 @@ pub fn test_quick_info_in_function_type_reference2() {
 }
 
 fn run_test_quick_info_in_function_type_reference2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoInFunctionTypeReference2") {
+        return;
+    }
     let content = r"class C<T> {
     map(fn: (/*1*/k: string, /*2*/value: T, context: any) => void, context: any) {
     }

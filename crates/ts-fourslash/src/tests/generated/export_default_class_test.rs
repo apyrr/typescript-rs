@@ -14,7 +14,9 @@ pub fn test_export_default_class() {
 }
 
 fn run_test_export_default_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExportDefaultClass") {
+        return;
+    }
     let content = r"export default class C {
     method() { /*1*/ }
 }

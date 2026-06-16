@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_local_05() {
 }
 
 fn run_test_go_to_implementation_local_05(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationLocal_05") {
+        return;
+    }
     let content = r"class Bar {
     public hello() {}
 }

@@ -14,7 +14,9 @@ pub fn test_code_fix_add_parameter_names3() {
 }
 
 fn run_test_code_fix_add_parameter_names3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddParameterNames3") {
+        return;
+    }
     let content = r"// @noImplicitAny: true
 type Rest = ([|public string|]) => void;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

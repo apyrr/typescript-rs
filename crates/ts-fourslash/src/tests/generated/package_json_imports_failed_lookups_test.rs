@@ -14,7 +14,9 @@ pub fn test_package_json_imports_failed_lookups() {
 }
 
 fn run_test_package_json_imports_failed_lookups(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestPackageJsonImportsFailedLookups") {
+        return;
+    }
     let content = r##"// @Filename: /a/b/c/d/e/tsconfig.json
 { "compilerOptions": { "lib": ["es5"], "module": "nodenext" } }
 // @Filename: /a/b/c/d/e/package.json

@@ -14,7 +14,9 @@ pub fn test_js_file_import_no_types() {
 }
 
 fn run_test_js_file_import_no_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsFileImportNoTypes") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @filename: /declarations.ts
  export class TestClass {}

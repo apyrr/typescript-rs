@@ -14,7 +14,9 @@ pub fn test_signature_help_constructor_inheritance() {
 }
 
 fn run_test_signature_help_constructor_inheritance(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpConstructorInheritance") {
+        return;
+    }
     let content = r"class base {
     constructor(s: string);
     constructor(n: number);

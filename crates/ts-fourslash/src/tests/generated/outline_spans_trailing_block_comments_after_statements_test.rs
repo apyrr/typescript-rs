@@ -14,7 +14,9 @@ pub fn test_outline_spans_trailing_block_comments_after_statements() {
 }
 
 fn run_test_outline_spans_trailing_block_comments_after_statements(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOutlineSpansTrailingBlockCommentsAfterStatements") {
+        return;
+    }
     let content = r"console.log(0);
 [|/*
 / * Some text

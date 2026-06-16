@@ -14,7 +14,9 @@ pub fn test_completion_list_on_private_variable_in_module() {
 }
 
 fn run_test_completion_list_on_private_variable_in_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOnPrivateVariableInModule") {
+        return;
+    }
     let content = r#"namespace Foo {     var testing = "";     test/**/ }"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(

@@ -14,7 +14,9 @@ pub fn test_inlay_hints_this_parameter() {
 }
 
 fn run_test_inlay_hints_this_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsThisParameter") {
+        return;
+    }
     let content = r"interface I {
     a: number;
 }

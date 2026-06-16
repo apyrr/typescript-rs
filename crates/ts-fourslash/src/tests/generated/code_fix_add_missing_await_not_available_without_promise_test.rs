@@ -14,7 +14,9 @@ pub fn test_code_fix_add_missing_await_not_available_without_promise() {
 }
 
 fn run_test_code_fix_add_missing_await_not_available_without_promise(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddMissingAwait_notAvailableWithoutPromise") {
+        return;
+    }
     let content = r"async function fn(a: {}, b: number) {
   a + b;
 }";

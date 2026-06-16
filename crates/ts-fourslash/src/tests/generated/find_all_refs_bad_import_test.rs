@@ -14,7 +14,9 @@ pub fn test_find_all_refs_bad_import() {
 }
 
 fn run_test_find_all_refs_bad_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsBadImport") {
+        return;
+    }
     let content = r#"import { /*0*/ab as /*1*/cd } from "doesNotExist";"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_find_all_references(t, &["0".to_string(), "1".to_string()]);

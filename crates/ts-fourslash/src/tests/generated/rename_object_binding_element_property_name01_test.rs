@@ -14,7 +14,9 @@ pub fn test_rename_object_binding_element_property_name01() {
 }
 
 fn run_test_rename_object_binding_element_property_name01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameObjectBindingElementPropertyName01") {
+        return;
+    }
     let content = r#"interface I {
     [|[|{| "contextRangeIndex": 0 |}property1|]: number;|]
     property2: string;

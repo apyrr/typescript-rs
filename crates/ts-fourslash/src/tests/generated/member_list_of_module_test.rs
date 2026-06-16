@@ -14,7 +14,9 @@ pub fn test_member_list_of_module() {
 }
 
 fn run_test_member_list_of_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListOfModule") {
+        return;
+    }
     let content = r"namespace Foo {
   export class Bar {
 

@@ -14,7 +14,9 @@ pub fn test_completions_self_declaring2() {
 }
 
 fn run_test_completions_self_declaring2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsSelfDeclaring2") {
+        return;
+    }
     let content = r"// @lib: es5
 function f1<T>(x: T) {}
 f1({ abc/*1*/ });

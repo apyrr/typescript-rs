@@ -14,7 +14,9 @@ pub fn test_find_all_refs_import_named() {
 }
 
 fn run_test_find_all_refs_import_named(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsImportNamed") {
+        return;
+    }
     let content = r#"// @module: commonjs
 // @Filename: f.ts
 export { foo as foo }

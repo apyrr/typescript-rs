@@ -14,7 +14,9 @@ pub fn test_add_duplicate_setter() {
 }
 
 fn run_test_add_duplicate_setter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAddDuplicateSetter") {
+        return;
+    }
     let content = r"class C {
     set foo(value) { }
     /**/

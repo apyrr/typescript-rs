@@ -14,7 +14,9 @@ pub fn test_default_params_and_contextual_types() {
 }
 
 fn run_test_default_params_and_contextual_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDefaultParamsAndContextualTypes") {
+        return;
+    }
     let content = r"// @strict: false
 interface FooOptions {
     text?: string;

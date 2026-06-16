@@ -14,7 +14,9 @@ pub fn test_mispelt_variable_for_in_loop_error_recovery() {
 }
 
 fn run_test_mispelt_variable_for_in_loop_error_recovery(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMispeltVariableForInLoopErrorRecovery") {
+        return;
+    }
     let content = r"var alpha = [1, 2, 3];
 for (var beta in alpha) {
     alpha[beat/**/]++;

@@ -16,7 +16,11 @@ pub fn test_semantic_classification_uninstantiated_module_with_variable_of_same_
 fn run_test_semantic_classification_uninstantiated_module_with_variable_of_same_name2(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestSemanticClassificationUninstantiatedModuleWithVariableOfSameName2",
+    ) {
+        return;
+    }
     let content = r"module /*0*/M {
     export interface /*1*/I {
     }

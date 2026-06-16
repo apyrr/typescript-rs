@@ -14,7 +14,9 @@ pub fn test_references_for_class_parameter() {
 }
 
 fn run_test_references_for_class_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForClassParameter") {
+        return;
+    }
     let content = r"var p = 2;
 
 class p { }

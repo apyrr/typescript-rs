@@ -14,7 +14,9 @@ pub fn test_indentation_in_augmentations2() {
 }
 
 fn run_test_indentation_in_augmentations2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIndentationInAugmentations2") {
+        return;
+    }
     let content = r#"declare module "A" {
    global {/*1*/"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

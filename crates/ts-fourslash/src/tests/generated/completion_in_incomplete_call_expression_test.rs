@@ -14,7 +14,9 @@ pub fn test_completion_in_incomplete_call_expression() {
 }
 
 fn run_test_completion_in_incomplete_call_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionInIncompleteCallExpression") {
+        return;
+    }
     let content = r"// @lib: es5
 var array = [1, 2, 4]
 function a4(x, y, z) { }

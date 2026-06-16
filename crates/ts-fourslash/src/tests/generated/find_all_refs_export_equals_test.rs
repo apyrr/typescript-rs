@@ -14,7 +14,9 @@ pub fn test_find_all_refs_export_equals() {
 }
 
 fn run_test_find_all_refs_export_equals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsExportEquals") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 type /*0*/T = number;
 /*1*/export = /*2*/T;

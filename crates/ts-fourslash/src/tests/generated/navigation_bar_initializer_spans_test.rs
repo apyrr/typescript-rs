@@ -14,7 +14,9 @@ pub fn test_navigation_bar_initializer_spans() {
 }
 
 fn run_test_navigation_bar_initializer_spans(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarInitializerSpans") {
+        return;
+    }
     let content = r"// get the name for the navbar from the variable name rather than the function name
 const [|[|x|] = () => { var [|a|]; }|];
 const [|[|f|] = function f() { var [|b|]; }|];

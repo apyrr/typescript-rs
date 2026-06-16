@@ -14,7 +14,9 @@ pub fn test_go_to_definition_variable_assignment3() {
 }
 
 fn run_test_go_to_definition_variable_assignment3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionVariableAssignment3") {
+        return;
+    }
     let content = r"// @filename: foo.ts
 const Foo = module./*def*/exports = function () {}
 Foo.prototype.bar = function() {}

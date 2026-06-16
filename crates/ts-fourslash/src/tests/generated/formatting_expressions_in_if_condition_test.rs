@@ -14,7 +14,9 @@ pub fn test_formatting_expressions_in_if_condition() {
 }
 
 fn run_test_formatting_expressions_in_if_condition(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingExpressionsInIfCondition") {
+        return;
+    }
     let content = r"if (a === 1 ||
     /*0*/b === 2 ||/*1*/
     c === 3) {

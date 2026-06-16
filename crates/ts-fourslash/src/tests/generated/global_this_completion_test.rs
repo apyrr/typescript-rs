@@ -14,7 +14,9 @@ pub fn test_global_this_completion() {
 }
 
 fn run_test_global_this_completion(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGlobalThisCompletion") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @target: esnext
 // @Filename: test.js

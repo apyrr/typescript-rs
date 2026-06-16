@@ -14,10 +14,12 @@ pub fn test_format_no_space_between_closing_paren_and_template_string() {
 }
 
 fn run_test_format_no_space_between_closing_paren_and_template_string(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"foo() ` + "`" + `abc` + "`" + `;
-bar()` + "`" + `def` + "`" + `;
-baz()` + "`" + `a${x}b` + "`" + `;"#;
+    if should_skip_if_failing("TestFormatNoSpaceBetweenClosingParenAndTemplateString") {
+        return;
+    }
+    let content = r"foo() `abc`;
+bar()`def`;
+baz()`a${x}b`;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");
     f.verify_current_file_content(

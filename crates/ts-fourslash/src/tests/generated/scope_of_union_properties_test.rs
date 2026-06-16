@@ -14,7 +14,9 @@ pub fn test_scope_of_union_properties() {
 }
 
 fn run_test_scope_of_union_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestScopeOfUnionProperties") {
+        return;
+    }
     let content = r"function f(s: string | number) {
     s.constr/*1*/uctor
 }";

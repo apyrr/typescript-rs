@@ -14,7 +14,9 @@ pub fn test_unused_localsin_constructor_fs1() {
 }
 
 fn run_test_unused_localsin_constructor_fs1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedLocalsinConstructorFS1") {
+        return;
+    }
     let content = r"// @noUnusedLocals: true
 // @noUnusedParameters:true
 class greeter {

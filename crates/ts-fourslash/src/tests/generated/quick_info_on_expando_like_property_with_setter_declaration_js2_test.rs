@@ -14,7 +14,9 @@ pub fn test_quick_info_on_expando_like_property_with_setter_declaration_js2() {
 }
 
 fn run_test_quick_info_on_expando_like_property_with_setter_declaration_js2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnExpandoLikePropertyWithSetterDeclarationJs2") {
+        return;
+    }
     let content = r#"// @strict: true
 // @checkJs: true
 // @filename: index.js

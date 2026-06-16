@@ -16,7 +16,11 @@ pub fn test_go_to_definition_constructor_of_class_when_class_is_preceded_by_name
 fn run_test_go_to_definition_constructor_of_class_when_class_is_preceded_by_namespace01(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestGoToDefinitionConstructorOfClassWhenClassIsPrecededByNamespace01",
+    ) {
+        return;
+    }
     let content = r"namespace Foo {
     export var x;
 }

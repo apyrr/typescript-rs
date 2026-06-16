@@ -14,7 +14,9 @@ pub fn test_quick_info_on_catch_variable() {
 }
 
 fn run_test_quick_info_on_catch_variable(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnCatchVariable") {
+        return;
+    }
     let content = r"// @strict: false
 function f() {
    try { } catch (/**/e) { }

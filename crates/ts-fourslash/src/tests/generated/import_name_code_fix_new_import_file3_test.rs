@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_file3() {
 }
 
 fn run_test_import_name_code_fix_new_import_file3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportFile3") {
+        return;
+    }
     let content = r"[|let t: XXX/*0*/.I;|]
 // @Filename: ./module.ts
 export namespace XXX {

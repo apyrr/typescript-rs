@@ -14,7 +14,9 @@ pub fn test_function_overload_count() {
 }
 
 fn run_test_function_overload_count(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFunctionOverloadCount") {
+        return;
+    }
     let content = r#"class C1 {
     public attr(): string;
     public attr(i: number): string;

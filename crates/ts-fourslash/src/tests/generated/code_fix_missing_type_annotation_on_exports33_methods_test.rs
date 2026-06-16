@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports33_methods() {
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports33_methods(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports33-methods") {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 // @Filename: /code.ts

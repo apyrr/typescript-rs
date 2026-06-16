@@ -14,7 +14,9 @@ pub fn test_formatting_comments_before_errors() {
 }
 
 fn run_test_formatting_comments_before_errors(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingCommentsBeforeErrors") {
+        return;
+    }
     let content = r"namespace A {
     interface B {
         // a

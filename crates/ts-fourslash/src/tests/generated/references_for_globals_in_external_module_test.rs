@@ -14,7 +14,9 @@ pub fn test_references_for_globals_in_external_module() {
 }
 
 fn run_test_references_for_globals_in_external_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForGlobalsInExternalModule") {
+        return;
+    }
     let content = r"/*1*/var /*2*/topLevelVar = 2;
 var topLevelVar2 = /*3*/topLevelVar;
 

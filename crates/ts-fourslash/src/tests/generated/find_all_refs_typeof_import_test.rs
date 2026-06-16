@@ -14,7 +14,9 @@ pub fn test_find_all_refs_typeof_import() {
 }
 
 fn run_test_find_all_refs_typeof_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsTypeofImport") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 /*1*/export const /*2*/x = 0;
 declare const a: typeof import("./a");

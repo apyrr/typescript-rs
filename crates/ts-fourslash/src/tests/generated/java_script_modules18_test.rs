@@ -14,7 +14,9 @@ pub fn test_java_script_modules18() {
 }
 
 fn run_test_java_script_modules18(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJavaScriptModules18") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @Filename: myMod.js
 var x = require('fs');

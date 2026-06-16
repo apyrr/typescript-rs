@@ -14,7 +14,9 @@ pub fn test_regexp() {
 }
 
 fn run_test_regexp(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRegexp") {
+        return;
+    }
     let content = r"var /**/x = /aa/;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_quick_info_at(t, "", "var x: RegExp", "");

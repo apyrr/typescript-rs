@@ -14,7 +14,9 @@ pub fn test_syntactic_classification_with_errors() {
 }
 
 fn run_test_syntactic_classification_with_errors(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSyntacticClassificationWithErrors") {
+        return;
+    }
     let content = r"class A {
     a:
 }

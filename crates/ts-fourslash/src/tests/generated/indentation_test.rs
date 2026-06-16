@@ -14,7 +14,9 @@ pub fn test_indentation() {
 }
 
 fn run_test_indentation(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIndentation") {
+        return;
+    }
     let content = r#"
 namespace classes {
 {| "indent": 4 |} 

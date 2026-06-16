@@ -14,7 +14,9 @@ pub fn test_quick_info_on_error_types1() {
 }
 
 fn run_test_quick_info_on_error_types1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnErrorTypes1") {
+        return;
+    }
     let content = r"var /*A*/f: {
     x: number;
     <

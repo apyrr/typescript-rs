@@ -14,7 +14,9 @@ pub fn test_no_smart_indent_inside_multiline_string() {
 }
 
 fn run_test_no_smart_indent_inside_multiline_string(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNoSmartIndentInsideMultilineString") {
+        return;
+    }
     let content = r"window.onload = () => {
     var el = document.getElementById('content\/*1*/');
     var greeter = new Greeter(el);

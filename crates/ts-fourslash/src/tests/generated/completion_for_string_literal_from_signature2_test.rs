@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal_from_signature2() {
 }
 
 fn run_test_completion_for_string_literal_from_signature2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteralFromSignature2") {
+        return;
+    }
     let content = r#"declare function f(a: "x"): void;
 declare function f(a: string, b: number): void;
 f("/**/", 0);"#;

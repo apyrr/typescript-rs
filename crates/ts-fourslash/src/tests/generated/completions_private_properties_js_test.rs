@@ -14,7 +14,9 @@ pub fn test_completions_private_properties_js() {
 }
 
 fn run_test_completions_private_properties_js(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsPrivateProperties_Js") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @Filename: a.d.ts
 declare namespace A {

@@ -14,7 +14,9 @@ pub fn test_quick_info_meaning() {
 }
 
 fn run_test_quick_info_meaning(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoMeaning") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @module: commonjs
 // @Filename: foo.d.ts

@@ -14,7 +14,9 @@ pub fn test_satisfies_operator_completion() {
 }
 
 fn run_test_satisfies_operator_completion(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSatisfiesOperatorCompletion") {
+        return;
+    }
     let content = r"type T = number;
 var x;
 var y = x satisfies /**/";

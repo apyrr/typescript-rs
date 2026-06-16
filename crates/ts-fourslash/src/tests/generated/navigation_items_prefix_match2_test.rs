@@ -14,7 +14,9 @@ pub fn test_navigation_items_prefix_match2() {
 }
 
 fn run_test_navigation_items_prefix_match2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationItemsPrefixMatch2") {
+        return;
+    }
     let content = r"// @lib: es5
 namespace Shapes {
     export class Point {
@@ -35,7 +37,7 @@ function PointsFunc(): void {
     [|origin1;|]
     [|public _distance(distanceParam): void;|]
 }|]";
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_workspace_symbol(&[
         workspace_symbol_case(
             "origin",

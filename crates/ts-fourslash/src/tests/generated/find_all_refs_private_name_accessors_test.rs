@@ -14,7 +14,9 @@ pub fn test_find_all_refs_private_name_accessors() {
 }
 
 fn run_test_find_all_refs_private_name_accessors(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsPrivateNameAccessors") {
+        return;
+    }
     let content = r"class C {
     /*1*/get /*2*/#foo(){ return 1; }
     /*3*/set /*4*/#foo(value: number){  }

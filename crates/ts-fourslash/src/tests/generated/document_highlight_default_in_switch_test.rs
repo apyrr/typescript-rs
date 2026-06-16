@@ -14,7 +14,9 @@ pub fn test_document_highlight_default_in_switch() {
 }
 
 fn run_test_document_highlight_default_in_switch(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightDefaultInSwitch") {
+        return;
+    }
     let content = r"const foo = 'foo';
 [|switch|] (foo) {
    [|case|] 'foo':

@@ -14,7 +14,9 @@ pub fn test_rename_declaration_keywords() {
 }
 
 fn run_test_rename_declaration_keywords(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameDeclarationKeywords") {
+        return;
+    }
     let content = r#"[|{| "id": "baseDecl" |}class [|{| "isWriteAccess": true, "isDefinition": true, "contextRangeId": "baseDecl" |}Base|] {}|]
 [|{| "id": "implemented1Decl" |}interface [|{| "isWriteAccess": true, "isDefinition": true, "contextRangeId": "implemented1Decl" |}Implemented1|] {}|]
 [|{| "id": "classDecl1" |}[|class|] [|{| "isWriteAccess": true, "isDefinition": true, "contextRangeId": "classDecl1" |}C1|] [|extends|] [|Base|] [|implements|] [|Implemented1|] {

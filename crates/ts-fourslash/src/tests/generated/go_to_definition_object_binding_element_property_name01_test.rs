@@ -14,7 +14,9 @@ pub fn test_go_to_definition_object_binding_element_property_name01() {
 }
 
 fn run_test_go_to_definition_object_binding_element_property_name01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionObjectBindingElementPropertyName01") {
+        return;
+    }
     let content = r"interface I {
     /*def*/property1: number;
     property2: string;

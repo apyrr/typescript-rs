@@ -14,7 +14,9 @@ pub fn test_import_decl_paste0() {
 }
 
 fn run_test_import_decl_paste0(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportDeclPaste0") {
+        return;
+    }
     let content = r"// @Filename: exportEqualsInterface_A.ts
 interface A {
 	p1: number;

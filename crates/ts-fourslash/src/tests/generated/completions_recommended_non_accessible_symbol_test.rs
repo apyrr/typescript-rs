@@ -14,7 +14,9 @@ pub fn test_completions_recommended_non_accessible_symbol() {
 }
 
 fn run_test_completions_recommended_non_accessible_symbol(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsRecommended_nonAccessibleSymbol") {
+        return;
+    }
     let content = r"function f() {
     class C {}
     return (c: C) => void;

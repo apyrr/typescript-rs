@@ -14,7 +14,9 @@ pub fn test_formatting_global_augmentation2() {
 }
 
 fn run_test_formatting_global_augmentation2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingGlobalAugmentation2") {
+        return;
+    }
     let content = r#"declare module "A" {
 /*1*/                  global                {
     }

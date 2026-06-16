@@ -14,7 +14,9 @@ pub fn test_get_occurrences_const03() {
 }
 
 fn run_test_get_occurrences_const03(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesConst03") {
+        return;
+    }
     let content = r"namespace m {
     export /*1*/const x;
     export [|const|] enum E {

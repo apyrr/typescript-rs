@@ -14,7 +14,9 @@ pub fn test_go_to_definition_shadow_variable() {
 }
 
 fn run_test_go_to_definition_shadow_variable(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionShadowVariable") {
+        return;
+    }
     let content = r#"var shadowVariable = "foo";
 function shadowVariableTestModule() {
     var /*shadowVariableDefinition*/shadowVariable;

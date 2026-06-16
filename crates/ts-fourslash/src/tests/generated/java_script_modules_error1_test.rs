@@ -14,7 +14,9 @@ pub fn test_java_script_modules_error1() {
 }
 
 fn run_test_java_script_modules_error1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJavaScriptModulesError1") {
+        return;
+    }
     let content = r"// @allowNonTsExtensions: true
 // @Filename: Foo.js
 define('mod1', ['a'], /**/function(a, b) {

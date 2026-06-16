@@ -14,7 +14,9 @@ pub fn test_completion_list_after_regular_expression_literal02() {
 }
 
 fn run_test_completion_list_after_regular_expression_literal02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAfterRegularExpressionLiteral02") {
+        return;
+    }
     let content = r"let v = 100;
 let x = /absidey//**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

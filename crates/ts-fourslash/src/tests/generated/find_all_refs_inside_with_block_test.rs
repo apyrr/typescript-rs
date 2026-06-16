@@ -14,7 +14,9 @@ pub fn test_find_all_refs_inside_with_block() {
 }
 
 fn run_test_find_all_refs_inside_with_block(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsInsideWithBlock") {
+        return;
+    }
     let content = r"/*1*/var /*2*/x = 0;
 
 with ({}) {

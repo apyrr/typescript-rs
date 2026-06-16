@@ -14,7 +14,9 @@ pub fn test_code_fix_negative_replace_qualified_name_with_indexed_access_type01(
 }
 
 fn run_test_code_fix_negative_replace_qualified_name_with_indexed_access_type01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixNegativeReplaceQualifiedNameWithIndexedAccessType01") {
+        return;
+    }
     let content = r#"namespace Container {
     export interface Foo {
         bar: string;

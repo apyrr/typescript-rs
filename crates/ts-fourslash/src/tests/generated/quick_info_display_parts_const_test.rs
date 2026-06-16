@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_const() {
 }
 
 fn run_test_quick_info_display_parts_const(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsConst") {
+        return;
+    }
     let content = r#"const /*1*/a = 10;
 function foo() {
     const /*2*/b = /*3*/a;

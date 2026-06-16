@@ -14,7 +14,9 @@ pub fn test_outlining_spans_switch_cases() {
 }
 
 fn run_test_outlining_spans_switch_cases(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOutliningSpansSwitchCases") {
+        return;
+    }
     let content = r"switch (undefined)[| {
  case 0:[|
    console.log(1)

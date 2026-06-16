@@ -14,7 +14,9 @@ pub fn test_find_all_refs_of_constructor2() {
 }
 
 fn run_test_find_all_refs_of_constructor2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsOfConstructor2") {
+        return;
+    }
     let content = r#"class A {
     /*a*/constructor(s: string) {}
 }

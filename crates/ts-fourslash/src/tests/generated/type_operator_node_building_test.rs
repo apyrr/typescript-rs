@@ -14,7 +14,9 @@ pub fn test_type_operator_node_building() {
 }
 
 fn run_test_type_operator_node_building(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTypeOperatorNodeBuilding") {
+        return;
+    }
     let content = r"// @Filename: keyof.ts
 function doSomethingWithKeys<T>(...keys: (keyof T)[]) { }
 

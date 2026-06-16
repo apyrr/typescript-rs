@@ -14,7 +14,9 @@ pub fn test_completion_list_at_invalid_locations() {
 }
 
 fn run_test_completion_list_at_invalid_locations(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtInvalidLocations") {
+        return;
+    }
     let content = r#"var v1 = '';
 " /*openString1*/
 var v2 = '';

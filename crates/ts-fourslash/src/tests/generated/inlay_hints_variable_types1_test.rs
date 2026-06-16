@@ -14,7 +14,9 @@ pub fn test_inlay_hints_variable_types1() {
 }
 
 fn run_test_inlay_hints_variable_types1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsVariableTypes1") {
+        return;
+    }
     let content = r#"class C {}
 namespace N { export class Foo {} }
 interface Foo {}

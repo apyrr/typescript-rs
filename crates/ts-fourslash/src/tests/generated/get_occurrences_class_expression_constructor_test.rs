@@ -14,7 +14,9 @@ pub fn test_get_occurrences_class_expression_constructor() {
 }
 
 fn run_test_get_occurrences_class_expression_constructor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesClassExpressionConstructor") {
+        return;
+    }
     let content = r"let A = class Foo {
     [|constructor|]();
     [|constructor|](x: number);

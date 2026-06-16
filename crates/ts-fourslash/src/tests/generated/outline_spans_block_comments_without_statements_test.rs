@@ -14,7 +14,9 @@ pub fn test_outline_spans_block_comments_without_statements() {
 }
 
 fn run_test_outline_spans_block_comments_without_statements(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOutlineSpansBlockCommentsWithoutStatements") {
+        return;
+    }
     let content = r"[|/*
 / * Some text
   */|]";

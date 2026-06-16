@@ -14,7 +14,9 @@ pub fn test_semicolon_formatting_after_array_literal() {
 }
 
 fn run_test_semicolon_formatting_after_array_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemicolonFormattingAfterArrayLiteral") {
+        return;
+    }
     let content = r"[1,2]/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

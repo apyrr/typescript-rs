@@ -14,23 +14,25 @@ pub fn test_get_outlining_spans_for_template_literal() {
 }
 
 fn run_test_get_outlining_spans_for_template_literal(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"declare function tag(...args: any[]): void
-const a = [|` + "`" + `signal line` + "`" + `|]
-const b = [|` + "`" + `multi
-line` + "`" + `|]
-const c = tag[|` + "`" + `signal line` + "`" + `|]
-const d = tag[|` + "`" + `multi
-line` + "`" + `|]
-const e = [|` + "`" + `signal ${1} line` + "`" + `|]
-const f = [|` + "`" + `multi
+    if should_skip_if_failing("TestGetOutliningSpansForTemplateLiteral") {
+        return;
+    }
+    let content = r"declare function tag(...args: any[]): void
+const a = [|`signal line`|]
+const b = [|`multi
+line`|]
+const c = tag[|`signal line`|]
+const d = tag[|`multi
+line`|]
+const e = [|`signal ${1} line`|]
+const f = [|`multi
 ${1}
-line` + "`" + `|]
-const g = tag[|` + "`" + `signal ${1} line` + "`" + `|]
-const h = tag[|` + "`" + `multi
+line`|]
+const g = tag[|`signal ${1} line`|]
+const h = tag[|`multi
 ${1}
-line` + "`" + `|]
-const i = ` + "`" + `` + "`" + `"#;
+line`|]
+const i = ``";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_outlining_spans_from_ranges(t);
     done();

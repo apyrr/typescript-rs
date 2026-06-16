@@ -14,7 +14,9 @@ pub fn test_go_to_definition_import3() {
 }
 
 fn run_test_go_to_definition_import3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionImport3") {
+        return;
+    }
     let content = r#"// @Filename: /b.ts
 /*2*/export const foo = 1;
 // @Filename: /a.ts

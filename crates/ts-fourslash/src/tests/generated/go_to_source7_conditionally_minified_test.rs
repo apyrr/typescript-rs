@@ -14,7 +14,9 @@ pub fn test_go_to_source7_conditionally_minified() {
 }
 
 fn run_test_go_to_source7_conditionally_minified(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToSource7_conditionallyMinified") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @moduleResolution: bundler
 // @Filename: /home/src/workspaces/project/node_modules/react/package.json

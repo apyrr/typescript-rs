@@ -14,7 +14,9 @@ pub fn test_syntactic_classifications_for_of_keyword2() {
 }
 
 fn run_test_syntactic_classifications_for_of_keyword2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSyntacticClassificationsForOfKeyword2") {
+        return;
+    }
     let content = r"for (var of in of) { }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_semantic_tokens(

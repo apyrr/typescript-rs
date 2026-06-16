@@ -14,7 +14,9 @@ pub fn test_go_to_definition_overridden_member15() {
 }
 
 fn run_test_go_to_definition_overridden_member15(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionOverriddenMember15") {
+        return;
+    }
     let content = r"// @noImplicitOverride: true
 class A {
     static /*2*/m() {}

@@ -14,7 +14,9 @@ pub fn test_tsx_completion_in_function_expression_of_children_callback1() {
 }
 
 fn run_test_tsx_completion_in_function_expression_of_children_callback1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxCompletionInFunctionExpressionOfChildrenCallback1") {
+        return;
+    }
     let content = r"//@module: commonjs
 //@jsx: preserve
 // @Filename: 1.tsx

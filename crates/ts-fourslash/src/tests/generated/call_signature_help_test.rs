@@ -14,7 +14,9 @@ pub fn test_call_signature_help() {
 }
 
 fn run_test_call_signature_help(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCallSignatureHelp") {
+        return;
+    }
     let content = r"interface C {
    (): number;
 }

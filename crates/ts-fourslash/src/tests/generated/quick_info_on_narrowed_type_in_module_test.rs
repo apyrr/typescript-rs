@@ -14,7 +14,9 @@ pub fn test_quick_info_on_narrowed_type_in_module() {
 }
 
 fn run_test_quick_info_on_narrowed_type_in_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnNarrowedTypeInModule") {
+        return;
+    }
     let content = r#"// @strict: false
 var strOrNum: string | number;
 namespace m {

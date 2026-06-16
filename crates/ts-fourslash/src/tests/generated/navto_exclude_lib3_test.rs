@@ -14,10 +14,12 @@ pub fn test_navto_exclude_lib3() {
 }
 
 fn run_test_navto_exclude_lib3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavto_excludeLib3") {
+        return;
+    }
     let content = r"// @filename: /index.ts
 [|function parseInt(s: string): number {}|]";
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_workspace_symbol(&[workspace_symbol_case_with_preferences(
         "parseInt",
         vec![symbol_information(

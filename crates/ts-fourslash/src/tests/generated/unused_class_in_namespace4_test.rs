@@ -14,7 +14,9 @@ pub fn test_unused_class_in_namespace4() {
 }
 
 fn run_test_unused_class_in_namespace4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedClassInNamespace4") {
+        return;
+    }
     let content = r"// @strict: false
 // @noUnusedLocals: true
 // @noUnusedParameters:true

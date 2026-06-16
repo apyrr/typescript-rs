@@ -14,7 +14,9 @@ pub fn test_alias_to_var_used_as_type() {
 }
 
 fn run_test_alias_to_var_used_as_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAliasToVarUsedAsType") {
+        return;
+    }
     let content = r"/**/
 namespace A {
 export var X;

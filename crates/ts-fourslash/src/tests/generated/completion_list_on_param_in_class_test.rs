@@ -14,7 +14,9 @@ pub fn test_completion_list_on_param_in_class() {
 }
 
 fn run_test_completion_list_on_param_in_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOnParamInClass") {
+        return;
+    }
     let content = r"export class encoder {
     static getEncoding(buffer: buffer/**/Pointer
 }";

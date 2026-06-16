@@ -14,7 +14,9 @@ pub fn test_path_completions_allow_module_augmentation_extensions() {
 }
 
 fn run_test_path_completions_allow_module_augmentation_extensions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestPathCompletionsAllowModuleAugmentationExtensions") {
+        return;
+    }
     let content = r#"// @Filename: /project/foo.css
 export const foo = 0;
 // @Filename: declarations.d.ts

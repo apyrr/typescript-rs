@@ -14,7 +14,9 @@ pub fn test_code_fix_infer_from_primitive_usage() {
 }
 
 fn run_test_code_fix_infer_from_primitive_usage(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixInferFromPrimitiveUsage") {
+        return;
+    }
     let content = r"// @noImplicitAny: true
 function wrap( [| s |] ) {
     return s.length + s.indexOf('hi')

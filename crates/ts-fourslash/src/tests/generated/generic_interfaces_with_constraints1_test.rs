@@ -14,7 +14,9 @@ pub fn test_generic_interfaces_with_constraints1() {
 }
 
 fn run_test_generic_interfaces_with_constraints1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericInterfacesWithConstraints1") {
+        return;
+    }
     let content = r"interface A { a: string; }
 interface B extends A { b: string; }
 interface C extends B { c: string; }

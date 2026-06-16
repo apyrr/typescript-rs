@@ -14,7 +14,9 @@ pub fn test_formatting_on_invalid_codes() {
 }
 
 fn run_test_formatting_on_invalid_codes(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnInvalidCodes") {
+        return;
+    }
     let content = r"/*1*/var a;var c          , b;var  $d
 /*2*/var $e
 /*3*/var f

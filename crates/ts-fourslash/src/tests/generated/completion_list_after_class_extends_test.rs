@@ -14,7 +14,9 @@ pub fn test_completion_list_after_class_extends() {
 }
 
 fn run_test_completion_list_after_class_extends(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAfterClassExtends") {
+        return;
+    }
     let content = r"namespace Bar {
     export class Bleah {
     }

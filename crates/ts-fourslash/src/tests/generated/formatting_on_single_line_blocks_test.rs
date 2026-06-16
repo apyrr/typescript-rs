@@ -14,7 +14,9 @@ pub fn test_formatting_on_single_line_blocks() {
 }
 
 fn run_test_formatting_on_single_line_blocks(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnSingleLineBlocks") {
+        return;
+    }
     let content = r"class C
 {}
 if (true)

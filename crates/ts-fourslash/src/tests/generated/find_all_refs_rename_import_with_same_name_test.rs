@@ -14,7 +14,9 @@ pub fn test_find_all_refs_rename_import_with_same_name() {
 }
 
 fn run_test_find_all_refs_rename_import_with_same_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsRenameImportWithSameName") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 [|export const /*0*/[|{| "isWriteAccess": true, "isDefinition": true, "contextRangeIndex": 0 |}x|] = 0;|]
 //@Filename: /b.ts

@@ -14,7 +14,9 @@ pub fn test_find_all_references_of_json_module() {
 }
 
 fn run_test_find_all_references_of_json_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllReferencesOfJsonModule") {
+        return;
+    }
     let content = r#"// @resolveJsonModule: true
 // @module: commonjs
 // @esModuleInterop: true

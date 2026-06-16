@@ -14,7 +14,9 @@ pub fn test_go_to_definition_in_type_argument() {
 }
 
 fn run_test_go_to_definition_in_type_argument(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionInTypeArgument") {
+        return;
+    }
     let content = r"class /*fooDefinition*/Foo<T> { }
 
 class /*barDefinition*/Bar { }

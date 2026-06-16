@@ -14,7 +14,9 @@ pub fn test_navigation_bar_nested_object_literals() {
 }
 
 fn run_test_navigation_bar_nested_object_literals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarNestedObjectLiterals") {
+        return;
+    }
     let content = r"var a = {
     b: 0,
     c: {},

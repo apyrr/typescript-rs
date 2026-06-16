@@ -14,7 +14,9 @@ pub fn test_signature_help_expanded_rest_tuples_local_labels1() {
 }
 
 fn run_test_signature_help_expanded_rest_tuples_local_labels1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpExpandedRestTuplesLocalLabels1") {
+        return;
+    }
     let content = r#"interface AppleInfo {
   color: "green" | "red";
 }

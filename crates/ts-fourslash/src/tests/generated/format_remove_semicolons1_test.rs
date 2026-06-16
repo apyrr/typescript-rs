@@ -14,7 +14,9 @@ pub fn test_format_remove_semicolons1() {
 }
 
 fn run_test_format_remove_semicolons1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatRemoveSemicolons1") {
+        return;
+    }
     let content = r#"; (function f() { })();
 const a = 3;
 + 4;
@@ -31,7 +33,7 @@ class C {
     ;
 }
 a;
-` + "`" + `b` + "`" + `;
+`b`;
 b;
 (3);
 4;

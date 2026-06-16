@@ -14,7 +14,9 @@ pub fn test_completions_literal_on_property_value_matching_generic() {
 }
 
 fn run_test_completions_literal_on_property_value_matching_generic(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsLiteralOnPropertyValueMatchingGeneric") {
+        return;
+    }
     let content = r#"// @Filename: /a.tsx
 declare function bar1<P extends "" | "bar" | "baz">(p: { type: P }): void;
 

@@ -14,7 +14,9 @@ pub fn test_format_array_or_object_literals_in_variable_list() {
 }
 
 fn run_test_format_array_or_object_literals_in_variable_list(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatArrayOrObjectLiteralsInVariableList") {
+        return;
+    }
     let content = r"var v30 = [1, 2], v31, v32, v33 = [0], v34 = {'a': true}, v35;/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");

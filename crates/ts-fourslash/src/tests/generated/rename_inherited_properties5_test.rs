@@ -14,7 +14,9 @@ pub fn test_rename_inherited_properties5() {
 }
 
 fn run_test_rename_inherited_properties5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameInheritedProperties5") {
+        return;
+    }
     let content = r#"interface C extends D {
     propC: number;
 }

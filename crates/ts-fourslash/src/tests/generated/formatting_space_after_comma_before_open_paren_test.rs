@@ -14,7 +14,9 @@ pub fn test_formatting_space_after_comma_before_open_paren() {
 }
 
 fn run_test_formatting_space_after_comma_before_open_paren(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingSpaceAfterCommaBeforeOpenParen") {
+        return;
+    }
     let content = r"foo(a,(b))/*1*/
 foo(a,(<b>c).d)/*2*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_find_all_refs_this_keyword() {
 }
 
 fn run_test_find_all_refs_this_keyword(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsThisKeyword") {
+        return;
+    }
     let content = r"// @noLib: true
 /*1*/this;
 function f(/*2*/this) {

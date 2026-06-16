@@ -14,7 +14,9 @@ pub fn test_navigation_items_sub_string_match() {
 }
 
 fn run_test_navigation_items_sub_string_match(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationItemsSubStringMatch") {
+        return;
+    }
     let content = r#"// @lib: es5
 /// Module
 [|{| "name": "MyShapes", "kind": "module" |}namespace MyShapes {
@@ -31,7 +33,7 @@ fn run_test_navigation_items_sub_string_match(t: &mut TestingT) {
 
 // Local variables
 var [|{| "name": "MyXyz", "kind": "var" |}MyXyz = new Shapes.Point()|];"#;
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     for range in f.ranges() {
         f.verify_workspace_symbol(&[workspace_symbol_case_from_range_with_pattern(&range, {
             let name = range_marker_data(&range).data.get("name").unwrap();

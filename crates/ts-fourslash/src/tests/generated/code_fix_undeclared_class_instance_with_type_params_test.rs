@@ -14,7 +14,9 @@ pub fn test_code_fix_undeclared_class_instance_with_type_params() {
 }
 
 fn run_test_code_fix_undeclared_class_instance_with_type_params(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixUndeclaredClassInstanceWithTypeParams") {
+        return;
+    }
     let content = r"// @strict: false
 class A<T> {
     a: number;

@@ -14,7 +14,9 @@ pub fn test_auto_import_file_exclude_patterns1() {
 }
 
 fn run_test_auto_import_file_exclude_patterns1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportFileExcludePatterns1") {
+        return;
+    }
     let content = r#"// @module: commonjs
 // @lib: es5
 // @Filename: /home/src/workspaces/project/node_modules/aws-sdk/package.json

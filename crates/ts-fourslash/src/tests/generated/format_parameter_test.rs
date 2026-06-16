@@ -14,7 +14,9 @@ pub fn test_format_parameter() {
 }
 
 fn run_test_format_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatParameter") {
+        return;
+    }
     let content = r"function foo(
     first:
     number,/*first*/

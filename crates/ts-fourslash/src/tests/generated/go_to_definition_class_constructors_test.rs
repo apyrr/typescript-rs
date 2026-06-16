@@ -14,7 +14,9 @@ pub fn test_go_to_definition_class_constructors() {
 }
 
 fn run_test_go_to_definition_class_constructors(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionClassConstructors") {
+        return;
+    }
     let content = r"// @filename: definitions.ts
 export class Base {
     constructor(protected readonly cArg: string) {}

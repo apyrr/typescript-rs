@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_all_promote_type() {
 }
 
 fn run_test_import_name_code_fix_all_promote_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_all_promoteType") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 export class A {}
 export class B {}

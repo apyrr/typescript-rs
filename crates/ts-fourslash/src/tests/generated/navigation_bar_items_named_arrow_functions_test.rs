@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_named_arrow_functions() {
 }
 
 fn run_test_navigation_bar_items_named_arrow_functions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsNamedArrowFunctions") {
+        return;
+    }
     let content = r"export const value = 2;
 export const func = () => 2;
 export const func2 = function() { };

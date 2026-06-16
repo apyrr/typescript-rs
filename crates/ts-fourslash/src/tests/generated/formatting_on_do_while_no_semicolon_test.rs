@@ -14,7 +14,9 @@ pub fn test_formatting_on_do_while_no_semicolon() {
 }
 
 fn run_test_formatting_on_do_while_no_semicolon(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnDoWhileNoSemicolon") {
+        return;
+    }
     let content = r"/*2*/do {
 /*3*/    for (var i = 0; i < 10; i++)
 /*4*/        i -= 2

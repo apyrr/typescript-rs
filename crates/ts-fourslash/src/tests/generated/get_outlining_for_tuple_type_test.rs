@@ -14,7 +14,9 @@ pub fn test_get_outlining_for_tuple_type() {
 }
 
 fn run_test_get_outlining_for_tuple_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOutliningForTupleType") {
+        return;
+    }
     let content = r"type A =[| [
     number,
     number,

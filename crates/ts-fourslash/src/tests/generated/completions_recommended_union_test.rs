@@ -14,7 +14,9 @@ pub fn test_completions_recommended_union() {
 }
 
 fn run_test_completions_recommended_union(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsRecommended_union") {
+        return;
+    }
     let content = r#"// @strictNullChecks: true
 const enum E { A = "A", B = "B" }
 const enum E2 { X = "X", Y = "Y" }

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_import_meta() {
 }
 
 fn run_test_go_to_definition_import_meta(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionImportMeta") {
+        return;
+    }
     let content = r"// @module: esnext
 // @Filename: foo.ts
 /// <reference path='./bar.d.ts' />

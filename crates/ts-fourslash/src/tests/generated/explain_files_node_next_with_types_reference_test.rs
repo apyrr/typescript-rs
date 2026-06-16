@@ -14,7 +14,9 @@ pub fn test_explain_files_node_next_with_types_reference() {
 }
 
 fn run_test_explain_files_node_next_with_types_reference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExplainFilesNodeNextWithTypesReference") {
+        return;
+    }
     let content = r#"// @Filename: /node_modules/react-hook-form/package.json
 {
   "name": "react-hook-form",

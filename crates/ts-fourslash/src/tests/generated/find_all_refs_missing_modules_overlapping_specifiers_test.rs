@@ -14,7 +14,9 @@ pub fn test_find_all_refs_missing_modules_overlapping_specifiers() {
 }
 
 fn run_test_find_all_refs_missing_modules_overlapping_specifiers(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsMissingModulesOverlappingSpecifiers") {
+        return;
+    }
     let content = r#"// https://github.com/microsoft/TypeScript/issues/5551
 import { resolve/*0*/ as resolveUrl } from "idontcare";
 import { resolve/*1*/ } from "whatever";"#;

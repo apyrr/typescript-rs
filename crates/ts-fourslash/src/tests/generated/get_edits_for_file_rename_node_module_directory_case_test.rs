@@ -14,7 +14,9 @@ pub fn test_get_edits_for_file_rename_node_module_directory_case() {
 }
 
 fn run_test_get_edits_for_file_rename_node_module_directory_case(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetEditsForFileRename_nodeModuleDirectoryCase") {
+        return;
+    }
     let content = r#"// @Filename: /a/b/file1.ts
 import { foo } from "foo";
 // @Filename: /a/node_modules/foo/index.d.ts

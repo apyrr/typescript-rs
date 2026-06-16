@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_items() {
 }
 
 fn run_test_navigation_bar_items_items(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsItems") {
+        return;
+    }
     let content = r"// Interface
 interface IPoint {
     getDist(): number;

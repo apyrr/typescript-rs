@@ -14,7 +14,9 @@ pub fn test_code_fix_spelling5() {
 }
 
 fn run_test_code_fix_spelling5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixSpelling5") {
+        return;
+    }
     let content = r#"// @Filename: f1.ts
 export const fooooooooo = 1;
 // @Filename: f2.ts

@@ -14,7 +14,9 @@ pub fn test_completions_generic_indexed_access6() {
 }
 
 fn run_test_completions_generic_indexed_access6(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsGenericIndexedAccess6") {
+        return;
+    }
     let content = r#"// @Filename: component.tsx
 interface CustomElements {
   'component-one': {

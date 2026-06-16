@@ -14,7 +14,9 @@ pub fn test_completion_list_in_type_parameter_of_type_alias3() {
 }
 
 fn run_test_completion_list_in_type_parameter_of_type_alias3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInTypeParameterOfTypeAlias3") {
+        return;
+    }
     let content = r"type constructorType<T1, T2> = new <T/*1*/, /*2*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(t, MarkerInput::Markers(f.markers()), None);

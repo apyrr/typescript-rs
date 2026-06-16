@@ -14,7 +14,9 @@ pub fn test_completion_entry_for_property_from_union_of_module_type() {
 }
 
 fn run_test_completion_entry_for_property_from_union_of_module_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionEntryForPropertyFromUnionOfModuleType") {
+        return;
+    }
     let content = r"namespace E {
     export var n = 1;
     export var x = 0;

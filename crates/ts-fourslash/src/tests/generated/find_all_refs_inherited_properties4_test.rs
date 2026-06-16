@@ -14,7 +14,9 @@ pub fn test_find_all_refs_inherited_properties4() {
 }
 
 fn run_test_find_all_refs_inherited_properties4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsInheritedProperties4") {
+        return;
+    }
     let content = r"interface C extends D {
     /*0*/prop0: string;
     /*1*/prop1: number;

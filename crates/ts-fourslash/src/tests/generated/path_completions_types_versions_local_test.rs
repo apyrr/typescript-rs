@@ -14,7 +14,9 @@ pub fn test_path_completions_types_versions_local() {
 }
 
 fn run_test_path_completions_types_versions_local(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestPathCompletionsTypesVersionsLocal") {
+        return;
+    }
     let content = r#"// @Filename: /package.json
 {
   "typesVersions": {

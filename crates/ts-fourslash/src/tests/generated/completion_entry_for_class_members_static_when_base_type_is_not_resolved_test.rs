@@ -16,7 +16,10 @@ pub fn test_completion_entry_for_class_members_static_when_base_type_is_not_reso
 fn run_test_completion_entry_for_class_members_static_when_base_type_is_not_resolved(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionEntryForClassMembers_StaticWhenBaseTypeIsNotResolved")
+    {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 import React from 'react'
 class Slider extends React.Component {

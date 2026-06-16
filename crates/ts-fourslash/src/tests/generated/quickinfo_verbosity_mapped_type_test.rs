@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_mapped_type() {
 }
 
 fn run_test_quickinfo_verbosity_mapped_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityMappedType") {
+        return;
+    }
     let content = r"type Apple = boolean | number;
 type Orange = string | boolean;
 type F<T> = {

@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal_nonrelative_import_typings3() {
 }
 
 fn run_test_completion_for_string_literal_nonrelative_import_typings3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteralNonrelativeImportTypings3") {
+        return;
+    }
     let content = r#"// @Filename: subdirectory/test0.ts
 /// <reference types="m/*types_ref0*/" />
 import * as foo1 from "m/*import_as0*/

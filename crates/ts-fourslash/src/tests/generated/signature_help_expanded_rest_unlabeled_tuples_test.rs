@@ -14,7 +14,9 @@ pub fn test_signature_help_expanded_rest_unlabeled_tuples() {
 }
 
 fn run_test_signature_help_expanded_rest_unlabeled_tuples(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpExpandedRestUnlabeledTuples") {
+        return;
+    }
     let content = r#"export function complex(item: string, another: string, ...rest: [] | [object, (err: Error) => void] | [(err: Error) => void, ...object[]]) {
     
 }

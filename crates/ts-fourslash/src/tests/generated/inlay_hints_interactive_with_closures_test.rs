@@ -14,7 +14,9 @@ pub fn test_inlay_hints_interactive_with_closures() {
 }
 
 fn run_test_inlay_hints_interactive_with_closures(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInteractiveWithClosures") {
+        return;
+    }
     let content = r"function foo1(a: number) {
     return (b: number) => {
         return a + b

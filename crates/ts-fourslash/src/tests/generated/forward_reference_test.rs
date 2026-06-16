@@ -14,7 +14,9 @@ pub fn test_forward_reference() {
 }
 
 fn run_test_forward_reference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestForwardReference") {
+        return;
+    }
     let content = r"function f() {
     var x = new t();
     x./**/

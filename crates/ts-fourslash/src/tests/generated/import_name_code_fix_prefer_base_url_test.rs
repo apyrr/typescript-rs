@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_prefer_base_url() {
 }
 
 fn run_test_import_name_code_fix_prefer_base_url(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_preferBaseUrl") {
+        return;
+    }
     let content = r#"// @Filename: /tsconfig.json
 { "compilerOptions": { "baseUrl": "./src" } }
 // @Filename: /src/d0/d1/d2/file.ts

@@ -14,7 +14,9 @@ pub fn test_completions_for_string_depending_on_contex_sensitive_signature() {
 }
 
 fn run_test_completions_for_string_depending_on_contex_sensitive_signature(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsForStringDependingOnContexSensitiveSignature") {
+        return;
+    }
     let content = r#"// @strict: true
 
 type ActorRef<TEvent extends { type: string }> = {

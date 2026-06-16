@@ -14,7 +14,9 @@ pub fn test_navbar_contains_no_duplicates() {
 }
 
 fn run_test_navbar_contains_no_duplicates(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavbar_contains-no-duplicates") {
+        return;
+    }
     let content = r"declare namespace Windows {
     export namespace Foundation {
         export var A;

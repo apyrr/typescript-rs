@@ -14,7 +14,9 @@ pub fn test_cross_file_quick_info_exported_type_does_not_use_import_type() {
 }
 
 fn run_test_cross_file_quick_info_exported_type_does_not_use_import_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCrossFileQuickInfoExportedTypeDoesNotUseImportType") {
+        return;
+    }
     let content = r#"// @Filename: b.ts
 export interface B {}
 export function foob(): {

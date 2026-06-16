@@ -14,7 +14,9 @@ pub fn test_get_occurrences_is_definition_of_string_named_property() {
 }
 
 fn run_test_get_occurrences_is_definition_of_string_named_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIsDefinitionOfStringNamedProperty") {
+        return;
+    }
     let content = r#"let o = { /*1*/"/*2*/x": 12 };
 let y = o./*3*/x;"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_deduplicate_duplicate_merged_bind_check_errors() {
 }
 
 fn run_test_deduplicate_duplicate_merged_bind_check_errors(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDeduplicateDuplicateMergedBindCheckErrors") {
+        return;
+    }
     let content = r"class X {
   foo() {
       return 1;

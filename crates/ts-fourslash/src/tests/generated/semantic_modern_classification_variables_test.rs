@@ -14,7 +14,9 @@ pub fn test_semantic_modern_classification_variables() {
 }
 
 fn run_test_semantic_modern_classification_variables(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemanticModernClassificationVariables") {
+        return;
+    }
     let content = r"  var x = 9, y1 = [x];
   try {
     for (const s of y1) { x = s }

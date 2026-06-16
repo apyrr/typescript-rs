@@ -14,7 +14,9 @@ pub fn test_rename_property_access_expression_heritage_clause() {
 }
 
 fn run_test_rename_property_access_expression_heritage_clause(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenamePropertyAccessExpressionHeritageClause") {
+        return;
+    }
     let content = r#"class B {}
 function foo() {
     return {[|[|{| "contextRangeIndex": 0 |}B|]: B|]};

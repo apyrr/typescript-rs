@@ -14,7 +14,9 @@ pub fn test_smart_selection_empty_ranges() {
 }
 
 fn run_test_smart_selection_empty_ranges(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_emptyRanges") {
+        return;
+    }
     let content = r"class HomePage {
   componentDidMount(/*1*/) {
     if (this.props.username/*2*/) {

@@ -14,7 +14,9 @@ pub fn test_document_highlight_in_export1() {
 }
 
 fn run_test_document_highlight_in_export1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightInExport1") {
+        return;
+    }
     let content = r"class [|C|] {}
 [|export|] { [|C|] [|as|] [|D|] };";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

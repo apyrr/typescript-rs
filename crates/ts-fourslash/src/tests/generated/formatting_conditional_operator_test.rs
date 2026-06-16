@@ -14,7 +14,9 @@ pub fn test_formatting_conditional_operator() {
 }
 
 fn run_test_formatting_conditional_operator(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingConditionalOperator") {
+        return;
+    }
     let content = r"var x=true?1:2";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");

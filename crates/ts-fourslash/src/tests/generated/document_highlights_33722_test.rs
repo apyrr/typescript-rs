@@ -14,7 +14,9 @@ pub fn test_document_highlights_33722() {
 }
 
 fn run_test_document_highlights_33722(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlights_33722") {
+        return;
+    }
     let content = r#"// @Filename: /y.ts
 class Foo {
   private foo() {}

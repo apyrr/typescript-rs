@@ -14,7 +14,9 @@ pub fn test_module_reexported_into_global_quick_info() {
 }
 
 fn run_test_module_reexported_into_global_quick_info(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestModuleReexportedIntoGlobalQuickInfo") {
+        return;
+    }
     let content = r"// @Filename: /node_modules/@types/three/index.d.ts
 export class Vector3 {}
 export as namespace THREE;

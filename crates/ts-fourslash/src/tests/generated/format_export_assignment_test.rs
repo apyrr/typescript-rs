@@ -14,7 +14,9 @@ pub fn test_format_export_assignment() {
 }
 
 fn run_test_format_export_assignment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatExportAssignment") {
+        return;
+    }
     let content = r"export='foo';";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");

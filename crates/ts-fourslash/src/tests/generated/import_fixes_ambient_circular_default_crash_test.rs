@@ -14,7 +14,9 @@ pub fn test_import_fixes_ambient_circular_default_crash() {
 }
 
 fn run_test_import_fixes_ambient_circular_default_crash(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportFixes_ambientCircularDefaultCrash") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/tsconfig.json
 {
   "compilerOptions": {

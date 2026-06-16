@@ -14,7 +14,9 @@ pub fn test_get_occurrences_try_catch_finally3() {
 }
 
 fn run_test_get_occurrences_try_catch_finally3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesTryCatchFinally3") {
+        return;
+    }
     let content = r"try {
     try {
     }

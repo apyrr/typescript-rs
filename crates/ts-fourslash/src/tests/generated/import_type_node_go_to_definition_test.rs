@@ -14,7 +14,9 @@ pub fn test_import_type_node_go_to_definition() {
 }
 
 fn run_test_import_type_node_go_to_definition(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportTypeNodeGoToDefinition") {
+        return;
+    }
     let content = r#"// @Filename: /ns.ts
 /*refFile*/export namespace /*refFoo*/Foo {
     export namespace /*refBar*/Bar {

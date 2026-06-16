@@ -14,7 +14,9 @@ pub fn test_auto_import_paths() {
 }
 
 fn run_test_auto_import_paths(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportPaths") {
+        return;
+    }
     let content = r#"// @Filename: /package1/jsconfig.json
 {
   "compilerOptions": {

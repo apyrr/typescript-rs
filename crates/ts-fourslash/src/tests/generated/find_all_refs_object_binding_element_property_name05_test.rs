@@ -14,7 +14,9 @@ pub fn test_find_all_refs_object_binding_element_property_name05() {
 }
 
 fn run_test_find_all_refs_object_binding_element_property_name05(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsObjectBindingElementPropertyName05") {
+        return;
+    }
     let content = r"interface I {
     property1: number;
     property2: string;

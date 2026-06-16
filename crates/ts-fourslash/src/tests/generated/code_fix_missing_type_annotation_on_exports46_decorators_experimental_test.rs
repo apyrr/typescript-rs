@@ -16,7 +16,10 @@ pub fn test_code_fix_missing_type_annotation_on_exports46_decorators_experimenta
 fn run_test_code_fix_missing_type_annotation_on_exports46_decorators_experimental(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports46-decorators-experimental")
+    {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 // @experimentalDecorators: true

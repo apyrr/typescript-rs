@@ -14,7 +14,9 @@ pub fn test_unused_class_in_namespace2() {
 }
 
 fn run_test_unused_class_in_namespace2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedClassInNamespace2") {
+        return;
+    }
     let content = r"// @noUnusedLocals: true
 [| namespace greeter {
    export class class2 {

@@ -14,7 +14,9 @@ pub fn test_duplicate_indexers() {
 }
 
 fn run_test_duplicate_indexers(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDuplicateIndexers") {
+        return;
+    }
     let content = r"interface I {
     [x: number]: string;
     [x: number]: number;

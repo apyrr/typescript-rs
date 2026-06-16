@@ -14,7 +14,9 @@ pub fn test_rename_binding_element_initializer_external() {
 }
 
 fn run_test_rename_binding_element_initializer_external(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameBindingElementInitializerExternal") {
+        return;
+    }
     let content = r#"// @lib: es5
 [|const [|{| "contextRangeIndex": 0 |}external|] = true;|]
 

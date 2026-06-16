@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition2() {
 }
 
 fn run_test_go_to_type_definition2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinition2") {
+        return;
+    }
     let content = r"// @Filename: goToTypeDefinition2_Definition.ts
 interface /*definition*/I1 {
     p;

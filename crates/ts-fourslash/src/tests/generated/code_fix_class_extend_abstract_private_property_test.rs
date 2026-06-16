@@ -14,7 +14,9 @@ pub fn test_code_fix_class_extend_abstract_private_property() {
 }
 
 fn run_test_code_fix_class_extend_abstract_private_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassExtendAbstractPrivateProperty") {
+        return;
+    }
     let content = r"// @noImplicitOverride: true
 abstract class A {
    private abstract x: number;

@@ -14,7 +14,9 @@ pub fn test_format_satisfies_expression() {
 }
 
 fn run_test_format_satisfies_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatSatisfiesExpression") {
+        return;
+    }
     let content = r#"type Foo = "a" | "b" | "c";
 const foo1 = ["a"] satisfies Foo[];
 const foo2 = ["a"]satisfies Foo[];

@@ -14,7 +14,9 @@ pub fn test_find_all_refs_on_private_parameter_property1() {
 }
 
 fn run_test_find_all_refs_on_private_parameter_property1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsOnPrivateParameterProperty1") {
+        return;
+    }
     let content = r"class ABCD {
     constructor(private x: number, public y: number, /*1*/private /*2*/z: number) {
     }

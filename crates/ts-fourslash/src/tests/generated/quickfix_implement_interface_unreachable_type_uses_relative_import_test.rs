@@ -14,7 +14,9 @@ pub fn test_quickfix_implement_interface_unreachable_type_uses_relative_import()
 }
 
 fn run_test_quickfix_implement_interface_unreachable_type_uses_relative_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickfixImplementInterfaceUnreachableTypeUsesRelativeImport") {
+        return;
+    }
     let content = r"// @Filename: class.ts
 export class Class { }
 // @Filename: interface.ts

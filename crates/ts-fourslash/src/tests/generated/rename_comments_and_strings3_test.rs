@@ -14,7 +14,9 @@ pub fn test_rename_comments_and_strings3() {
 }
 
 fn run_test_rename_comments_and_strings3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameCommentsAndStrings3") {
+        return;
+    }
     let content = r#"///<reference path="./Bar.ts" />
 [|function [|{| "contextRangeIndex": 0 |}Bar|]() {
     // This is a reference to [|Bar|] in a comment.

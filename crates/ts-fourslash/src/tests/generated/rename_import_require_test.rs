@@ -14,7 +14,9 @@ pub fn test_rename_import_require() {
 }
 
 fn run_test_rename_import_require(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameImportRequire") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 [|import [|{| "contextRangeIndex": 0 |}e|] = require("mod4");|]
 [|e|];

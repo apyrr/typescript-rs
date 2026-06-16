@@ -16,17 +16,21 @@ pub fn test_string_completions_from_generic_conditional_types_using_template_lit
 fn run_test_string_completions_from_generic_conditional_types_using_template_literal_types(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestStringCompletionsFromGenericConditionalTypesUsingTemplateLiteralTypes",
+    ) {
+        return;
+    }
     let content = r#"// @stableTypeOrdering: true
 // @strict: true
 type keyword = "foo" | "bar" | "baz"
 
 type validateString<s> = s extends keyword
     ? s
-    : s extends ` + "`" + `${infer left extends keyword}|${infer right}` + "`" + `
+    : s extends `${infer left extends keyword}|${infer right}`
     ? right extends keyword
         ? s
-        : ` + "`" + `${left}|${keyword}` + "`" + `
+        : `${left}|${keyword}`
     : keyword
 
 type isUnknown<t> = unknown extends t

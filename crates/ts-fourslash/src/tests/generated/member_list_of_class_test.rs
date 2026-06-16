@@ -14,7 +14,9 @@ pub fn test_member_list_of_class() {
 }
 
 fn run_test_member_list_of_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListOfClass") {
+        return;
+    }
     let content = r"class C1 {
    public pubMeth() { }
    private privMeth() { }

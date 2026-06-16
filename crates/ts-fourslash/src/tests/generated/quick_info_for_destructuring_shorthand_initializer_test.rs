@@ -14,7 +14,9 @@ pub fn test_quick_info_for_destructuring_shorthand_initializer() {
 }
 
 fn run_test_quick_info_for_destructuring_shorthand_initializer(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForDestructuringShorthandInitializer") {
+        return;
+    }
     let content = r"let a = '';
 let b: string;
 ({b = /**/a} = {b: 'b'});";

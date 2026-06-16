@@ -14,7 +14,9 @@ pub fn test_references_for_function_overloads() {
 }
 
 fn run_test_references_for_function_overloads(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForFunctionOverloads") {
+        return;
+    }
     let content = r"/*1*/function /*2*/foo(x: string);
 /*3*/function /*4*/foo(x: string, y: number) {
     /*5*/foo('', 43);

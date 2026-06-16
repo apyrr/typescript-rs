@@ -14,7 +14,9 @@ pub fn test_insert_argument_before_overloaded_constructor() {
 }
 
 fn run_test_insert_argument_before_overloaded_constructor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInsertArgumentBeforeOverloadedConstructor") {
+        return;
+    }
     let content = r"alert(/**/100);
 
 class OverloadedMonster {

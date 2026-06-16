@@ -14,7 +14,9 @@ pub fn test_completion_list_default_type_argument_position_type_only() {
 }
 
 fn run_test_completion_list_default_type_argument_position_type_only(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListDefaultTypeArgumentPositionTypeOnly") {
+        return;
+    }
     let content = r#"// @lib: es5
 const foo = "foo";
 function test1<T = /*1*/>() {}"#;

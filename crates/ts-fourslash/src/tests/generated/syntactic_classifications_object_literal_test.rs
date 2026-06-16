@@ -14,7 +14,9 @@ pub fn test_syntactic_classifications_object_literal() {
 }
 
 fn run_test_syntactic_classifications_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSyntacticClassificationsObjectLiteral") {
+        return;
+    }
     let content = r"var v = 10e0;
 var x = {
     p1: 1,

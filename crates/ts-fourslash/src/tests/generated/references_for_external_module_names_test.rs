@@ -14,7 +14,9 @@ pub fn test_references_for_external_module_names() {
 }
 
 fn run_test_references_for_external_module_names(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForExternalModuleNames") {
+        return;
+    }
     let content = r#"// @Filename: referencesForGlobals_1.ts
 /*1*/declare module "/*2*/foo" {
     var f: number;

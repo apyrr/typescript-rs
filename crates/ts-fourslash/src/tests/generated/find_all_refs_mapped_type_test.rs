@@ -14,7 +14,9 @@ pub fn test_find_all_refs_mapped_type() {
 }
 
 fn run_test_find_all_refs_mapped_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsMappedType") {
+        return;
+    }
     let content = r"interface T { /*1*/a: number; }
 type U = { readonly [K in keyof T]?: string };
 declare const t: T;

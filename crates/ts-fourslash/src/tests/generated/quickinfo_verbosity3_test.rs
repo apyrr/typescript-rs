@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity3() {
 }
 
 fn run_test_quickinfo_verbosity3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosity3") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 export type X = { x: number };
 export function f(x: X): void {}

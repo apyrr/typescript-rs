@@ -14,7 +14,9 @@ pub fn test_go_to_definition_filtering_generic_mapped_type() {
 }
 
 fn run_test_go_to_definition_filtering_generic_mapped_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinition_filteringGenericMappedType") {
+        return;
+    }
     let content = r#"const obj = {
   get /*def*/id() {
     return 1;

@@ -14,7 +14,9 @@ pub fn test_smart_selection_string_literal() {
 }
 
 fn run_test_smart_selection_string_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_stringLiteral") {
+        return;
+    }
     let content = r"const a = 'a';
 const b = /**/'b';";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

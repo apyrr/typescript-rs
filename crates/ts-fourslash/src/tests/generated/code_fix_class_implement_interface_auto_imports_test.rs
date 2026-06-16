@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_auto_imports() {
 }
 
 fn run_test_code_fix_class_implement_interface_auto_imports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceAutoImports") {
+        return;
+    }
     let content = r#"// @Filename: types1.ts
 type A = {};
 export default A;

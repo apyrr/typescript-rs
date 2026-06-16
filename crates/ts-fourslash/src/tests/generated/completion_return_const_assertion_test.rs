@@ -14,7 +14,9 @@ pub fn test_completion_return_const_assertion() {
 }
 
 fn run_test_completion_return_const_assertion(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionReturnConstAssertion") {
+        return;
+    }
     let content = r"type T = {
     foo1: 1;
     foo2: 2;

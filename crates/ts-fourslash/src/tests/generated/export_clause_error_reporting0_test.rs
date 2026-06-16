@@ -14,7 +14,9 @@ pub fn test_export_clause_error_reporting0() {
 }
 
 fn run_test_export_clause_error_reporting0(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExportClauseErrorReporting0") {
+        return;
+    }
     let content = r"namespace M {
     /*1*/class C<T> { }
 }

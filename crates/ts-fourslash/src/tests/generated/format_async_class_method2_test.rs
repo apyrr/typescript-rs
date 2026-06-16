@@ -14,7 +14,9 @@ pub fn test_format_async_class_method2() {
 }
 
 fn run_test_format_async_class_method2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatAsyncClassMethod2") {
+        return;
+    }
     let content = r"class Foo {
     private    async     foo() {}
 }";

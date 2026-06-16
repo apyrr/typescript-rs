@@ -14,7 +14,9 @@ pub fn test_jsdoc_deprecated_suggestion9() {
 }
 
 fn run_test_jsdoc_deprecated_suggestion9(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsdocDeprecated_suggestion9") {
+        return;
+    }
     let content = r"// @Filename: first.ts
 export class logger { }
 // @Filename: second.ts

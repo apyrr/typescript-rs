@@ -14,7 +14,9 @@ pub fn test_quick_info_for_shorthand_property() {
 }
 
 fn run_test_quick_info_for_shorthand_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForShorthandProperty") {
+        return;
+    }
     let content = r#"// @strict: false
 var name1 = undefined, id1 = undefined;
 var /*obj1*/obj1 = {/*name1*/name1, /*id1*/id1};

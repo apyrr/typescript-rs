@@ -14,7 +14,9 @@ pub fn test_go_to_module_alias_definition() {
 }
 
 fn run_test_go_to_module_alias_definition(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToModuleAliasDefinition") {
+        return;
+    }
     let content = r"// @Filename: a.ts
 export class /*2*/Foo {}
 // @Filename: b.ts

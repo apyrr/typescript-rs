@@ -14,7 +14,9 @@ pub fn test_member_list_of_enum_in_module() {
 }
 
 fn run_test_member_list_of_enum_in_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListOfEnumInModule") {
+        return;
+    }
     let content = r"namespace Fixes {
     enum Foo {
         bar,

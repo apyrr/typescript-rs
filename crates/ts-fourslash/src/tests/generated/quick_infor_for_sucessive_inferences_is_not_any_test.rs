@@ -14,7 +14,9 @@ pub fn test_quick_infor_for_sucessive_inferences_is_not_any() {
 }
 
 fn run_test_quick_infor_for_sucessive_inferences_is_not_any(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInforForSucessiveInferencesIsNotAny") {
+        return;
+    }
     let content = r"declare function schema<T> (value : T) : {field : T};
 
 declare const b: boolean;

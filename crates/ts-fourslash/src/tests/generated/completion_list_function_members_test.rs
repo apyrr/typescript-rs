@@ -14,7 +14,9 @@ pub fn test_completion_list_function_members() {
 }
 
 fn run_test_completion_list_function_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListFunctionMembers") {
+        return;
+    }
     let content = r"// @lib: es5
 function fnc1() {
     var bar = 1;

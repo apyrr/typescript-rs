@@ -14,7 +14,9 @@ pub fn test_format_remove_semicolons3() {
 }
 
 fn run_test_format_remove_semicolons3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatRemoveSemicolons3") {
+        return;
+    }
     let content = r"(<InterfaceTypeWithDeclaredMembers>type).declaredProperties = getNamedMembers(members);
 // Start with signatures at empty array in case of recursive types
 (<InterfaceTypeWithDeclaredMembers>type).declaredCallSignatures = emptyArray;";

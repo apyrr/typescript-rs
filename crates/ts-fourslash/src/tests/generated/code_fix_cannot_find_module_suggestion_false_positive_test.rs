@@ -14,7 +14,9 @@ pub fn test_code_fix_cannot_find_module_suggestion_false_positive() {
 }
 
 fn run_test_code_fix_cannot_find_module_suggestion_false_positive(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixCannotFindModule_suggestion_falsePositive") {
+        return;
+    }
     let content = r#"// @moduleResolution: bundler
 // @module: commonjs
 // @resolveJsonModule: true

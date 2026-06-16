@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_barrel_export5() {
 }
 
 fn run_test_import_name_code_fix_barrel_export5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_barrelExport5") {
+        return;
+    }
     let content = r#"// @module: node18
 // @Filename: /package.json
 { "type": "module" }

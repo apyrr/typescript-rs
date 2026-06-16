@@ -14,7 +14,9 @@ pub fn test_completion_of_interface_and_var() {
 }
 
 fn run_test_completion_of_interface_and_var(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionOfInterfaceAndVar") {
+        return;
+    }
     let content = r"// @lib: es5
 interface AnalyserNode {
 }

@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal_nonrelative_import_typings2() {
 }
 
 fn run_test_completion_for_string_literal_nonrelative_import_typings2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteralNonrelativeImportTypings2") {
+        return;
+    }
     let content = r#"// @typeRoots: my_typings,my_other_typings
 // @types: module-x,module-z
 // @Filename: tests/test0.ts

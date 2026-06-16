@@ -14,7 +14,9 @@ pub fn test_rename_destructuring_nested_binding_element() {
 }
 
 fn run_test_rename_destructuring_nested_binding_element(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameDestructuringNestedBindingElement") {
+        return;
+    }
     let content = r#"interface MultiRobot {
     name: string;
     skills: {

@@ -14,7 +14,9 @@ pub fn test_format_variable_declaration_list() {
 }
 
 fn run_test_format_variable_declaration_list(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatVariableDeclarationList") {
+        return;
+    }
     let content = r"/*1*/var   fun1   =   function   (     )     {
 /*2*/            var               x   =   'foo'             ,
 /*3*/                z   =   'bar'           ;

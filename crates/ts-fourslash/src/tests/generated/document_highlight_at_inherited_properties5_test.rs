@@ -14,7 +14,9 @@ pub fn test_document_highlight_at_inherited_properties5() {
 }
 
 fn run_test_document_highlight_at_inherited_properties5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightAtInheritedProperties5") {
+        return;
+    }
     let content = r"// @Filename: file1.ts
 interface C extends D {
     [|prop0|]: string;

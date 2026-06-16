@@ -14,7 +14,9 @@ pub fn test_outlining_spans_for_import_and_export_attributes() {
 }
 
 fn run_test_outlining_spans_for_import_and_export_attributes(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOutliningSpansForImportAndExportAttributes") {
+        return;
+    }
     let content = r#"import { a1, a2 } from "a";
 ;
 import {

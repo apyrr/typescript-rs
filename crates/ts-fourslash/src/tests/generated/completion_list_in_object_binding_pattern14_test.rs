@@ -14,7 +14,9 @@ pub fn test_completion_list_in_object_binding_pattern14() {
 }
 
 fn run_test_completion_list_in_object_binding_pattern14(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInObjectBindingPattern14") {
+        return;
+    }
     let content = r"const { b/**/ } = new class {
     private ab;
     protected bc;

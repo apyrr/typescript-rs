@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports23_heritage_formatting() 
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports23_heritage_formatting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports23-heritage-formatting") {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 function mixin<T extends new (...a: any) => any>(ctor: T): T {

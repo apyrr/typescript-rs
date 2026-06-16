@@ -14,7 +14,9 @@ pub fn test_ambient_shorthand_goto_definition() {
 }
 
 fn run_test_ambient_shorthand_goto_definition(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAmbientShorthandGotoDefinition") {
+        return;
+    }
     let content = r#"// @Filename: declarations.d.ts
 declare module /*module*/"jquery"
 // @Filename: user.ts

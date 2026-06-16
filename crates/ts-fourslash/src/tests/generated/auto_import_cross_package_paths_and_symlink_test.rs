@@ -14,7 +14,9 @@ pub fn test_auto_import_cross_package_paths_and_symlink() {
 }
 
 fn run_test_auto_import_cross_package_paths_and_symlink(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportCrossPackage_pathsAndSymlink") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/packages/common/package.json
 {
   "name": "@company/common",

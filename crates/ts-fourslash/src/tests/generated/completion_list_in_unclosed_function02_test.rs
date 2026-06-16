@@ -14,7 +14,9 @@ pub fn test_completion_list_in_unclosed_function02() {
 }
 
 fn run_test_completion_list_in_unclosed_function02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInUnclosedFunction02") {
+        return;
+    }
     let content = r"function foo(x: string, y: number, z: boolean) {
     function bar(a: number, b: string, c: typeof /*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

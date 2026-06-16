@@ -14,7 +14,9 @@ pub fn test_format_bracket_in_switch_case() {
 }
 
 fn run_test_format_bracket_in_switch_case(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatBracketInSwitchCase") {
+        return;
+    }
     let content = r"// @lib: es5
 switch (x) {
     case[]:

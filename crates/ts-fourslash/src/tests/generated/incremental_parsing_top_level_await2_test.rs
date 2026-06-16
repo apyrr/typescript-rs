@@ -14,7 +14,9 @@ pub fn test_incremental_parsing_top_level_await2() {
 }
 
 fn run_test_incremental_parsing_top_level_await2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIncrementalParsingTopLevelAwait2") {
+        return;
+    }
     let content = r"// @target: esnext
 // @module: esnext
 // @Filename: ./foo.ts

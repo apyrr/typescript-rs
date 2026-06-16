@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_jsx_opening_tag_import_default() {
 }
 
 fn run_test_import_name_code_fix_jsx_opening_tag_import_default(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_jsxOpeningTagImportDefault") {
+        return;
+    }
     let content = r"// @module: commonjs
 // @jsx: react-jsx
 // @Filename: /component.tsx

@@ -14,14 +14,16 @@ pub fn test_rename_string_literal_ok() {
 }
 
 fn run_test_rename_string_literal_ok(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"interface Foo {
+    if should_skip_if_failing("TestRenameStringLiteralOk") {
+        return;
+    }
+    let content = r"interface Foo {
     f: '[|foo|]' | 'bar'
 }
 const d: 'foo' = 'foo'
 declare const f: Foo
 f.f = '[|foo|]'
-f.f = ` + "`" + `[|foo|]` + "`" + `"#;
+f.f = `[|foo|]`";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_rename_at_ranges_with_text(t, "foo");
     done();

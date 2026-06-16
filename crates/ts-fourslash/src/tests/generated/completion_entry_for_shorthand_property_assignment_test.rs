@@ -14,7 +14,9 @@ pub fn test_completion_entry_for_shorthand_property_assignment() {
 }
 
 fn run_test_completion_entry_for_shorthand_property_assignment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionEntryForShorthandPropertyAssignment") {
+        return;
+    }
     let content = r"var person: {name:string; id:number} = {n/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(

@@ -14,7 +14,9 @@ pub fn test_add_member_to_module() {
 }
 
 fn run_test_add_member_to_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAddMemberToModule") {
+        return;
+    }
     let content = r"namespace A {
     /*var*/
 }

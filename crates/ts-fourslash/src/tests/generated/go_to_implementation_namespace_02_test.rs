@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_namespace_02() {
 }
 
 fn run_test_go_to_implementation_namespace_02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationNamespace_02") {
+        return;
+    }
     let content = r"namespace Foo {
     export function [|hello|]() {}
 }

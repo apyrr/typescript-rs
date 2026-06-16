@@ -14,7 +14,9 @@ pub fn test_go_to_definition_shorthand_property01() {
 }
 
 fn run_test_go_to_definition_shorthand_property01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionShorthandProperty01") {
+        return;
+    }
     let content = r#"// @lib: es5
 var /*valueDeclaration1*/name = "hello";
 var /*valueDeclaration2*/id = 100000;

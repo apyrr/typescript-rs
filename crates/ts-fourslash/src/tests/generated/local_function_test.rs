@@ -14,7 +14,9 @@ pub fn test_local_function() {
 }
 
 fn run_test_local_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestLocalFunction") {
+        return;
+    }
     let content = r"function /*1*/foo() {
     function /*2*/bar2() {
     }

@@ -14,7 +14,9 @@ pub fn test_completions_import_from_ambient_module() {
 }
 
 fn run_test_completions_import_from_ambient_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImport_fromAmbientModule") {
+        return;
+    }
     let content = r#"// @module: esnext
 // @Filename: /a.ts
 declare module "m" {

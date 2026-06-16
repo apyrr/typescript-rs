@@ -14,7 +14,9 @@ pub fn test_syntactic_classifications_function_with_comments() {
 }
 
 fn run_test_syntactic_classifications_function_with_comments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSyntacticClassificationsFunctionWithComments") {
+        return;
+    }
     let content = r"/**
  * This is my function.
  * There are many like it, but this one is mine.

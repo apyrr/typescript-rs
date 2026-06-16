@@ -14,7 +14,9 @@ pub fn test_parameterless_setter() {
 }
 
 fn run_test_parameterless_setter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestParameterlessSetter") {
+        return;
+    }
     let content = r"class foo {
     get getterOnly() {
         return undefined;

@@ -14,7 +14,9 @@ pub fn test_get_edits_for_file_rename_unresolvable_node_module() {
 }
 
 fn run_test_get_edits_for_file_rename_unresolvable_node_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetEditsForFileRename_unresolvableNodeModule") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @checkJs: true
 // @Filename: /modules/@app/something/index.js

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_union_type_property3() {
 }
 
 fn run_test_go_to_definition_union_type_property3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionUnionTypeProperty3") {
+        return;
+    }
     let content = r"interface Array<T> {
     /*definition*/specialPop(): T
 }

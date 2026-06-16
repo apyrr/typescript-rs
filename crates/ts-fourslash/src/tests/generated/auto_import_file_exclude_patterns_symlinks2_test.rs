@@ -14,7 +14,9 @@ pub fn test_auto_import_file_exclude_patterns_symlinks2() {
 }
 
 fn run_test_auto_import_file_exclude_patterns_symlinks2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportFileExcludePatterns_symlinks2") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @module: commonjs
 // @Filename: c:/workspaces/project/node_modules/.store/aws-sdk-virtual-adfe098/package/package.json

@@ -14,7 +14,9 @@ pub fn test_quick_info_on_function_property_returned_from_generic_function3() {
 }
 
 fn run_test_quick_info_on_function_property_returned_from_generic_function3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnFunctionPropertyReturnedFromGenericFunction3") {
+        return;
+    }
     let content = r"function createProps<T>(t: T) {
   const getProps = () => {}
   const createVariants = () => {}

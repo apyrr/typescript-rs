@@ -14,7 +14,9 @@ pub fn test_member_overload_edits() {
 }
 
 fn run_test_member_overload_edits(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberOverloadEdits") {
+        return;
+    }
     let content = r"namespace M {
     export class A {
         public m(n: number) {

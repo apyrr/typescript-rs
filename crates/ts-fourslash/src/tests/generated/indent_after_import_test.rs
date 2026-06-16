@@ -14,7 +14,9 @@ pub fn test_indent_after_import() {
 }
 
 fn run_test_indent_after_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIndentAfterImport") {
+        return;
+    }
     let content = r"import f = module('foo');/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

@@ -14,21 +14,23 @@ pub fn test_completions_wrapped_class() {
 }
 
 fn run_test_completions_wrapped_class(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"class Client {
+    if should_skip_if_failing("TestCompletionsWrappedClass") {
+        return;
+    }
+    let content = r"class Client {
     private close() { }
     public open() { }
 }
 type Wrap<T> = T &
 {
-    [K in Extract<keyof T, string> as ` + "`" + `${K}Wrapped` + "`" + `]: T[K];
+    [K in Extract<keyof T, string> as `${K}Wrapped`]: T[K];
 };
 class Service {
     method() {
         let service = undefined as unknown as Wrap<Client>;
         const { /*a*/ } = service;
     }
-}"#;
+}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(
         t,

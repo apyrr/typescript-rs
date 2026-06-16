@@ -14,7 +14,9 @@ pub fn test_quick_info_assign_to_existing_class() {
 }
 
 fn run_test_quick_info_assign_to_existing_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoAssignToExistingClass") {
+        return;
+    }
     let content = r#"namespace Test {
     class Mocked {
         myProp: string;

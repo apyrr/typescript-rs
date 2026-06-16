@@ -14,7 +14,9 @@ pub fn test_find_all_references_umd_module_as_global_const() {
 }
 
 fn run_test_find_all_references_umd_module_as_global_const(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllReferencesUmdModuleAsGlobalConst") {
+        return;
+    }
     let content = r#"// @Filename: /node_modules/@types/three/three-core.d.ts
 export class Vector3 {
     constructor(x?: number, y?: number, z?: number);

@@ -14,7 +14,9 @@ pub fn test_completion_list_in_type_literal_in_type_parameter17() {
 }
 
 fn run_test_completion_list_in_type_literal_in_type_parameter17(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInTypeLiteralInTypeParameter17") {
+        return;
+    }
     let content = r"class Foo<T extends { x: 'one' | 2 }> {}
 function foo<T extends { x: 'one' | 2 }>() {}
 

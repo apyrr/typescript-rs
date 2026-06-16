@@ -14,7 +14,9 @@ pub fn test_duplicate_type_parameters() {
 }
 
 fn run_test_duplicate_type_parameters(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDuplicateTypeParameters") {
+        return;
+    }
     let content = r"class A<B, /**/B>  { }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

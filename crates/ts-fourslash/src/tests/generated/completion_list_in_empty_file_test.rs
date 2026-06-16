@@ -14,7 +14,9 @@ pub fn test_completion_list_in_empty_file() {
 }
 
 fn run_test_completion_list_in_empty_file(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInEmptyFile") {
+        return;
+    }
     let content = r"var a = 0;
 /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

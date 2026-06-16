@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_object_literal_properties() {
 }
 
 fn run_test_find_all_refs_for_object_literal_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForObjectLiteralProperties") {
+        return;
+    }
     let content = r"var x = {
     /*1*/property: {}
 };

@@ -14,7 +14,9 @@ pub fn test_auto_import_verbatim_type_only1() {
 }
 
 fn run_test_auto_import_verbatim_type_only1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportVerbatimTypeOnly1") {
+        return;
+    }
     let content = r"// @module: node18
 // @verbatimModuleSyntax: true
 // @Filename: /mod.ts

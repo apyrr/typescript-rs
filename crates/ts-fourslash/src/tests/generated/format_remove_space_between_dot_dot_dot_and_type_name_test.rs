@@ -14,7 +14,9 @@ pub fn test_format_remove_space_between_dot_dot_dot_and_type_name() {
 }
 
 fn run_test_format_remove_space_between_dot_dot_dot_and_type_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatRemoveSpaceBetweenDotDotDotAndTypeName") {
+        return;
+    }
     let content = r"let a: [... any[]];
 let b: [...   number[]];
 let c: [...     string[]];";

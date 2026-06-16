@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_allow_synthetic_default_imports1() {
 }
 
 fn run_test_import_name_code_fix_new_import_allow_synthetic_default_imports1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportAllowSyntheticDefaultImports1") {
+        return;
+    }
     let content = r"// @Module: system
 // @Filename: a/f1.ts
 [|export var x = 0;

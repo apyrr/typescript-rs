@@ -14,7 +14,9 @@ pub fn test_format01() {
 }
 
 fn run_test_format01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormat01") {
+        return;
+    }
     let content = r"// @lib: es5
 /**/namespace Default{var x= ( { } ) ;}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

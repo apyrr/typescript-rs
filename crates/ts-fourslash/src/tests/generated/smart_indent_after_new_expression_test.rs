@@ -14,7 +14,9 @@ pub fn test_smart_indent_after_new_expression() {
 }
 
 fn run_test_smart_indent_after_new_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentAfterNewExpression") {
+        return;
+    }
     let content = r#"
 new Array
 {| "indent": 0 |}

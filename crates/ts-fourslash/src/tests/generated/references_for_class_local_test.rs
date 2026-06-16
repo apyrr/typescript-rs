@@ -14,7 +14,9 @@ pub fn test_references_for_class_local() {
 }
 
 fn run_test_references_for_class_local(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForClassLocal") {
+        return;
+    }
     let content = r"var n = 14;
 
 class foo {

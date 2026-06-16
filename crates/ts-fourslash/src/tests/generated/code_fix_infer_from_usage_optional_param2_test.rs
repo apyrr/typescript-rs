@@ -14,7 +14,9 @@ pub fn test_code_fix_infer_from_usage_optional_param2() {
 }
 
 fn run_test_code_fix_infer_from_usage_optional_param2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixInferFromUsageOptionalParam2") {
+        return;
+    }
     let content = r"// @noImplicitAny: true
 function f([|a? |]){
     if (a < 9) return;

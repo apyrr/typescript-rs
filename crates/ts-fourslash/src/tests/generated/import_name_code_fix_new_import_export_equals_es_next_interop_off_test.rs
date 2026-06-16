@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_export_equals_es_next_interop_off() 
 }
 
 fn run_test_import_name_code_fix_new_import_export_equals_es_next_interop_off(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportExportEqualsESNextInteropOff") {
+        return;
+    }
     let content = r#"// @Module: esnext
 // @Filename: /foo.d.ts
 declare module "foo" {

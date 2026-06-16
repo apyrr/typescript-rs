@@ -14,7 +14,9 @@ pub fn test_reference_to_class() {
 }
 
 fn run_test_reference_to_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferenceToClass") {
+        return;
+    }
     let content = r"// @Filename: referenceToClass_1.ts
 class /*1*/foo {
     public n: /*2*/foo;

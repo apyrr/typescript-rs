@@ -14,7 +14,9 @@ pub fn test_completion_list_new_identifier_variable_declaration() {
 }
 
 fn run_test_completion_list_new_identifier_variable_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListNewIdentifierVariableDeclaration") {
+        return;
+    }
     let content = r"var y : (s:string, list/*2*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(t, MarkerInput::Name("2".to_string()), None);

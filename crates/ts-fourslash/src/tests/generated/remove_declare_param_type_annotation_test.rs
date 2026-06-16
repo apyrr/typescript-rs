@@ -14,7 +14,9 @@ pub fn test_remove_declare_param_type_annotation() {
 }
 
 fn run_test_remove_declare_param_type_annotation(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRemoveDeclareParamTypeAnnotation") {
+        return;
+    }
     let content = r"declare class T { }
 declare function parseInt(/**/s:T):T;
 parseInt('2');";

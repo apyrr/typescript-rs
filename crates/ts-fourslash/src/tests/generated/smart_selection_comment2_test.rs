@@ -14,7 +14,9 @@ pub fn test_smart_selection_comment2() {
 }
 
 fn run_test_smart_selection_comment2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_comment2") {
+        return;
+    }
     let content = r"const a = 1; //a b/**/c d";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_selection_ranges(t, &[]);

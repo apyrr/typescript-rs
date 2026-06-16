@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_exports() {
 }
 
 fn run_test_navigation_bar_items_exports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsExports") {
+        return;
+    }
     let content = r#"export { a } from "a";
 
 export { b as B } from "a" 

@@ -14,7 +14,9 @@ pub fn test_signature_help_rest_args1() {
 }
 
 fn run_test_signature_help_rest_args1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpRestArgs1") {
+        return;
+    }
     let content = r"function fn(a: number, b: number, c: number) {}
 const a = [1, 2] as const;
 const b = [1] as const;

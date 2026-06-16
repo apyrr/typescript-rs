@@ -14,7 +14,9 @@ pub fn test_completions_union_string_literal_property() {
 }
 
 fn run_test_completions_union_string_literal_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsUnionStringLiteralProperty") {
+        return;
+    }
     let content = r"type Foo = { a: 0, b: 'x' } | { a: 0, b: 'y' } | { a: 1, b: 'z' };
 const foo: Foo = { a: 0, b: '/*1*/' }
 

@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_method_type_predicate() {
 }
 
 fn run_test_code_fix_class_implement_interface_method_type_predicate(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceMethodTypePredicate") {
+        return;
+    }
     let content = r"interface I {
     f(i: any): i is I;
     f(): this is I;

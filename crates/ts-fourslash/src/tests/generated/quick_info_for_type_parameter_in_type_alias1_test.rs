@@ -14,7 +14,9 @@ pub fn test_quick_info_for_type_parameter_in_type_alias1() {
 }
 
 fn run_test_quick_info_for_type_parameter_in_type_alias1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForTypeParameterInTypeAlias1") {
+        return;
+    }
     let content = r"type Ctor<AA> = new () => A/*1*/A;
 type MixinCtor<AA> = new () => AA & { constructor: MixinCtor<A/*2*/A> };
 type NestedCtor<AA> = new() => AA & (new () => AA & { constructor: NestedCtor<A/*3*/A> });

@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_file_all_comments() {
 }
 
 fn run_test_import_name_code_fix_new_import_file_all_comments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportFileAllComments") {
+        return;
+    }
     let content = r#"[|/*!
  * This is a license or something
  */

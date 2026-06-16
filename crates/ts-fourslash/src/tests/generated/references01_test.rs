@@ -14,7 +14,9 @@ pub fn test_references01() {
 }
 
 fn run_test_references01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferences01") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @Filename: /home/src/workspaces/project/referencesForGlobals_1.ts
 class /*0*/globalClass {

@@ -14,7 +14,9 @@ pub fn test_formatting_fat_arrow_functions() {
 }
 
 fn run_test_formatting_fat_arrow_functions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingFatArrowFunctions") {
+        return;
+    }
     let content = r"// valid
     (         )           =>    1  ;/*1*/
     (        arg )           =>    2  ;/*2*/

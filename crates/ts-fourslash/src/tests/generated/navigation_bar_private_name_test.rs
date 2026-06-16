@@ -14,7 +14,9 @@ pub fn test_navigation_bar_private_name() {
 }
 
 fn run_test_navigation_bar_private_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarPrivateName") {
+        return;
+    }
     let content = r"class A {
   #foo: () => {
     class B {

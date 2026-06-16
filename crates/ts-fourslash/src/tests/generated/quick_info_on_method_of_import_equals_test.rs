@@ -14,7 +14,9 @@ pub fn test_quick_info_on_method_of_import_equals() {
 }
 
 fn run_test_quick_info_on_method_of_import_equals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnMethodOfImportEquals") {
+        return;
+    }
     let content = r#"// @Filename: /a.d.ts
 declare class C<T> {
     m(): void;

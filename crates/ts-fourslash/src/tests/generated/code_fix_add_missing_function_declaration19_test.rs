@@ -14,7 +14,9 @@ pub fn test_code_fix_add_missing_function_declaration19() {
 }
 
 fn run_test_code_fix_add_missing_function_declaration19(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddMissingFunctionDeclaration19") {
+        return;
+    }
     let content = r"declare function f(x: number): any;
 f(foo);";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

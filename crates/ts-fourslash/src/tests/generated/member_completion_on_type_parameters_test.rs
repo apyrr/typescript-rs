@@ -14,7 +14,9 @@ pub fn test_member_completion_on_type_parameters() {
 }
 
 fn run_test_member_completion_on_type_parameters(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberCompletionOnTypeParameters") {
+        return;
+    }
     let content = r"interface IFoo {
     x: number;
     y: string;

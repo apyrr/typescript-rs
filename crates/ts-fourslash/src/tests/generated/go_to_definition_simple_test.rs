@@ -14,7 +14,9 @@ pub fn test_go_to_definition_simple() {
 }
 
 fn run_test_go_to_definition_simple(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionSimple") {
+        return;
+    }
     let content = r"// @Filename: Definition.ts
 class /*2*/c { }
 // @Filename: Consumption.ts

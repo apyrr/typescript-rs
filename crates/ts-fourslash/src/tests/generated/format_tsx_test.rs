@@ -14,7 +14,9 @@ pub fn test_format_tsx() {
 }
 
 fn run_test_format_tsx(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatTsx") {
+        return;
+    }
     let content = r"// @Filename: foo.tsx
 <div><p>'</p><p>{function(){return 1;}]}</p></div>";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

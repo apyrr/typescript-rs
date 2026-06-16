@@ -14,7 +14,9 @@ pub fn test_auto_import_pnpm() {
 }
 
 fn run_test_auto_import_pnpm(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportPnpm") {
+        return;
+    }
     let content = r#"// @Filename: /tsconfig.json
 { "compilerOptions": { "module": "commonjs" } }
 // @Filename: /node_modules/.pnpm/mobx@6.0.4/node_modules/mobx/package.json

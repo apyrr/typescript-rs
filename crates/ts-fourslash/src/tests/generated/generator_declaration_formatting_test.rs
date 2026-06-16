@@ -14,7 +14,9 @@ pub fn test_generator_declaration_formatting() {
 }
 
 fn run_test_generator_declaration_formatting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGeneratorDeclarationFormatting") {
+        return;
+    }
     let content = r"function    *g() { }/*1*/
 var v = function    *() { };/*2*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

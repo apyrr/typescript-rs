@@ -14,7 +14,9 @@ pub fn test_code_fix_import_non_exported_member5() {
 }
 
 fn run_test_code_fix_import_non_exported_member5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixImportNonExportedMember5") {
+        return;
+    }
     let content = r#"// @moduleResolution: bundler
 // @module: esnext
 // @filename: /node_modules/foo/index.js

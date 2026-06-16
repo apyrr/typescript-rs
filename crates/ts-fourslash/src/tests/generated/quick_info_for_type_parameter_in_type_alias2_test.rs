@@ -14,7 +14,9 @@ pub fn test_quick_info_for_type_parameter_in_type_alias2() {
 }
 
 fn run_test_quick_info_for_type_parameter_in_type_alias2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForTypeParameterInTypeAlias2") {
+        return;
+    }
     let content = r"type Call<AA> = { (): A/*1*/A };
 type Index<AA> = {[foo: string]: A/*2*/A};
 type GenericMethod<AA> = { method<BB>(): A/*3*/A & B/*4*/B }

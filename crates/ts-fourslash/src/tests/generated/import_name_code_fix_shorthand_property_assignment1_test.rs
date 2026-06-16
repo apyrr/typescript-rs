@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_shorthand_property_assignment1() {
 }
 
 fn run_test_import_name_code_fix_shorthand_property_assignment1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_shorthandPropertyAssignment1") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 export const a = 1;
 // @Filename: /b.ts

@@ -14,7 +14,9 @@ pub fn test_jsx_find_all_references_on_runtime_import_with_paths1() {
 }
 
 fn run_test_jsx_find_all_references_on_runtime_import_with_paths1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsxFindAllReferencesOnRuntimeImportWithPaths1") {
+        return;
+    }
     let content = r#"// @Filename: project/src/foo.ts
 import * as x from /**/"@foo/dir/jsx-runtime";
 // @Filename: project/src/bar.tsx

@@ -14,7 +14,9 @@ pub fn test_code_fix_undeclared_class_instance() {
 }
 
 fn run_test_code_fix_undeclared_class_instance(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixUndeclaredClassInstance") {
+        return;
+    }
     let content = r"// @strict: false
 class A {
     a: number;

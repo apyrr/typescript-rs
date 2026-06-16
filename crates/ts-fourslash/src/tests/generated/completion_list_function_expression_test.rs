@@ -14,7 +14,9 @@ pub fn test_completion_list_function_expression() {
 }
 
 fn run_test_completion_list_function_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListFunctionExpression") {
+        return;
+    }
     let content = r#"// @lib: es5
 class DataHandler {
     dataArray: Uint8Array;

@@ -14,7 +14,9 @@ pub fn test_completions_augmented_types_class2() {
 }
 
 fn run_test_completions_augmented_types_class2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsAugmentedTypesClass2") {
+        return;
+    }
     let content = r"class c5b { public foo(){ } }
 namespace c5b { var y = 2; } // should be ok
 c5b./*1*/

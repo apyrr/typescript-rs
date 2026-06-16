@@ -14,7 +14,9 @@ pub fn test_highlights_for_export_from_unfound_module() {
 }
 
 fn run_test_highlights_for_export_from_unfound_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestHighlightsForExportFromUnfoundModule") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @Filename: a.js
 import foo from 'unfound';

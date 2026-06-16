@@ -14,7 +14,9 @@ pub fn test_smart_indent_missing_brackets_with_keyword() {
 }
 
 fn run_test_smart_indent_missing_brackets_with_keyword(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentMissingBracketsWithKeyword") {
+        return;
+    }
     let content = r"with /*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

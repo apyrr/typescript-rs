@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition_module() {
 }
 
 fn run_test_go_to_type_definition_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinitionModule") {
+        return;
+    }
     let content = r"// @Filename: module1.ts
 module /*definition*/M {
     export var p;

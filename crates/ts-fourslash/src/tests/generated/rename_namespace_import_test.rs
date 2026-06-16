@@ -14,7 +14,9 @@ pub fn test_rename_namespace_import() {
 }
 
 fn run_test_rename_namespace_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameNamespaceImport") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/lib/tsconfig.json
 { "compilerOptions": { "lib": ["es5"] } }
 // @Filename: /home/src/workspaces/project/lib/index.ts

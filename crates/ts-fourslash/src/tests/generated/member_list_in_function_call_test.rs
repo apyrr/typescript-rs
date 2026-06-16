@@ -14,7 +14,9 @@ pub fn test_member_list_in_function_call() {
 }
 
 fn run_test_member_list_in_function_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListInFunctionCall") {
+        return;
+    }
     let content = r#"function aa(x: any) {}
 aa({
   "1": function () {

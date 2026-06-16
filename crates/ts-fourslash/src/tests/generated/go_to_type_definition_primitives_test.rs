@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition_primitives() {
 }
 
 fn run_test_go_to_type_definition_primitives(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinitionPrimitives") {
+        return;
+    }
     let content = r#"// @Filename: module1.ts
 var w: {a: number};
 var x = "string";

@@ -14,7 +14,9 @@ pub fn test_completion_list_in_type_parameter_of_type_alias1() {
 }
 
 fn run_test_completion_list_in_type_parameter_of_type_alias1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInTypeParameterOfTypeAlias1") {
+        return;
+    }
     let content = r"type List1</*0*/
 type List2</*1*/T> = T[];
 type List4<T> = /*2*/T[];

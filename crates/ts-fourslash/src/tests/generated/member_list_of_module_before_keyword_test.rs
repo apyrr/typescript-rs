@@ -14,7 +14,9 @@ pub fn test_member_list_of_module_before_keyword() {
 }
 
 fn run_test_member_list_of_module_before_keyword(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListOfModuleBeforeKeyword") {
+        return;
+    }
     let content = r"namespace TypeModule1 {
     export class C1 { }
     export class C2 { }

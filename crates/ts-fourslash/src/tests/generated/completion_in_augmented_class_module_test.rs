@@ -14,7 +14,9 @@ pub fn test_completion_in_augmented_class_module() {
 }
 
 fn run_test_completion_in_augmented_class_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionInAugmentedClassModule") {
+        return;
+    }
     let content = r"declare class m3f { foo(x: number): void }
 namespace m3f { export interface I { foo(): void } }
 var x: m3f./**/";

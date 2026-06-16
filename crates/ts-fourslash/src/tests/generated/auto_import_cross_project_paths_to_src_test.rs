@@ -14,7 +14,9 @@ pub fn test_auto_import_cross_project_paths_to_src() {
 }
 
 fn run_test_auto_import_cross_project_paths_to_src(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportCrossProject_paths_toSrc") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/packages/app/package.json
 { "name": "app", "dependencies": { "dep": "*" } }
 // @Filename: /home/src/workspaces/project/packages/app/tsconfig.json

@@ -14,7 +14,9 @@ pub fn test_unclosed_string_literal_error_recovery() {
 }
 
 fn run_test_unclosed_string_literal_error_recovery(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnclosedStringLiteralErrorRecovery") {
+        return;
+    }
     let content = r#""an unclosed string is a terrible thing!
 
 class foo { public x() { } }

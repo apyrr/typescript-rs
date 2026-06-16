@@ -14,7 +14,9 @@ pub fn test_organize_imports_remove_only() {
 }
 
 fn run_test_organize_imports_remove_only(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImports_removeOnly") {
+        return;
+    }
     let content = r#"import { c, b, a } from "foo";
 import d, { e } from "bar";
 import * as f from "baz";

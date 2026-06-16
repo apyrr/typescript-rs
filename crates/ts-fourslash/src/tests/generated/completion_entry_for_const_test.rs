@@ -14,7 +14,9 @@ pub fn test_completion_entry_for_const() {
 }
 
 fn run_test_completion_entry_for_const(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionEntryForConst") {
+        return;
+    }
     let content = r#"const c = "s";
 /*1*/
 const d = 1

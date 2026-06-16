@@ -14,7 +14,9 @@ pub fn test_get_occurrences_is_definition_of_namespace() {
 }
 
 fn run_test_get_occurrences_is_definition_of_namespace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIsDefinitionOfNamespace") {
+        return;
+    }
     let content = r"/*1*/namespace /*2*/Numbers {
     export var n = 12;
 }

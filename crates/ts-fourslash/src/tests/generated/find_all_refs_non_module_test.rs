@@ -14,7 +14,9 @@ pub fn test_find_all_refs_non_module() {
 }
 
 fn run_test_find_all_refs_non_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsNonModule") {
+        return;
+    }
     let content = r#"// @checkJs: true
 // @Filename: /script.ts
 console.log("I'm a script!");

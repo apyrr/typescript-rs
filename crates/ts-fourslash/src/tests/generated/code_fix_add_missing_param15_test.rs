@@ -14,7 +14,9 @@ pub fn test_code_fix_add_missing_param15() {
 }
 
 fn run_test_code_fix_add_missing_param15(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddMissingParam15") {
+        return;
+    }
     let content = r"function f(a: number, b: number) {}
 f();";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

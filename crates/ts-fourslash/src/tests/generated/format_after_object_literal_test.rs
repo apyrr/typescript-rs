@@ -14,7 +14,9 @@ pub fn test_format_after_object_literal() {
 }
 
 fn run_test_format_after_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatAfterObjectLiteral") {
+        return;
+    }
     let content = r"/**/namespace Default{var x= ( { } ) ;}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");

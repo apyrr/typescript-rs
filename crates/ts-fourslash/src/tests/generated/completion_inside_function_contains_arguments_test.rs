@@ -14,7 +14,9 @@ pub fn test_completion_inside_function_contains_arguments() {
 }
 
 fn run_test_completion_inside_function_contains_arguments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionInsideFunctionContainsArguments") {
+        return;
+    }
     let content = r"function testArguments() {/*1*/}
 /*2*/
 function testNestedArguments() {

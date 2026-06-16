@@ -14,7 +14,9 @@ pub fn test_go_to_definition_mapped_type() {
 }
 
 fn run_test_go_to_definition_mapped_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinition_mappedType") {
+        return;
+    }
     let content = r#"interface I { /*def*/m(): void; };
 declare const i: { [K in "m"]: I[K] };
 i.[|/*ref*/m|]();"#;

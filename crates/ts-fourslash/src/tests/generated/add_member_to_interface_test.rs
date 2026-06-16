@@ -14,7 +14,9 @@ pub fn test_add_member_to_interface() {
 }
 
 fn run_test_add_member_to_interface(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAddMemberToInterface") {
+        return;
+    }
     let content = r"
 namespace /*check*/Mod{
 }

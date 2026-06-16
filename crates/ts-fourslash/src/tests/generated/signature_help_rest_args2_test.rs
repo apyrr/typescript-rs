@@ -14,7 +14,9 @@ pub fn test_signature_help_rest_args2() {
 }
 
 fn run_test_signature_help_rest_args2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpRestArgs2") {
+        return;
+    }
     let content = r"// @strict: true
 // @allowJs: true
 // @checkJs: true

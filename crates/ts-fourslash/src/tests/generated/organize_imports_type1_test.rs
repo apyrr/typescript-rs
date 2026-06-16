@@ -14,7 +14,9 @@ pub fn test_organize_imports_type1() {
 }
 
 fn run_test_organize_imports_type1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsType1") {
+        return;
+    }
     let content = r#"// @allowSyntheticDefaultImports: true
 // @moduleResolution: bundler
 // @noUnusedLocals: true

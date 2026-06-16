@@ -14,7 +14,9 @@ pub fn test_type_reference_on_server() {
 }
 
 fn run_test_type_reference_on_server(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTypeReferenceOnServer") {
+        return;
+    }
     let content = r#"// @lib: es5
 /// <reference types="foo" />
 var x: number;

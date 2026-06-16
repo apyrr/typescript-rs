@@ -14,7 +14,9 @@ pub fn test_quick_info_for_const_assertions() {
 }
 
 fn run_test_quick_info_for_const_assertions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForConstAssertions") {
+        return;
+    }
     let content = r#"const a = { a: 1 } as /*1*/const;
 const b = 1 as /*2*/const;
 const c = "c" as /*3*/const;

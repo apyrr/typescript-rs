@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_static_and_non_static_no_merge() {
 }
 
 fn run_test_navigation_bar_items_static_and_non_static_no_merge(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsStaticAndNonStaticNoMerge") {
+        return;
+    }
     let content = r"class C {
     static x;
     x;

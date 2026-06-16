@@ -14,7 +14,9 @@ pub fn test_go_to_definition_switch_case5() {
 }
 
 fn run_test_go_to_definition_switch_case5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionSwitchCase5") {
+        return;
+    }
     let content = r"export [|/*start*/default|] {}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_go_to_definition(t, &["start".to_string()]);

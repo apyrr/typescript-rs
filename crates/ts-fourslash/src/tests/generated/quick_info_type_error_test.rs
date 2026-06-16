@@ -14,7 +14,9 @@ pub fn test_quick_info_type_error() {
 }
 
 fn run_test_quick_info_type_error(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoTypeError") {
+        return;
+    }
     let content = r"foo({
     /**/f: function() {},
     f() {}

@@ -14,7 +14,9 @@ pub fn test_formatting_object_literal_open_curly_single_line() {
 }
 
 fn run_test_formatting_object_literal_open_curly_single_line(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingObjectLiteralOpenCurlySingleLine") {
+        return;
+    }
     let content = r"
 let obj1 =
 { x: 10 };

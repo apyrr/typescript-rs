@@ -14,7 +14,9 @@ pub fn test_completion_details_of_context_sensitive_parameter_no_crash() {
 }
 
 fn run_test_completion_details_of_context_sensitive_parameter_no_crash(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionDetailsOfContextSensitiveParameterNoCrash") {
+        return;
+    }
     let content = r"// @strict: true
 type __ = never;
 

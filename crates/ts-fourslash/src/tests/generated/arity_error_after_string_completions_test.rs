@@ -14,7 +14,9 @@ pub fn test_arity_error_after_string_completions() {
 }
 
 fn run_test_arity_error_after_string_completions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestArityErrorAfterStringCompletions") {
+        return;
+    }
     let content = r#"// @strict: true
 
 interface Events {
@@ -47,6 +49,6 @@ declare function addListener<K extends keyof Events>(type: K, listener: (ev: Eve
             user_preferences: None,
         }),
     );
-    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"), 0);
+    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"));
     done();
 }

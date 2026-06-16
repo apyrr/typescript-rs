@@ -14,7 +14,9 @@ pub fn test_signature_help_type_parameters_not_variadic() {
 }
 
 fn run_test_signature_help_type_parameters_not_variadic(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpTypeParametersNotVariadic") {
+        return;
+    }
     let content = r"declare function f(a: any, ...b: any[]): any;
 f</*1*/>(1, 2);";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

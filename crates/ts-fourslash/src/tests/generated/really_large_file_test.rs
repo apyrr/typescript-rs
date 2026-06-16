@@ -14,7 +14,9 @@ pub fn test_really_large_file() {
 }
 
 fn run_test_really_large_file(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReallyLargeFile") {
+        return;
+    }
     let content = r"// @Filename: file.d.ts
 namespace /*1*/Foo {
 

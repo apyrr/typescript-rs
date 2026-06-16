@@ -14,7 +14,9 @@ pub fn test_unclosed_comments_in_constructor() {
 }
 
 fn run_test_unclosed_comments_in_constructor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnclosedCommentsInConstructor") {
+        return;
+    }
     let content = r"class Foo {
     constructor(/* /**/) { }
 }";

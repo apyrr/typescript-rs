@@ -14,7 +14,9 @@ pub fn test_code_fix_override_modifier18() {
 }
 
 fn run_test_code_fix_override_modifier18(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixOverrideModifier18") {
+        return;
+    }
     let content = r"// @noImplicitOverride: true
 class A {
     static foo() {}

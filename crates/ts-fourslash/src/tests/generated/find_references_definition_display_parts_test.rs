@@ -14,7 +14,9 @@ pub fn test_find_references_definition_display_parts() {
 }
 
 fn run_test_find_references_definition_display_parts(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindReferencesDefinitionDisplayParts") {
+        return;
+    }
     let content = r#"class Gre/*1*/eter {
     someFunction() { th/*2*/is;  }
 }

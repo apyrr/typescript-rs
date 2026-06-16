@@ -14,7 +14,9 @@ pub fn test_auto_import_cross_project_paths_shared_out_dir() {
 }
 
 fn run_test_auto_import_cross_project_paths_shared_out_dir(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportCrossProject_paths_sharedOutDir") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/tsconfig.base.json
 {
   "compilerOptions": {

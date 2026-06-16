@@ -14,7 +14,9 @@ pub fn test_recursive_class_reference() {
 }
 
 fn run_test_recursive_class_reference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRecursiveClassReference") {
+        return;
+    }
     let content = r"declare namespace Thing { }
 
 namespace Thing {

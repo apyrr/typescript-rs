@@ -14,7 +14,9 @@ pub fn test_rename_for_default_export08() {
 }
 
 fn run_test_rename_for_default_export08(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameForDefaultExport08") {
+        return;
+    }
     let content = r"// @Filename: foo.ts
 export default function DefaultExportedFunction() {
     return /**/[|DefaultExportedFunction|]

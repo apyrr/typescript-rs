@@ -14,7 +14,9 @@ pub fn test_format_empty_block() {
 }
 
 fn run_test_format_empty_block(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatEmptyBlock") {
+        return;
+    }
     let content = r"{}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_eof(t);

@@ -14,7 +14,9 @@ pub fn test_completion_list_new_identifier_function_declaration() {
 }
 
 fn run_test_completion_list_new_identifier_function_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListNewIdentifierFunctionDeclaration") {
+        return;
+    }
     let content = r"// @noLib: true
 function F(pref: (a/*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

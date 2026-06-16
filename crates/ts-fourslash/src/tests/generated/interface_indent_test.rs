@@ -14,7 +14,9 @@ pub fn test_interface_indent() {
 }
 
 fn run_test_interface_indent(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInterfaceIndent") {
+        return;
+    }
     let content = r"";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_bof(t);

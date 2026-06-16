@@ -14,7 +14,9 @@ pub fn test_format_empty_param_list() {
 }
 
 fn run_test_format_empty_param_list(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatEmptyParamList") {
+        return;
+    }
     let content = r"function f( f: function){/*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

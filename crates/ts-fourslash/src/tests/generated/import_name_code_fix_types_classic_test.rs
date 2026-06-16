@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_types_classic() {
 }
 
 fn run_test_import_name_code_fix_types_classic(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_types_classic") {
+        return;
+    }
     let content = r"// @moduleResolution: classic
 // @Filename: /node_modules/@types/foo/index.d.ts
 export const xyz: number;

@@ -14,7 +14,9 @@ pub fn test_export_equal_namespace_class_es_module_interop() {
 }
 
 fn run_test_export_equal_namespace_class_es_module_interop(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExportEqualNamespaceClassESModuleInterop") {
+        return;
+    }
     let content = r#"// @esModuleInterop: true
 // @moduleResolution: bundler
 // @target: es2015

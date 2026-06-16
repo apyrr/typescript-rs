@@ -14,7 +14,9 @@ pub fn test_declaration_maps_go_to_definition_same_name_different_directory() {
 }
 
 fn run_test_declaration_maps_go_to_definition_same_name_different_directory(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDeclarationMapsGoToDefinitionSameNameDifferentDirectory") {
+        return;
+    }
     let content = r#"// @Filename: BaseClass/Source.d.ts
 declare class Control {
     constructor();

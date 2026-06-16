@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_jsx7() {
 }
 
 fn run_test_import_name_code_fix_jsx7(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_jsx7") {
+        return;
+    }
     let content = r"// @jsx: react
 // @module: esnext
 // @esModuleInterop: true

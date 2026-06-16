@@ -14,7 +14,9 @@ pub fn test_format_tsx_closing_after_jsx_text() {
 }
 
 fn run_test_format_tsx_closing_after_jsx_text(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatTsxClosingAfterJsxText") {
+        return;
+    }
     let content = r"// @Filename: foo.tsx
 
 const a = (

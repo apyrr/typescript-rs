@@ -14,7 +14,9 @@ pub fn test_remove_duplicate_identifier() {
 }
 
 fn run_test_remove_duplicate_identifier(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRemoveDuplicateIdentifier") {
+        return;
+    }
     let content = r"class foo{}
 function foo() { return null; }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

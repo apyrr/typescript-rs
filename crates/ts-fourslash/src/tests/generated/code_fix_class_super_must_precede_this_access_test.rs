@@ -14,7 +14,9 @@ pub fn test_code_fix_class_super_must_precede_this_access() {
 }
 
 fn run_test_code_fix_class_super_must_precede_this_access(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassSuperMustPrecedeThisAccess") {
+        return;
+    }
     let content = r"class Base{
 }
 class C extends Base{

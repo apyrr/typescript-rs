@@ -14,7 +14,9 @@ pub fn test_member_list_on_function_parameter() {
 }
 
 fn run_test_member_list_on_function_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListOnFunctionParameter") {
+        return;
+    }
     let content = r"namespace Test10 {
     var x: string[] = [];
     x.forEach(function (y) { y./**/} );

@@ -14,7 +14,9 @@ pub fn test_tabbing_after_newline_inserted_before_while() {
 }
 
 fn run_test_tabbing_after_newline_inserted_before_while(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTabbingAfterNewlineInsertedBeforeWhile") {
+        return;
+    }
     let content = r"function foo() {
     /**/while (true) { }
 }";

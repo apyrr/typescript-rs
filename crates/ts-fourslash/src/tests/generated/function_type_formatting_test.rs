@@ -14,7 +14,9 @@ pub fn test_function_type_formatting() {
 }
 
 fn run_test_function_type_formatting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFunctionTypeFormatting") {
+        return;
+    }
     let content = r"var x: () =>           string/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

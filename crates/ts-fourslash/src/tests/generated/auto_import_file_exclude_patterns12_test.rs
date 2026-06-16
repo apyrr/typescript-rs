@@ -14,7 +14,9 @@ pub fn test_auto_import_file_exclude_patterns12() {
 }
 
 fn run_test_auto_import_file_exclude_patterns12(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportFileExcludePatterns12") {
+        return;
+    }
     let content = r"// @Filename: /src/vs/test.ts
 import { Parts } from './parts';
 export class /**/Extended implements Parts {

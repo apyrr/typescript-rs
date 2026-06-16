@@ -14,7 +14,9 @@ pub fn test_completion_list_for_rest() {
 }
 
 fn run_test_completion_list_for_rest(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListForRest") {
+        return;
+    }
     let content = r"interface Gen {
     x: number;
     parent: Gen;

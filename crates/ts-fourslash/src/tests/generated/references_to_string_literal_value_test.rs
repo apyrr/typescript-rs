@@ -14,7 +14,9 @@ pub fn test_references_to_string_literal_value() {
 }
 
 fn run_test_references_to_string_literal_value(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesToStringLiteralValue") {
+        return;
+    }
     let content = r#"// @lib: es5
 const s: string = "some /*1*/ string";"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

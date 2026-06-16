@@ -14,7 +14,9 @@ pub fn test_completion_list_builder_locations_variable_declarations() {
 }
 
 fn run_test_completion_list_builder_locations_variable_declarations(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListBuilderLocations_VariableDeclarations") {
+        return;
+    }
     let content = r#"// @lib: es5
 var x = a/*var1*/
 var x = (b/*var2*/
@@ -27,8 +29,8 @@ var y = new C(/*var6*/
  var y = new C(0, /*var7*/
 var y = [/*var8*/
 var y = [0, /*var9*/
-var y = ` + "`" + `${/*var10*/
-var y = ` + "`" + `${10} dd ${ /*var11*/
+var y = `${/*var10*/
+var y = `${10} dd ${ /*var11*/
 var y = 10; y=/*var12*/"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(

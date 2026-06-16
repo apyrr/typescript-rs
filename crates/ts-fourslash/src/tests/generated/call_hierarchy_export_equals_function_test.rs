@@ -14,7 +14,9 @@ pub fn test_call_hierarchy_export_equals_function() {
 }
 
 fn run_test_call_hierarchy_export_equals_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCallHierarchyExportEqualsFunction") {
+        return;
+    }
     let content = r#"// @filename: main.ts
 import bar = require("./other");
 

@@ -14,7 +14,9 @@ pub fn test_completion_in_checks1() {
 }
 
 fn run_test_completion_in_checks1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionInChecks1") {
+        return;
+    }
     let content = r#"// @target: esnext
 declare const obj: {
   a?: string;

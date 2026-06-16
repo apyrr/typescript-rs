@@ -14,7 +14,9 @@ pub fn test_inverted_clodule_after_quick_info() {
 }
 
 fn run_test_inverted_clodule_after_quick_info(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInvertedCloduleAfterQuickInfo") {
+        return;
+    }
     let content = r"// @strict: false
 namespace M {
     namespace A {

@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_method_this_and_self_reference() 
 }
 
 fn run_test_code_fix_class_implement_interface_method_this_and_self_reference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceMethodThisAndSelfReference") {
+        return;
+    }
     let content = r"interface I {
     f(x: number, y: this): I
 }

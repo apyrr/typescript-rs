@@ -14,7 +14,9 @@ pub fn test_formatting_on_type_literal() {
 }
 
 fn run_test_formatting_on_type_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnTypeLiteral") {
+        return;
+    }
     let content = r"function _uniteVertices<p extends string, a>(
     minority: Pinned<p, Vertex<a>>,
     majorityCounter: number,

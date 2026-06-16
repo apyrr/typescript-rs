@@ -14,7 +14,9 @@ pub fn test_code_fix_import_non_exported_member4() {
 }
 
 fn run_test_code_fix_import_non_exported_member4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixImportNonExportedMember4") {
+        return;
+    }
     let content = r#"// @module: esnext
 // @filename: /a.d.ts
 declare function foo(): any;

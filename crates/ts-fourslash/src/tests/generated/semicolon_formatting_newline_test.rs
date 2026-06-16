@@ -14,7 +14,9 @@ pub fn test_semicolon_formatting_newline() {
 }
 
 fn run_test_semicolon_formatting_newline(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemicolonFormattingNewline") {
+        return;
+    }
     let content = r"declare var f: { 
     (): any;
     (x: number): string;

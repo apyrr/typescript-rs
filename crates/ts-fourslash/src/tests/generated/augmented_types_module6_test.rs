@@ -14,7 +14,9 @@ pub fn test_augmented_types_module6() {
 }
 
 fn run_test_augmented_types_module6(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAugmentedTypesModule6") {
+        return;
+    }
     let content = r"declare class m3f { foo(x: number): void }
 namespace m3f { export interface I { foo(): void } }
 var x: m3f./*1*/

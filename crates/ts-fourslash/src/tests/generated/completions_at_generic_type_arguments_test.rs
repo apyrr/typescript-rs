@@ -14,7 +14,9 @@ pub fn test_completions_at_generic_type_arguments() {
 }
 
 fn run_test_completions_at_generic_type_arguments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsAtGenericTypeArguments") {
+        return;
+    }
     let content = r"// @lib: es5
 class Foo<T1, T2> {}
 const foo = new Foo</*1*/, /*2*/,

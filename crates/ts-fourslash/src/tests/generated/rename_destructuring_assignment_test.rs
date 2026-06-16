@@ -14,7 +14,9 @@ pub fn test_rename_destructuring_assignment() {
 }
 
 fn run_test_rename_destructuring_assignment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameDestructuringAssignment") {
+        return;
+    }
     let content = r#"interface I {
     [|[|{| "contextRangeIndex": 0 |}x|]: number;|]
 }

@@ -14,7 +14,9 @@ pub fn test_references_for_globals() {
 }
 
 fn run_test_references_for_globals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForGlobals") {
+        return;
+    }
     let content = r"// @Filename: referencesForGlobals_1.ts
 /*1*/var /*2*/global = 2;
 

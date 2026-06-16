@@ -14,7 +14,9 @@ pub fn test_rename_default_import_different_name() {
 }
 
 fn run_test_rename_default_import_different_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameDefaultImportDifferentName") {
+        return;
+    }
     let content = r#"// @Filename: B.ts
 [|export default class /*1*/[|{| "isWriteAccess": true, "isDefinition": true, "contextRangeIndex": 0 |}C|] {
     test() {

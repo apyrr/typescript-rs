@@ -14,7 +14,9 @@ pub fn test_completion_after_dot_dot_dot() {
 }
 
 fn run_test_completion_after_dot_dot_dot(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionAfterDotDotDot") {
+        return;
+    }
     let content = r"// @lib: es5
 .../**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

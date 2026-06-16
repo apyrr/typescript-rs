@@ -14,7 +14,9 @@ pub fn test_document_highlight_at_inherited_properties3() {
 }
 
 fn run_test_document_highlight_at_inherited_properties3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightAtInheritedProperties3") {
+        return;
+    }
     let content = r"// @Filename: file1.ts
 interface interface1 extends interface1 {
    [|doStuff|](): void;

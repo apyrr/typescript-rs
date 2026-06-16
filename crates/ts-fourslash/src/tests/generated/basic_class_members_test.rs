@@ -14,7 +14,9 @@ pub fn test_basic_class_members() {
 }
 
 fn run_test_basic_class_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestBasicClassMembers") {
+        return;
+    }
     let content = r"class n {
     constructor (public x: number, public y: number, private z: string) { }
 }

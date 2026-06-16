@@ -14,7 +14,9 @@ pub fn test_rename_module_exports_properties1() {
 }
 
 fn run_test_rename_module_exports_properties1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameModuleExportsProperties1") {
+        return;
+    }
     let content = r#"[|class [|{| "contextRangeIndex": 0 |}A|] {}|]
 module.exports = { [|A|] }"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

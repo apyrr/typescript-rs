@@ -16,7 +16,11 @@ pub fn test_code_fix_top_level_await_module_target_es2017_compiler_options_in_ts
 fn run_test_code_fix_top_level_await_module_target_es2017_compiler_options_in_ts_config(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestCodeFixTopLevelAwait_module_targetES2017CompilerOptionsInTsConfig",
+    ) {
+        return;
+    }
     let content = r#"// @filename: /dir/a.ts
 declare const p: Promise<number>;
 await p;

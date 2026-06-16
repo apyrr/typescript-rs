@@ -14,7 +14,9 @@ pub fn test_find_all_refs_import_equals() {
 }
 
 fn run_test_find_all_refs_import_equals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsImportEquals") {
+        return;
+    }
     let content = r"import j = N./**/q;
 namespace N { export const q = 0; }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

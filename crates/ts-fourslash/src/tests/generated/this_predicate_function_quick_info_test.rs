@@ -14,7 +14,9 @@ pub fn test_this_predicate_function_quick_info() {
 }
 
 fn run_test_this_predicate_function_quick_info(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestThisPredicateFunctionQuickInfo") {
+        return;
+    }
     let content = r#"class RoyalGuard {
     isLeader(): this is LeadGuard {
         return this instanceof LeadGuard;

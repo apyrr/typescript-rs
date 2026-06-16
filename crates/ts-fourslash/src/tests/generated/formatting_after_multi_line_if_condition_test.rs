@@ -14,7 +14,9 @@ pub fn test_formatting_after_multi_line_if_condition() {
 }
 
 fn run_test_formatting_after_multi_line_if_condition(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingAfterMultiLineIfCondition") {
+        return;
+    }
     let content = r" var foo;
  if (foo &&
      foo) {

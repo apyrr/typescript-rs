@@ -14,7 +14,9 @@ pub fn test_extend_array_interface() {
 }
 
 fn run_test_extend_array_interface(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExtendArrayInterface") {
+        return;
+    }
     let content = r"var x = [1, 2, 3];
 x./*1*/concat([4]);
 x./*2*/foo/*3*/()./*6*/toExponential/*7*/(2);
@@ -39,14 +41,14 @@ x./*4*/foo/*5*/()./*8*/charAt/*9*/(0);
             user_preferences: None,
         }),
     );
-    f.verify_error_exists_between_markers(&f.marker_by_name("2"), &f.marker_by_name("3"), 0);
-    f.verify_error_exists_between_markers(&f.marker_by_name("4"), &f.marker_by_name("5"), 0);
+    f.verify_error_exists_between_markers(&f.marker_by_name("2"), &f.marker_by_name("3"));
+    f.verify_error_exists_between_markers(&f.marker_by_name("4"), &f.marker_by_name("5"));
     f.go_to_eof(t);
     f.insert_line(t, "interface Array<T> { foo(): T; }");
     f.verify_no_error_exists_between_markers(&f.marker_by_name("2"), &f.marker_by_name("3"));
     f.verify_no_error_exists_between_markers(&f.marker_by_name("4"), &f.marker_by_name("5"));
     f.verify_no_error_exists_between_markers(&f.marker_by_name("6"), &f.marker_by_name("7"));
-    f.verify_error_exists_between_markers(&f.marker_by_name("8"), &f.marker_by_name("9"), 0);
+    f.verify_error_exists_between_markers(&f.marker_by_name("8"), &f.marker_by_name("9"));
     f.verify_number_of_errors_in_current_file(1);
     done();
 }

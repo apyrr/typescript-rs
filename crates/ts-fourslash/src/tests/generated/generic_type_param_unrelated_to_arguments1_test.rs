@@ -14,7 +14,9 @@ pub fn test_generic_type_param_unrelated_to_arguments1() {
 }
 
 fn run_test_generic_type_param_unrelated_to_arguments1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericTypeParamUnrelatedToArguments1") {
+        return;
+    }
     let content = r"interface Foo<T> {
     new (x: number): Foo<T>;
 }

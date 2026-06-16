@@ -14,7 +14,9 @@ pub fn test_unused_function_in_namespace4() {
 }
 
 fn run_test_unused_function_in_namespace4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedFunctionInNamespace4") {
+        return;
+    }
     let content = r"// @noUnusedLocals: true
 // @noUnusedParameters:true
  [| namespace Validation {

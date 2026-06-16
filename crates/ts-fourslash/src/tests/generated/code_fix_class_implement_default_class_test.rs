@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_default_class() {
 }
 
 fn run_test_code_fix_class_implement_default_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementDefaultClass") {
+        return;
+    }
     let content = r"interface I { x: number; }
 export default class implements I {[| |]}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

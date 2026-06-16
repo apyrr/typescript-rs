@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_file_detached_comments() {
 }
 
 fn run_test_import_name_code_fix_new_import_file_detached_comments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportFileDetachedComments") {
+        return;
+    }
     let content = r"[|/**
  * This is a comment intended to be attached to this interface
  */

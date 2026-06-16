@@ -14,7 +14,9 @@ pub fn test_quick_info_on_internal_aliases() {
 }
 
 fn run_test_quick_info_on_internal_aliases(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnInternalAliases") {
+        return;
+    }
     let content = r"/** Module comment*/
 export namespace m1 {
     /** m2 comments*/

@@ -14,7 +14,9 @@ pub fn test_quick_info_type_of_this_in_statics() {
 }
 
 fn run_test_quick_info_type_of_this_in_statics(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoTypeOfThisInStatics") {
+        return;
+    }
     let content = r"class C {
     static foo() {
         var /*1*/r = this;

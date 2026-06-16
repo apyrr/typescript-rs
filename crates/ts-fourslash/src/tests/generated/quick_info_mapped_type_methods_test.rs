@@ -14,7 +14,9 @@ pub fn test_quick_info_mapped_type_methods() {
 }
 
 fn run_test_quick_info_mapped_type_methods(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoMappedTypeMethods") {
+        return;
+    }
     let content = r"type M = { [K in 'one']: any };
 const x: M = {
   /**/one() {}

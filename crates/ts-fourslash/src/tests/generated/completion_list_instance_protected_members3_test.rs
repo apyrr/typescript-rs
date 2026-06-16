@@ -14,7 +14,9 @@ pub fn test_completion_list_instance_protected_members3() {
 }
 
 fn run_test_completion_list_instance_protected_members3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInstanceProtectedMembers3") {
+        return;
+    }
     let content = r"class Base {
     private privateMethod() { }
     private privateProperty;

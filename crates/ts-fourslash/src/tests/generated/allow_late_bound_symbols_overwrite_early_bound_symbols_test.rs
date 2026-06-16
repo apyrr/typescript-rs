@@ -14,7 +14,9 @@ pub fn test_allow_late_bound_symbols_overwrite_early_bound_symbols() {
 }
 
 fn run_test_allow_late_bound_symbols_overwrite_early_bound_symbols(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAllowLateBoundSymbolsOverwriteEarlyBoundSymbols") {
+        return;
+    }
     let content = r#"export {};
 const prop = "abc";
 function foo(): void {};

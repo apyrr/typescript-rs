@@ -14,7 +14,9 @@ pub fn test_syntactic_classifications_conflict_markers1() {
 }
 
 fn run_test_syntactic_classifications_conflict_markers1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSyntacticClassificationsConflictMarkers1") {
+        return;
+    }
     let content = r"class C {
 <<<<<<< HEAD
     v = 1;

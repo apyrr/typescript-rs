@@ -14,7 +14,9 @@ pub fn test_assert_contextual_type() {
 }
 
 fn run_test_assert_contextual_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAssertContextualType") {
+        return;
+    }
     let content = r"<(aa: number) =>void >(function myFn(b/**/b) { });";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_quick_info_at(t, "", "(parameter) bb: number", "");

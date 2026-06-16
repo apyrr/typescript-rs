@@ -14,7 +14,9 @@ pub fn test_outlining_spans_for_arguments() {
 }
 
 fn run_test_outlining_spans_for_arguments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOutliningSpansForArguments") {
+        return;
+    }
     let content = r"console.log(123, 456)l;
 console.log(
 );

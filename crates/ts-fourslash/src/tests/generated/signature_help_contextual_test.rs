@@ -14,7 +14,9 @@ pub fn test_signature_help_contextual() {
 }
 
 fn run_test_signature_help_contextual(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelp_contextual") {
+        return;
+    }
     let content = r"interface I {
     m(n: number, s: string): void;
     m2: () => void;

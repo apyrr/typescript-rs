@@ -14,7 +14,9 @@ pub fn test_inlay_hints_quote_preference1() {
 }
 
 fn run_test_inlay_hints_quote_preference1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsQuotePreference1") {
+        return;
+    }
     let content = r#"const a1: '"' = '"';
 const b1: '\\' = '\\';
 export function fn(a = a1, b = b1) {}"#;

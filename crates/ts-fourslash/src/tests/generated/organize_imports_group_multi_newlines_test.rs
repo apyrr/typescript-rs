@@ -14,7 +14,9 @@ pub fn test_organize_imports_group_multi_newlines() {
 }
 
 fn run_test_organize_imports_group_multi_newlines(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsGroup_MultiNewlines") {
+        return;
+    }
     let content = r#"import c from "C";
 
 

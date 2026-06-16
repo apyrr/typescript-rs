@@ -14,7 +14,9 @@ pub fn test_completion_of_await_promise4() {
 }
 
 fn run_test_completion_of_await_promise4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionOfAwaitPromise4") {
+        return;
+    }
     let content = r"function foo(x: Promise<string>) {
    [|x./**/|]
 }";

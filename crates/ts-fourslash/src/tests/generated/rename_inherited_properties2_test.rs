@@ -14,7 +14,9 @@ pub fn test_rename_inherited_properties2() {
 }
 
 fn run_test_rename_inherited_properties2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameInheritedProperties2") {
+        return;
+    }
     let content = r#"class class1 extends class1 {
    [|[|{| "contextRangeIndex": 0 |}doStuff|]() { }|]
 }

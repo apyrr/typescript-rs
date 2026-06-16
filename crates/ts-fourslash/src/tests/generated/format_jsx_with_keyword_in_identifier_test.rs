@@ -14,7 +14,9 @@ pub fn test_format_jsx_with_keyword_in_identifier() {
 }
 
 fn run_test_format_jsx_with_keyword_in_identifier(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatJsxWithKeywordInIdentifier") {
+        return;
+    }
     let content = r#"// @Filename: /a.tsx
 <div module-layout=""></div>"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

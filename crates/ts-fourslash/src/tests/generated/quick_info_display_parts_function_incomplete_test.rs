@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_function_incomplete() {
 }
 
 fn run_test_quick_info_display_parts_function_incomplete(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsFunctionIncomplete") {
+        return;
+    }
     let content = r"/*1*/function /*2*/(param: string) {
 }\
 /*3*/function /*4*/ {

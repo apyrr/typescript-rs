@@ -14,7 +14,9 @@ pub fn test_completion_list_private_names() {
 }
 
 fn run_test_completion_list_private_names(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListPrivateNames") {
+        return;
+    }
     let content = r"class Foo {
     #x;
     y;

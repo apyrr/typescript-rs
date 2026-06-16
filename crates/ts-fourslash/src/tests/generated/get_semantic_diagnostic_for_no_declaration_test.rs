@@ -14,7 +14,9 @@ pub fn test_get_semantic_diagnostic_for_no_declaration() {
 }
 
 fn run_test_get_semantic_diagnostic_for_no_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetSemanticDiagnosticForNoDeclaration") {
+        return;
+    }
     let content = r"// @module: CommonJS
 interface privateInterface {}
 export class Bar implements /*1*/privateInterface/*2*/{ }";

@@ -14,7 +14,9 @@ pub fn test_completions_import_promote_type_only1() {
 }
 
 fn run_test_completions_import_promote_type_only1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImport_promoteTypeOnly1") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @module: es2015
 // @Filename: /exports.ts

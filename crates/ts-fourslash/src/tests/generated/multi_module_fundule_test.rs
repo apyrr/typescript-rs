@@ -14,7 +14,9 @@ pub fn test_multi_module_fundule() {
 }
 
 fn run_test_multi_module_fundule(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMultiModuleFundule") {
+        return;
+    }
     let content = r"// @strict: false
 function C(x: number) { }
 

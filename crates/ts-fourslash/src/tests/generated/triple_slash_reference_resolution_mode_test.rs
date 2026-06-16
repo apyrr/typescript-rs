@@ -14,7 +14,9 @@ pub fn test_triple_slash_reference_resolution_mode() {
 }
 
 fn run_test_triple_slash_reference_resolution_mode(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTripleSlashReferenceResolutionMode") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/tsconfig.json
  { "compilerOptions": { "lib": ["es5"], "module": "nodenext", "declaration": true, "strict": true, "outDir": "out" }, "files": ["./index.ts"] }
 // @Filename: /home/src/workspaces/project/package.json

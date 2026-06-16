@@ -14,7 +14,9 @@ pub fn test_references_in_configured_project() {
 }
 
 fn run_test_references_in_configured_project(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesInConfiguredProject") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/referencesForGlobals_1.ts
 class /*0*/globalClass {
     public f() { }

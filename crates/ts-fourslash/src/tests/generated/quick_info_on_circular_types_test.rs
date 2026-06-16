@@ -14,7 +14,9 @@ pub fn test_quick_info_on_circular_types() {
 }
 
 fn run_test_quick_info_on_circular_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnCircularTypes") {
+        return;
+    }
     let content = r"interface A { (): B; };
 declare var a: A;
 var xx = a();

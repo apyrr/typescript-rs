@@ -14,7 +14,9 @@ pub fn test_format_signatures() {
 }
 
 fn run_test_format_signatures(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatSignatures") {
+        return;
+    }
     let content = r"type Foo = {
     (
       call: any/*callAutoformat*/

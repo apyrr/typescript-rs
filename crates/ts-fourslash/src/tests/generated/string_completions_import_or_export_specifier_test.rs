@@ -14,7 +14,9 @@ pub fn test_string_completions_import_or_export_specifier() {
 }
 
 fn run_test_string_completions_import_or_export_specifier(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestStringCompletionsImportOrExportSpecifier") {
+        return;
+    }
     let content = r#"// @Filename: exports.ts
 export let foo = 1;
 let someValue = 2;

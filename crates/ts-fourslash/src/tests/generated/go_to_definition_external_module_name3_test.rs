@@ -14,7 +14,9 @@ pub fn test_go_to_definition_external_module_name3() {
 }
 
 fn run_test_go_to_definition_external_module_name3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionExternalModuleName3") {
+        return;
+    }
     let content = r#"// @Filename: b.ts
 import n = require([|'e/*1*/'|]);
 var x = new n.Foo();

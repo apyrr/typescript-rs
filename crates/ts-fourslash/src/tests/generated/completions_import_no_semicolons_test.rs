@@ -14,7 +14,9 @@ pub fn test_completions_import_no_semicolons() {
 }
 
 fn run_test_completions_import_no_semicolons(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImport_noSemicolons") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 export function foo() {}
 // @Filename: /b.ts

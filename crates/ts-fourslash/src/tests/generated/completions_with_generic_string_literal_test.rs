@@ -14,7 +14,9 @@ pub fn test_completions_with_generic_string_literal() {
 }
 
 fn run_test_completions_with_generic_string_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsWithGenericStringLiteral") {
+        return;
+    }
     let content = r#"// @strict: true
 declare function get<T, K extends keyof T>(obj: T, key: K): T[K];
 get({ hello: 123, world: 456 }, "/**/");"#;

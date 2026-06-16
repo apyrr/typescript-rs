@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_undeclared_symbol() {
 }
 
 fn run_test_code_fix_class_implement_interface_undeclared_symbol(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceUndeclaredSymbol") {
+        return;
+    }
     let content = r"interface I {
    x: T;
 }

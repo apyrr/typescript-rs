@@ -14,7 +14,9 @@ pub fn test_parenthesis_fat_arrows() {
 }
 
 fn run_test_parenthesis_fat_arrows(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestParenthesisFatArrows") {
+        return;
+    }
     let content = r"// @strict: false
 x => x;
 (y) => y;

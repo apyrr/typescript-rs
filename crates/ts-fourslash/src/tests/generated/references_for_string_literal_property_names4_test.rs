@@ -14,7 +14,9 @@ pub fn test_references_for_string_literal_property_names4() {
 }
 
 fn run_test_references_for_string_literal_property_names4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForStringLiteralPropertyNames4") {
+        return;
+    }
     let content = r#"var x = { "/*1*/someProperty": 0 }
 x[/*2*/"someProperty"] = 3;
 x.someProperty = 5;"#;

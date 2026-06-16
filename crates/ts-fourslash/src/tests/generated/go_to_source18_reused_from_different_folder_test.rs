@@ -14,7 +14,9 @@ pub fn test_go_to_source18_reused_from_different_folder() {
 }
 
 fn run_test_go_to_source18_reused_from_different_folder(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToSource18_reusedFromDifferentFolder") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @moduleResolution: bundler
 // @Filename: /home/src/workspaces/project/node_modules/@types/yargs/package.json

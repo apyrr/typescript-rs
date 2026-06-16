@@ -14,7 +14,9 @@ pub fn test_completions_string_methods() {
 }
 
 fn run_test_completions_string_methods(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsStringMethods") {
+        return;
+    }
     let content = r#"// @lib: es5
 var s = "foo"./*1*/"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

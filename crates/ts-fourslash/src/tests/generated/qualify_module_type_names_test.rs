@@ -14,7 +14,9 @@ pub fn test_qualify_module_type_names() {
 }
 
 fn run_test_qualify_module_type_names(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQualifyModuleTypeNames") {
+        return;
+    }
     let content = r"namespace m { export class c { } };
 function x(arg: m.c) { return arg; }
 x(/**/";

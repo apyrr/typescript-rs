@@ -14,7 +14,9 @@ pub fn test_find_all_refs_in_class_expression() {
 }
 
 fn run_test_find_all_refs_in_class_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsInClassExpression") {
+        return;
+    }
     let content = r"interface I { /*0*/boom(): void; }
 new class C implements I {
    /*1*/boom(){}

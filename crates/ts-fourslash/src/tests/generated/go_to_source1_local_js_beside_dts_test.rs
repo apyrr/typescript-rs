@@ -14,7 +14,9 @@ pub fn test_go_to_source1_local_js_beside_dts() {
 }
 
 fn run_test_go_to_source1_local_js_beside_dts(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToSource1_localJsBesideDts") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @Filename: /home/src/workspaces/project/a.js
 export const /*end*/a = "a";

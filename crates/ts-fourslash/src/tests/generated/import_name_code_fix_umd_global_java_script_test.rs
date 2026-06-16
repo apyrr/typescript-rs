@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_umd_global_java_script() {
 }
 
 fn run_test_import_name_code_fix_umd_global_java_script(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixUMDGlobalJavaScript") {
+        return;
+    }
     let content = r"// @AllowSyntheticDefaultImports: false
 // @Module: commonjs
 // @CheckJs: true

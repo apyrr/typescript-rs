@@ -14,7 +14,9 @@ pub fn test_call_hierarchy_interface_method() {
 }
 
 fn run_test_call_hierarchy_interface_method(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCallHierarchyInterfaceMethod") {
+        return;
+    }
     let content = r"interface I {
     /**/foo(): void;
 }

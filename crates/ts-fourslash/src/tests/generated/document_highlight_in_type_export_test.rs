@@ -14,7 +14,9 @@ pub fn test_document_highlight_in_type_export() {
 }
 
 fn run_test_document_highlight_in_type_export(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightInTypeExport") {
+        return;
+    }
     let content = r"// @Filename: /1.ts
 type [|A|] = 1;
 export { [|A|] as [|B|] };

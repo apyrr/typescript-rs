@@ -14,7 +14,9 @@ pub fn test_formatting_await() {
 }
 
 fn run_test_formatting_await(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingAwait") {
+        return;
+    }
     let content = r"async function f() {
     for          await (const x of g()) {
         console.log(x);

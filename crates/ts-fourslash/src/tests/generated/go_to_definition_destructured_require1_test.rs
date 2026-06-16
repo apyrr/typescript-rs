@@ -14,7 +14,9 @@ pub fn test_go_to_definition_destructured_require1() {
 }
 
 fn run_test_go_to_definition_destructured_require1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionDestructuredRequire1") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @Filename: util.js
 class /*2*/Util {}

@@ -14,7 +14,9 @@ pub fn test_completion_list_in_named_class_expression_with_shadowing() {
 }
 
 fn run_test_completion_list_in_named_class_expression_with_shadowing(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInNamedClassExpressionWithShadowing") {
+        return;
+    }
     let content = r"class myClass { /*0*/ }
 /*1*/
 var x = class myClass {

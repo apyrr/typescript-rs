@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_recursive_type() {
 }
 
 fn run_test_quickinfo_verbosity_recursive_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityRecursiveType") {
+        return;
+    }
     let content = r#"// @lib: es5
 type Node/*N*/<T> = {
     value: T;

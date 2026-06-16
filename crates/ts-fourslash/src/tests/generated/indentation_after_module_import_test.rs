@@ -14,7 +14,9 @@ pub fn test_indentation_after_module_import() {
 }
 
 fn run_test_indentation_after_module_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIndentationAfterModuleImport") {
+        return;
+    }
     let content = r#"declare module "fs" { };
 import im = module("fs");/**/"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

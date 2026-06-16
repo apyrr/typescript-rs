@@ -14,7 +14,9 @@ pub fn test_is_definition_across_module_projects() {
 }
 
 fn run_test_is_definition_across_module_projects(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIsDefinitionAcrossModuleProjects") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/a/index.ts
 import { NS } from "../b";
 import { I } from "../c";

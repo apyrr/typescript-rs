@@ -14,7 +14,9 @@ pub fn test_rename_for_aliasing_export01() {
 }
 
 fn run_test_rename_for_aliasing_export01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameForAliasingExport01") {
+        return;
+    }
     let content = r"// @Filename: foo.ts
 let x = 1;
 

@@ -14,7 +14,9 @@ pub fn test_quick_info_parameter_skip_this_parameter() {
 }
 
 fn run_test_quick_info_parameter_skip_this_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoParameter_skipThisParameter") {
+        return;
+    }
     let content = r"function f(cb: (x: number) => void) {}
 f(function(this: any, /**/x) {});";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

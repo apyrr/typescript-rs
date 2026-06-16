@@ -14,7 +14,9 @@ pub fn test_code_fix_unused_label_no_suggestion_if_disabled() {
 }
 
 fn run_test_code_fix_unused_label_no_suggestion_if_disabled(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixUnusedLabel_noSuggestionIfDisabled") {
+        return;
+    }
     let content = r"// @allowUnusedLabels: true
 [|foo|]: while (true) {}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

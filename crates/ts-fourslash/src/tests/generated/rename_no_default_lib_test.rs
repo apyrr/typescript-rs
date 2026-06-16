@@ -14,7 +14,9 @@ pub fn test_rename_no_default_lib() {
 }
 
 fn run_test_rename_no_default_lib(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameNoDefaultLib") {
+        return;
+    }
     let content = r"// @checkJs: true
 // @allowJs: true
 // @Filename: /foo.js

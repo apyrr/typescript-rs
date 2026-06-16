@@ -14,7 +14,9 @@ pub fn test_completion_list_after_any_type() {
 }
 
 fn run_test_completion_list_after_any_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAfterAnyType") {
+        return;
+    }
     let content = r"declare class myString {
     charAt(pos: number): string;
 }

@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_toplevel_truncation1() {
 }
 
 fn run_test_quickinfo_verbosity_toplevel_truncation1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityToplevelTruncation1") {
+        return;
+    }
     let content = r"export enum LargeEnum/*1*/ {
     Member1,
     Member2,

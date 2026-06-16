@@ -14,7 +14,9 @@ pub fn test_completions_class_properties_after_private_property() {
 }
 
 fn run_test_completions_class_properties_after_private_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsClassPropertiesAfterPrivateProperty") {
+        return;
+    }
     let content = r#"interface X {
     bla: string;
 }

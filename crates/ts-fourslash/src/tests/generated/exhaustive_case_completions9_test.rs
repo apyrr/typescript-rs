@@ -14,7 +14,9 @@ pub fn test_exhaustive_case_completions9() {
 }
 
 fn run_test_exhaustive_case_completions9(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExhaustiveCaseCompletions9") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @newline: LF
 switch (Math.random() ? 123 : 456) {

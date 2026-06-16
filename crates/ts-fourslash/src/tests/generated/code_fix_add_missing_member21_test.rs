@@ -14,7 +14,9 @@ pub fn test_code_fix_add_missing_member21() {
 }
 
 fn run_test_code_fix_add_missing_member21(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddMissingMember21") {
+        return;
+    }
     let content = r"declare let p: Promise<string>;
 async function f() {
     p.toLowerCase();

@@ -14,7 +14,9 @@ pub fn test_completions_namespace_merged_with_object() {
 }
 
 fn run_test_completions_namespace_merged_with_object(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsNamespaceMergedWithObject") {
+        return;
+    }
     let content = r"namespace N {
     export type T = number;
 }

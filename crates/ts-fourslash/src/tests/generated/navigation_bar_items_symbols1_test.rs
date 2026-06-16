@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_symbols1() {
 }
 
 fn run_test_navigation_bar_items_symbols1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsSymbols1") {
+        return;
+    }
     let content = r"class C {
     [Symbol.isRegExp] = 0;
     [Symbol.iterator]() { }

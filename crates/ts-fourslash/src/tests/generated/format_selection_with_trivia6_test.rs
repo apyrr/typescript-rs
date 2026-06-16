@@ -14,7 +14,9 @@ pub fn test_format_selection_with_trivia6() {
 }
 
 fn run_test_format_selection_with_trivia6(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatSelectionWithTrivia6") {
+        return;
+    }
     let content = r"/*begin*/    // test comment
 /*end*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_document_highlights_files_to_search() {
 }
 
 fn run_test_document_highlights_files_to_search(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlights_filesToSearch") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 export const [|x|] = 0;
 // @Filename: /b.ts

@@ -14,7 +14,9 @@ pub fn test_formatting_on_enter_in_comments() {
 }
 
 fn run_test_formatting_on_enter_in_comments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnEnterInComments") {
+        return;
+    }
     let content = r"namespace me {
     class A {
         /*

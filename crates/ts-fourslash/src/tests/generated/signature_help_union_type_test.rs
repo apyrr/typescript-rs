@@ -14,7 +14,9 @@ pub fn test_signature_help_union_type() {
 }
 
 fn run_test_signature_help_union_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelp_unionType") {
+        return;
+    }
     let content = r"declare const a: (fn?: ((x: string) => string) | ((y: number) => number)) => void;
 declare const b: (x: string | number) => void;
 

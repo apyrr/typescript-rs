@@ -14,7 +14,9 @@ pub fn test_go_to_definition_built_in_values() {
 }
 
 fn run_test_go_to_definition_built_in_values(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionBuiltInValues") {
+        return;
+    }
     let content = r"var u = /*undefined*/undefined;
 var n = /*null*/null;
 var a = function() { return /*arguments*/arguments; };

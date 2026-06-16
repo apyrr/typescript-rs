@@ -14,7 +14,9 @@ pub fn test_smart_indent_in_parenthesized_expression02() {
 }
 
 fn run_test_smart_indent_in_parenthesized_expression02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentInParenthesizedExpression02") {
+        return;
+    }
     let content = r#"var y = (
 {| "indent": 4 |}"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

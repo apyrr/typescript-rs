@@ -14,7 +14,9 @@ pub fn test_code_fix_add_missing_import_for_react_jsx2() {
 }
 
 fn run_test_code_fix_add_missing_import_for_react_jsx2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddMissingImportForReactJsx2") {
+        return;
+    }
     let content = r#"// @jsx: react-jsxdev
 // @Filename: node_modules/react/index.d.ts
 export declare var React: any;

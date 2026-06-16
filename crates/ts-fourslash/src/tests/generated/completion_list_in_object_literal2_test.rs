@@ -14,7 +14,9 @@ pub fn test_completion_list_in_object_literal2() {
 }
 
 fn run_test_completion_list_in_object_literal2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInObjectLiteral2") {
+        return;
+    }
     let content = r#"interface TelemetryService {
     publicLog(eventName: string, data: any): any;
 };

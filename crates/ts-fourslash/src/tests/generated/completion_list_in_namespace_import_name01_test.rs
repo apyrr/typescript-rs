@@ -14,7 +14,9 @@ pub fn test_completion_list_in_namespace_import_name01() {
 }
 
 fn run_test_completion_list_in_namespace_import_name01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInNamespaceImportName01") {
+        return;
+    }
     let content = r#"// @Filename: m1.ts
 export var foo: number = 1;
 // @Filename: m2.ts

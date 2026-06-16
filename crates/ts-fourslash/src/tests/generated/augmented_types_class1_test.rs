@@ -14,7 +14,9 @@ pub fn test_augmented_types_class1() {
 }
 
 fn run_test_augmented_types_class1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAugmentedTypesClass1") {
+        return;
+    }
     let content = r"class c5b { public foo() { } }
 namespace c5b { export var y = 2; } // should be ok
 c5b./*1*/

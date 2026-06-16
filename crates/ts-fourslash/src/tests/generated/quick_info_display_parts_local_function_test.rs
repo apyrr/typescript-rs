@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_local_function() {
 }
 
 fn run_test_quick_info_display_parts_local_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsLocalFunction") {
+        return;
+    }
     let content = r#"function /*1*/outerFoo() {
     function /*2*/foo(param: string, optionalParam?: string, paramWithInitializer = "hello", ...restParam: string[]) {
     }

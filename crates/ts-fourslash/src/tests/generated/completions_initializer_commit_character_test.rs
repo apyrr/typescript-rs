@@ -14,7 +14,9 @@ pub fn test_completions_initializer_commit_character() {
 }
 
 fn run_test_completions_initializer_commit_character(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsInitializerCommitCharacter") {
+        return;
+    }
     let content = r"// @lib: es5
 // @Filename: file1.ts
 const mySpecialVar = 1;

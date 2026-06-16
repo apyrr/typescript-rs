@@ -14,7 +14,9 @@ pub fn test_get_occurrences_is_definition_of_interface() {
 }
 
 fn run_test_get_occurrences_is_definition_of_interface(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIsDefinitionOfInterface") {
+        return;
+    }
     let content = r"/*1*/interface /*2*/I {
     p: number;
 }

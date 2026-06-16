@@ -14,7 +14,9 @@ pub fn test_go_to_definition_function_overloads() {
 }
 
 fn run_test_go_to_definition_function_overloads(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionFunctionOverloads") {
+        return;
+    }
     let content = r#"function [|/*functionOverload1*/functionOverload|](value: number);
 function /*functionOverload2*/functionOverload(value: string);
 function /*functionOverloadDefinition*/functionOverload() {}

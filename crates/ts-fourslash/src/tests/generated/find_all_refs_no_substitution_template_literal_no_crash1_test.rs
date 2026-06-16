@@ -14,8 +14,10 @@ pub fn test_find_all_refs_no_substitution_template_literal_no_crash1() {
 }
 
 fn run_test_find_all_refs_no_substitution_template_literal_no_crash1(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"type Test = ` + "`" + `T/*1*/` + "`" + `;"#;
+    if should_skip_if_failing("TestFindAllRefsNoSubstitutionTemplateLiteralNoCrash1") {
+        return;
+    }
+    let content = r"type Test = `T/*1*/`;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_find_all_references(t, &["1".to_string()]);
     done();

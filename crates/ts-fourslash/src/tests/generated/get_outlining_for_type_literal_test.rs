@@ -14,7 +14,9 @@ pub fn test_get_outlining_for_type_literal() {
 }
 
 fn run_test_get_outlining_for_type_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOutliningForTypeLiteral") {
+        return;
+    }
     let content = r"type A =[| {
     a: number;
 }|]

@@ -14,7 +14,9 @@ pub fn test_signature_help_simple_super_call() {
 }
 
 fn run_test_signature_help_simple_super_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpSimpleSuperCall") {
+        return;
+    }
     let content = r"class SuperCallBase {
     constructor(b: boolean) {
     }

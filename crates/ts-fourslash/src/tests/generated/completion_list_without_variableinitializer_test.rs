@@ -14,7 +14,9 @@ pub fn test_completion_list_without_variableinitializer() {
 }
 
 fn run_test_completion_list_without_variableinitializer(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListWithoutVariableinitializer") {
+        return;
+    }
     let content = r"const a = a/*1*/;
 const b = a && b/*2*/;
 const c = [{ prop: [c/*3*/] }];

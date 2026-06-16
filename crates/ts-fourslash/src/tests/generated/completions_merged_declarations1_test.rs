@@ -14,7 +14,9 @@ pub fn test_completions_merged_declarations1() {
 }
 
 fn run_test_completions_merged_declarations1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsMergedDeclarations1") {
+        return;
+    }
     let content = r"// @lib: es5
 interface Point {
     x: number;

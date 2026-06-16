@@ -14,7 +14,9 @@ pub fn test_const_enum_quick_info_and_completion_list() {
 }
 
 fn run_test_const_enum_quick_info_and_completion_list(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestConstEnumQuickInfoAndCompletionList") {
+        return;
+    }
     let content = r"const enum /*1*/e {
     a,
     b,

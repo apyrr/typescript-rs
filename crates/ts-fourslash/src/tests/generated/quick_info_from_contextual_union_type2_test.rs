@@ -14,7 +14,9 @@ pub fn test_quick_info_from_contextual_union_type2() {
 }
 
 fn run_test_quick_info_from_contextual_union_type2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoFromContextualUnionType2") {
+        return;
+    }
     let content = r#"// @strict: true
 function test1(arg: { prop: "foo" }) {}
 test1({ /*1*/prop: "bar" });

@@ -14,7 +14,9 @@ pub fn test_format_after_multiline_comment() {
 }
 
 fn run_test_format_after_multiline_comment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatAfterMultilineComment") {
+        return;
+    }
     let content = r#"/*foo
 */"123123";"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

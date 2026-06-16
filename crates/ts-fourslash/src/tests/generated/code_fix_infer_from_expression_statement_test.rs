@@ -14,7 +14,9 @@ pub fn test_code_fix_infer_from_expression_statement() {
 }
 
 fn run_test_code_fix_infer_from_expression_statement(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixInferFromExpressionStatement") {
+        return;
+    }
     let content = r"// @noImplicitAny: true
 function inferVoid( [| app |] ) {
     app.use('hi')

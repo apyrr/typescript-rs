@@ -14,7 +14,9 @@ pub fn test_completion_property_shorthand_for_object_literal4() {
 }
 
 fn run_test_completion_property_shorthand_for_object_literal4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionPropertyShorthandForObjectLiteral4") {
+        return;
+    }
     let content = r"// @lib: es5
 const foo = 1;
 const bar = 2;

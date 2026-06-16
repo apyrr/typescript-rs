@@ -14,7 +14,9 @@ pub fn test_formatting_on_tab_after_close_curly() {
 }
 
 fn run_test_formatting_on_tab_after_close_curly(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnTabAfterCloseCurly") {
+        return;
+    }
     let content = r"namespace Tools {/*1*/
     export enum NodeType {/*2*/
         Error,/*3*/

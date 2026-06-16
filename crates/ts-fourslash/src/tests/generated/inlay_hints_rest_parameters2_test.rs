@@ -14,7 +14,9 @@ pub fn test_inlay_hints_rest_parameters2() {
 }
 
 fn run_test_inlay_hints_rest_parameters2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsRestParameters2") {
+        return;
+    }
     let content = r"function foo(a: unknown, b: unknown, c: unknown) { }
 function foo1(...x: [number, number | undefined]) {
     foo(...x, 3);

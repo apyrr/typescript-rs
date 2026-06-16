@@ -14,7 +14,9 @@ pub fn test_contextual_typing_of_generic_call_signatures2() {
 }
 
 fn run_test_contextual_typing_of_generic_call_signatures2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestContextualTypingOfGenericCallSignatures2") {
+        return;
+    }
     let content = r"interface I {
     <T>(x: T): void
 }

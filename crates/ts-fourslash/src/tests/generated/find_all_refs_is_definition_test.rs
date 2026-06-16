@@ -14,7 +14,9 @@ pub fn test_find_all_refs_is_definition() {
 }
 
 fn run_test_find_all_refs_is_definition(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsIsDefinition") {
+        return;
+    }
     let content = r"declare function foo(a: number): number;
 declare function foo(a: string): string;
 declare function foo/*1*/(a: string | number): string | number;

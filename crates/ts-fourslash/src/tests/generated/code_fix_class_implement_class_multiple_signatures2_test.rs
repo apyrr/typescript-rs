@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_class_multiple_signatures2() {
 }
 
 fn run_test_code_fix_class_implement_class_multiple_signatures2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementClassMultipleSignatures2") {
+        return;
+    }
     let content = r"class A {
     method(a: any, b: string): boolean;
     method(a: string, b: number): Function;

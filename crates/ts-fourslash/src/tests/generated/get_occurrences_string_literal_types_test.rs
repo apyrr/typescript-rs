@@ -14,7 +14,9 @@ pub fn test_get_occurrences_string_literal_types() {
 }
 
 fn run_test_get_occurrences_string_literal_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesStringLiteralTypes") {
+        return;
+    }
     let content = r#"function foo(a: "[|option 1|]") { }
 foo("[|option 1|]");"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

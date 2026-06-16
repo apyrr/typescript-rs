@@ -14,7 +14,9 @@ pub fn test_const_quick_info_and_completion_list() {
 }
 
 fn run_test_const_quick_info_and_completion_list(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestConstQuickInfoAndCompletionList") {
+        return;
+    }
     let content = r"const /*1*/a = 10;
 var x = /*2*/a;
 /*3*/

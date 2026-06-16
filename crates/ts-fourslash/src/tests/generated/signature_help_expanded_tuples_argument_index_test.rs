@@ -14,7 +14,9 @@ pub fn test_signature_help_expanded_tuples_argument_index() {
 }
 
 fn run_test_signature_help_expanded_tuples_argument_index(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpExpandedTuplesArgumentIndex") {
+        return;
+    }
     let content = r#"function foo(...args: [string, string] | [number, string, string]
 ) {
 

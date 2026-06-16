@@ -14,7 +14,9 @@ pub fn test_go_to_definition_imported_names8() {
 }
 
 fn run_test_go_to_definition_imported_names8(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionImportedNames8") {
+        return;
+    }
     let content = r#"// @allowjs: true
 // @Filename: b.js
 import { [|/*classAliasDefinition*/Class|] } from "./a";

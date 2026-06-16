@@ -14,7 +14,9 @@ pub fn test_go_to_definition_interface_after_implement() {
 }
 
 fn run_test_go_to_definition_interface_after_implement(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionInterfaceAfterImplement") {
+        return;
+    }
     let content = r"interface /*interfaceDefinition*/sInt {
     sVar: number;
     sFn: () => void;

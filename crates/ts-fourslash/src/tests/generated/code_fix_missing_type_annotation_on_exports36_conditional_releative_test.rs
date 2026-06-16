@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports36_conditional_releative(
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports36_conditional_releative(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports36-conditional-releative") {
+        return;
+    }
     let content = r#"// @isolatedDeclarations: true
 // @declaration: true
 // @Filename: /code.ts

@@ -14,7 +14,9 @@ pub fn test_signature_help_on_super_when_members_are_not_resolved() {
 }
 
 fn run_test_signature_help_on_super_when_members_are_not_resolved(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpOnSuperWhenMembersAreNotResolved") {
+        return;
+    }
     let content = r"class A { }
 class B extends A { constructor(public x: string) { } }
 class C extends B {

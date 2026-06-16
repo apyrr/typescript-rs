@@ -14,7 +14,9 @@ pub fn test_quick_info_clodule_with_recursive_reference() {
 }
 
 fn run_test_quick_info_clodule_with_recursive_reference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoCloduleWithRecursiveReference") {
+        return;
+    }
     let content = r"namespace M {
     export class C {
         foo() { }

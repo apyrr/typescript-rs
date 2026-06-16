@@ -14,7 +14,9 @@ pub fn test_completion_list_in_string_literals1() {
 }
 
 fn run_test_completion_list_in_string_literals1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInStringLiterals1") {
+        return;
+    }
     let content = r#""/*1*/       /*2*/\/*3*/
  /*4*/   \\/*5*/"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

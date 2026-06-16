@@ -14,7 +14,9 @@ pub fn test_import_type_completions2() {
 }
 
 fn run_test_import_type_completions2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportTypeCompletions2") {
+        return;
+    }
     let content = r"// @target: esnext
 // @filename: /foo.ts
 export const Foo = {};

@@ -14,7 +14,9 @@ pub fn test_formatting_space_between_optional_chaining() {
 }
 
 fn run_test_formatting_space_between_optional_chaining(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingSpaceBetweenOptionalChaining") {
+        return;
+    }
     let content = r"/*1*/a    ?.    b   ?.   c   .   d;
 /*2*/o    .  m()   ?.   length;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

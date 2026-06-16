@@ -14,8 +14,10 @@ pub fn test_smart_selection_template_strings2() {
 }
 
 fn run_test_smart_selection_template_strings2(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"` + "`" + `a ${b} /**/c` + "`" + `"#;
+    if should_skip_if_failing("TestSmartSelection_templateStrings2") {
+        return;
+    }
+    let content = r"`a ${b} /**/c`";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_selection_ranges(t, &[]);
     done();

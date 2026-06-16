@@ -14,7 +14,9 @@ pub fn test_code_fix_add_optional_param18() {
 }
 
 fn run_test_code_fix_add_optional_param18(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddOptionalParam18") {
+        return;
+    }
     let content = r#"[|function f(a: number, c: string) {}|]
 f(1, 1, "");"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

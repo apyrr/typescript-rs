@@ -14,7 +14,9 @@ pub fn test_auto_import_type_only_preferred3() {
 }
 
 fn run_test_auto_import_type_only_preferred3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportTypeOnlyPreferred3") {
+        return;
+    }
     let content = r#"// @module: esnext
 // @moduleResolution: bundler
 // @Filename: /a.ts

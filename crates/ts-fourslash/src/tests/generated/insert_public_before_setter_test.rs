@@ -14,7 +14,9 @@ pub fn test_insert_public_before_setter() {
 }
 
 fn run_test_insert_public_before_setter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInsertPublicBeforeSetter") {
+        return;
+    }
     let content = r"class C {
     /**/set Bar(bar:string) {}
 }

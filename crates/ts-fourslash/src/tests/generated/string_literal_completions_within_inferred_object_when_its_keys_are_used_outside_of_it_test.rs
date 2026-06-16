@@ -19,7 +19,11 @@ pub fn test_string_literal_completions_within_inferred_object_when_its_keys_are_
 fn run_test_string_literal_completions_within_inferred_object_when_its_keys_are_used_outside_of_it(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestStringLiteralCompletionsWithinInferredObjectWhenItsKeysAreUsedOutsideOfIt",
+    ) {
+        return;
+    }
     let content = r#"// @strict: true
 declare function createMachine<T>(config: {
   initial: keyof T;

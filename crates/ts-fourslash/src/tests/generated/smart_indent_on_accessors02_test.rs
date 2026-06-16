@@ -14,7 +14,9 @@ pub fn test_smart_indent_on_accessors02() {
 }
 
 fn run_test_smart_indent_on_accessors02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentOnAccessors02") {
+        return;
+    }
     let content = r#"class Foo {
     get foo() {
 {| "indent": 8 |} "#;

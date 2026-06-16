@@ -14,7 +14,9 @@ pub fn test_get_occurrences_is_definition_of_computed_property() {
 }
 
 fn run_test_get_occurrences_is_definition_of_computed_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIsDefinitionOfComputedProperty") {
+        return;
+    }
     let content = r#"let o = { /*1*/["/*2*/foo"]: 12 };
 let y = o./*3*/foo;
 let z = o['/*4*/foo'];"#;

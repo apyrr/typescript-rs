@@ -14,7 +14,9 @@ pub fn test_export_equals_interface_a() {
 }
 
 fn run_test_export_equals_interface_a(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExportEqualsInterfaceA") {
+        return;
+    }
     let content = r"// @Filename: exportEqualsInterface_A.ts
 interface A {
     p1: number;

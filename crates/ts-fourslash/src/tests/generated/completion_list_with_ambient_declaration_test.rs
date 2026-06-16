@@ -14,7 +14,9 @@ pub fn test_completion_list_with_ambient_declaration() {
 }
 
 fn run_test_completion_list_with_ambient_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListWithAmbientDeclaration") {
+        return;
+    }
     let content = r#"declare module "http" {
    var x;
    /*1*/

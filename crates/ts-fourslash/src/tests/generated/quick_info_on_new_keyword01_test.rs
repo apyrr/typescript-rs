@@ -14,7 +14,9 @@ pub fn test_quick_info_on_new_keyword01() {
 }
 
 fn run_test_quick_info_on_new_keyword01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnNewKeyword01") {
+        return;
+    }
     let content = r"class Cat {
   /**
    * NOTE: this constructor is private! Please use the factory function

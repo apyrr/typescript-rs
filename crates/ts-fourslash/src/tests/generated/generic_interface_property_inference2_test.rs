@@ -14,7 +14,9 @@ pub fn test_generic_interface_property_inference2() {
 }
 
 fn run_test_generic_interface_property_inference2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericInterfacePropertyInference2") {
+        return;
+    }
     let content = r"// @strict: false
 interface I {
     x: number;

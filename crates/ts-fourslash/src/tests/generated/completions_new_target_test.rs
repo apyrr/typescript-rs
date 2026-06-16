@@ -14,7 +14,9 @@ pub fn test_completions_new_target() {
 }
 
 fn run_test_completions_new_target(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsNewTarget") {
+        return;
+    }
     let content = r"class C {
     constructor() {
         if (C === new./*1*/)

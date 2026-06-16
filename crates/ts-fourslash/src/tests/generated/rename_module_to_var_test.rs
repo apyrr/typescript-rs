@@ -14,7 +14,9 @@ pub fn test_rename_module_to_var() {
 }
 
 fn run_test_rename_module_to_var(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameModuleToVar") {
+        return;
+    }
     let content = r"interface IMod {
     y: number;
 }

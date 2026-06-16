@@ -14,7 +14,9 @@ pub fn test_generic_derived_type_across_module_boundary1() {
 }
 
 fn run_test_generic_derived_type_across_module_boundary1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericDerivedTypeAcrossModuleBoundary1") {
+        return;
+    }
     let content = r"namespace M {
    export class C1 { }
    export class C2<T> { }

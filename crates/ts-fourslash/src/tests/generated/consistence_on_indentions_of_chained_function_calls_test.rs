@@ -14,7 +14,9 @@ pub fn test_consistence_on_indentions_of_chained_function_calls() {
 }
 
 fn run_test_consistence_on_indentions_of_chained_function_calls(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestConsistenceOnIndentionsOfChainedFunctionCalls") {
+        return;
+    }
     let content = r"interface ig {
   module(data): ig;
    requires(data): ig;

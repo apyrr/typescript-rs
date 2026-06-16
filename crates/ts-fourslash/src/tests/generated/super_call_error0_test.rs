@@ -14,7 +14,9 @@ pub fn test_super_call_error0() {
 }
 
 fn run_test_super_call_error0(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSuperCallError0") {
+        return;
+    }
     let content = r"class T5<T>{
     constructor(public bar: T) { }
 }

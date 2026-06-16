@@ -14,7 +14,9 @@ pub fn test_proto_var_visible_with_outer_scope_underscore_proto() {
 }
 
 fn run_test_proto_var_visible_with_outer_scope_underscore_proto(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestProtoVarVisibleWithOuterScopeUnderscoreProto") {
+        return;
+    }
     let content = r#"// outer
 var ___proto__ = 10;
 function foo() {

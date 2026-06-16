@@ -14,7 +14,9 @@ pub fn test_augmented_types_module1() {
 }
 
 fn run_test_augmented_types_module1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAugmentedTypesModule1") {
+        return;
+    }
     let content = r"namespace m1c {
     export interface I { foo(): void; }
 }

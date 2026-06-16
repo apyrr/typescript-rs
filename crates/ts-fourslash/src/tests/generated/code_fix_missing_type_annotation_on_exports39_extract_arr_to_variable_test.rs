@@ -16,7 +16,10 @@ pub fn test_code_fix_missing_type_annotation_on_exports39_extract_arr_to_variabl
 fn run_test_code_fix_missing_type_annotation_on_exports39_extract_arr_to_variable(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports39-extract-arr-to-variable")
+    {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 // @lib: es2019

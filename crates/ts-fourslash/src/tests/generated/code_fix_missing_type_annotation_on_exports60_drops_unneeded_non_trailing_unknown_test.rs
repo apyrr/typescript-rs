@@ -18,7 +18,11 @@ pub fn test_code_fix_missing_type_annotation_on_exports60_drops_unneeded_non_tra
 fn run_test_code_fix_missing_type_annotation_on_exports60_drops_unneeded_non_trailing_unknown(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestCodeFixMissingTypeAnnotationOnExports60-drops-unneeded-non-trailing-unknown",
+    ) {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 

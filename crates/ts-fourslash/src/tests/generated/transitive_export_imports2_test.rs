@@ -14,7 +14,9 @@ pub fn test_transitive_export_imports2() {
 }
 
 fn run_test_transitive_export_imports2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTransitiveExportImports2") {
+        return;
+    }
     let content = r#"// @Filename: a.ts
 [|namespace /*A*/[|{| "isWriteAccess": true, "isDefinition": true, "contextRangeIndex": 0 |}A|] {
     export const x = 0;

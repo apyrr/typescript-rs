@@ -14,7 +14,9 @@ pub fn test_delete_class_with_enum_present() {
 }
 
 fn run_test_delete_class_with_enum_present(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDeleteClassWithEnumPresent") {
+        return;
+    }
     let content = r"enum Foo { a, b, c }
 /**/class Bar { }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_completions_after_async_in_object_literal() {
 }
 
 fn run_test_completions_after_async_in_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsAfterAsyncInObjectLiteral") {
+        return;
+    }
     let content = r"const x: { m(): Promise<void> } = { async /**/ };";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(

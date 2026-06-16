@@ -14,7 +14,9 @@ pub fn test_formatting_on_close_brace() {
 }
 
 fn run_test_formatting_on_close_brace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnCloseBrace") {
+        return;
+    }
     let content = r"class foo    {
     /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

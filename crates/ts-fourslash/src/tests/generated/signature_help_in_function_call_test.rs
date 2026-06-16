@@ -14,7 +14,9 @@ pub fn test_signature_help_in_function_call() {
 }
 
 fn run_test_signature_help_in_function_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpInFunctionCall") {
+        return;
+    }
     let content = r"var items = [];
 items.forEach(item => {
     for (/**/

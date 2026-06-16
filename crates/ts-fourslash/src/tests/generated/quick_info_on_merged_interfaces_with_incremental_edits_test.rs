@@ -14,7 +14,9 @@ pub fn test_quick_info_on_merged_interfaces_with_incremental_edits() {
 }
 
 fn run_test_quick_info_on_merged_interfaces_with_incremental_edits(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnMergedInterfacesWithIncrementalEdits") {
+        return;
+    }
     let content = r"// @strict: false
 namespace MM {
     interface B<T> {

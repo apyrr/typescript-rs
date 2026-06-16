@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_auto_imports_type_only() {
 }
 
 fn run_test_code_fix_class_implement_interface_auto_imports_type_only(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceAutoImports_typeOnly") {
+        return;
+    }
     let content = r"// @module: esnext
 // @verbatimModuleSyntax: true
 // @Filename: types1.ts

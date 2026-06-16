@@ -14,7 +14,9 @@ pub fn test_completion_entry_for_deferred_mapped_type_members() {
 }
 
 fn run_test_completion_entry_for_deferred_mapped_type_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionEntryForDeferredMappedTypeMembers") {
+        return;
+    }
     let content = r"// @Filename: test.ts
 interface A { a: A }
 declare let a: A;

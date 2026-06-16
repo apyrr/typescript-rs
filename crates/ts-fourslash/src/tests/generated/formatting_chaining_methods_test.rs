@@ -14,7 +14,9 @@ pub fn test_formatting_chaining_methods() {
 }
 
 fn run_test_formatting_chaining_methods(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingChainingMethods") {
+        return;
+    }
     let content = r" z$ = this.store.select(this.fake())
      .ofType(
       'ACTION',

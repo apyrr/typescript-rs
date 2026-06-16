@@ -14,7 +14,9 @@ pub fn test_find_all_refs_with_leading_underscore_names9() {
 }
 
 fn run_test_find_all_refs_with_leading_underscore_names9(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsWithLeadingUnderscoreNames9") {
+        return;
+    }
     let content = r"(/*1*/function /*2*/___foo() {
     /*3*/___foo();
 })";

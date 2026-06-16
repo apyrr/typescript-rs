@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_global() {
 }
 
 fn run_test_code_fix_class_implement_interface_global(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceGlobal") {
+        return;
+    }
     let content = r"// @Filename: /src/globals.d.ts
 export {}; // Make this a module
 declare global {

@@ -14,7 +14,9 @@ pub fn test_get_outlining_spans_depth_chained_calls() {
 }
 
 fn run_test_get_outlining_spans_depth_chained_calls(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOutliningSpansDepthChainedCalls") {
+        return;
+    }
     let content = r#"declare var router: any;
 router
     .get[|("/", async(ctx) =>[|{

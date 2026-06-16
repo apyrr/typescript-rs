@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_class_function_void_inferred() {
 }
 
 fn run_test_code_fix_class_implement_class_function_void_inferred(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementClassFunctionVoidInferred") {
+        return;
+    }
     let content = r"class A {
     f() {}
 }

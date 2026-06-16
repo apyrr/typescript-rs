@@ -14,7 +14,9 @@ pub fn test_empty_export_find_references() {
 }
 
 fn run_test_empty_export_find_references(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestEmptyExportFindReferences") {
+        return;
+    }
     let content = r"// @allowNonTsExtensions: true
 // @Filename: Foo.js
 /**/module.exports = {

@@ -14,7 +14,9 @@ pub fn test_format_no_space_before_close_brace() {
 }
 
 fn run_test_format_no_space_before_close_brace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatNoSpaceBeforeCloseBrace") {
+        return;
+    }
     let content = r"foo(1, /* comment */    );";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");

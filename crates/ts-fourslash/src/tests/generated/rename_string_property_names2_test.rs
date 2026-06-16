@@ -14,7 +14,9 @@ pub fn test_rename_string_property_names2() {
 }
 
 fn run_test_rename_string_property_names2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameStringPropertyNames2") {
+        return;
+    }
     let content = r#"type Props = {
   foo: boolean;
 }

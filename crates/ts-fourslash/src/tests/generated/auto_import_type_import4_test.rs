@@ -14,7 +14,9 @@ pub fn test_auto_import_type_import4() {
 }
 
 fn run_test_auto_import_type_import4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportTypeImport4") {
+        return;
+    }
     let content = r#"// @verbatimModuleSyntax: true
 // @target: esnext
 // @Filename: /exports1.ts

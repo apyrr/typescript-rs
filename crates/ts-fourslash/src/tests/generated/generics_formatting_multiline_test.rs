@@ -14,7 +14,9 @@ pub fn test_generics_formatting_multiline() {
 }
 
 fn run_test_generics_formatting_multiline(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericsFormattingMultiline") {
+        return;
+    }
     let content = r#"
 class Foo   <   
  T1   extends unknown,
@@ -80,7 +82,7 @@ function s<T, U>(x: TemplateStringsArray, ...args: any[]) { return x.join(); }
 const t = s<
       number , 
   string[] & ArrayLike<any>
-      >` + "`" + `abc${1}def` + "`" + ` ;
+      >`abc${1}def` ;
 "#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");

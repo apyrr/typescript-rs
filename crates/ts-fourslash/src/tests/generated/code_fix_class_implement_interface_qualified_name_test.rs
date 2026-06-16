@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_qualified_name() {
 }
 
 fn run_test_code_fix_class_implement_interface_qualified_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceQualifiedName") {
+        return;
+    }
     let content = r"namespace N {
     export interface I { y: I; }
 }

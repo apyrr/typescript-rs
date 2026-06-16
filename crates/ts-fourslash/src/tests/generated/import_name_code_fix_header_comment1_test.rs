@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_header_comment1() {
 }
 
 fn run_test_import_name_code_fix_header_comment1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_HeaderComment1") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 export const foo = 0;
 // @Filename: /b.ts

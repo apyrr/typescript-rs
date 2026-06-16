@@ -14,7 +14,9 @@ pub fn test_completions01() {
 }
 
 fn run_test_completions01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletions01") {
+        return;
+    }
     let content = r"// @lib: es5
 var x: string[] = [];
 x.forEach(function (y) { y/*1*/

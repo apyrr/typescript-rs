@@ -14,7 +14,9 @@ pub fn test_get_occurrences_is_definition_of_binding_pattern() {
 }
 
 fn run_test_get_occurrences_is_definition_of_binding_pattern(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIsDefinitionOfBindingPattern") {
+        return;
+    }
     let content = r"const { /*1*/x, y } = { /*2*/x: 1, y: 2 };
 const z = /*3*/x;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

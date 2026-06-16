@@ -14,7 +14,9 @@ pub fn test_augmented_types_module3() {
 }
 
 fn run_test_augmented_types_module3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAugmentedTypesModule3") {
+        return;
+    }
     let content = r"function m2g() { };
 namespace m2g { export class C { foo(x: number) { } } }
 var x: m2g./*1*/;

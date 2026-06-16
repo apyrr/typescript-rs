@@ -14,7 +14,9 @@ pub fn test_format_selection_with_trivia8() {
 }
 
 fn run_test_format_selection_with_trivia8(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatSelectionWithTrivia8") {
+        return;
+    }
     let content = r"/*begin*/;
     
 /*end*/console.log();";

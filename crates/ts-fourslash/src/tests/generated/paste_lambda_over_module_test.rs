@@ -14,7 +14,9 @@ pub fn test_paste_lambda_over_module() {
 }
 
 fn run_test_paste_lambda_over_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestPasteLambdaOverModule") {
+        return;
+    }
     let content = r"// @strict: false
 /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

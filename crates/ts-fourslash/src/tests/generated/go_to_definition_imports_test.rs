@@ -14,7 +14,9 @@ pub fn test_go_to_definition_imports() {
 }
 
 fn run_test_go_to_definition_imports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionImports") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 export default function /*fDef*/f() {}
 export const /*xDef*/x = 0;

@@ -14,7 +14,9 @@ pub fn test_format_async_computed_method() {
 }
 
 fn run_test_format_async_computed_method(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatAsyncComputedMethod") {
+        return;
+    }
     let content = r"class C {
     /*method*/async [0]() { }
 }";

@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_quote_preference_double() {
 }
 
 fn run_test_code_fix_class_implement_interface_quote_preference_double(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterface_quotePreferenceDouble") {
+        return;
+    }
     let content = r#"interface I {
     a(): void;
     b(x: "x", y: "a" | "b"): "b";

@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_import_type2() {
 }
 
 fn run_test_import_name_code_fix_import_type2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_importType2") {
+        return;
+    }
     let content = r#"// @verbatimModuleSyntax: true
 // @module: es2015
 // @Filename: /exports1.ts

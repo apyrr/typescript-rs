@@ -14,7 +14,9 @@ pub fn test_completions_recursive_namespace() {
 }
 
 fn run_test_completions_recursive_namespace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsRecursiveNamespace") {
+        return;
+    }
     let content = r"declare namespace N {
     export import M = N;
 }

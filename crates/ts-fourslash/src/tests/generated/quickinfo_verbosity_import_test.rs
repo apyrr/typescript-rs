@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_import() {
 }
 
 fn run_test_quickinfo_verbosity_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityImport") {
+        return;
+    }
     let content = r#"// @module: esnext
 // @filename: /0.ts
 export type Apple = {

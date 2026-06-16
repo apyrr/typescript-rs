@@ -14,7 +14,9 @@ pub fn test_document_highlight_default_in_keyword() {
 }
 
 fn run_test_document_highlight_default_in_keyword(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightDefaultInKeyword") {
+        return;
+    }
     let content = r"[|case|]
 [|default|]";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

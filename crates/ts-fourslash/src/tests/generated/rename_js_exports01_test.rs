@@ -14,7 +14,9 @@ pub fn test_rename_js_exports01() {
 }
 
 fn run_test_rename_js_exports01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameJsExports01") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: a.js
 [|exports.[|{| "contextRangeIndex": 0 |}area|] = function (r) { return r * r; }|]

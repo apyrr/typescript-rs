@@ -14,7 +14,9 @@ pub fn test_completions_jsx_attribute2() {
 }
 
 fn run_test_completions_jsx_attribute2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsJsxAttribute2") {
+        return;
+    }
     let content = r#"// @jsx: preserve
 // @Filename: /a.tsx
 declare namespace JSX {

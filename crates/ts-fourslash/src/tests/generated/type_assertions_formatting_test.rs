@@ -14,7 +14,9 @@ pub fn test_type_assertions_formatting() {
 }
 
 fn run_test_type_assertions_formatting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTypeAssertionsFormatting") {
+        return;
+    }
     let content = r"( <  any   >      publisher);/*1*/
  <  any  >      3;/*2*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

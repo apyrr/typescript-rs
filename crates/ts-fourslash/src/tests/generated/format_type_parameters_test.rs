@@ -14,7 +14,9 @@ pub fn test_format_type_parameters() {
 }
 
 fn run_test_format_type_parameters(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatTypeParameters") {
+        return;
+    }
     let content = r"/**/type Bar<T extends any[]= any[]> = T";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");

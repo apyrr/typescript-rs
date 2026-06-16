@@ -14,7 +14,9 @@ pub fn test_get_occurrences_class_expression_private() {
 }
 
 fn run_test_get_occurrences_class_expression_private(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesClassExpressionPrivate") {
+        return;
+    }
     let content = r"let A = class Foo {
     [|private|] foo;
     [|private|] private;

@@ -14,7 +14,9 @@ pub fn test_inlay_hints_variable_types3() {
 }
 
 fn run_test_inlay_hints_variable_types3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsVariableTypes3") {
+        return;
+    }
     let content = r#"// @strict: true
 // @target: esnext
 interface DivElement {}

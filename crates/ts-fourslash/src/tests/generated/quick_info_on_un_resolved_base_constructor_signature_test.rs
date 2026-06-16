@@ -14,7 +14,9 @@ pub fn test_quick_info_on_un_resolved_base_constructor_signature() {
 }
 
 fn run_test_quick_info_on_un_resolved_base_constructor_signature(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnUnResolvedBaseConstructorSignature") {
+        return;
+    }
     let content = r"class baseClassWithConstructorParameterSpecifyingType {
     constructor(loading?: boolean) {
     }

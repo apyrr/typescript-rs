@@ -14,7 +14,9 @@ pub fn test_completion_list_in_object_binding_pattern15() {
 }
 
 fn run_test_completion_list_in_object_binding_pattern15(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInObjectBindingPattern15") {
+        return;
+    }
     let content = r"class Foo {
     private   xxx1 = 1;
     protected xxx2 = 2;

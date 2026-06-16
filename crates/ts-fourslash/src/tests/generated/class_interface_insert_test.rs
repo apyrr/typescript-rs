@@ -14,7 +14,9 @@ pub fn test_class_interface_insert() {
 }
 
 fn run_test_class_interface_insert(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestClassInterfaceInsert") {
+        return;
+    }
     let content = r"interface Intersection {
     dist: number;
 }

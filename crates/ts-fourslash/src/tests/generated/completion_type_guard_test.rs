@@ -14,7 +14,9 @@ pub fn test_completion_type_guard() {
 }
 
 fn run_test_completion_type_guard(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionTypeGuard") {
+        return;
+    }
     let content = r#"// @lib: es5
 const x = "str";
 function assert1(condition: any, msg?: string): /*1*/ ;

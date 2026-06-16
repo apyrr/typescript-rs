@@ -14,7 +14,9 @@ pub fn test_optional_property_formatting() {
 }
 
 fn run_test_optional_property_formatting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOptionalPropertyFormatting") {
+        return;
+    }
     let content = r"export class C extends Error {
     message: string;
     data? = {};

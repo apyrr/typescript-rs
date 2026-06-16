@@ -14,7 +14,9 @@ pub fn test_find_all_refs_unresolved_symbols3() {
 }
 
 fn run_test_find_all_refs_unresolved_symbols3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsUnresolvedSymbols3") {
+        return;
+    }
     let content = r#"import * as /*a0*/Bar from "does-not-exist";
 
 let a: /*a1*/Bar;

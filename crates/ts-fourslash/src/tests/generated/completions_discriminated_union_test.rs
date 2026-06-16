@@ -14,7 +14,9 @@ pub fn test_completions_discriminated_union() {
 }
 
 fn run_test_completions_discriminated_union(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsDiscriminatedUnion") {
+        return;
+    }
     let content = r#"interface A { kind: "a"; a: number; }
 interface B { kind: "b"; b: number; }
 const c: A | B = { kind: "a", /**/ };"#;

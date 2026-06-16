@@ -14,7 +14,9 @@ pub fn test_signature_help_at_eof() {
 }
 
 fn run_test_signature_help_at_eof(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpAtEOF") {
+        return;
+    }
     let content = r"function Foo(arg1: string, arg2: string) {
 }
 

@@ -14,7 +14,9 @@ pub fn test_completion_lists_string_literal_type_as_indexed_access_type_object()
 }
 
 fn run_test_completion_lists_string_literal_type_as_indexed_access_type_object(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListsStringLiteralTypeAsIndexedAccessTypeObject") {
+        return;
+    }
     let content = r#"let firstCase: "a/*case_1*/"["foo"]
 let secondCase: "b/*case_2*/"["bar"]
 let thirdCase: "c/*case_3*/"["baz"]

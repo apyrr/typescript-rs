@@ -14,7 +14,9 @@ pub fn test_member_list_on_contextual_this() {
 }
 
 fn run_test_member_list_on_contextual_this(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListOnContextualThis") {
+        return;
+    }
     let content = r"interface A {
     a: string;
 }

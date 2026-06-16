@@ -14,7 +14,9 @@ pub fn test_quick_info_type_only_import_export() {
 }
 
 fn run_test_quick_info_type_only_import_export(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoTypeOnlyImportExport") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 export type A = number;
 export const A = 42;

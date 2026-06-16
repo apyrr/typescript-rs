@@ -14,7 +14,9 @@ pub fn test_rename_string_literal_types5() {
 }
 
 fn run_test_rename_string_literal_types5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameStringLiteralTypes5") {
+        return;
+    }
     let content = r#"type T = {
     "Prop 1": string;
 }

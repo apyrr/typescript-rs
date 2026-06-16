@@ -14,7 +14,9 @@ pub fn test_inherited_module_members_for_clodule2() {
 }
 
 fn run_test_inherited_module_members_for_clodule2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInheritedModuleMembersForClodule2") {
+        return;
+    }
     let content = r"// @strict: false
 namespace M {
     export namespace A {

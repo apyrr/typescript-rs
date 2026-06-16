@@ -14,7 +14,9 @@ pub fn test_code_fix_unreachable_code_no_suggestion_if_disabled() {
 }
 
 fn run_test_code_fix_unreachable_code_no_suggestion_if_disabled(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixUnreachableCode_noSuggestionIfDisabled") {
+        return;
+    }
     let content = r"// @allowUnreachableCode: true
 if (false) [|0;|]";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_navbar_const() {
 }
 
 fn run_test_navbar_const(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavbar_const") {
+        return;
+    }
     let content = r"const c = 0;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_document_symbol(t);

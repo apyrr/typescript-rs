@@ -14,7 +14,9 @@ pub fn test_completion_list_in_unclosed_function05() {
 }
 
 fn run_test_completion_list_in_unclosed_function05(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInUnclosedFunction05") {
+        return;
+    }
     let content = r"function foo(x: string, y: number, z: boolean) {
     function bar(a: number, b: string, c: typeof x = /*1*/
 }";

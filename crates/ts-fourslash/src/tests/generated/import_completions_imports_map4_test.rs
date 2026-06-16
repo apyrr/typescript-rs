@@ -14,7 +14,9 @@ pub fn test_import_completions_imports_map4() {
 }
 
 fn run_test_import_completions_imports_map4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportCompletions_importsMap4") {
+        return;
+    }
     let content = r##"// @Filename: /home/src/workspaces/project/tsconfig.json
 {
   "compilerOptions": {

@@ -14,7 +14,9 @@ pub fn test_completion_list_of_union() {
 }
 
 fn run_test_completion_list_of_union(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOfUnion") {
+        return;
+    }
     let content = r"// @strictNullChecks: true
 const x: { a: number, b: number } | { a: string, c: string } | { b: boolean } | number | null | undefined = { /*x*/ };
 interface I { a: number; }

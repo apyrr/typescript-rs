@@ -14,7 +14,9 @@ pub fn test_generic_function_with_generic_params1() {
 }
 
 fn run_test_generic_function_with_generic_params1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericFunctionWithGenericParams1") {
+        return;
+    }
     let content = r"var obj = function f<T>(a: T) {
     var x/**/x: T;
     return a;

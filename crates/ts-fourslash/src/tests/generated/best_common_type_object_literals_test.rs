@@ -14,7 +14,9 @@ pub fn test_best_common_type_object_literals() {
 }
 
 fn run_test_best_common_type_object_literals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestBestCommonTypeObjectLiterals") {
+        return;
+    }
     let content = r"// @stableTypeOrdering: true
 var a = { name: 'bob', age: 18 };
 var b = { name: 'jim', age: 20 };

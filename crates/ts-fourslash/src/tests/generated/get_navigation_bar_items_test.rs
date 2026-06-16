@@ -14,7 +14,9 @@ pub fn test_get_navigation_bar_items() {
 }
 
 fn run_test_get_navigation_bar_items(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetNavigationBarItems") {
+        return;
+    }
     let content = r#"class C {
     foo;
     ["bar"]: string;

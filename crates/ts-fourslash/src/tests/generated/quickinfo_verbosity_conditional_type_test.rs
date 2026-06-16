@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_conditional_type() {
 }
 
 fn run_test_quickinfo_verbosity_conditional_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityConditionalType") {
+        return;
+    }
     let content = r#"interface Apple {
     color: string;
     weight: number;

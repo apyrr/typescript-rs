@@ -14,7 +14,9 @@ pub fn test_import_completions_package_json_imports_pattern() {
 }
 
 fn run_test_import_completions_package_json_imports_pattern(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportCompletionsPackageJsonImportsPattern") {
+        return;
+    }
     let content = r##"// @module: node18
 // @Filename: /package.json
 {

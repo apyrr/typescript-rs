@@ -14,7 +14,9 @@ pub fn test_quick_info_generics() {
 }
 
 fn run_test_quick_info_generics(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoGenerics") {
+        return;
+    }
     let content = r"class Con/*1*/tainer<T> {
     x: T;
 }

@@ -14,7 +14,9 @@ pub fn test_excessively_large_array_literal_completions() {
 }
 
 fn run_test_excessively_large_array_literal_completions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExcessivelyLargeArrayLiteralCompletions") {
+        return;
+    }
     let content = r"/*
    Route exported from CloudMade;
 

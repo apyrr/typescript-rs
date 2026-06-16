@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_multiple_implements1() {
 }
 
 fn run_test_code_fix_class_implement_interface_multiple_implements1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceMultipleImplements1") {
+        return;
+    }
     let content = r"// @strict: false
 interface I1 {
     x: number;

@@ -14,7 +14,9 @@ pub fn test_rename_import_of_re_export2() {
 }
 
 fn run_test_rename_import_of_re_export2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameImportOfReExport2") {
+        return;
+    }
     let content = r#"declare module "a" {
     [|export class /*1*/[|{| "isWriteAccess": true, "isDefinition": true, "contextRangeIndex": 0 |}C|] {}|]
 }

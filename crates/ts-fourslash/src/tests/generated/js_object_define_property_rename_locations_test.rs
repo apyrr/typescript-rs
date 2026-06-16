@@ -14,7 +14,9 @@ pub fn test_js_object_define_property_rename_locations() {
 }
 
 fn run_test_js_object_define_property_rename_locations(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsObjectDefinePropertyRenameLocations") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @checkJs: true
 // @noEmit: true

@@ -14,7 +14,9 @@ pub fn test_completions_paths_json_module_without_resolve_json_module() {
 }
 
 fn run_test_completions_paths_json_module_without_resolve_json_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsPathsJsonModuleWithoutResolveJsonModule") {
+        return;
+    }
     let content = r#"// @resolveJsonModule: false
 // @Filename: /project/test.json
 not read

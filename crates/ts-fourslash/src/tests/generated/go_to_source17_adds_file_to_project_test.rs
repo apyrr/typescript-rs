@@ -14,7 +14,9 @@ pub fn test_go_to_source17_adds_file_to_project() {
 }
 
 fn run_test_go_to_source17_adds_file_to_project(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToSource17_AddsFileToProject") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @moduleResolution: bundler
 // @Filename: /home/src/workspaces/project/node_modules/@types/yargs/package.json

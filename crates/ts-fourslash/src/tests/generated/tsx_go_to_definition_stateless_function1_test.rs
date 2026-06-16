@@ -14,7 +14,9 @@ pub fn test_tsx_go_to_definition_stateless_function1() {
 }
 
 fn run_test_tsx_go_to_definition_stateless_function1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxGoToDefinitionStatelessFunction1") {
+        return;
+    }
     let content = r#"//@Filename: file.tsx
 // @jsx: preserve
 // @noLib: true

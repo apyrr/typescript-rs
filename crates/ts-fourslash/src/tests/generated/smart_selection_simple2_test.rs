@@ -14,7 +14,9 @@ pub fn test_smart_selection_simple2() {
 }
 
 fn run_test_smart_selection_simple2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_simple2") {
+        return;
+    }
     let content = r"export interface IService {
   _serviceBrand: any;
 

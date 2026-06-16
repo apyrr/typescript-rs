@@ -16,7 +16,9 @@ pub fn test_completion_list_class_members_with_super_class_from_unknown_namespac
 fn run_test_completion_list_class_members_with_super_class_from_unknown_namespace(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListClassMembersWithSuperClassFromUnknownNamespace") {
+        return;
+    }
     let content = r"class Child extends Namespace.Parent {
     /**/
 }";

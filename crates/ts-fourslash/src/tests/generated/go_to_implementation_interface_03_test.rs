@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_interface_03() {
 }
 
 fn run_test_go_to_implementation_interface_03(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationInterface_03") {
+        return;
+    }
     let content = r"interface Fo/*interface_definition*/o { hello: () => void }
 
 var x = <Foo> [|{ hello: () => {} }|];";

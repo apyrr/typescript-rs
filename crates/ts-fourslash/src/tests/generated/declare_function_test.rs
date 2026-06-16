@@ -14,10 +14,12 @@ pub fn test_declare_function() {
 }
 
 fn run_test_declare_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDeclareFunction") {
+        return;
+    }
     let content = r"// @filename: index.ts
 declare function";
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_workspace_symbol(&[workspace_symbol_case("", vec![])]);
     done();
 }

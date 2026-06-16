@@ -14,7 +14,9 @@ pub fn test_find_all_refs_unresolved_symbols1() {
 }
 
 fn run_test_find_all_refs_unresolved_symbols1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsUnresolvedSymbols1") {
+        return;
+    }
     let content = r"let a: /*a0*/Bar;
 let b: /*a1*/Bar<string>;
 let c: /*a2*/Bar<string, number>;

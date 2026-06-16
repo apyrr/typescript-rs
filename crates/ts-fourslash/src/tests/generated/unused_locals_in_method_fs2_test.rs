@@ -14,7 +14,9 @@ pub fn test_unused_locals_in_method_fs2() {
 }
 
 fn run_test_unused_locals_in_method_fs2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedLocalsInMethodFS2") {
+        return;
+    }
     let content = r"// @noUnusedLocals: true
 // @noUnusedParameters: true
 class greeter {

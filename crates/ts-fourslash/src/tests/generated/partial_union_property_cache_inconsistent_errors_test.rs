@@ -14,7 +14,9 @@ pub fn test_partial_union_property_cache_inconsistent_errors() {
 }
 
 fn run_test_partial_union_property_cache_inconsistent_errors(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestPartialUnionPropertyCacheInconsistentErrors") {
+        return;
+    }
     let content = r#"// @strict: true
 // @lib: esnext
 interface ComponentOptions<Props> {

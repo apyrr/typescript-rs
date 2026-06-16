@@ -14,7 +14,9 @@ pub fn test_format_debugger_statement() {
 }
 
 fn run_test_format_debugger_statement(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatDebuggerStatement") {
+        return;
+    }
     let content = r"if(false){debugger;}
   if    (   false   )   {    debugger  ;   }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,21 +14,23 @@ pub fn test_rename_template_literals_define_property_js() {
 }
 
 fn run_test_rename_template_literals_define_property_js(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameTemplateLiteralsDefinePropertyJs") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: a.js
 let obj = {};
 
-Object.defineProperty(obj, ` + "`" + `[|prop|]` + "`" + `, { value: 0 });
+Object.defineProperty(obj, `[|prop|]`, { value: 0 });
 
 obj = {
-    [|[` + "`" + `[|{| "contextRangeIndex": 1 |}prop|]` + "`" + `]: 1|]
+    [|[`[|{| "contextRangeIndex": 1 |}prop|]`]: 1|]
 };
 
 obj.[|prop|];
 obj['[|prop|]'];
 obj["[|prop|]"];
-obj[` + "`" + `[|prop|]` + "`" + `];"#;
+obj[`[|prop|]`];"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_rename_at_ranges_with_text(t, "prop");
     done();

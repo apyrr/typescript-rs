@@ -14,7 +14,9 @@ pub fn test_rename_import_specifier_property_name() {
 }
 
 fn run_test_rename_import_specifier_property_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameImportSpecifierPropertyName") {
+        return;
+    }
     let content = r"// @Filename: canada.ts
 export interface /**/Ginger {}
 // @Filename: dry.ts

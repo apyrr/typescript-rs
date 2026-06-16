@@ -14,7 +14,9 @@ pub fn test_navigation_bar_assignment_types() {
 }
 
 fn run_test_navigation_bar_assignment_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarAssignmentTypes") {
+        return;
+    }
     let content = r"'use strict'
 const a = {
     ...b,

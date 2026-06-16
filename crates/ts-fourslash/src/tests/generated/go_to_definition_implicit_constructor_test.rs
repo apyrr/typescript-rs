@@ -14,7 +14,9 @@ pub fn test_go_to_definition_implicit_constructor() {
 }
 
 fn run_test_go_to_definition_implicit_constructor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionImplicitConstructor") {
+        return;
+    }
     let content = r"class /*constructorDefinition*/ImplicitConstructor {
 }
 var implicitConstructor = new /*constructorReference*/ImplicitConstructor();";

@@ -14,7 +14,9 @@ pub fn test_module_node_next_auto_import1() {
 }
 
 fn run_test_module_node_next_auto_import1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestModuleNodeNextAutoImport1") {
+        return;
+    }
     let content = r#"// @Filename: /tsconfig.json
 { "compilerOptions": { "module": "nodenext" } }
 // @Filename: /package.json

@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_property_signatures() {
 }
 
 fn run_test_code_fix_class_implement_interface_property_signatures(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfacePropertySignatures") {
+        return;
+    }
     let content = r"interface I {
     a0: {};
     a1: { (b1: number, c1: string): number; };

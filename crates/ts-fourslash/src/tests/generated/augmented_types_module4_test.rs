@@ -14,7 +14,9 @@ pub fn test_augmented_types_module4() {
 }
 
 fn run_test_augmented_types_module4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAugmentedTypesModule4") {
+        return;
+    }
     let content = r"namespace m3d { export var y = 2; }
 declare class m3d { foo(): void }
 var /*1*/r = new m3d();

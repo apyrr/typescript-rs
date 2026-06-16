@@ -14,7 +14,9 @@ pub fn test_quick_info_for_umd_module_alias() {
 }
 
 fn run_test_quick_info_for_umd_module_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForUMDModuleAlias") {
+        return;
+    }
     let content = r#"// @Filename: 0.d.ts
 export function doThing(): string;
 export function doTheOtherThing(): void;

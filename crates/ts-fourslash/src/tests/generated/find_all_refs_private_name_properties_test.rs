@@ -14,7 +14,9 @@ pub fn test_find_all_refs_private_name_properties() {
 }
 
 fn run_test_find_all_refs_private_name_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsPrivateNameProperties") {
+        return;
+    }
     let content = r"class C {
     /*1*/#foo = 10;
     constructor() {

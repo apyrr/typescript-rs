@@ -14,7 +14,9 @@ pub fn test_derived_type_indexer_with_generic_constraints() {
 }
 
 fn run_test_derived_type_indexer_with_generic_constraints(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDerivedTypeIndexerWithGenericConstraints") {
+        return;
+    }
     let content = r"// @strict: false
 class CollectionItem {
     x: number;

@@ -14,7 +14,9 @@ pub fn test_path_completions_allow_ts_extensions() {
 }
 
 fn run_test_path_completions_allow_ts_extensions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestPathCompletionsAllowTsExtensions") {
+        return;
+    }
     let content = r#"// @moduleResolution: bundler
 // @allowImportingTsExtensions: true
 // @noEmit: true

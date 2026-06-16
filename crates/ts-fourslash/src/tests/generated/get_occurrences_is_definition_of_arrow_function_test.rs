@@ -14,7 +14,9 @@ pub fn test_get_occurrences_is_definition_of_arrow_function() {
 }
 
 fn run_test_get_occurrences_is_definition_of_arrow_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIsDefinitionOfArrowFunction") {
+        return;
+    }
     let content = r"/*1*/var /*2*/f = x => x + 1;
 /*3*/f(12);";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

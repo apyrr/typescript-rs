@@ -14,7 +14,9 @@ pub fn test_quick_info_of_string_property_names1() {
 }
 
 fn run_test_quick_info_of_string_property_names1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOfStringPropertyNames1") {
+        return;
+    }
     let content = r#"interface foo {
     "foo bar": string;
 }

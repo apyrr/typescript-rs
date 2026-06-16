@@ -14,7 +14,9 @@ pub fn test_missing_method_after_edit_after_import() {
 }
 
 fn run_test_missing_method_after_edit_after_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMissingMethodAfterEditAfterImport") {
+        return;
+    }
     let content = r"namespace foo {
     export namespace bar { namespace baz { export class boo { } } }
 }

@@ -14,7 +14,9 @@ pub fn test_rename_string_literal_ok1() {
 }
 
 fn run_test_rename_string_literal_ok1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameStringLiteralOk1") {
+        return;
+    }
     let content = r"declare function f(): '[|foo|]' | 'bar'
 class Foo {
     f = f()

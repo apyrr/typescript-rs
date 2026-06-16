@@ -14,7 +14,9 @@ pub fn test_format_async_await() {
 }
 
 fn run_test_format_async_await(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatAsyncAwait") {
+        return;
+    }
     let content = r#"async   function asyncFunction() {/*asyncKeyword*/
     await
 /*awaitExpressionIndent*/

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_property_assignment() {
 }
 
 fn run_test_go_to_definition_property_assignment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionPropertyAssignment") {
+        return;
+    }
     let content = r#"export const /*FunctionResult*/Component = () => { return "OK"}
 Component./*PropertyResult*/displayName = 'Component'
 

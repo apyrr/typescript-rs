@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_default_export01() {
 }
 
 fn run_test_find_all_refs_for_default_export01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForDefaultExport01") {
+        return;
+    }
     let content = r"/*1*/export default class /*2*/DefaultExportedClass {
 }
 

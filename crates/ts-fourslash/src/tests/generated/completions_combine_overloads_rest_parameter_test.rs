@@ -14,7 +14,9 @@ pub fn test_completions_combine_overloads_rest_parameter() {
 }
 
 fn run_test_completions_combine_overloads_rest_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsCombineOverloads_restParameter") {
+        return;
+    }
     let content = r"interface A { a: number }
 interface B { b: number }
 interface C { c: number }

@@ -14,7 +14,9 @@ pub fn test_rename_default_lib_dont_work() {
 }
 
 fn run_test_rename_default_lib_dont_work(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameDefaultLibDontWork") {
+        return;
+    }
     let content = r#"// @Filename: file1.ts
 [|var [|{| "contextRangeIndex": 0 |}test|] = "foo";|]
 console.log([|test|]);"#;

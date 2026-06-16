@@ -14,7 +14,9 @@ pub fn test_formatting_on_constructor_signature() {
 }
 
 fn run_test_formatting_on_constructor_signature(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnConstructorSignature") {
+        return;
+    }
     let content = r"/*1*/interface Gourai { new   () {} }
 /*2*/type Stylet = { new   () {} }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

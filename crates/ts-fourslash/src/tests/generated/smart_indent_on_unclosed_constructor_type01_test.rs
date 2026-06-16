@@ -14,7 +14,9 @@ pub fn test_smart_indent_on_unclosed_constructor_type01() {
 }
 
 fn run_test_smart_indent_on_unclosed_constructor_type01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentOnUnclosedConstructorType01") {
+        return;
+    }
     let content = r#"var x: new () => {
 {| "indent": 4 |}"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

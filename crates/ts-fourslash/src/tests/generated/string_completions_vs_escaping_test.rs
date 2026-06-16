@@ -14,20 +14,22 @@ pub fn test_string_completions_vs_escaping() {
 }
 
 fn run_test_string_completions_vs_escaping(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"type Value<P extends string> = ` + "`" + `var(--\\\\, ${P})` + "`" + `
+    if should_skip_if_failing("TestStringCompletionsVsEscaping") {
+        return;
+    }
+    let content = r#"type Value<P extends string> = `var(--\\\\, ${P})`
 export const value: Value<'one' | 'two'> = "/*1*/"
 
-export const test: ` + "`" + `\ntest\n` + "`" + ` = '/*2*/'
+export const test: `\ntest\n` = '/*2*/'
 
-export const doubleQuoted1: ` + "`" + `"double-quoted"` + "`" + ` = '/*3*/'
-export const doubleQuoted2: ` + "`" + `"double-quoted"` + "`" + ` = "/*4*/"
+export const doubleQuoted1: `"double-quoted"` = '/*3*/'
+export const doubleQuoted2: `"double-quoted"` = "/*4*/"
 
-export const singleQuoted2: ` + "`" + `'single-quoted'` + "`" + ` = "/*5*/"
-export const singleQuoted2: ` + "`" + `'single-quoted'` + "`" + ` = '/*6*/'
+export const singleQuoted2: `'single-quoted'` = "/*5*/"
+export const singleQuoted2: `'single-quoted'` = '/*6*/'
 
-export const backtickQuoted1: '` + "`" + `backtick-quoted` + "`" + `' = "/*7*/"
-export const backtickQuoted2: '` + "`" + `backtick-quoted` + "`" + `' = ` + "`" + `/*8*/` + "`" + `"#;
+export const backtickQuoted1: '`backtick-quoted`' = "/*7*/"
+export const backtickQuoted2: '`backtick-quoted`' = `/*8*/`"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(
         t,

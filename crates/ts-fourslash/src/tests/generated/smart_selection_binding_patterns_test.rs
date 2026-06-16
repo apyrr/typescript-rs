@@ -14,7 +14,9 @@ pub fn test_smart_selection_binding_patterns() {
 }
 
 fn run_test_smart_selection_binding_patterns(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_bindingPatterns") {
+        return;
+    }
     let content = r"const { /*1*/x, y: /*2*/a, .../*3*/zs = {} } = {};";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_selection_ranges(t, &[]);

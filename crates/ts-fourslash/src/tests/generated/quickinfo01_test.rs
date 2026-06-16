@@ -14,7 +14,9 @@ pub fn test_quickinfo01() {
 }
 
 fn run_test_quickinfo01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfo01") {
+        return;
+    }
     let content = r"// @lib: es5
 interface One {
     commonProperty: number;

@@ -14,7 +14,9 @@ pub fn test_completions_literal_from_inference_within_inferred_type1() {
 }
 
 fn run_test_completions_literal_from_inference_within_inferred_type1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsLiteralFromInferenceWithinInferredType1") {
+        return;
+    }
     let content = r#"// @stableTypeOrdering: true
 // @Filename: /a.tsx
 declare function test<T>(a: {

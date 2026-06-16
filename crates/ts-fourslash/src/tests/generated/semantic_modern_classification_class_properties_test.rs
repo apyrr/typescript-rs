@@ -14,7 +14,9 @@ pub fn test_semantic_modern_classification_class_properties() {
 }
 
 fn run_test_semantic_modern_classification_class_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemanticModernClassificationClassProperties") {
+        return;
+    }
     let content = r"class A { 
   private y: number;
   constructor(public x : number, _y : number) { this.y = _y; }

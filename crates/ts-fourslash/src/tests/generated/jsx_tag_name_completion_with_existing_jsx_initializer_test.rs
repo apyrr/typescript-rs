@@ -14,7 +14,9 @@ pub fn test_jsx_tag_name_completion_with_existing_jsx_initializer() {
 }
 
 fn run_test_jsx_tag_name_completion_with_existing_jsx_initializer(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsxTagNameCompletionWithExistingJsxInitializer") {
+        return;
+    }
     let content = r#"// @filename: /foo.tsx
 declare namespace JSX {
     interface Element { }

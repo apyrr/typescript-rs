@@ -14,7 +14,9 @@ pub fn test_references_for_ambients() {
 }
 
 fn run_test_references_for_ambients(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForAmbients") {
+        return;
+    }
     let content = r#"/*1*/declare module "/*2*/foo" {
     /*3*/var /*4*/f: number;
 }

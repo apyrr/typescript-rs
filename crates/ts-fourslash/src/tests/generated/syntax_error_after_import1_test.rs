@@ -14,7 +14,9 @@ pub fn test_syntax_error_after_import1() {
 }
 
 fn run_test_syntax_error_after_import1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSyntaxErrorAfterImport1") {
+        return;
+    }
     let content = r#"declare module "extmod" {
   namespace IntMod {
     class Customer {

@@ -14,7 +14,9 @@ pub fn test_inlay_hints_no_parameter_hints() {
 }
 
 fn run_test_inlay_hints_no_parameter_hints(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsNoParameterHints") {
+        return;
+    }
     let content = r"function foo (a: number, b: number) {}
 foo(1, 2);";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

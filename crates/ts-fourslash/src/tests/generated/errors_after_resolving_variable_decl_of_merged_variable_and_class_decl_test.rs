@@ -16,7 +16,9 @@ pub fn test_errors_after_resolving_variable_decl_of_merged_variable_and_class_de
 fn run_test_errors_after_resolving_variable_decl_of_merged_variable_and_class_decl(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestErrorsAfterResolvingVariableDeclOfMergedVariableAndClassDecl") {
+        return;
+    }
     let content = r"namespace M {
     export class C {
         foo() { }

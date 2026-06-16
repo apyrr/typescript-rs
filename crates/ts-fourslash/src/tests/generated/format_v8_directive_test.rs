@@ -14,7 +14,9 @@ pub fn test_format_v8_directive() {
 }
 
 fn run_test_format_v8_directive(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatV8Directive") {
+        return;
+    }
     let content = r"// @Filename: foo.js
 function foo() {}
 /*1*/%PrepareFunctionForOptimization(foo)/*2*/;";

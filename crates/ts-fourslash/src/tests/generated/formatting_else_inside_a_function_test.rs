@@ -14,7 +14,9 @@ pub fn test_formatting_else_inside_a_function() {
 }
 
 fn run_test_formatting_else_inside_a_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingElseInsideAFunction") {
+        return;
+    }
     let content = r"var x = function() {
     if (true) {
     /*1*/} else {/*2*/

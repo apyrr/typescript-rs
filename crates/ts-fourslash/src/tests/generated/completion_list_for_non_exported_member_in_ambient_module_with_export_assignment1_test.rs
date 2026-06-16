@@ -18,7 +18,11 @@ pub fn test_completion_list_for_non_exported_member_in_ambient_module_with_expor
 fn run_test_completion_list_for_non_exported_member_in_ambient_module_with_export_assignment1(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestCompletionListForNonExportedMemberInAmbientModuleWithExportAssignment1",
+    ) {
+        return;
+    }
     let content = r#"// @Filename: completionListForNonExportedMemberInAmbientModuleWithExportAssignment1_file0.ts
 var x: Date;
 export = x;

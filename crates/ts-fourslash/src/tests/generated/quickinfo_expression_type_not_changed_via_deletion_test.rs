@@ -14,7 +14,9 @@ pub fn test_quickinfo_expression_type_not_changed_via_deletion() {
 }
 
 fn run_test_quickinfo_expression_type_not_changed_via_deletion(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoExpressionTypeNotChangedViaDeletion") {
+        return;
+    }
     let content = r"type TypeEq<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
 
 const /*2*/test1: TypeEq<number[], [number, ...number[]]> = false;

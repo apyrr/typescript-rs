@@ -14,7 +14,9 @@ pub fn test_completion_list_on_param() {
 }
 
 fn run_test_completion_list_on_param(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOnParam") {
+        return;
+    }
     let content = r"namespace Bar {
     export class Blah { }
 }

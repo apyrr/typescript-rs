@@ -14,7 +14,9 @@ pub fn test_get_occurrences_constructor() {
 }
 
 fn run_test_get_occurrences_constructor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesConstructor") {
+        return;
+    }
     let content = r"class C {
     [|const/**/ructor|]();
     [|constructor|](x: number);

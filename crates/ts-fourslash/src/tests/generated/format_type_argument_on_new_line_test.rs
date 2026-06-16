@@ -14,7 +14,9 @@ pub fn test_format_type_argument_on_new_line() {
 }
 
 fn run_test_format_type_argument_on_new_line(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatTypeArgumentOnNewLine") {
+        return;
+    }
     let content = r"const genericObject = new GenericObject<
   /*1*/{}
 >();

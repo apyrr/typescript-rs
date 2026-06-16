@@ -14,7 +14,9 @@ pub fn test_get_occurrences_this2() {
 }
 
 fn run_test_get_occurrences_this2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesThis2") {
+        return;
+    }
     let content = r"this;
 this;
 

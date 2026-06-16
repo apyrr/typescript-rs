@@ -14,7 +14,9 @@ pub fn test_completions_namespace_name() {
 }
 
 fn run_test_completions_namespace_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsNamespaceName") {
+        return;
+    }
     let content = r"{ namespace /*0*/ }
 namespace N/*1*/ {}
 namespace N.M {}

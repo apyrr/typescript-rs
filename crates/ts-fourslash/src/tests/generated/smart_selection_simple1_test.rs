@@ -14,7 +14,9 @@ pub fn test_smart_selection_simple1() {
 }
 
 fn run_test_smart_selection_simple1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_simple1") {
+        return;
+    }
     let content = r"class Foo {
   bar(a, b) {
       if (/*1*/a === b) {

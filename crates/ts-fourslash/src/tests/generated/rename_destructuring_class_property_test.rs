@@ -14,7 +14,9 @@ pub fn test_rename_destructuring_class_property() {
 }
 
 fn run_test_rename_destructuring_class_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameDestructuringClassProperty") {
+        return;
+    }
     let content = r#"class A {
     [|[|{| "contextRangeIndex": 0 |}foo|]: string;|]
 }

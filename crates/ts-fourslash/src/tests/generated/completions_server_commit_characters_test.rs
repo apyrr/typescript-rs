@@ -14,7 +14,9 @@ pub fn test_completions_server_commit_characters() {
 }
 
 fn run_test_completions_server_commit_characters(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsServerCommitCharacters") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @Filename: /home/src/workspaces/project/src/index.ts
 const a: "aa" | "bb" = "/**/";"#;

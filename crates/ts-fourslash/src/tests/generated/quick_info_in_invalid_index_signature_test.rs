@@ -14,7 +14,9 @@ pub fn test_quick_info_in_invalid_index_signature() {
 }
 
 fn run_test_quick_info_in_invalid_index_signature(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoInInvalidIndexSignature") {
+        return;
+    }
     let content = r"function method() { var /**/dictionary = <{ [index]: string; }>{}; }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_quick_info_at(

@@ -14,7 +14,9 @@ pub fn test_references_for_inherited_properties3() {
 }
 
 fn run_test_references_for_inherited_properties3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForInheritedProperties3") {
+        return;
+    }
     let content = r"interface interface1 extends interface1 {
    /*1*/doStuff(): void;
    /*2*/propName: string;

@@ -14,7 +14,9 @@ pub fn test_smart_selection_last_blank_line() {
 }
 
 fn run_test_smart_selection_last_blank_line(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_lastBlankLine") {
+        return;
+    }
     let content = r"class C {}
 /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_generic_function_signature_help1() {
 }
 
 fn run_test_generic_function_signature_help1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericFunctionSignatureHelp1") {
+        return;
+    }
     let content = r"function f<T>(a: T): T { return null; }
 f(/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

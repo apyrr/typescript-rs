@@ -14,7 +14,9 @@ pub fn test_document_highlight_in_keyword() {
 }
 
 fn run_test_document_highlight_in_keyword(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightInKeyword") {
+        return;
+    }
     let content = r#"export type Foo<T> = {
     [K [|in|] keyof T]: any;
 }

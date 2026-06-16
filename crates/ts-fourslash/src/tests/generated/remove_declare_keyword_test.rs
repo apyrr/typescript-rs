@@ -14,7 +14,9 @@ pub fn test_remove_declare_keyword() {
 }
 
 fn run_test_remove_declare_keyword(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRemoveDeclareKeyword") {
+        return;
+    }
     let content = r"/**/declare var y;
 var x = new y;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

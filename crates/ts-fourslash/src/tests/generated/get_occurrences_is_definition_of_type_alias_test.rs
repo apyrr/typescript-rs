@@ -14,7 +14,9 @@ pub fn test_get_occurrences_is_definition_of_type_alias() {
 }
 
 fn run_test_get_occurrences_is_definition_of_type_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIsDefinitionOfTypeAlias") {
+        return;
+    }
     let content = r"/*1*/type /*2*/Alias= number;
 let n: /*3*/Alias = 12;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

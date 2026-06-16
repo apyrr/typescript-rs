@@ -14,10 +14,12 @@ pub fn test_code_fix_class_implement_interface_no_truncation() {
 }
 
 fn run_test_code_fix_class_implement_interface_no_truncation(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceNoTruncation") {
+        return;
+    }
     let content = r#"// @stableTypeOrdering: true
 type GeneratePrefixedNumbers<Limit extends number, Prefix extends string, Result extends number[] = []> = 
-    Result['length'] extends Limit ? ` + "`" + `${Prefix}${Result[number]}` + "`" + ` : GeneratePrefixedNumbers<Limit, Prefix, [...Result, Result['length']]>;
+    Result['length'] extends Limit ? `${Prefix}${Result[number]}` : GeneratePrefixedNumbers<Limit, Prefix, [...Result, Result['length']]>;
 
 type PrefixedNumbersUpTo5 = GeneratePrefixedNumbers<5, 'name'>; // result = "name0" | "name1" | "name2" | "name3" | "name4"
 

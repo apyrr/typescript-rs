@@ -14,7 +14,9 @@ pub fn test_completions_big_int_show_no_completions() {
 }
 
 fn run_test_completions_big_int_show_no_completions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsBigIntShowNoCompletions") {
+        return;
+    }
     let content = r"declare const SSL_OP_SSLEAY_080_CLIENT_DH_BUG: number
 const foo = 0n/*1*/;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

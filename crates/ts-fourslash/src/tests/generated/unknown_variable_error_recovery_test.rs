@@ -14,7 +14,9 @@ pub fn test_unknown_variable_error_recovery() {
 }
 
 fn run_test_unknown_variable_error_recovery(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnknownVariableErrorRecovery") {
+        return;
+    }
     let content = r"var foo = [1, 2, 3];
 for (var bar = 0; foo[bar] < 5; bear/**/++ ) {
     foo[bar] = 0;

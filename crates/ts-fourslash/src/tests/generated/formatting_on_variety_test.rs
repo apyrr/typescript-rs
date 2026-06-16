@@ -14,7 +14,9 @@ pub fn test_formatting_on_variety() {
 }
 
 fn run_test_formatting_on_variety(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnVariety") {
+        return;
+    }
     let content = r"function f(a,b,c,d){/*1*/
 for(var i=0;i<10;i++){/*2*/
 var a=0;/*3*/

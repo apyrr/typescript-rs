@@ -14,7 +14,9 @@ pub fn test_navto01() {
 }
 
 fn run_test_navto01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavto01") {
+        return;
+    }
     let content = r#"// @lib: es5
 /// Module
 [|{| "name": "MyShapes", "kind": "module" |}namespace MyShapes {

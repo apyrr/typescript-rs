@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_type_alias() {
 }
 
 fn run_test_quick_info_display_parts_type_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsTypeAlias") {
+        return;
+    }
     let content = r"class /*1*/c {
 }
 type /*2*/t1 = /*3*/c;

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_super() {
 }
 
 fn run_test_go_to_definition_super(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinition_super") {
+        return;
+    }
     let content = r"class A {
     /*ctr*/constructor() {}
     x() {}

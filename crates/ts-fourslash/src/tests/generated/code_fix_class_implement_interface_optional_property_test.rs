@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_optional_property() {
 }
 
 fn run_test_code_fix_class_implement_interface_optional_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceOptionalProperty") {
+        return;
+    }
     let content = r"// @strict: false
 interface IPerson {
     name: string;

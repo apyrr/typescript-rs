@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_symlink_own_package() {
 }
 
 fn run_test_import_name_code_fix_symlink_own_package(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_symlink_own_package") {
+        return;
+    }
     let content = r#"// @Filename: /packages/b/b0.ts
 // @Symlink: /node_modules/b/b0.ts
 x;

@@ -14,7 +14,9 @@ pub fn test_multiple_export_assignments_error_list0() {
 }
 
 fn run_test_multiple_export_assignments_error_list0(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMultipleExportAssignmentsErrorList0") {
+        return;
+    }
     let content = r"interface connectModule {
     (res, req, next): void;
 }

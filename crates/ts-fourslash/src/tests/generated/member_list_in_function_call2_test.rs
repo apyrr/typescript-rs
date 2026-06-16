@@ -14,7 +14,9 @@ pub fn test_member_list_in_function_call2() {
 }
 
 fn run_test_member_list_in_function_call2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListInFunctionCall2") {
+        return;
+    }
     let content = r"type T = {
     a: 1;
     b: 2;

@@ -14,7 +14,9 @@ pub fn test_find_all_refs_nonexistent_property_no_crash1() {
 }
 
 fn run_test_find_all_refs_nonexistent_property_no_crash1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsNonexistentPropertyNoCrash1") {
+        return;
+    }
     let content = r#"// @strict: true
 // @allowJs: true
 // @checkJs: true

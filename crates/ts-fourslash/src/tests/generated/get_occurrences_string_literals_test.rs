@@ -14,7 +14,9 @@ pub fn test_get_occurrences_string_literals() {
 }
 
 fn run_test_get_occurrences_string_literals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesStringLiterals") {
+        return;
+    }
     let content = r#"var x = "[|string|]";
 function f(a = "[|initial value|]") { }"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

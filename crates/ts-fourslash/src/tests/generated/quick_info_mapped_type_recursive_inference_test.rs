@@ -14,7 +14,9 @@ pub fn test_quick_info_mapped_type_recursive_inference() {
 }
 
 fn run_test_quick_info_mapped_type_recursive_inference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoMappedTypeRecursiveInference") {
+        return;
+    }
     let content = r"// @Filename: test.ts
 interface A { a: A }
 declare let a: A;

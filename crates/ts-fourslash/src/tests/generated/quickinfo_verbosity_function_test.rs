@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_function() {
 }
 
 fn run_test_quickinfo_verbosity_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityFunction") {
+        return;
+    }
     let content = r"interface Apple {
     color: string;
     size: number;

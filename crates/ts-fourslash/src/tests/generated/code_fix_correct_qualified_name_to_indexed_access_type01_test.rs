@@ -14,7 +14,9 @@ pub fn test_code_fix_correct_qualified_name_to_indexed_access_type01() {
 }
 
 fn run_test_code_fix_correct_qualified_name_to_indexed_access_type01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixCorrectQualifiedNameToIndexedAccessType01") {
+        return;
+    }
     let content = r#"export interface Foo {
   bar: string;
 }

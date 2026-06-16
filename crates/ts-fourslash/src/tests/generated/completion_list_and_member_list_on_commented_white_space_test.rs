@@ -14,7 +14,9 @@ pub fn test_completion_list_and_member_list_on_commented_white_space() {
 }
 
 fn run_test_completion_list_and_member_list_on_commented_white_space(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAndMemberListOnCommentedWhiteSpace") {
+        return;
+    }
     let content = r"namespace M {
   export class C { public pub = 0; private priv = 1; }
   export var V = 0;

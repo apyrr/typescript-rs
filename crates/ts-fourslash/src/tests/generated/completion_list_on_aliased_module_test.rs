@@ -14,7 +14,9 @@ pub fn test_completion_list_on_aliased_module() {
 }
 
 fn run_test_completion_list_on_aliased_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOnAliasedModule") {
+        return;
+    }
     let content = r"namespace M {
     export namespace N {
         export function foo() { }

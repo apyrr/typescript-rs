@@ -14,7 +14,9 @@ pub fn test_references_for_label4() {
 }
 
 fn run_test_references_for_label4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForLabel4") {
+        return;
+    }
     let content = r"/*1*/label: function foo(label) {
     while (true) {
         /*2*/break /*3*/label;

@@ -14,7 +14,9 @@ pub fn test_ambient_variables_with_same_name() {
 }
 
 fn run_test_ambient_variables_with_same_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAmbientVariablesWithSameName") {
+        return;
+    }
     let content = r"declare namespace M {
     export var x: string;
 }

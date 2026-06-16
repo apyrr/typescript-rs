@@ -14,7 +14,9 @@ pub fn test_signature_help_on_overloads() {
 }
 
 fn run_test_signature_help_on_overloads(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpOnOverloads") {
+        return;
+    }
     let content = r"declare function fn(x: string);
 declare function fn(x: string, y: number);
 fn(/*1*/";

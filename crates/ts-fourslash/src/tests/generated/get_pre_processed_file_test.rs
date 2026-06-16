@@ -14,7 +14,9 @@ pub fn test_get_pre_processed_file() {
 }
 
 fn run_test_get_pre_processed_file(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetPreProcessedFile") {
+        return;
+    }
     let content = r#"// @moduleResolution: classic
 // @Filename: refFile1.ts
 class D { }
@@ -35,12 +37,12 @@ var obj2: ref2.E;"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_file(t, "main.ts");
     f.verify_number_of_errors_in_current_file(7);
-    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"), 0);
-    f.verify_error_exists_between_markers(&f.marker_by_name("3"), &f.marker_by_name("4"), 0);
-    f.verify_error_exists_between_markers(&f.marker_by_name("5"), &f.marker_by_name("6"), 0);
-    f.verify_error_exists_between_markers(&f.marker_by_name("7"), &f.marker_by_name("8"), 0);
-    f.verify_error_exists_between_markers(&f.marker_by_name("9"), &f.marker_by_name("10"), 0);
-    f.verify_error_exists_between_markers(&f.marker_by_name("10"), &f.marker_by_name("10A"), 0);
-    f.verify_error_exists_between_markers(&f.marker_by_name("11"), &f.marker_by_name("12"), 0);
+    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"));
+    f.verify_error_exists_between_markers(&f.marker_by_name("3"), &f.marker_by_name("4"));
+    f.verify_error_exists_between_markers(&f.marker_by_name("5"), &f.marker_by_name("6"));
+    f.verify_error_exists_between_markers(&f.marker_by_name("7"), &f.marker_by_name("8"));
+    f.verify_error_exists_between_markers(&f.marker_by_name("9"), &f.marker_by_name("10"));
+    f.verify_error_exists_between_markers(&f.marker_by_name("10"), &f.marker_by_name("10A"));
+    f.verify_error_exists_between_markers(&f.marker_by_name("11"), &f.marker_by_name("12"));
     done();
 }

@@ -14,7 +14,9 @@ pub fn test_completion_list_on_aliases() {
 }
 
 fn run_test_completion_list_on_aliases(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOnAliases") {
+        return;
+    }
     let content = r"namespace M {
     export var value;
 

@@ -14,7 +14,9 @@ pub fn test_find_references_jsx_tag_name2() {
 }
 
 fn run_test_find_references_jsx_tag_name2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindReferencesJSXTagName2") {
+        return;
+    }
     let content = r"// @Filename: index.tsx
 /*1*/const /*2*/obj = {Component: () => <div/>};
 const element = </*3*/obj.Component/>;";

@@ -14,7 +14,9 @@ pub fn test_navigation_bar_anonymous_class_and_function_expressions2() {
 }
 
 fn run_test_navigation_bar_anonymous_class_and_function_expressions2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarAnonymousClassAndFunctionExpressions2") {
+        return;
+    }
     let content = r"console.log(console.log(class Y {}, class X {}), console.log(class B {}, class A {}));
 console.log(class Cls { meth() {} });";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

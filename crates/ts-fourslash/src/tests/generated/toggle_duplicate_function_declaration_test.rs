@@ -14,7 +14,9 @@ pub fn test_toggle_duplicate_function_declaration() {
 }
 
 fn run_test_toggle_duplicate_function_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestToggleDuplicateFunctionDeclaration") {
+        return;
+    }
     let content = r"class D { }
 D();";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

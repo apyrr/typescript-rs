@@ -14,7 +14,9 @@ pub fn test_quick_info_mapped_spread_types() {
 }
 
 fn run_test_quick_info_mapped_spread_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoMappedSpreadTypes") {
+        return;
+    }
     let content = r#"interface Foo {
     /** Doc */
     bar: number;

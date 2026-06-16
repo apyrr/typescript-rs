@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_class_expression() {
 }
 
 fn run_test_code_fix_class_implement_interface_class_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceClassExpression") {
+        return;
+    }
     let content = r"interface I { x: number; }
 new class implements I {};";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

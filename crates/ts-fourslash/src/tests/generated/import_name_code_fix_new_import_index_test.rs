@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_index() {
 }
 
 fn run_test_import_name_code_fix_new_import_index(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportIndex") {
+        return;
+    }
     let content = r"// @Filename: /a/index.ts
 export const foo = 0;
 // @Filename: /b.ts

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_jsx_not_set() {
 }
 
 fn run_test_go_to_definition_jsx_not_set(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionJsxNotSet") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @Filename: /foo.jsx
 const /*def*/Foo = () => (

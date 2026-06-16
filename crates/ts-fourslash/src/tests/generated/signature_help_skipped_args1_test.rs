@@ -14,7 +14,9 @@ pub fn test_signature_help_skipped_args1() {
 }
 
 fn run_test_signature_help_skipped_args1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpSkippedArgs1") {
+        return;
+    }
     let content = r"function fn(a: number, b: number, c: number) {}
 fn(/*1*/, /*2*/, /*3*/, /*4*/, /*5*/);";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

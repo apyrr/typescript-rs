@@ -14,7 +14,9 @@ pub fn test_as_const_refs_no_errors1() {
 }
 
 fn run_test_as_const_refs_no_errors1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAsConstRefsNoErrors1") {
+        return;
+    }
     let content = r"class Tex {
     type = 'Text' as /**/const;
 }";

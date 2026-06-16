@@ -14,7 +14,9 @@ pub fn test_go_to_definition_signature_alias_require() {
 }
 
 fn run_test_go_to_definition_signature_alias_require(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionSignatureAlias_require") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: /a.js
 module.exports = function /*f*/f() {}

@@ -14,7 +14,9 @@ pub fn test_signature_help_filtered_triggers03() {
 }
 
 fn run_test_signature_help_filtered_triggers03(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpFilteredTriggers03") {
+        return;
+    }
     let content = r"declare class ViewJayEss {
     constructor(obj: object);
 }

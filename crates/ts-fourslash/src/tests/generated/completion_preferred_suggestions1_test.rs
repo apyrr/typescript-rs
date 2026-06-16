@@ -14,7 +14,9 @@ pub fn test_completion_preferred_suggestions1() {
 }
 
 fn run_test_completion_preferred_suggestions1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionPreferredSuggestions1") {
+        return;
+    }
     let content = r#"declare let v1: string & {} | "a" | "b" | "c";
 v1 = "/*1*/";
 declare let v2: number & {} | 0 | 1 | 2;

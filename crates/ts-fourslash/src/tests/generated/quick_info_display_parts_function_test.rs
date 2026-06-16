@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_function() {
 }
 
 fn run_test_quick_info_display_parts_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsFunction") {
+        return;
+    }
     let content = r#"function /*1*/foo(param: string, optionalParam?: string, paramWithInitializer = "hello", ...restParam: string[]) {
 }
 function /*2*/foowithoverload(a: string): string;

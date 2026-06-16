@@ -14,7 +14,9 @@ pub fn test_duplicate_function_implementation() {
 }
 
 fn run_test_duplicate_function_implementation(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDuplicateFunctionImplementation") {
+        return;
+    }
     let content = r"interface IFoo<T> {
     foo<T>(): T;
 }

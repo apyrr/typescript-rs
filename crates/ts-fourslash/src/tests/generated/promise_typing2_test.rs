@@ -14,7 +14,9 @@ pub fn test_promise_typing2() {
 }
 
 fn run_test_promise_typing2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestPromiseTyping2") {
+        return;
+    }
     let content = r#"interface IPromise<T> {
     then<U>(success?: (value: T) => IPromise<U>, error?: (error: any) => IPromise<U>, progress?: (progress: any) => void ): IPromise<U>;
     then<U>(success?: (value: T) => IPromise<U>, error?: (error: any) => U, progress?: (progress: any) => void ): IPromise<U>;

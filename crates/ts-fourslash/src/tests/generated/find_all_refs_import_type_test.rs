@@ -14,7 +14,9 @@ pub fn test_find_all_refs_import_type() {
 }
 
 fn run_test_find_all_refs_import_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsImportType") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: /a.js
 module.exports = 0;

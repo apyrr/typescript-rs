@@ -14,7 +14,9 @@ pub fn test_navigation_bar_property_declarations() {
 }
 
 fn run_test_navigation_bar_property_declarations(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarPropertyDeclarations") {
+        return;
+    }
     let content = r#"class A {
     public A1 = class {
         public x = 1;

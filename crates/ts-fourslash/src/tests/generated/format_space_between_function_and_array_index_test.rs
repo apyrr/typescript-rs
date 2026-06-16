@@ -14,7 +14,9 @@ pub fn test_format_space_between_function_and_array_index() {
 }
 
 fn run_test_format_space_between_function_and_array_index(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatSpaceBetweenFunctionAndArrayIndex") {
+        return;
+    }
     let content = r"// @lib: es5
 
 function test() {

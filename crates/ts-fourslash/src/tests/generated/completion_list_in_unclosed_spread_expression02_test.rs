@@ -14,7 +14,9 @@ pub fn test_completion_list_in_unclosed_spread_expression02() {
 }
 
 fn run_test_completion_list_in_unclosed_spread_expression02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInUnclosedSpreadExpression02") {
+        return;
+    }
     let content = r"var x;
 var y = (p) => [1,2,.../*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

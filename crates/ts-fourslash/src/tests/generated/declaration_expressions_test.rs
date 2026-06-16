@@ -14,7 +14,9 @@ pub fn test_declaration_expressions() {
 }
 
 fn run_test_declaration_expressions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDeclarationExpressions") {
+        return;
+    }
     let content = r#"// @noLib: true
 [|{| "name": "A", "kind": "class" |}class A {}|]
 const [|{| "name": "B", "kind": "const" |}B = [|{| "name": "Cz", "kind": "class" |}class Cz {
@@ -29,7 +31,7 @@ String([|{| "name": "nn", "kind": "function" |}function nn() {
 		[|{| "name": "prop", "kind": "property", "kindModifiers": "public", "containerName": "cls", "containerKind": "class" |}public prop;|]
 	}|]
 }|]));"#;
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     for range in f.ranges() {
         f.verify_workspace_symbol(&[workspace_symbol_case_from_range_with_pattern(
             &range,

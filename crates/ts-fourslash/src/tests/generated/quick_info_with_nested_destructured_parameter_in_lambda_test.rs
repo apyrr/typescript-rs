@@ -14,8 +14,10 @@ pub fn test_quick_info_with_nested_destructured_parameter_in_lambda() {
 }
 
 fn run_test_quick_info_with_nested_destructured_parameter_in_lambda(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"// @filename: a.tsx
+    if should_skip_if_failing("TestQuickInfoWithNestedDestructuredParameterInLambda") {
+        return;
+    }
+    let content = r"// @filename: a.tsx
 import * as React from 'react';
 interface SomeInterface {
     someBoolean: boolean,
@@ -24,7 +26,7 @@ interface SomeInterface {
 interface SomeProps {
     someProp: SomeInterface;
 }
-export const /*1*/SomeStatelessComponent = ({someProp: { someBoolean, someString}}: SomeProps) => (<div>{` + "`" + `${someBoolean}${someString}` + "`" + `});"#;
+export const /*1*/SomeStatelessComponent = ({someProp: { someBoolean, someString}}: SomeProps) => (<div>{`${someBoolean}${someString}`});";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");
     f.verify_quick_info_exists(t);

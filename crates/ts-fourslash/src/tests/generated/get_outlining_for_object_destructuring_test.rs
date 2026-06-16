@@ -14,7 +14,9 @@ pub fn test_get_outlining_for_object_destructuring() {
 }
 
 fn run_test_get_outlining_for_object_destructuring(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOutliningForObjectDestructuring") {
+        return;
+    }
     let content = r"const[| {
     a,
     b,

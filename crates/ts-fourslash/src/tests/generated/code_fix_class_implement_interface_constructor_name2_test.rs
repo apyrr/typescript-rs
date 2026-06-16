@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_constructor_name2() {
 }
 
 fn run_test_code_fix_class_implement_interface_constructor_name2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceConstructorName2") {
+        return;
+    }
     let content = r"interface I {
     constructor(): number;
 }

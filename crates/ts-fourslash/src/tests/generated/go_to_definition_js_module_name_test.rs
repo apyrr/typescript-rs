@@ -14,7 +14,9 @@ pub fn test_go_to_definition_js_module_name() {
 }
 
 fn run_test_go_to_definition_js_module_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionJsModuleName") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: foo.js
 /*2*/module.exports = {};

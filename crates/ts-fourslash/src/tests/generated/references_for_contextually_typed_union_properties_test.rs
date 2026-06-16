@@ -14,7 +14,9 @@ pub fn test_references_for_contextually_typed_union_properties() {
 }
 
 fn run_test_references_for_contextually_typed_union_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForContextuallyTypedUnionProperties") {
+        return;
+    }
     let content = r#"interface A {
     a: number;
     /*1*/common: string;

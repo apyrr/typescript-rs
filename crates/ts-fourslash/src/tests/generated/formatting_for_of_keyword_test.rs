@@ -14,7 +14,9 @@ pub fn test_formatting_for_of_keyword() {
 }
 
 fn run_test_formatting_for_of_keyword(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingForOfKeyword") {
+        return;
+    }
     let content = r"/**/for ([]of[]) { }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");

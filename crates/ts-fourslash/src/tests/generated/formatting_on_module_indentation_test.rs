@@ -14,7 +14,9 @@ pub fn test_formatting_on_module_indentation() {
 }
 
 fn run_test_formatting_on_module_indentation(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnModuleIndentation") {
+        return;
+    }
     let content = r"  namespace     Foo    {
     export    namespace    A  .   B  .   C     {      }/**/
                }";

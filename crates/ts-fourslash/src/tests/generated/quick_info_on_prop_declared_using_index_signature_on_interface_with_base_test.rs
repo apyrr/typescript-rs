@@ -16,7 +16,9 @@ pub fn test_quick_info_on_prop_declared_using_index_signature_on_interface_with_
 fn run_test_quick_info_on_prop_declared_using_index_signature_on_interface_with_base(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnPropDeclaredUsingIndexSignatureOnInterfaceWithBase") {
+        return;
+    }
     let content = r"interface P {}
 interface B extends P {
   [k: string]: number;

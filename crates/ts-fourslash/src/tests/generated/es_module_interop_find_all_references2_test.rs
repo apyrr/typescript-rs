@@ -14,7 +14,9 @@ pub fn test_es_module_interop_find_all_references2() {
 }
 
 fn run_test_es_module_interop_find_all_references2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestEsModuleInteropFindAllReferences2") {
+        return;
+    }
     let content = r#"// @esModuleInterop: true
 // @Filename: /a.d.ts
 export as namespace abc;

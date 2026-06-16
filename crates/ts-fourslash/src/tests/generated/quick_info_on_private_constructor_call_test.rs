@@ -14,7 +14,9 @@ pub fn test_quick_info_on_private_constructor_call() {
 }
 
 fn run_test_quick_info_on_private_constructor_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnPrivateConstructorCall") {
+        return;
+    }
     let content = r"class A {
     private constructor() {}
 }

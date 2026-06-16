@@ -14,7 +14,9 @@ pub fn test_signature_help_object_creation_expression_no_args_not_available() {
 }
 
 fn run_test_signature_help_object_creation_expression_no_args_not_available(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpObjectCreationExpressionNoArgs_NotAvailable") {
+        return;
+    }
     let content = r"class sampleCls { constructor(str: string, num: number) { } }
 var x = new sampleCls/**/;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

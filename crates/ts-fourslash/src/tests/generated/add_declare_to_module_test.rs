@@ -14,7 +14,9 @@ pub fn test_add_declare_to_module() {
 }
 
 fn run_test_add_declare_to_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAddDeclareToModule") {
+        return;
+    }
     let content = r"/**/namespace mAmbient {
     namespace m3 { }
 }";

@@ -14,7 +14,9 @@ pub fn test_signature_help_type_arguments() {
 }
 
 fn run_test_signature_help_type_arguments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpTypeArguments") {
+        return;
+    }
     let content = r"declare function f(a: number, b: string, c: boolean): void; // ignored, not generic
 declare function f<T extends number>(): void;
 declare function f<T, U>(): void;

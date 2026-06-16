@@ -14,7 +14,9 @@ pub fn test_find_all_refs_import_type_meaning_at_location() {
 }
 
 fn run_test_find_all_refs_import_type_meaning_at_location(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefs_importType_meaningAtLocation") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 /*1*/export type /*2*/T = 0;
 /*3*/export const /*4*/T = 0;

@@ -14,13 +14,15 @@ pub fn test_signature_help_tagged_templates_with_overloaded_tags2() {
 }
 
 fn run_test_signature_help_tagged_templates_with_overloaded_tags2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpTaggedTemplatesWithOverloadedTags2") {
+        return;
+    }
     let content = r#"function f(templateStrings: string[], p1_o1: string): number;
 function f(templateStrings: string[], p1_o2: number, p2_o2: number, p3_o2: number): string;
 function f(templateStrings: string[], p1_o3: string, p2_o3: boolean, p3_o3: number): boolean;
 function f(...foo[]: any) { return ""; }
 
-f ` + "`" + `${/*1*/ /*2*/ /*3*/"#;
+f `${/*1*/ /*2*/ /*3*/"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     for marker in f.marker_names() {
         f.go_to_marker(t, &marker);

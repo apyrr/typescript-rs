@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_namespace() {
 }
 
 fn run_test_quickinfo_verbosity_namespace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityNamespace") {
+        return;
+    }
     let content = r#"// @filename: /1.ts
 export {};
 class Foo<T> {

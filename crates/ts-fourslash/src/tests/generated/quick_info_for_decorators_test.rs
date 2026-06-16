@@ -14,7 +14,9 @@ pub fn test_quick_info_for_decorators() {
 }
 
 fn run_test_quick_info_for_decorators(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForDecorators") {
+        return;
+    }
     let content = r"@/*1*/decorator
 class C {
 }

@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_member_nested_type_alias() {
 }
 
 fn run_test_code_fix_class_implement_interface_member_nested_type_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceMemberNestedTypeAlias") {
+        return;
+    }
     let content = r"type Either<T> = { val: T } | Error;
 interface I {
     x: Either<Either<string>>;

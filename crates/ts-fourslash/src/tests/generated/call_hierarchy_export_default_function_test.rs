@@ -14,7 +14,9 @@ pub fn test_call_hierarchy_export_default_function() {
 }
 
 fn run_test_call_hierarchy_export_default_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCallHierarchyExportDefaultFunction") {
+        return;
+    }
     let content = r#"// @filename: main.ts
 import bar from "./other";
 

@@ -14,7 +14,9 @@ pub fn test_get_occurrences_modifiers_negatives1() {
 }
 
 fn run_test_get_occurrences_modifiers_negatives1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesModifiersNegatives1") {
+        return;
+    }
     let content = r#"class C {
     [|{| "count": 3 |}export|] foo;
     [|{| "count": 3 |}declare|] bar;

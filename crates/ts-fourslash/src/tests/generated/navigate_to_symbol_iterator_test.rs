@@ -14,12 +14,14 @@ pub fn test_navigate_to_symbol_iterator() {
 }
 
 fn run_test_navigate_to_symbol_iterator(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigateToSymbolIterator") {
+        return;
+    }
     let content = r"// @lib: es5
 class C {
     [|[Symbol.iterator]() {}|]
 }";
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_workspace_symbol(&[workspace_symbol_case(
         "iterator",
         vec![symbol_information(

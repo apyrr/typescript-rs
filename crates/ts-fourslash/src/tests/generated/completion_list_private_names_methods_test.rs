@@ -14,7 +14,9 @@ pub fn test_completion_list_private_names_methods() {
 }
 
 fn run_test_completion_list_private_names_methods(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListPrivateNamesMethods") {
+        return;
+    }
     let content = r"class Foo {
    #x() {};
    y() {};

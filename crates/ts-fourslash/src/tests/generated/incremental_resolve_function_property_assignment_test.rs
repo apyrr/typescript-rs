@@ -14,7 +14,9 @@ pub fn test_incremental_resolve_function_property_assignment() {
 }
 
 fn run_test_incremental_resolve_function_property_assignment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIncrementalResolveFunctionPropertyAssignment") {
+        return;
+    }
     let content = r#"function bar(indexer: { getLength(): number; getTypeAtIndex(index: number): string; }): string {
     return indexer.getTypeAtIndex(indexer.getLength() - 1);
 }

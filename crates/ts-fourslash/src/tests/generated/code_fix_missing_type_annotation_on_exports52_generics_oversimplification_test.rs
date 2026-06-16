@@ -16,7 +16,11 @@ pub fn test_code_fix_missing_type_annotation_on_exports52_generics_oversimplific
 fn run_test_code_fix_missing_type_annotation_on_exports52_generics_oversimplification(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestCodeFixMissingTypeAnnotationOnExports52-generics-oversimplification",
+    ) {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 export interface Foo<T, U = T[]> {}

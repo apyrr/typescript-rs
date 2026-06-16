@@ -14,7 +14,9 @@ pub fn test_smart_indent_if_statement() {
 }
 
 fn run_test_smart_indent_if_statement(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentIfStatement") {
+        return;
+    }
     let content = r"if /*1*/(true) { }
 
 if (true) /*2*/ { /*3*/

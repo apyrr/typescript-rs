@@ -14,7 +14,9 @@ pub fn test_find_all_refs_parameter_property_declaration3() {
 }
 
 fn run_test_find_all_refs_parameter_property_declaration3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsParameterPropertyDeclaration3") {
+        return;
+    }
     let content = r"class Foo {
     constructor(protected /*0*/protectedParam: number) {
         let localProtected = /*1*/protectedParam;

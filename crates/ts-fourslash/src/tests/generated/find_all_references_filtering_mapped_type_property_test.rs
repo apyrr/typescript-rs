@@ -14,7 +14,9 @@ pub fn test_find_all_references_filtering_mapped_type_property() {
 }
 
 fn run_test_find_all_references_filtering_mapped_type_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllReferencesFilteringMappedTypeProperty") {
+        return;
+    }
     let content = r"const obj = { /*1*/a: 1, b: 2 };
 const filtered: { [P in keyof typeof obj as P extends 'b' ? never : P]: 0; } = { /*2*/a: 0 };
 filtered./*3*/a;";

@@ -14,7 +14,9 @@ pub fn test_super_in_derived_type_of_generic_with_statics() {
 }
 
 fn run_test_super_in_derived_type_of_generic_with_statics(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSuperInDerivedTypeOfGenericWithStatics") {
+        return;
+    }
     let content = r"// @strict: false
 namespace M {
    export class C<T extends Date> {

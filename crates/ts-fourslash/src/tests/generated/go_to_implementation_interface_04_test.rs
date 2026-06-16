@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_interface_04() {
 }
 
 fn run_test_go_to_implementation_interface_04(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationInterface_04") {
+        return;
+    }
     let content = r"interface Fo/*interface_definition*/o {
     (a: number): void
 }

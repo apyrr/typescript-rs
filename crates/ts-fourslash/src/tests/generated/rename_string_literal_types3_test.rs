@@ -14,7 +14,9 @@ pub fn test_rename_string_literal_types3() {
 }
 
 fn run_test_rename_string_literal_types3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameStringLiteralTypes3") {
+        return;
+    }
     let content = r#"type Foo = "[|a|]" | "b";
 
 class C {

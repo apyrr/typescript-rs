@@ -14,7 +14,9 @@ pub fn test_inlay_hints_interactive_return_type() {
 }
 
 fn run_test_inlay_hints_interactive_return_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInteractiveReturnType") {
+        return;
+    }
     let content = r"function foo1 () {
     return 1
 }

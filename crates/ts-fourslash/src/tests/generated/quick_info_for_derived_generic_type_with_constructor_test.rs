@@ -14,7 +14,9 @@ pub fn test_quick_info_for_derived_generic_type_with_constructor() {
 }
 
 fn run_test_quick_info_for_derived_generic_type_with_constructor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForDerivedGenericTypeWithConstructor") {
+        return;
+    }
     let content = r"class A<T> {
     foo() { }
 }

@@ -14,7 +14,9 @@ pub fn test_completion_list_implementing_interface_functions() {
 }
 
 fn run_test_completion_list_implementing_interface_functions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListImplementingInterfaceFunctions") {
+        return;
+    }
     let content = r"interface I1 {
     a(): void;
     b(): void;

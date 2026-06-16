@@ -14,11 +14,13 @@ pub fn test_navto_empty_pattern() {
 }
 
 fn run_test_navto_empty_pattern(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavto_emptyPattern") {
+        return;
+    }
     let content = r"// @filename: foo.ts
 const [|x: number = 1|];
 [|function y(x: string): string { return x; }|]";
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_workspace_symbol(&[workspace_symbol_case(
         "",
         vec![

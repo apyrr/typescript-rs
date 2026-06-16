@@ -14,7 +14,9 @@ pub fn test_completion_list_in_function_declaration() {
 }
 
 fn run_test_completion_list_in_function_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInFunctionDeclaration") {
+        return;
+    }
     let content = r"// @lib: es5
 var a = 0;
 function foo(/**/";

@@ -14,7 +14,9 @@ pub fn test_format_selection_edit_at_end_of_range() {
 }
 
 fn run_test_format_selection_edit_at_end_of_range(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatSelectionEditAtEndOfRange") {
+        return;
+    }
     let content = r"/*1*/var x = 1;/*2*/
 void 0;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

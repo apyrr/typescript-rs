@@ -14,7 +14,9 @@ pub fn test_format_if_try_catch_blocks() {
 }
 
 fn run_test_format_if_try_catch_blocks(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatIfTryCatchBlocks") {
+        return;
+    }
     let content = r"try {
 }
 catch {

@@ -14,7 +14,9 @@ pub fn test_javascript_modules23() {
 }
 
 fn run_test_javascript_modules23(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJavascriptModules23") {
+        return;
+    }
     let content = r#"// @Filename: mod.ts
 var foo = {a: "test"};
 export = foo;

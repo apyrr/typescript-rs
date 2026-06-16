@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_type_parameter() {
 }
 
 fn run_test_quickinfo_verbosity_type_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityTypeParameter") {
+        return;
+    }
     let content = r"type Str = string | {};
 type FooType = Str | number;
 function fn<T extends FooType>(x: T) {

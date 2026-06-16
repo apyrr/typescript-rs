@@ -14,7 +14,9 @@ pub fn test_rename_object_spread_assignment() {
 }
 
 fn run_test_rename_object_spread_assignment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameObjectSpreadAssignment") {
+        return;
+    }
     let content = r#"interface A1 { a: number };
 interface A2 { a?: number };
 [|let [|{| "contextRangeIndex": 0 |}a1|]: A1;|]

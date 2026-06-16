@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_umd_global_react1() {
 }
 
 fn run_test_import_name_code_fix_umd_global_react1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixUMDGlobalReact1") {
+        return;
+    }
     let content = r#"// @jsx: react
 // @allowSyntheticDefaultImports: false
 // @module: es2015

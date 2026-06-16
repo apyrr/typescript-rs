@@ -14,7 +14,9 @@ pub fn test_incremental_edit_invocation_expression_above_interface_declaration()
 }
 
 fn run_test_incremental_edit_invocation_expression_above_interface_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIncrementalEditInvocationExpressionAboveInterfaceDeclaration") {
+        return;
+    }
     let content = r"// @lib: es5
 declare function alert(message?: any): void;
 /*1*/

@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_existing_import9() {
 }
 
 fn run_test_import_name_code_fix_existing_import9(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixExistingImport9") {
+        return;
+    }
     let content = r#"import [|{
     v1
 }|] from "./module";

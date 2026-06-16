@@ -14,7 +14,9 @@ pub fn test_completions_dot_dot_dot_in_object_literal1() {
 }
 
 fn run_test_completions_dot_dot_dot_in_object_literal1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsDotDotDotInObjectLiteral1") {
+        return;
+    }
     let content = r"// https://github.com/microsoft/TypeScript/issues/57540
 
 const foo = { b: 100 };

@@ -14,7 +14,9 @@ pub fn test_find_all_refs_enum_member() {
 }
 
 fn run_test_find_all_refs_enum_member(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsEnumMember") {
+        return;
+    }
     let content = r"enum E { /*1*/A, B }
 const e: E./*2*/A = E./*3*/A;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

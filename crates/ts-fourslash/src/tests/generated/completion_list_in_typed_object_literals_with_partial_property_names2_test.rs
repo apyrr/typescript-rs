@@ -16,7 +16,9 @@ pub fn test_completion_list_in_typed_object_literals_with_partial_property_names
 fn run_test_completion_list_in_typed_object_literals_with_partial_property_names2(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInTypedObjectLiteralsWithPartialPropertyNames2") {
+        return;
+    }
     let content = r"interface MyPoint {
     x1: number;
     y1: number;

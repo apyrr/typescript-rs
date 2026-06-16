@@ -14,7 +14,9 @@ pub fn test_augmented_types_class3_fourslash() {
 }
 
 fn run_test_augmented_types_class3_fourslash(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAugmentedTypesClass3Fourslash") {
+        return;
+    }
     let content = r"class c/*1*/5b { public foo() { } }
 namespace c/*2*/5b { export var y = 2; } // should be ok
 /*3*/";

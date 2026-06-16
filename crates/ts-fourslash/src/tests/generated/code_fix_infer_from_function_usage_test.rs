@@ -14,7 +14,9 @@ pub fn test_code_fix_infer_from_function_usage() {
 }
 
 fn run_test_code_fix_infer_from_function_usage(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixInferFromFunctionUsage") {
+        return;
+    }
     let content = r"// @stableTypeOrdering: true
 // @noImplicitAny: true
 function wrap( [| arr |] ) {

@@ -14,7 +14,9 @@ pub fn test_export_in_labeled_statement() {
 }
 
 fn run_test_export_in_labeled_statement(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExportInLabeledStatement") {
+        return;
+    }
     let content = r"// @Filename: a.ts
 subTitle:
 [|export|] const title: string";

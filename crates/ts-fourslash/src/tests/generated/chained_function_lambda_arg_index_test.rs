@@ -14,7 +14,9 @@ pub fn test_chained_function_lambda_arg_index() {
 }
 
 fn run_test_chained_function_lambda_arg_index(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestChainedFunctionLambdaArgIndex") {
+        return;
+    }
     let content = r"class C2 {
     eventEmitter: any;
     constructor() {
@@ -28,5 +30,6 @@ console.log/**/
     f.insert(t, ";");
     f.verify_indentation(t, 12);
     f.verify_current_line_content(t, "            console.log;");
+    // Ensure line is indented correctly and doesn't jump up to previous line on semi-colon
     done();
 }

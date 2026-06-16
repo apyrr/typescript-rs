@@ -14,7 +14,9 @@ pub fn test_rename_import_of_export_equals2() {
 }
 
 fn run_test_rename_import_of_export_equals2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameImportOfExportEquals2") {
+        return;
+    }
     let content = r#"[|declare namespace /*N*/[|{| "isWriteAccess": true, "isDefinition": true, "contextRangeIndex": 0 |}N|] {
     export var x: number;
 }|]

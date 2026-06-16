@@ -14,7 +14,9 @@ pub fn test_formatting_in_destructuring2() {
 }
 
 fn run_test_formatting_in_destructuring2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingInDestructuring2") {
+        return;
+    }
     let content = r#"/*1*/function   drawText(    { text = "", location: [x, y]=           [0, 0], bold = false }) {
     // Draw text  
 }"#;

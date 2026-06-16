@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_class_method() {
 }
 
 fn run_test_quick_info_display_parts_class_method(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsClassMethod") {
+        return;
+    }
     let content = r"class c {
     public /*1*/publicMethod() { }
     private /*2*/privateMethod() { }

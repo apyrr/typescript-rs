@@ -14,7 +14,9 @@ pub fn test_navigation_items_export_equals_expression() {
 }
 
 fn run_test_navigation_items_export_equals_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationItemsExportEqualsExpression") {
+        return;
+    }
     let content = r#"export = function () {}
 export = function () {
     return class Foo {

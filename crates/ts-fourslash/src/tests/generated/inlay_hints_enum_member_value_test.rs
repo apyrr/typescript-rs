@@ -14,7 +14,9 @@ pub fn test_inlay_hints_enum_member_value() {
 }
 
 fn run_test_inlay_hints_enum_member_value(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsEnumMemberValue") {
+        return;
+    }
     let content = r"enum E {
     A,
     AA,

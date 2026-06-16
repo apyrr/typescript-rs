@@ -14,7 +14,9 @@ pub fn test_completion_list_in_object_literal5() {
 }
 
 fn run_test_completion_list_in_object_literal5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInObjectLiteral5") {
+        return;
+    }
     let content = r"const o = 'something' 
 const obj = {
     prop: o/*1*/,

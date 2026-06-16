@@ -14,7 +14,9 @@ pub fn test_delete_type_parameter() {
 }
 
 fn run_test_delete_type_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDeleteTypeParameter") {
+        return;
+    }
     let content = r"interface Query<T> {
     groupBy(): Query</**/T>;
 }

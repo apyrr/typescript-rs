@@ -14,7 +14,9 @@ pub fn test_format_selection_doc_comment_in_block() {
 }
 
 fn run_test_format_selection_doc_comment_in_block(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatSelectionDocCommentInBlock") {
+        return;
+    }
     let content = r"{
     /*1*//**
      * Some doc comment

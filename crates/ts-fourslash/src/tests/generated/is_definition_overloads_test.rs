@@ -14,7 +14,9 @@ pub fn test_is_definition_overloads() {
 }
 
 fn run_test_is_definition_overloads(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIsDefinitionOverloads") {
+        return;
+    }
     let content = r#"function /*1*/f(x: number): void;
 function /*2*/f(x: string): void;
 function /*3*/f(x: number | string) { }

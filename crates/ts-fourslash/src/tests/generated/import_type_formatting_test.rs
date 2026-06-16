@@ -14,7 +14,9 @@ pub fn test_import_type_formatting() {
 }
 
 fn run_test_import_type_formatting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportTypeFormatting") {
+        return;
+    }
     let content = r#"var y: import("./c2").mytype;
 var z: import ("./c2").mytype;"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

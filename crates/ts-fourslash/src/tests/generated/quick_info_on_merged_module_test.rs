@@ -14,7 +14,9 @@ pub fn test_quick_info_on_merged_module() {
 }
 
 fn run_test_quick_info_on_merged_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnMergedModule") {
+        return;
+    }
     let content = r"// @strict: false
 namespace M2 {
     export interface A {

@@ -14,7 +14,9 @@ pub fn test_completion_list_after_property_name() {
 }
 
 fn run_test_completion_list_after_property_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAfterPropertyName") {
+        return;
+    }
     let content = r"// @Filename: a.ts
 class Test1 {
 	public some /*afterPropertyName*/

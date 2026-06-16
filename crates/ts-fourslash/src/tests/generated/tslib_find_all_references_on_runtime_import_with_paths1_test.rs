@@ -14,7 +14,9 @@ pub fn test_tslib_find_all_references_on_runtime_import_with_paths1() {
 }
 
 fn run_test_tslib_find_all_references_on_runtime_import_with_paths1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTslibFindAllReferencesOnRuntimeImportWithPaths1") {
+        return;
+    }
     let content = r#"// @Filename: project/src/foo.ts
 import * as x from /**/"tslib";
 // @Filename: project/src/bar.ts

@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports14() {
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports14(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports14") {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 function foo() {

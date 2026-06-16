@@ -14,7 +14,9 @@ pub fn test_completion_list_in_closed_object_type_literal_in_signature02() {
 }
 
 fn run_test_completion_list_in_closed_object_type_literal_in_signature02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInClosedObjectTypeLiteralInSignature02") {
+        return;
+    }
     let content = r"interface I<TString, TNumber> {
     [s: string]: TString;
     [s: number]: TNumber;

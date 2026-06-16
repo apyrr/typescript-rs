@@ -14,7 +14,9 @@ pub fn test_completion_list_builder_locations_modules() {
 }
 
 fn run_test_completion_list_builder_locations_modules(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListBuilderLocations_Modules") {
+        return;
+    }
     let content = r"// @lib: es5
 module A/*moduleName1*/
 module A./*moduleName2*/";

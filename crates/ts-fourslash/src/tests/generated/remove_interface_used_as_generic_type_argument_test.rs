@@ -14,7 +14,9 @@ pub fn test_remove_interface_used_as_generic_type_argument() {
 }
 
 fn run_test_remove_interface_used_as_generic_type_argument(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRemoveInterfaceUsedAsGenericTypeArgument") {
+        return;
+    }
     let content = r"/**/interface A { a: string; }
 interface G<T, U> { }
 var v1: G<A, C>;";

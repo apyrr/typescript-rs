@@ -14,7 +14,9 @@ pub fn test_declaration_maps_out_of_date_mapping() {
 }
 
 fn run_test_declaration_maps_out_of_date_mapping(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDeclarationMapsOutOfDateMapping") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @Filename: /home/src/workspaces/project/node_modules/a/dist/index.d.ts
 export declare class Foo {

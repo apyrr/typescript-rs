@@ -14,7 +14,9 @@ pub fn test_find_all_refs_indexed_access_types() {
 }
 
 fn run_test_find_all_refs_indexed_access_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsIndexedAccessTypes") {
+        return;
+    }
     let content = r#"interface I {
     /*1*/0: number;
     /*2*/s: string;

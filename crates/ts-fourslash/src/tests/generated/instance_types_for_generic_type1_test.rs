@@ -14,7 +14,9 @@ pub fn test_instance_types_for_generic_type1() {
 }
 
 fn run_test_instance_types_for_generic_type1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInstanceTypesForGenericType1") {
+        return;
+    }
     let content = r"class G<T> {               // Introduce type parameter T
     self: G<T>;            // Use T as type argument to form instance type
     f() {

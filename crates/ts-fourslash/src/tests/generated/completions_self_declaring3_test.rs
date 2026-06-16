@@ -14,7 +14,9 @@ pub fn test_completions_self_declaring3() {
 }
 
 fn run_test_completions_self_declaring3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsSelfDeclaring3") {
+        return;
+    }
     let content = r#"function f<T extends { x: number }>(p: T & (T extends { hello: string } ? { goodbye: number } : {})) {}
 f({ x/*x*/: 0, hello/*hello*/: "", goodbye/*goodbye*/: 0, abc/*abc*/: "" })"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

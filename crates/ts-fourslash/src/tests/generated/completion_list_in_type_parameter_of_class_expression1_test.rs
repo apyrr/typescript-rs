@@ -14,7 +14,9 @@ pub fn test_completion_list_in_type_parameter_of_class_expression1() {
 }
 
 fn run_test_completion_list_in_type_parameter_of_class_expression1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInTypeParameterOfClassExpression1") {
+        return;
+    }
     let content = r"// @lib: es5
 var C0 = class D</*0*/
 var C1 = class D</*1*/T> {}

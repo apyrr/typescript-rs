@@ -14,7 +14,9 @@ pub fn test_completion_list_enum_members() {
 }
 
 fn run_test_completion_list_enum_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListEnumMembers") {
+        return;
+    }
     let content = r"enum Foo {
     bar,
     baz

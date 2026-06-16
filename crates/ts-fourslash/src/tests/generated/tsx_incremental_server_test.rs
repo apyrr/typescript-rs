@@ -14,7 +14,9 @@ pub fn test_tsx_incremental_server() {
 }
 
 fn run_test_tsx_incremental_server(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxIncrementalServer") {
+        return;
+    }
     let content = r"// @lib: es5
 /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

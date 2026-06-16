@@ -14,7 +14,9 @@ pub fn test_automatic_constructor_toggling() {
 }
 
 fn run_test_automatic_constructor_toggling(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutomaticConstructorToggling") {
+        return;
+    }
     let content = r#"class A<T> { }
 class B<T> {/*B*/ }
 class C<T> { /*C*/constructor(val: T) { } }
@@ -46,6 +48,7 @@ new /*Dsig*/D<string>();"#;
         "constructor D<string>(val: string): D<string>",
         "",
     );
+    // Cannot resolve signature. Still fill in generics based on explicit type arguments.
     f.go_to_marker(t, "C");
     f.delete_at_caret(t, 23);
     f.verify_quick_info_at(t, "Asig", "constructor A<string>(): A<string>", "");
@@ -62,6 +65,7 @@ new /*Dsig*/D<string>();"#;
         "constructor D<string>(val: string): D<string>",
         "",
     );
+    // Cannot resolve signature
     f.go_to_marker(t, "D");
     f.delete_at_caret(t, 6);
     f.verify_quick_info_at(t, "Asig", "constructor A<string>(): A<string>", "");

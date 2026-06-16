@@ -14,7 +14,9 @@ pub fn test_completions_literal_directly_in_rest_constrained_to_array_type() {
 }
 
 fn run_test_completions_literal_directly_in_rest_constrained_to_array_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsLiteralDirectlyInRestConstrainedToArrayType") {
+        return;
+    }
     let content = r"// @strict: true
 
 function fn<T extends ('value1' | 'value2' | 'value3')[]>(...values: T): T { return values; }

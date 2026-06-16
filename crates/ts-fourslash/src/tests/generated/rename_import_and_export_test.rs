@@ -14,7 +14,9 @@ pub fn test_rename_import_and_export() {
 }
 
 fn run_test_rename_import_and_export(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameImportAndExport") {
+        return;
+    }
     let content = r#"[|import [|{| "contextRangeIndex": 0 |}a|] from "module";|]
 [|export { [|{| "contextRangeIndex": 2 |}a|] };|]"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

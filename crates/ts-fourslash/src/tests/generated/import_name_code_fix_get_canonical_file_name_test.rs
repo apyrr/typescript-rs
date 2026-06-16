@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_get_canonical_file_name() {
 }
 
 fn run_test_import_name_code_fix_get_canonical_file_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_getCanonicalFileName") {
+        return;
+    }
     let content = r"// @Filename: /howNow/node_modules/brownCow/index.d.ts
 export const foo: number;
 // @Filename: /howNow/a.ts

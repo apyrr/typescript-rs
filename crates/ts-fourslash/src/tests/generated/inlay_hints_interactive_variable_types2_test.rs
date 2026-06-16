@@ -14,7 +14,9 @@ pub fn test_inlay_hints_interactive_variable_types2() {
 }
 
 fn run_test_inlay_hints_interactive_variable_types2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInteractiveVariableTypes2") {
+        return;
+    }
     let content = r"const object = { foo: 1, bar: 2 }
 const array = [1, 2]
 const a = object;

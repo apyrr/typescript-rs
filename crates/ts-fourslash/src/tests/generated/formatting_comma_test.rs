@@ -14,7 +14,9 @@ pub fn test_formatting_comma() {
 }
 
 fn run_test_formatting_comma(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingComma") {
+        return;
+    }
     let content = r"var x = [1 , 2];/*x*/
 var y = ( 1  , 2 );/*y*/
 var z1 = 1 , zz = 2;/*z1*/

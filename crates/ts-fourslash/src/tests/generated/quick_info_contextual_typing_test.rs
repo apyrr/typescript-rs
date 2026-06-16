@@ -14,7 +14,9 @@ pub fn test_quick_info_contextual_typing() {
 }
 
 fn run_test_quick_info_contextual_typing(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoContextualTyping") {
+        return;
+    }
     let content = r"// DEFAULT INTERFACES
 interface IFoo {
     n: number;

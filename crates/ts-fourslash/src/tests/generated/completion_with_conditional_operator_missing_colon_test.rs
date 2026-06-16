@@ -14,7 +14,9 @@ pub fn test_completion_with_conditional_operator_missing_colon() {
 }
 
 fn run_test_completion_with_conditional_operator_missing_colon(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionWithConditionalOperatorMissingColon") {
+        return;
+    }
     let content = r"1 ? fun/*1*/
 function func () {}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

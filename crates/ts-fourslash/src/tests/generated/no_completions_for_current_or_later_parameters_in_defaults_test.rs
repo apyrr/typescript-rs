@@ -14,7 +14,9 @@ pub fn test_no_completions_for_current_or_later_parameters_in_defaults() {
 }
 
 fn run_test_no_completions_for_current_or_later_parameters_in_defaults(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNoCompletionsForCurrentOrLaterParametersInDefaults") {
+        return;
+    }
     let content = r"function f1(a = /*1*/, b) { }
 function f2(a = a/*2*/, b) { }
 function f3(a = a + /*3*/, b = a/*4*/, c = /*5*/) { }

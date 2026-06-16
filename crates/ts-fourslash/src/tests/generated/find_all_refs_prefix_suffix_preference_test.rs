@@ -14,7 +14,9 @@ pub fn test_find_all_refs_prefix_suffix_preference() {
 }
 
 fn run_test_find_all_refs_prefix_suffix_preference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsPrefixSuffixPreference") {
+        return;
+    }
     let content = r#"// @Filename: /file1.ts
 declare function log(s: string | number): void;
 [|const /*q0*/[|{| "isWriteAccess": true, "isDefinition": true, "contextRangeIndex": 0 |}q|] = 1;|]

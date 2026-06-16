@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_import_type4() {
 }
 
 fn run_test_import_name_code_fix_import_type4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_importType4") {
+        return;
+    }
     let content = r#"// @preserveValueImports: true
 // @isolatedModules: true
 // @module: es2015

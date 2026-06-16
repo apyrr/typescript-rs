@@ -14,7 +14,9 @@ pub fn test_rename_alias_external_module2() {
 }
 
 fn run_test_rename_alias_external_module2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameAliasExternalModule2") {
+        return;
+    }
     let content = r#"// @Filename: a.ts
 [|module [|{| "contextRangeIndex": 0 |}SomeModule|] { export class SomeClass { } }|]
 [|export = [|{| "contextRangeIndex": 2 |}SomeModule|];|]

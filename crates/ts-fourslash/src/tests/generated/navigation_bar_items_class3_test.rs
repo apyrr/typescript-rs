@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_class3() {
 }
 
 fn run_test_navigation_bar_items_class3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsClass3") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @filename: /foo.js
 function Foo() {}

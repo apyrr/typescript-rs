@@ -14,7 +14,9 @@ pub fn test_rename_import_and_export_in_diff_files() {
 }
 
 fn run_test_rename_import_and_export_in_diff_files(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameImportAndExportInDiffFiles") {
+        return;
+    }
     let content = r#"// @Filename: a.ts
 [|export var /*1*/[|{| "isDefinition": true, "contextRangeIndex": 0 |}a|];|]
 // @Filename: b.ts

@@ -14,7 +14,9 @@ pub fn test_transitive_export_imports() {
 }
 
 fn run_test_transitive_export_imports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTransitiveExportImports") {
+        return;
+    }
     let content = r#"// @module: commonjs
 // @Filename: a.ts
 [|class /*1*/[|{| "isWriteAccess": true, "isDefinition": true, "contextRangeIndex": 0 |}A|] {

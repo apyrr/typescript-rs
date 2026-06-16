@@ -14,11 +14,13 @@ pub fn test_signature_help_tagged_templates_negatives5() {
 }
 
 fn run_test_signature_help_tagged_templates_negatives5(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"function foo(strs, ...rest) {
+    if should_skip_if_failing("TestSignatureHelpTaggedTemplatesNegatives5") {
+        return;
+    }
+    let content = r"function foo(strs, ...rest) {
 }
 
-/*1*/fo/*2*/o /*3*/` + "`" + `abcd` + "`" + `/*4*/"#;
+/*1*/fo/*2*/o /*3*/`abcd`/*4*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_no_signature_help_for_markers(t, &f.marker_names());
     done();

@@ -14,7 +14,9 @@ pub fn test_completions_at_type_arguments() {
 }
 
 fn run_test_completions_at_type_arguments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsAtTypeArguments") {
+        return;
+    }
     let content = r#"interface I {
     a: string;
     b: number;

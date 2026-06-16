@@ -14,7 +14,9 @@ pub fn test_code_fix_undeclared_property_accesses() {
 }
 
 fn run_test_code_fix_undeclared_property_accesses(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixUndeclaredPropertyAccesses") {
+        return;
+    }
     let content = r#"interface I { x: number; }
 let i: I;
 i.y;

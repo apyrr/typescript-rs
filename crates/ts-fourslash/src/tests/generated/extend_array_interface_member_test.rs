@@ -14,13 +14,15 @@ pub fn test_extend_array_interface_member() {
 }
 
 fn run_test_extend_array_interface_member(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExtendArrayInterfaceMember") {
+        return;
+    }
     let content = r"// @strict: false
 var x = [1, 2, 3];
 var /*y*/y = x.pop(/*1*/5/*2*/);
 ";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
-    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"), 0);
+    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"));
     f.verify_number_of_errors_in_current_file(1);
     f.verify_quick_info_at(t, "y", "var y: number", "");
     f.go_to_eof(t);

@@ -14,7 +14,9 @@ pub fn test_completion_list_invalid_member_names2() {
 }
 
 fn run_test_completion_list_invalid_member_names2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInvalidMemberNames2") {
+        return;
+    }
     let content = r"// @lib: es5
 declare var Symbol: SymbolConstructor;
 interface SymbolConstructor {

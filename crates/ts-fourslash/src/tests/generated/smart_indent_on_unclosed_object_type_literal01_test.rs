@@ -14,7 +14,9 @@ pub fn test_smart_indent_on_unclosed_object_type_literal01() {
 }
 
 fn run_test_smart_indent_on_unclosed_object_type_literal01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentOnUnclosedObjectTypeLiteral01") {
+        return;
+    }
     let content = r#"var x: {
 {| "indent": 4 |}"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

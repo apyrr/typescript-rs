@@ -14,10 +14,12 @@ pub fn test_syntactic_classifications_templates2() {
 }
 
 fn run_test_syntactic_classifications_templates2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSyntacticClassificationsTemplates2") {
+        return;
+    }
     let content = r#"var tiredOfCanonicalExamples =
-` + "`" + `goodbye "${ ` + "`" + `hello world` + "`" + ` }" 
-and ${ ` + "`" + `good${ " " }riddance` + "`" + ` }` + "`" + `;"#;
+`goodbye "${ `hello world` }" 
+and ${ `good${ " " }riddance` }`;"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_semantic_tokens(
         t,

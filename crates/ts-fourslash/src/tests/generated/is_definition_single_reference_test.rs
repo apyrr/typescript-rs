@@ -14,7 +14,9 @@ pub fn test_is_definition_single_reference() {
 }
 
 fn run_test_is_definition_single_reference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIsDefinitionSingleReference") {
+        return;
+    }
     let content = r"function /*1*/f() {}
 /*2*/f();";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_smart_indent_object_literal_open_bracket_new_line() {
 }
 
 fn run_test_smart_indent_object_literal_open_bracket_new_line(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentObjectLiteralOpenBracketNewLine") {
+        return;
+    }
     let content = r"var a =/*1*/
     {/*2*/}
 

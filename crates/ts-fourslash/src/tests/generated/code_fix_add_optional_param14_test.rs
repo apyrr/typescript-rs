@@ -14,7 +14,9 @@ pub fn test_code_fix_add_optional_param14() {
 }
 
 fn run_test_code_fix_add_optional_param14(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddOptionalParam14") {
+        return;
+    }
     let content = r#"function f(a: string): string;
 function f(a: string, b: number): string;
 function f(a: string, b?: number): string {

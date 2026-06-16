@@ -14,7 +14,9 @@ pub fn test_format_in_try_catch_finally() {
 }
 
 fn run_test_format_in_try_catch_finally(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatInTryCatchFinally") {
+        return;
+    }
     let content = r"try 
 {
     var x = 1/*1*/

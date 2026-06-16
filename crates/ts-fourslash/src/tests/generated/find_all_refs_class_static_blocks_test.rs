@@ -14,7 +14,9 @@ pub fn test_find_all_refs_class_static_blocks() {
 }
 
 fn run_test_find_all_refs_class_static_blocks(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsClassStaticBlocks") {
+        return;
+    }
     let content = r"class ClassStaticBocks {
     static x;
     [|[|/*classStaticBocks1*/static|] {}|]

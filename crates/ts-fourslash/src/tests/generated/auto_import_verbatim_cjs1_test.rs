@@ -14,7 +14,9 @@ pub fn test_auto_import_verbatim_cjs1() {
 }
 
 fn run_test_auto_import_verbatim_cjs1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportVerbatimCJS1") {
+        return;
+    }
     let content = r"// @module: node18
 // @verbatimModuleSyntax: true
 // @allowJs: true

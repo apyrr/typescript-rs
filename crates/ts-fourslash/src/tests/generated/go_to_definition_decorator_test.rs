@@ -14,7 +14,9 @@ pub fn test_go_to_definition_decorator() {
 }
 
 fn run_test_go_to_definition_decorator(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionDecorator") {
+        return;
+    }
     let content = r#"// @Filename: b.ts
 @[|/*decoratorUse*/decorator|]
 class C {

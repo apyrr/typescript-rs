@@ -14,7 +14,9 @@ pub fn test_rename_module_exports_properties3() {
 }
 
 fn run_test_rename_module_exports_properties3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameModuleExportsProperties3") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: a.js
 [|class [|{| "contextRangeIndex": 0 |}A|] {}|]

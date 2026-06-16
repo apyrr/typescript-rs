@@ -14,7 +14,9 @@ pub fn test_smart_selection_object_types() {
 }
 
 fn run_test_smart_selection_object_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_objectTypes") {
+        return;
+    }
     let content = r"type X = {
   /*1*/foo?: string;
   /*2*/readonly /*3*/bar: { x: num/*4*/ber };

@@ -14,7 +14,9 @@ pub fn test_delete_modifier_before_var_statement1() {
 }
 
 fn run_test_delete_modifier_before_var_statement1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDeleteModifierBeforeVarStatement1") {
+        return;
+    }
     let content = r"
 
 /////////////////////////////

@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_inherits_abstract_method() {
 }
 
 fn run_test_code_fix_class_implement_interface_inherits_abstract_method(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceInheritsAbstractMethod") {
+        return;
+    }
     let content = r"abstract class C1 { }
 abstract class C2 {
     abstract fＡ<T extends number>(): T;

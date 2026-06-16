@@ -14,7 +14,9 @@ pub fn test_auto_import_package_json_imports_case_sensitivity() {
 }
 
 fn run_test_auto_import_package_json_imports_case_sensitivity(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportPackageJsonImportsCaseSensitivity") {
+        return;
+    }
     let content = r##"// @module: node18
 // @allowImportingTsExtensions: true
 // @Filename: /package.json

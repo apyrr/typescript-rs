@@ -14,18 +14,20 @@ pub fn test_code_fix_add_missing_attributes10() {
 }
 
 fn run_test_code_fix_add_missing_attributes10(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"// @jsx: preserve
+    if should_skip_if_failing("TestCodeFixAddMissingAttributes10") {
+        return;
+    }
+    let content = r"// @jsx: preserve
 // @filename: foo.tsx
 type A = 'a' | 'b' | 'c' | 'd' | 'e';
 type B = 1 | 2 | 3;
 type C = '@' | '!';
-type D = ` + "`" + `${A}${Uppercase<A>}${B}${C}` + "`" + `;
+type D = `${A}${Uppercase<A>}${B}${C}`;
 const A = (props: { [K in D]: K }) =>
    <div {...props}></div>;
 
 const Bar = () =>
-   [|<A></A>|]"#;
+   [|<A></A>|]";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_code_fix_not_available(t, &vec!["fixMissingAttributes".to_string()]);
     done();

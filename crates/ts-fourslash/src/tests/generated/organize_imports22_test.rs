@@ -14,7 +14,9 @@ pub fn test_organize_imports22() {
 }
 
 fn run_test_organize_imports22(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImports22") {
+        return;
+    }
     let content = r"import {abc, Abc, bc, Bc} from 'b';
 import {
   I,

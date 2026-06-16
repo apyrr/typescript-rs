@@ -14,7 +14,9 @@ pub fn test_format_literal_type_in_union_or_intersection_type() {
 }
 
 fn run_test_format_literal_type_in_union_or_intersection_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatLiteralTypeInUnionOrIntersectionType") {
+        return;
+    }
     let content = r"type NumberAndString = {
     a: number
 } & {

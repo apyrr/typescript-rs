@@ -14,7 +14,9 @@ pub fn test_signature_help_js_missing_property_access() {
 }
 
 fn run_test_signature_help_js_missing_property_access(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpJSMissingPropertyAccess") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @checkJs: true
 // @Filename: test.js

@@ -14,7 +14,9 @@ pub fn test_import_meta_completion_details() {
 }
 
 fn run_test_import_meta_completion_details(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportMetaCompletionDetails") {
+        return;
+    }
     let content = r"// @filename: index.mts
 // @module: Node16
 // @strict: true

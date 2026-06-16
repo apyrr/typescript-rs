@@ -14,7 +14,9 @@ pub fn test_completions_import_umd_default_no_crash2() {
 }
 
 fn run_test_completions_import_umd_default_no_crash2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImport_umdDefaultNoCrash2") {
+        return;
+    }
     let content = r#"// @moduleResolution: bundler
 // @allowJs: true
 // @checkJs: true

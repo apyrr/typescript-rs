@@ -14,7 +14,9 @@ pub fn test_member_list_on_constructor_type() {
 }
 
 fn run_test_member_list_on_constructor_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListOnConstructorType") {
+        return;
+    }
     let content = r"// @lib: es5
 var f: new () => void;
 f./*1*/";

@@ -14,7 +14,9 @@ pub fn test_smart_indent_after_aligned_function_argument() {
 }
 
 fn run_test_smart_indent_after_aligned_function_argument(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentAfterAlignedFunctionArgument") {
+        return;
+    }
     let content = r"function foo(bar,
              blah, baz,
              /**/

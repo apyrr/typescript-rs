@@ -14,7 +14,9 @@ pub fn test_generic_type_with_multiple_bases1_multi_file() {
 }
 
 fn run_test_generic_type_with_multiple_bases1_multi_file(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericTypeWithMultipleBases1MultiFile") {
+        return;
+    }
     let content = r"// @Filename: genericTypeWithMultipleBases_0.ts
 interface iBaseScope {
     watch: () => void;

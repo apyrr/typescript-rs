@@ -14,7 +14,9 @@ pub fn test_rest_params_contextually_typed() {
 }
 
 fn run_test_rest_params_contextually_typed(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRestParamsContextuallyTyped") {
+        return;
+    }
     let content = r"var foo: Function = function (/*1*/a, /*2*/b, /*3*/c) { };";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_quick_info_at(t, "1", "(parameter) a: any", "");

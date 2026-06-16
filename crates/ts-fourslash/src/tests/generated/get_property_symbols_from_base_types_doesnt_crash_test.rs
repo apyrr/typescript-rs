@@ -14,7 +14,9 @@ pub fn test_get_property_symbols_from_base_types_doesnt_crash() {
 }
 
 fn run_test_get_property_symbols_from_base_types_doesnt_crash(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetPropertySymbolsFromBaseTypesDoesntCrash") {
+        return;
+    }
     let content = r"// @Filename: file1.ts
 class ClassA implements IInterface {
     private [|value|]: number;

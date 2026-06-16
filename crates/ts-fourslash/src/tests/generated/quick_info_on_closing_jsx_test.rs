@@ -14,7 +14,9 @@ pub fn test_quick_info_on_closing_jsx() {
 }
 
 fn run_test_quick_info_on_closing_jsx(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnClosingJsx") {
+        return;
+    }
     let content = r"// @Filename: foo.tsx
 let x = <div>
     /*$*/</div >";

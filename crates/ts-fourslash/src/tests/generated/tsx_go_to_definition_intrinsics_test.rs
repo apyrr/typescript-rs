@@ -14,7 +14,9 @@ pub fn test_tsx_go_to_definition_intrinsics() {
 }
 
 fn run_test_tsx_go_to_definition_intrinsics(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxGoToDefinitionIntrinsics") {
+        return;
+    }
     let content = r"//@Filename: file.tsx
 declare namespace JSX {
     interface Element { }

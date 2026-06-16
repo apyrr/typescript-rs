@@ -14,7 +14,9 @@ pub fn test_inlay_hints_interactive_function_parameter_types2() {
 }
 
 fn run_test_inlay_hints_interactive_function_parameter_types2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInteractiveFunctionParameterTypes2") {
+        return;
+    }
     let content = r#"class C {}
 namespace N { export class Foo {} }
 interface Foo {}

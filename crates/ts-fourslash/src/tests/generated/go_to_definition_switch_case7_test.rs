@@ -14,7 +14,9 @@ pub fn test_go_to_definition_switch_case7() {
 }
 
 fn run_test_go_to_definition_switch_case7(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionSwitchCase7") {
+        return;
+    }
     let content = r"switch (null) {
   case null:
     export [|/*start*/default|] 123;";

@@ -14,7 +14,9 @@ pub fn test_completions_import_module_augmentation_with_js() {
 }
 
 fn run_test_completions_import_module_augmentation_with_js(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImportModuleAugmentationWithJS") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @checkJs: true
 // @noEmit: true

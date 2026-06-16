@@ -14,7 +14,9 @@ pub fn test_quick_info_call_property() {
 }
 
 fn run_test_quick_info_call_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoCallProperty") {
+        return;
+    }
     let content = r"interface I {
     /** Doc */
     m: () => void;

@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_let() {
 }
 
 fn run_test_quick_info_display_parts_let(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsLet") {
+        return;
+    }
     let content = r#"let /*1*/a = 10;
 function foo() {
     let /*2*/b = /*3*/a;

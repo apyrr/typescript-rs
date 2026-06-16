@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_type_param_instantiate_t() {
 }
 
 fn run_test_code_fix_class_implement_interface_type_param_instantiate_t(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceTypeParamInstantiateT") {
+        return;
+    }
     let content = r"interface I<T> { x: T; }
 class C<T> implements I<T> {}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

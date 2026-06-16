@@ -14,7 +14,9 @@ pub fn test_inlay_hints_property_declarations2() {
 }
 
 fn run_test_inlay_hints_property_declarations2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsPropertyDeclarations2") {
+        return;
+    }
     let content = r"// @strict: true
 // @target: esnext
 class C {

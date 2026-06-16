@@ -14,7 +14,9 @@ pub fn test_signature_help_with_interface_as_identifier() {
 }
 
 fn run_test_signature_help_with_interface_as_identifier(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpWithInterfaceAsIdentifier") {
+        return;
+    }
     let content = r"interface C {
     (): void;
 }

@@ -14,7 +14,9 @@ pub fn test_references_for_class_members_extending_abstract_class() {
 }
 
 fn run_test_references_for_class_members_extending_abstract_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForClassMembersExtendingAbstractClass") {
+        return;
+    }
     let content = r"abstract class Base {
     abstract /*a1*/a: number;
     abstract /*method1*/method(): void;

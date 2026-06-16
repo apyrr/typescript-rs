@@ -14,15 +14,17 @@ pub fn test_rename_comments_and_strings4() {
 }
 
 fn run_test_rename_comments_and_strings4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameCommentsAndStrings4") {
+        return;
+    }
     let content = r#"///<reference path="./Bar.ts" />
 [|function [|{| "contextRangeIndex": 0 |}Bar|]() {
     // This is a reference to [|Bar|] in a comment.
     "this is a reference to [|Bar|] in a string";
-    ` + "`" + `Foo [|Bar|] Baz.` + "`" + `;
+    `Foo [|Bar|] Baz.`;
     {
         const Bar = 0;
-        ` + "`" + `[|Bar|] ba ${Bar} bara [|Bar|] berbobo ${Bar} araura [|Bar|] ara!` + "`" + `;
+        `[|Bar|] ba ${Bar} bara [|Bar|] berbobo ${Bar} araura [|Bar|] ara!`;
     }
 }|]"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

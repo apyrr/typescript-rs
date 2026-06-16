@@ -14,7 +14,9 @@ pub fn test_completions_commit_characters_after_dot() {
 }
 
 fn run_test_completions_commit_characters_after_dot(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsCommitCharactersAfterDot") {
+        return;
+    }
     let content = r"// @lib: es5
 declare const obj: { banana: 1 };
 const x = obj./*1*/

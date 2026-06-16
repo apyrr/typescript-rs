@@ -14,7 +14,9 @@ pub fn test_quick_info_export_assignment_of_generic_interface() {
 }
 
 fn run_test_quick_info_export_assignment_of_generic_interface(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoExportAssignmentOfGenericInterface") {
+        return;
+    }
     let content = r"// @Filename: quickInfoExportAssignmentOfGenericInterface_0.ts
 interface Foo<T> {
     a: string;

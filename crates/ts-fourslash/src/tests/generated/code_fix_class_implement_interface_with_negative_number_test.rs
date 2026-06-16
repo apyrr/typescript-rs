@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_with_negative_number() {
 }
 
 fn run_test_code_fix_class_implement_interface_with_negative_number(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceWithNegativeNumber") {
+        return;
+    }
     let content = r"interface X { value: -1 | 0 | 1; }
 class Y implements X { }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

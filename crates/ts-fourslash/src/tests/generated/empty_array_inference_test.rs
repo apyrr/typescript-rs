@@ -14,7 +14,9 @@ pub fn test_empty_array_inference() {
 }
 
 fn run_test_empty_array_inference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestEmptyArrayInference") {
+        return;
+    }
     let content = r"// @strict: false
 var x/*1*/x = true ? [1] : [undefined]; 
 var y/*2*/y = true ? [1] : [];";

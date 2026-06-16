@@ -14,7 +14,9 @@ pub fn test_export_default_function() {
 }
 
 fn run_test_export_default_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExportDefaultFunction") {
+        return;
+    }
     let content = r"export default function func() {
     /*1*/
 }

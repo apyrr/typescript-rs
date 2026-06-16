@@ -14,7 +14,9 @@ pub fn test_generic_combinators3() {
 }
 
 fn run_test_generic_combinators3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericCombinators3") {
+        return;
+    }
     let content = r#"interface Collection<T, U> {
 }
 

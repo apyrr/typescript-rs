@@ -14,7 +14,9 @@ pub fn test_call_hierarchy_container_name() {
 }
 
 fn run_test_call_hierarchy_container_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCallHierarchyContainerName") {
+        return;
+    }
     let content = r"function /**/f() {}
 
 class A {

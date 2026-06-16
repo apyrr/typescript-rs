@@ -14,7 +14,9 @@ pub fn test_organize_imports8() {
 }
 
 fn run_test_organize_imports8(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImports8") {
+        return;
+    }
     let content = r#"import { foo as foo } from "foo";
 foo;"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

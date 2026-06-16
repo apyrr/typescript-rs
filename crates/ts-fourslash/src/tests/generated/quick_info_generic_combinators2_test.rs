@@ -14,7 +14,9 @@ pub fn test_quick_info_generic_combinators2() {
 }
 
 fn run_test_quick_info_generic_combinators2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoGenericCombinators2") {
+        return;
+    }
     let content = r"interface Collection<T, U> {
    length: number;
    add(x: T, y: U): void ;
@@ -119,20 +121,14 @@ var /*23*/r8a = _.map<number, /*error1*/B/*error2*/, string>(c5, (/*8a*/x,/*8b*/
     f.verify_quick_info_at(t, "21", "var r7a: Collection<number, string>", "");
     f.verify_quick_info_at(t, "22", "var r7b: Collection<number, string>", "");
     f.verify_quick_info_at(t, "23", "var r8a: Collection<number, string>", "");
-    f.verify_error_exists_between_markers(
-        &f.marker_by_name("error1"),
-        &f.marker_by_name("error2"),
-        0,
-    );
+    f.verify_error_exists_between_markers(&f.marker_by_name("error1"), &f.marker_by_name("error2"));
     f.verify_error_exists_between_markers(
         &f.marker_by_name("17error1"),
         &f.marker_by_name("17error2"),
-        0,
     );
     f.verify_error_exists_between_markers(
         &f.marker_by_name("22error1"),
         &f.marker_by_name("22error2"),
-        0,
     );
     done();
 }

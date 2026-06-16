@@ -14,7 +14,9 @@ pub fn test_completions_merged_declarations2() {
 }
 
 fn run_test_completions_merged_declarations2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsMergedDeclarations2") {
+        return;
+    }
     let content = r"class point {
     constructor(public x: number, public y: number) { }
 }

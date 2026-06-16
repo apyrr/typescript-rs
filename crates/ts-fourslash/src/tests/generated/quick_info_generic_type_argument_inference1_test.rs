@@ -14,7 +14,9 @@ pub fn test_quick_info_generic_type_argument_inference1() {
 }
 
 fn run_test_quick_info_generic_type_argument_inference1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoGenericTypeArgumentInference1") {
+        return;
+    }
     let content = r"// @strict: false
 namespace Underscore {
     export interface Iterator<T, U> {

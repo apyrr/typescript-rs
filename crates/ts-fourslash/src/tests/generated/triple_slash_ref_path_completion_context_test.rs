@@ -14,7 +14,9 @@ pub fn test_triple_slash_ref_path_completion_context() {
 }
 
 fn run_test_triple_slash_ref_path_completion_context(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTripleSlashRefPathCompletionContext") {
+        return;
+    }
     let content = r#"// @Filename: f.ts
 /*f*/
 // @Filename: test.ts

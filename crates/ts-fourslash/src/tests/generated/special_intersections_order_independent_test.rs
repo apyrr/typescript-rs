@@ -14,7 +14,9 @@ pub fn test_special_intersections_order_independent() {
 }
 
 fn run_test_special_intersections_order_independent(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSpecialIntersectionsOrderIndependent") {
+        return;
+    }
     let content = r"declare function a(arg: 'test' | (string & {})): void
 a('/*1*/')
 declare function b(arg: 'test' | ({} & string)): void

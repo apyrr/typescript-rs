@@ -14,7 +14,9 @@ pub fn test_class_extends_interface_sig_help1() {
 }
 
 fn run_test_class_extends_interface_sig_help1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestClassExtendsInterfaceSigHelp1") {
+        return;
+    }
     let content = r"class C {
     public foo(x: string);
     public foo(x: number);

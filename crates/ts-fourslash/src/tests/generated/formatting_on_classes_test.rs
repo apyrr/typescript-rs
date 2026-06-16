@@ -14,7 +14,9 @@ pub fn test_formatting_on_classes() {
 }
 
 fn run_test_formatting_on_classes(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnClasses") {
+        return;
+    }
     let content = r#"/*1*/         class                    a                  {
 /*2*/                                                        constructor       (       n   :                 number    )             ;
 /*3*/                                                        constructor       (       s   :                 string    )             ;

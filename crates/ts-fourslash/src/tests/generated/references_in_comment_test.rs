@@ -14,7 +14,9 @@ pub fn test_references_in_comment() {
 }
 
 fn run_test_references_in_comment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesInComment") {
+        return;
+    }
     let content = r"// References to /*1*/foo or b/*2*/ar
 /* in comments should not find fo/*3*/o or bar/*4*/ */
 class foo { }

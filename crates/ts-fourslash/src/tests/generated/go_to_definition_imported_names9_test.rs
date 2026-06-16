@@ -14,7 +14,9 @@ pub fn test_go_to_definition_imported_names9() {
 }
 
 fn run_test_go_to_definition_imported_names9(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionImportedNames9") {
+        return;
+    }
     let content = r#"// @allowjs: true
 // @Filename: a.js
 class /*classDefinition*/Class {

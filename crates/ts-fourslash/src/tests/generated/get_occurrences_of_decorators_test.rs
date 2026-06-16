@@ -14,7 +14,9 @@ pub fn test_get_occurrences_of_decorators() {
 }
 
 fn run_test_get_occurrences_of_decorators(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesOfDecorators") {
+        return;
+    }
     let content = r"// @Filename: b.ts
 @/*1*/decorator
 class C {

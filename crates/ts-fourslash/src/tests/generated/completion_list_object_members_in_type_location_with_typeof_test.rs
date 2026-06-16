@@ -14,7 +14,9 @@ pub fn test_completion_list_object_members_in_type_location_with_typeof() {
 }
 
 fn run_test_completion_list_object_members_in_type_location_with_typeof(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListObjectMembersInTypeLocationWithTypeof") {
+        return;
+    }
     let content = r"// @strict: true
 const languageService = { getCompletions() {} }
 type A = Parameters<typeof languageService./*1*/>

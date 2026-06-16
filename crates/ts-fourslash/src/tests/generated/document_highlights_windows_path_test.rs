@@ -14,7 +14,9 @@ pub fn test_document_highlights_windows_path() {
 }
 
 fn run_test_document_highlights_windows_path(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlights_windowsPath") {
+        return;
+    }
     let content = r"//@Filename: C:\a\b\c.ts
 var /*1*/[|x|] = 1;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

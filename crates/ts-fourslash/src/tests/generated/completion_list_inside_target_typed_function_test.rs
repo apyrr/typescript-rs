@@ -14,7 +14,9 @@ pub fn test_completion_list_inside_target_typed_function() {
 }
 
 fn run_test_completion_list_inside_target_typed_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInsideTargetTypedFunction") {
+        return;
+    }
     let content = r"namespace Fix2 {
     interface iFace { (event: string); }
     var foo: iFace = function (elem) { /**/ }

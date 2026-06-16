@@ -14,7 +14,9 @@ pub fn test_find_all_refs_global_this_keyword_in_module() {
 }
 
 fn run_test_find_all_refs_global_this_keyword_in_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsGlobalThisKeywordInModule") {
+        return;
+    }
     let content = r"// @noLib: true
 /*1*/this;
 export const c = 1;";

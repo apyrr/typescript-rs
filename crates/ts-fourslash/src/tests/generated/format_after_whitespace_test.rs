@@ -14,7 +14,9 @@ pub fn test_format_after_whitespace() {
 }
 
 fn run_test_format_after_whitespace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatAfterWhitespace") {
+        return;
+    }
     let content = r"function foo()
 {
     var bar;

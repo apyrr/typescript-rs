@@ -14,7 +14,9 @@ pub fn test_completion_entry_after_asi_expression_in_class() {
 }
 
 fn run_test_completion_entry_after_asi_expression_in_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionEntryAfterASIExpressionInClass") {
+        return;
+    }
     let content = r"class Parent {
   protected shouldWork() {
       console.log();

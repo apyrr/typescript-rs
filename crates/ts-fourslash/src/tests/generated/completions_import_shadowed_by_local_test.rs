@@ -14,7 +14,9 @@ pub fn test_completions_import_shadowed_by_local() {
 }
 
 fn run_test_completions_import_shadowed_by_local(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImport_shadowedByLocal") {
+        return;
+    }
     let content = r"// @noLib: true
 // @Filename: /a.ts
 export const foo = 0;

@@ -14,7 +14,9 @@ pub fn test_underscore_typings02() {
 }
 
 fn run_test_underscore_typings02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnderscoreTypings02") {
+        return;
+    }
     let content = r"// @strict: false
 // @module: CommonJS
 interface Dictionary<T> {

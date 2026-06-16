@@ -14,7 +14,9 @@ pub fn test_code_fix_convert_to_mapped_object_type13() {
 }
 
 fn run_test_code_fix_convert_to_mapped_object_type13(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixConvertToMappedObjectType13") {
+        return;
+    }
     let content = r#"let x: {
     [p: ""]: string;
 }"#;

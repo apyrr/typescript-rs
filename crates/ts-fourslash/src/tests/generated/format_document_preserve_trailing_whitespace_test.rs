@@ -14,7 +14,9 @@ pub fn test_format_document_preserve_trailing_whitespace() {
 }
 
 fn run_test_format_document_preserve_trailing_whitespace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatDocumentPreserveTrailingWhitespace") {
+        return;
+    }
     let content = r"
 var a;     
 var b     

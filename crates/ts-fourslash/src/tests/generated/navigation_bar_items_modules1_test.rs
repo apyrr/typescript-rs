@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_modules1() {
 }
 
 fn run_test_navigation_bar_items_modules1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsModules1") {
+        return;
+    }
     let content = r#"declare module "X.Y.Z" {}
 
 declare module 'X2.Y2.Z2' {}

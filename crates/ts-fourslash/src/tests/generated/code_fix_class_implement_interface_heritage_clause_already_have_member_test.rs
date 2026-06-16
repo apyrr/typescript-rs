@@ -16,7 +16,9 @@ pub fn test_code_fix_class_implement_interface_heritage_clause_already_have_memb
 fn run_test_code_fix_class_implement_interface_heritage_clause_already_have_member(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceHeritageClauseAlreadyHaveMember") {
+        return;
+    }
     let content = r"// @strict: false
 class Base {
     foo: number;

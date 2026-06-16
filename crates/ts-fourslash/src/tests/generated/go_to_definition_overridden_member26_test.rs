@@ -14,7 +14,9 @@ pub fn test_go_to_definition_overridden_member26() {
 }
 
 fn run_test_go_to_definition_overridden_member26(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionOverriddenMember26") {
+        return;
+    }
     let content = r"// @strict: true
 // @target: esnext
 // @lib: esnext

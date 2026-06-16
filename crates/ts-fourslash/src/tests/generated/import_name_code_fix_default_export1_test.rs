@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_default_export1() {
 }
 
 fn run_test_import_name_code_fix_default_export1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixDefaultExport1") {
+        return;
+    }
     let content = r#"// @Filename: /foo-bar.ts
 export default function fooBar();
 // @Filename: /b.ts

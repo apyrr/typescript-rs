@@ -14,7 +14,9 @@ pub fn test_completion_list_in_import_clause06() {
 }
 
 fn run_test_completion_list_in_import_clause06(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInImportClause06") {
+        return;
+    }
     let content = r#"// @typeRoots: T1,T2
 // @Filename: app.ts
 import * as A from "/*1*/";

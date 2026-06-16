@@ -14,7 +14,9 @@ pub fn test_triple_slash_ref_path_completion_extensions_allow_js_true() {
 }
 
 fn run_test_triple_slash_ref_path_completion_extensions_allow_js_true(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTripleSlashRefPathCompletionExtensionsAllowJSTrue") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: test0.ts
 /// <reference path="/*0*/

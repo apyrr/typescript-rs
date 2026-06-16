@@ -14,7 +14,9 @@ pub fn test_intellisense_in_object_literal() {
 }
 
 fn run_test_intellisense_in_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIntellisenseInObjectLiteral") {
+        return;
+    }
     let content = r#"var x = 3;
 
 class Foo {

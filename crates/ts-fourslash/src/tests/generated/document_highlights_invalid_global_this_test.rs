@@ -14,7 +14,9 @@ pub fn test_document_highlights_invalid_global_this() {
 }
 
 fn run_test_document_highlights_invalid_global_this(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightsInvalidGlobalThis") {
+        return;
+    }
     let content = r"declare global {
     export { globalThis as [|global|] }
 }";

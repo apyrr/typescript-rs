@@ -16,7 +16,10 @@ pub fn test_alignment_after_formatting_on_multiline_expression_and_parameters_li
 fn run_test_alignment_after_formatting_on_multiline_expression_and_parameters_list(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAlignmentAfterFormattingOnMultilineExpressionAndParametersList")
+    {
+        return;
+    }
     let content = r"class TestClass {
     private testMethod1(param1: boolean,
                         param2/*1*/: boolean) {

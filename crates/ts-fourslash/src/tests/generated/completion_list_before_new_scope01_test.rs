@@ -14,7 +14,9 @@ pub fn test_completion_list_before_new_scope01() {
 }
 
 fn run_test_completion_list_before_new_scope01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListBeforeNewScope01") {
+        return;
+    }
     let content = r"p/*1*/
 
 function fun(param) {

@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_all() {
 }
 
 fn run_test_code_fix_class_implement_interface_all(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterface_all") {
+        return;
+    }
     let content = r"interface I { i(): void; }
 interface J { j(): void; }
 class C implements I, J {}

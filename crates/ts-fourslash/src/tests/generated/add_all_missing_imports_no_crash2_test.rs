@@ -14,7 +14,9 @@ pub fn test_add_all_missing_imports_no_crash2() {
 }
 
 fn run_test_add_all_missing_imports_no_crash2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAddAllMissingImportsNoCrash2") {
+        return;
+    }
     let content = r"// @Filename: file1.ts
 export { /**/default };";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

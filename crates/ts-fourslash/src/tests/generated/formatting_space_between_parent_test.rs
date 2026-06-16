@@ -14,7 +14,9 @@ pub fn test_formatting_space_between_parent() {
 }
 
 fn run_test_formatting_space_between_parent(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingSpaceBetweenParent") {
+        return;
+    }
     let content = r"/*1*/foo(() => 1);
 /*2*/foo(1);
 /*3*/if((true)){}";

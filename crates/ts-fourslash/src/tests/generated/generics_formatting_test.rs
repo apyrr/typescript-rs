@@ -14,7 +14,9 @@ pub fn test_generics_formatting() {
 }
 
 fn run_test_generics_formatting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericsFormatting") {
+        return;
+    }
     let content = r"/*inClassDeclaration*/class Foo   <    T1   ,  T2    >  {
 /*inMethodDeclaration*/    public method    <   T3,    T4   >   ( a: T1,   b: Array    < T4 > ):   Map < T1  ,   T2, Array < T3    >    > {
     }

@@ -14,7 +14,9 @@ pub fn test_formatting_with_multiline_comments() {
 }
 
 fn run_test_formatting_with_multiline_comments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingWithMultilineComments") {
+        return;
+    }
     let content = r"f(/*
 /*2*/         */() => { /*1*/ });";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

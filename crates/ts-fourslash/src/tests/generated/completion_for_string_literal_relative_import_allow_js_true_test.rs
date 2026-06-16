@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal_relative_import_allow_js_true() {
 }
 
 fn run_test_completion_for_string_literal_relative_import_allow_js_true(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteralRelativeImportAllowJSTrue") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: test0.ts
 import * as foo1 from ".//*import_as0*/

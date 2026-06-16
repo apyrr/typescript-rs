@@ -14,7 +14,9 @@ pub fn test_get_outlining_spans_for_comments() {
 }
 
 fn run_test_get_outlining_spans_for_comments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOutliningSpansForComments") {
+        return;
+    }
     let content = r#"// @lib: es5
 [|/*
     Block comment at the beginning of the file before module:

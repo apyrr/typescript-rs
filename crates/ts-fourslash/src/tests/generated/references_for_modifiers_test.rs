@@ -14,7 +14,9 @@ pub fn test_references_for_modifiers() {
 }
 
 fn run_test_references_for_modifiers(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForModifiers") {
+        return;
+    }
     let content = r"// @lib: es5
 [|/*declareModifier*/declare /*abstractModifier*/abstract class C1 {
     [|/*staticModifier*/static a;|]

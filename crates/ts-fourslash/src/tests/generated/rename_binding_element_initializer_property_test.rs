@@ -14,7 +14,9 @@ pub fn test_rename_binding_element_initializer_property() {
 }
 
 fn run_test_rename_binding_element_initializer_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameBindingElementInitializerProperty") {
+        return;
+    }
     let content = r#"function f([|{[|{| "contextRangeIndex": 0 |}required|], optional = [|required|]}: {[|[|{| "contextRangeIndex": 3 |}required|]: number,|] optional?: number}|]) {
     console.log("required", [|required|]);
     console.log("optional", optional);

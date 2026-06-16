@@ -14,7 +14,9 @@ pub fn test_navigation_items_export_default_expression() {
 }
 
 fn run_test_navigation_items_export_default_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationItemsExportDefaultExpression") {
+        return;
+    }
     let content = r#"export default function () {}
 export default function () {
     return class Foo {

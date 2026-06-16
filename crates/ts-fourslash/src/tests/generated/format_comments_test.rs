@@ -14,7 +14,9 @@ pub fn test_format_comments() {
 }
 
 fn run_test_format_comments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatComments") {
+        return;
+    }
     let content = r"_.chain()
 // wow/*callChain1*/
   .then()

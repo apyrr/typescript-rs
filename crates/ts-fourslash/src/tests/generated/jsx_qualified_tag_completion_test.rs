@@ -14,7 +14,9 @@ pub fn test_jsx_qualified_tag_completion() {
 }
 
 fn run_test_jsx_qualified_tag_completion(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsxQualifiedTagCompletion") {
+        return;
+    }
     let content = r"//@Filename: file.tsx
 declare var React: any;
 namespace NS {

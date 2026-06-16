@@ -14,7 +14,9 @@ pub fn test_quick_info_on_constructor_with_generic_parameter() {
 }
 
 fn run_test_quick_info_on_constructor_with_generic_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnConstructorWithGenericParameter") {
+        return;
+    }
     let content = r"interface I {
     x: number;
 }

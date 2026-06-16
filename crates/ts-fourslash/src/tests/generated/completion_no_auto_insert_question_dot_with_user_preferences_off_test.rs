@@ -14,7 +14,9 @@ pub fn test_completion_no_auto_insert_question_dot_with_user_preferences_off() {
 }
 
 fn run_test_completion_no_auto_insert_question_dot_with_user_preferences_off(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionNoAutoInsertQuestionDotWithUserPreferencesOff") {
+        return;
+    }
     let content = r#"// @strict: true
 interface User {
     address?: {

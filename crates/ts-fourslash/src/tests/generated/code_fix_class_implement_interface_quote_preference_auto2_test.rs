@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_quote_preference_auto2() {
 }
 
 fn run_test_code_fix_class_implement_interface_quote_preference_auto2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterface_quotePreferenceAuto2") {
+        return;
+    }
     let content = r"// @filename: a.ts
 export interface I {
     a(): void;

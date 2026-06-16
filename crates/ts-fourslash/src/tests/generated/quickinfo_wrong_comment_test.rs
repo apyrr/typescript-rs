@@ -14,7 +14,9 @@ pub fn test_quickinfo_wrong_comment() {
 }
 
 fn run_test_quickinfo_wrong_comment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoWrongComment") {
+        return;
+    }
     let content = r#"// @stableTypeOrdering: true
 // @lib: es5
 interface I {

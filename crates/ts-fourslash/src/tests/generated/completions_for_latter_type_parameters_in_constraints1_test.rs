@@ -14,7 +14,9 @@ pub fn test_completions_for_latter_type_parameters_in_constraints1() {
 }
 
 fn run_test_completions_for_latter_type_parameters_in_constraints1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsForLatterTypeParametersInConstraints1") {
+        return;
+    }
     let content = r"// https://github.com/microsoft/TypeScript/issues/56474
 function test<First extends S/*1*/, Second>(a: First, b: Second) {}
 type A1<K extends /*2*/, L> = K";

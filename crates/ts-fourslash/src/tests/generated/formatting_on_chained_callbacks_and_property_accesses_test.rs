@@ -14,7 +14,9 @@ pub fn test_formatting_on_chained_callbacks_and_property_accesses() {
 }
 
 fn run_test_formatting_on_chained_callbacks_and_property_accesses(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnChainedCallbacksAndPropertyAccesses") {
+        return;
+    }
     let content = r"var x = 1;
 x
 /*1*/.toFixed

@@ -14,7 +14,9 @@ pub fn test_param_help_on_comma_in_string() {
 }
 
 fn run_test_param_help_on_comma_in_string(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestParamHelpOnCommaInString") {
+        return;
+    }
     let content = r"function blah(foo: string, bar: number) {
 }
 blah('hola/*1*/,/*2*/')";

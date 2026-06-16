@@ -14,7 +14,9 @@ pub fn test_quick_info_type_only_namespace_and_class() {
 }
 
 fn run_test_quick_info_type_only_namespace_and_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoTypeOnlyNamespaceAndClass") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 export namespace ns {
   export class Box<T> {}

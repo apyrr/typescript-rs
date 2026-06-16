@@ -14,7 +14,9 @@ pub fn test_code_fix_class_extend_abstract_some_properties_present() {
 }
 
 fn run_test_code_fix_class_extend_abstract_some_properties_present(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassExtendAbstractSomePropertiesPresent") {
+        return;
+    }
     let content = r"// @strict: false
 // @noImplicitOverride: true
 abstract class A {

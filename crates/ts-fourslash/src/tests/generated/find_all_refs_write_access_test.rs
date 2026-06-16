@@ -14,13 +14,15 @@ pub fn test_find_all_refs_write_access() {
 }
 
 fn run_test_find_all_refs_write_access(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"interface Obj {
-    [` + "`" + `/*1*/num` + "`" + `]: number;
+    if should_skip_if_failing("TestFindAllRefsWriteAccess") {
+        return;
+    }
+    let content = r"interface Obj {
+    [`/*1*/num`]: number;
 }
 
 let o: Obj = {
-    [` + "`" + `num` + "`" + `]: 0
+    [`num`]: 0
 };
 
 o = {
@@ -28,10 +30,10 @@ o = {
 };
 
 o['num'] = 2;
-o[` + "`" + `num` + "`" + `] = 3;
+o[`num`] = 3;
 
 o['num'];
-o[` + "`" + `num` + "`" + `];"#;
+o[`num`];";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_find_all_references(t, &["1".to_string()]);
     done();

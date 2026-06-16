@@ -14,7 +14,9 @@ pub fn test_get_occurrences_non_string_import_attributes() {
 }
 
 fn run_test_get_occurrences_non_string_import_attributes(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesNonStringImportAttributes") {
+        return;
+    }
     let content = r#"// @module: node18
 import * as react from "react" with { cache: /**/0 };
 react.Children;"#;

@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_tuple() {
 }
 
 fn run_test_quickinfo_verbosity_tuple(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityTuple") {
+        return;
+    }
     let content = r#"interface Orange {
     color: string;
 }

@@ -14,7 +14,9 @@ pub fn test_smart_indent_in_call_expressions() {
 }
 
 fn run_test_smart_indent_in_call_expressions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentInCallExpressions") {
+        return;
+    }
     let content = r#"namespace My.App {
     export var appModule = angular.module("app", [
     ]).config([() => {

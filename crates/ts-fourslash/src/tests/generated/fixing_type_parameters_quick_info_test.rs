@@ -14,7 +14,9 @@ pub fn test_fixing_type_parameters_quick_info() {
 }
 
 fn run_test_fixing_type_parameters_quick_info(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFixingTypeParametersQuickInfo") {
+        return;
+    }
     let content = r"// @strict: false
 declare function f<T>(x: T, y: (p: T) => T, z: (p: T) => T): T;
 var /*1*/result = /*2*/f(0, /*3*/x => null, /*4*/x => x.blahblah);";

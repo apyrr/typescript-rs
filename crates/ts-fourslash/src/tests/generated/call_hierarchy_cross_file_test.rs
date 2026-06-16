@@ -14,7 +14,9 @@ pub fn test_call_hierarchy_cross_file() {
 }
 
 fn run_test_call_hierarchy_cross_file(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCallHierarchyCrossFile") {
+        return;
+    }
     let content = r#"// @filename: /a.ts
 export function /**/createModelReference() {}
 // @filename: /b.ts

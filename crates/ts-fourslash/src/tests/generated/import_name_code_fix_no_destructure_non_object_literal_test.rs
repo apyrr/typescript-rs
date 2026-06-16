@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_no_destructure_non_object_literal() {
 }
 
 fn run_test_import_name_code_fix_no_destructure_non_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_noDestructureNonObjectLiteral") {
+        return;
+    }
     let content = r"// @lib: es5
 // @target: es2015
 // @strict: true

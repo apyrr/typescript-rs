@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_module() {
 }
 
 fn run_test_find_all_refs_for_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForModule") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: /a.ts
 export const x = 0;

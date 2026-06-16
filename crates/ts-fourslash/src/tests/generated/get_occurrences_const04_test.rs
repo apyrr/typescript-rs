@@ -14,7 +14,9 @@ pub fn test_get_occurrences_const04() {
 }
 
 fn run_test_get_occurrences_const04(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesConst04") {
+        return;
+    }
     let content = r"export const class C {
     private static c/*1*/onst f/*2*/oo;
     constructor(public con/*3*/st foo) {

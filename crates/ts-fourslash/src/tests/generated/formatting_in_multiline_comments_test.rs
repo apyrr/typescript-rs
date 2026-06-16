@@ -14,7 +14,9 @@ pub fn test_formatting_in_multiline_comments() {
 }
 
 fn run_test_formatting_in_multiline_comments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingInMultilineComments") {
+        return;
+    }
     let content = r"var x = function() {
     if (true) {
     /*1*/} else {/*2*/

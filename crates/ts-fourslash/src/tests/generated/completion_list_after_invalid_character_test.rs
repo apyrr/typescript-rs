@@ -14,7 +14,9 @@ pub fn test_completion_list_after_invalid_character() {
 }
 
 fn run_test_completion_list_after_invalid_character(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAfterInvalidCharacter") {
+        return;
+    }
     let content = r"// Completion after invalid character
 namespace testModule {
     export var foo = 1;

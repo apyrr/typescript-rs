@@ -14,7 +14,9 @@ pub fn test_smart_indent_list_item() {
 }
 
 fn run_test_smart_indent_list_item(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentListItem") {
+        return;
+    }
     let content = r"[1,
     2
           + 3, 4,

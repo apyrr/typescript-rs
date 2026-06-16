@@ -14,7 +14,9 @@ pub fn test_unused_class_in_namespace_with_trivia1() {
 }
 
 fn run_test_unused_class_in_namespace_with_trivia1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedClassInNamespaceWithTrivia1") {
+        return;
+    }
     let content = r"// @noUnusedLocals: true
 [| namespace greeter {
   /* comment1 */

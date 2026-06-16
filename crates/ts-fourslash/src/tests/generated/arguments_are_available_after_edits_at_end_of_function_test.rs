@@ -14,7 +14,9 @@ pub fn test_arguments_are_available_after_edits_at_end_of_function() {
 }
 
 fn run_test_arguments_are_available_after_edits_at_end_of_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestArgumentsAreAvailableAfterEditsAtEndOfFunction") {
+        return;
+    }
     let content = r"namespace Test1 {
 	class Person {
 		children: string[];

@@ -14,7 +14,9 @@ pub fn test_completion_list_after_regular_expression_literal03() {
 }
 
 fn run_test_completion_list_after_regular_expression_literal03(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAfterRegularExpressionLiteral03") {
+        return;
+    }
     let content = r"let v = 100;
 let x = /absidey/
 /**/";

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_function_type() {
 }
 
 fn run_test_go_to_definition_function_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionFunctionType") {
+        return;
+    }
     let content = r"const /*constDefinition*/c: () => void;
 /*constReference*/c();
 function test(/*cbDefinition*/cb: () => void) {

@@ -14,7 +14,9 @@ pub fn test_member_list_on_this_in_class_with_privates() {
 }
 
 fn run_test_member_list_on_this_in_class_with_privates(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListOnThisInClassWithPrivates") {
+        return;
+    }
     let content = r"class C1 {
    public pubMeth() {this./**/} // test on 'this.'
    private privMeth() {}

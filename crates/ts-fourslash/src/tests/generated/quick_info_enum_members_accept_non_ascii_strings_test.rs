@@ -14,7 +14,9 @@ pub fn test_quick_info_enum_members_accept_non_ascii_strings() {
 }
 
 fn run_test_quick_info_enum_members_accept_non_ascii_strings(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoEnumMembersAcceptNonAsciiStrings") {
+        return;
+    }
     let content = r"enum Demo {
     /*Emoji*/Emoji = '🍎',
     /*Hebrew*/Hebrew = 'תפוח',

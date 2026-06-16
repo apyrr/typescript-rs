@@ -14,7 +14,9 @@ pub fn test_get_occurrences_if_else5() {
 }
 
 fn run_test_get_occurrences_if_else5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIfElse5") {
+        return;
+    }
     let content = r"if/*1*/ (true) {
     if/*2*/ (false) {
     }

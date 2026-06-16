@@ -14,7 +14,9 @@ pub fn test_semantic_modern_classification_callable_variables() {
 }
 
 fn run_test_semantic_modern_classification_callable_variables(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemanticModernClassificationCallableVariables") {
+        return;
+    }
     let content = r"class A { onEvent: () => void; }
 const x = new A().onEvent;
 const match = (s: any) => x();

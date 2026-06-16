@@ -16,7 +16,11 @@ pub fn test_completions_external_module_reference_resolution_order_in_import_dec
 fn run_test_completions_external_module_reference_resolution_order_in_import_declaration(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestCompletionsExternalModuleReferenceResolutionOrderInImportDeclaration",
+    ) {
+        return;
+    }
     let content = r#"// @Filename: externalModuleRefernceResolutionOrderInImportDeclaration_file1.ts
 export function foo() { };
 // @Filename: externalModuleRefernceResolutionOrderInImportDeclaration_file2.ts

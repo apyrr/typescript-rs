@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_iife() {
 }
 
 fn run_test_quick_info_display_parts_iife(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsIife") {
+        return;
+    }
     let content = r"// @strictNullChecks: true
 var iife = (function foo/*1*/(x, y) { return x })(12);";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

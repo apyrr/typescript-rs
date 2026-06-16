@@ -14,7 +14,9 @@ pub fn test_signature_help_call_expression_js() {
 }
 
 fn run_test_signature_help_call_expression_js(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpCallExpressionJs") {
+        return;
+    }
     let content = r"// @strict: false
 // @checkJs: true
 // @allowJs: true

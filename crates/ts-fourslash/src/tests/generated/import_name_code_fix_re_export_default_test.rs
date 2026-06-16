@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_re_export_default() {
 }
 
 fn run_test_import_name_code_fix_re_export_default(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_reExportDefault") {
+        return;
+    }
     let content = r#"// @Filename: /user.ts
 foo;
 // @Filename: /user2.ts

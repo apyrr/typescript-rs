@@ -14,7 +14,9 @@ pub fn test_completions_import_promote_type_only4() {
 }
 
 fn run_test_completions_import_promote_type_only4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImport_promoteTypeOnly4") {
+        return;
+    }
     let content = r#"// @module: es2015
 // @verbatimModuleSyntax: true
 // @Filename: /exports.ts

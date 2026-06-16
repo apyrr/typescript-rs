@@ -14,7 +14,9 @@ pub fn test_rename_private_fields1() {
 }
 
 fn run_test_rename_private_fields1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenamePrivateFields1") {
+        return;
+    }
     let content = r#"class Foo {
    [|[|{| "contextRangeIndex": 0 |}#foo|] = 1;|]
 

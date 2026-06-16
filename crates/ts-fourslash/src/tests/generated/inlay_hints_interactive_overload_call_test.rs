@@ -14,7 +14,9 @@ pub fn test_inlay_hints_interactive_overload_call() {
 }
 
 fn run_test_inlay_hints_interactive_overload_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInteractiveOverloadCall") {
+        return;
+    }
     let content = r"interface Call {
     (a: number): void
     (b: number, c: number): void

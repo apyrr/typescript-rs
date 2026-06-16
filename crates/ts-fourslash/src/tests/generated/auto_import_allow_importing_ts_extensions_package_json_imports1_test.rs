@@ -14,7 +14,9 @@ pub fn test_auto_import_allow_importing_ts_extensions_package_json_imports1() {
 }
 
 fn run_test_auto_import_allow_importing_ts_extensions_package_json_imports1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportAllowImportingTsExtensionsPackageJsonImports1") {
+        return;
+    }
     let content = r##"// @lib: es5
 // @module: node18
 // @allowImportingTsExtensions: true

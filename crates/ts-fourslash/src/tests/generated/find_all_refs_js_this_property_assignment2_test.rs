@@ -14,7 +14,9 @@ pub fn test_find_all_refs_js_this_property_assignment2() {
 }
 
 fn run_test_find_all_refs_js_this_property_assignment2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsJsThisPropertyAssignment2") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @noImplicitThis: true
 // @Filename: infer.d.ts

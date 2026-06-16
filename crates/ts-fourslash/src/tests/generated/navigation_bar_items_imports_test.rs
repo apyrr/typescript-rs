@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_imports() {
 }
 
 fn run_test_navigation_bar_items_imports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsImports") {
+        return;
+    }
     let content = r#"import d1 from "a";
 
 import { a } from "a";

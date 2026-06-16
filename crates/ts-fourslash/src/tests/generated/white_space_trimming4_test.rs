@@ -14,7 +14,9 @@ pub fn test_white_space_trimming4() {
 }
 
 fn run_test_white_space_trimming4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestWhiteSpaceTrimming4") {
+        return;
+    }
     let content = r"var re = /\w+   /*1*//;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

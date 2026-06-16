@@ -14,7 +14,9 @@ pub fn test_signature_help_implicit_constructor() {
 }
 
 fn run_test_signature_help_implicit_constructor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpImplicitConstructor") {
+        return;
+    }
     let content = r"class ImplicitConstructor {
 }
 var implicitConstructor = new ImplicitConstructor(/**/);";

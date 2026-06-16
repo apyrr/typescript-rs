@@ -14,7 +14,9 @@ pub fn test_go_to_definition_css_pattern_ambient_module() {
 }
 
 fn run_test_go_to_definition_css_pattern_ambient_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionCSSPatternAmbientModule") {
+        return;
+    }
     let content = r#"// @esModuleInterop: true
 // @Filename: index.css
 /*2a*/html { font-size: 16px; }

@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_type_parameter_in_class() {
 }
 
 fn run_test_quick_info_display_parts_type_parameter_in_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsTypeParameterInClass") {
+        return;
+    }
     let content = r#"class /*1*/c</*2*/T> {
     /*3*/constructor(/*4*/a: /*5*/T) {
     }

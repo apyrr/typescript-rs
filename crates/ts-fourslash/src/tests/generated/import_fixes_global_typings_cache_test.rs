@@ -14,7 +14,9 @@ pub fn test_import_fixes_global_typings_cache() {
 }
 
 fn run_test_import_fixes_global_typings_cache(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportFixesGlobalTypingsCache") {
+        return;
+    }
     let content = r#"// @Filename: /project/tsconfig.json
  { "compilerOptions": { "allowJs": true, "checkJs": true, "module": "commonjs" } }
 // @Filename: /home/src/Library/Caches/typescript/node_modules/@types/react-router-dom/package.json

@@ -14,7 +14,9 @@ pub fn test_auto_import_package_json_imports_js() {
 }
 
 fn run_test_auto_import_package_json_imports_js(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportPackageJsonImports_js") {
+        return;
+    }
     let content = r##"// @module: node18
 // @Filename: /package.json
 {

@@ -14,7 +14,9 @@ pub fn test_navigation_bar_with_local_variables() {
 }
 
 fn run_test_navigation_bar_with_local_variables(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarWithLocalVariables") {
+        return;
+    }
     let content = r#"function x(){
 	const x = Object()
 	x.foo = ""

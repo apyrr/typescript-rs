@@ -14,7 +14,9 @@ pub fn test_format_space_after_implements_extends() {
 }
 
 fn run_test_format_space_after_implements_extends(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatSpaceAfterImplementsExtends") {
+        return;
+    }
     let content = r"class C1 implements Array<string>{
 }
 

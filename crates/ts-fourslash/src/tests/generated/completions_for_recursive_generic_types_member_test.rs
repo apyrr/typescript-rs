@@ -14,7 +14,9 @@ pub fn test_completions_for_recursive_generic_types_member() {
 }
 
 fn run_test_completions_for_recursive_generic_types_member(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsForRecursiveGenericTypesMember") {
+        return;
+    }
     let content = r"export class TestBase<T extends TestBase<T>>
 {
     public publicMethod(p: any): void {}

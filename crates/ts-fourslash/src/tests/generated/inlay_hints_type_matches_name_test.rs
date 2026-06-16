@@ -14,7 +14,9 @@ pub fn test_inlay_hints_type_matches_name() {
 }
 
 fn run_test_inlay_hints_type_matches_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsTypeMatchesName") {
+        return;
+    }
     let content = r"type Client = {};
 function getClient(): Client { return {}; };
 const client = getClient();";

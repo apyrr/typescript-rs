@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_empty_type_literal() {
 }
 
 fn run_test_code_fix_class_implement_interface_empty_type_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceEmptyTypeLiteral") {
+        return;
+    }
     let content = r"
 interface I {
     x: {};

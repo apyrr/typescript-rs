@@ -14,7 +14,9 @@ pub fn test_string_literal_completions_in_jsx_attribute_initializer() {
 }
 
 fn run_test_string_literal_completions_in_jsx_attribute_initializer(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestStringLiteralCompletionsInJsxAttributeInitializer") {
+        return;
+    }
     let content = r#"// @jsx: preserve
 // @filename: /a.tsx
 type Props = { a: number } | { b: "somethingelse", c: 0 | 1 };

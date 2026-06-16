@@ -14,7 +14,9 @@ pub fn test_format_type_operation() {
 }
 
 fn run_test_format_type_operation(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatTypeOperation") {
+        return;
+    }
     let content = r"type   Union = number  |  {}/*formatBarOperator*/
 /*indent*/
 |string/*autoformat*/

@@ -14,7 +14,9 @@ pub fn test_this_predicate_function_quick_info01() {
 }
 
 fn run_test_this_predicate_function_quick_info01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestThisPredicateFunctionQuickInfo01") {
+        return;
+    }
     let content = r#"class FileSystemObject {
     /*1*/isFile(): this is Item {
         return this instanceof Item;

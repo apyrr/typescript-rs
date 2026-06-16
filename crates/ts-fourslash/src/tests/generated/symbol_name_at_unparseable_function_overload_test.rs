@@ -14,7 +14,9 @@ pub fn test_symbol_name_at_unparseable_function_overload() {
 }
 
 fn run_test_symbol_name_at_unparseable_function_overload(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSymbolNameAtUnparseableFunctionOverload") {
+        return;
+    }
     let content = r"class TestClass {
     public function foo(x: string): void;
     public function foo(): void;

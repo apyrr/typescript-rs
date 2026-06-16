@@ -14,7 +14,9 @@ pub fn test_get_outlining_for_objects_in_array() {
 }
 
 fn run_test_get_outlining_for_objects_in_array(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOutliningForObjectsInArray") {
+        return;
+    }
     let content = r"const x =[| [
     [|{ a: 0 }|],
     [|{ b: 1 }|],

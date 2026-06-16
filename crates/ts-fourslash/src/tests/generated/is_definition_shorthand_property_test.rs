@@ -14,7 +14,9 @@ pub fn test_is_definition_shorthand_property() {
 }
 
 fn run_test_is_definition_shorthand_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIsDefinitionShorthandProperty") {
+        return;
+    }
     let content = r"const /*1*/x = 1;
 const y: { /*2*/x: number } = { /*3*/x };";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

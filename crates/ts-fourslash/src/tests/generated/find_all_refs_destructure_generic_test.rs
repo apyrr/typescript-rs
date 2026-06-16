@@ -14,7 +14,9 @@ pub fn test_find_all_refs_destructure_generic() {
 }
 
 fn run_test_find_all_refs_destructure_generic(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsDestructureGeneric") {
+        return;
+    }
     let content = r"interface I<T> {
     /*0*/x: boolean;
 }

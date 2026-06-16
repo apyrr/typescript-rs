@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_enum1() {
 }
 
 fn run_test_quick_info_display_parts_enum1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsEnum1") {
+        return;
+    }
     let content = r"enum /*1*/E {
     /*2*/e1,
     /*3*/e2 = 10,

@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_using() {
 }
 
 fn run_test_quick_info_display_parts_using(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsUsing") {
+        return;
+    }
     let content = r#"// @lib: esnext
 using a/*a*/ = "a";
 const f = async () => {

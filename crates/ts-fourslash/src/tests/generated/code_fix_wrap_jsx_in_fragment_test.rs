@@ -14,7 +14,9 @@ pub fn test_code_fix_wrap_jsx_in_fragment() {
 }
 
 fn run_test_code_fix_wrap_jsx_in_fragment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixWrapJsxInFragment") {
+        return;
+    }
     let content = r"// @jsx: react
 // @Filename: /a.tsx
 [|<a /><a />|]";

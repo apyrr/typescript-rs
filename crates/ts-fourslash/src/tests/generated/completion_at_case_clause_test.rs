@@ -14,7 +14,9 @@ pub fn test_completion_at_case_clause() {
 }
 
 fn run_test_completion_at_case_clause(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionAtCaseClause") {
+        return;
+    }
     let content = r"// @lib: es5
 case /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

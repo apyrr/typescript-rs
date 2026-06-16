@@ -14,7 +14,9 @@ pub fn test_get_occurrences_export3() {
 }
 
 fn run_test_get_occurrences_export3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesExport3") {
+        return;
+    }
     let content = r"
 declare var x;
 [|export|] declare var y, z;

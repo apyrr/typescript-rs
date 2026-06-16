@@ -14,7 +14,9 @@ pub fn test_tsx_completion8() {
 }
 
 fn run_test_tsx_completion8(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxCompletion8") {
+        return;
+    }
     let content = r"//@Filename: file.tsx
 declare namespace JSX {
     interface Element { }

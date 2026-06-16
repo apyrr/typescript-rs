@@ -14,7 +14,9 @@ pub fn test_document_highlights_40082() {
 }
 
 fn run_test_document_highlights_40082(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlights_40082") {
+        return;
+    }
     let content = r"// @checkJs: true
 export = (state, messages) => {
    export [|default|] {

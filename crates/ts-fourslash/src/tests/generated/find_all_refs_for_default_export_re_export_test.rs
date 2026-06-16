@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_default_export_re_export() {
 }
 
 fn run_test_find_all_refs_for_default_export_re_export(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForDefaultExport_reExport") {
+        return;
+    }
     let content = r#"// @Filename: /export.ts
 const /*0*/foo = 1;
 export default /*1*/foo;

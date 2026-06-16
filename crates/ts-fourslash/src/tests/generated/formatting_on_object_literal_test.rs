@@ -14,7 +14,9 @@ pub fn test_formatting_on_object_literal() {
 }
 
 fn run_test_formatting_on_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnObjectLiteral") {
+        return;
+    }
     let content = r#"var x = /*1*/{foo:/*2*/ 1,
 bar: "tt",/*3*/
 boo: /*4*/1 + 5}/*5*/;

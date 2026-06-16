@@ -14,7 +14,9 @@ pub fn test_smart_selection_function_params1() {
 }
 
 fn run_test_smart_selection_function_params1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_functionParams1") {
+        return;
+    }
     let content = r"function f(/*1*/p, /*2*/q?, /*3*/...r: any[] = []) {}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_selection_ranges(t, &[]);

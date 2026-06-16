@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_local_07() {
 }
 
 fn run_test_go_to_implementation_local_07(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationLocal_07") {
+        return;
+    }
     let content = r"declare function [|someFunction|](): () => void;
 someFun/*reference*/ction();";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_order2() {
 }
 
 fn run_test_import_name_code_fix_order2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_order2") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 export const _aB: number;
 export const _Ab: number;

@@ -14,7 +14,9 @@ pub fn test_format_document_with_trivia() {
 }
 
 fn run_test_format_document_with_trivia(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatDocumentWithTrivia") {
+        return;
+    }
     let content = r"  
 // 1 below   
     

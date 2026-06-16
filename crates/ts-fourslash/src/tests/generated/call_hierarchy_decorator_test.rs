@@ -14,7 +14,9 @@ pub fn test_call_hierarchy_decorator() {
 }
 
 fn run_test_call_hierarchy_decorator(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCallHierarchyDecorator") {
+        return;
+    }
     let content = r"// @experimentalDecorators: true
 @bar
 class Foo {

@@ -14,7 +14,9 @@ pub fn test_quick_info_for_named_tuple_member() {
 }
 
 fn run_test_quick_info_for_named_tuple_member(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForNamedTupleMember") {
+        return;
+    }
     let content = r"type foo = [/**/x: string];";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_quick_info_at(t, "", "string", "");

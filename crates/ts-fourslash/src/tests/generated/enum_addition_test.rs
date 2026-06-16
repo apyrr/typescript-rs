@@ -14,7 +14,9 @@ pub fn test_enum_addition() {
 }
 
 fn run_test_enum_addition(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestEnumAddition") {
+        return;
+    }
     let content = r"namespace m { export enum Color { Red } }
 var /**/t = m.Color.Red + 1;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

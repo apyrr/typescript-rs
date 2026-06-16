@@ -14,7 +14,9 @@ pub fn test_auto_import_type_only_preferred2() {
 }
 
 fn run_test_auto_import_type_only_preferred2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportTypeOnlyPreferred2") {
+        return;
+    }
     let content = r#"// @Filename: /node_modules/react/index.d.ts
 export interface ComponentType {}
 export interface ComponentProps {}

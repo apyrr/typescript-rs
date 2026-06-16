@@ -14,7 +14,9 @@ pub fn test_rename_destructuring_declaration_in_for() {
 }
 
 fn run_test_rename_destructuring_declaration_in_for(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameDestructuringDeclarationInFor") {
+        return;
+    }
     let content = r#"interface I {
     [|[|{| "contextRangeIndex": 0 |}property1|]: number;|]
     property2: string;

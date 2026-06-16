@@ -14,13 +14,15 @@ pub fn test_completion_list_in_type_literal_in_type_parameter14() {
 }
 
 fn run_test_completion_list_in_type_literal_in_type_parameter14(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"interface Foo {
+    if should_skip_if_failing("TestCompletionListInTypeLiteralInTypeParameter14") {
+        return;
+    }
+    let content = r"interface Foo {
    one: string;
    two: number;
 }
 declare function f<T extends Foo>(x: TemplateStringsArray): void;
-f<{/*0*/}>` + "`" + `` + "`" + `;"#;
+f<{/*0*/}>``;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(
         t,

@@ -14,7 +14,9 @@ pub fn test_smart_indent_on_unclosed_index_signature01() {
 }
 
 fn run_test_smart_indent_on_unclosed_index_signature01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentOnUnclosedIndexSignature01") {
+        return;
+    }
     let content = r#"class C {
 [x: string
 {| "indent": 4 |}

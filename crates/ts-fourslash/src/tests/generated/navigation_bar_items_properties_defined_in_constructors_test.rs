@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_properties_defined_in_constructors() {
 }
 
 fn run_test_navigation_bar_items_properties_defined_in_constructors(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsPropertiesDefinedInConstructors") {
+        return;
+    }
     let content = r"class List<T> {
     constructor(public a: boolean, private b: T, readonly c: string, d: number) {
         var local = 0;

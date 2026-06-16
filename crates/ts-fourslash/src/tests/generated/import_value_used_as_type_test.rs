@@ -14,7 +14,9 @@ pub fn test_import_value_used_as_type() {
 }
 
 fn run_test_import_value_used_as_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportValueUsedAsType") {
+        return;
+    }
     let content = r"/**/
 namespace A {
     export var X;

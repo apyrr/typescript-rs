@@ -14,7 +14,9 @@ pub fn test_regex_detection() {
 }
 
 fn run_test_regex_detection(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRegexDetection") {
+        return;
+    }
     let content = r" /*1*/15 / /*2*/Math.min(61 / /*3*/42, 32 / 15) / /*4*/15;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

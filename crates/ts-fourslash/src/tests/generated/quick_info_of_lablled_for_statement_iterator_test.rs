@@ -14,7 +14,9 @@ pub fn test_quick_info_of_lablled_for_statement_iterator() {
 }
 
 fn run_test_quick_info_of_lablled_for_statement_iterator(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOfLablledForStatementIterator") {
+        return;
+    }
     let content = r"label1: for(var /**/i = 0; i < 1; i++) { }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

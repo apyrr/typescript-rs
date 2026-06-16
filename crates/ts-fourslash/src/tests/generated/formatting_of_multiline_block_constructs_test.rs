@@ -14,7 +14,9 @@ pub fn test_formatting_of_multiline_block_constructs() {
 }
 
 fn run_test_formatting_of_multiline_block_constructs(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOfMultilineBlockConstructs") {
+        return;
+    }
     let content = r"namespace InternalModule/*1*/
 {
 }

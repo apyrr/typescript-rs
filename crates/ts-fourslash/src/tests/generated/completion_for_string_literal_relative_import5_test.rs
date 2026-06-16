@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal_relative_import5() {
 }
 
 fn run_test_completion_for_string_literal_relative_import5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteralRelativeImport5") {
+        return;
+    }
     let content = r#"// @rootDirs: /repo/src1,/repo/src2/,/repo/generated1,/repo/generated2/
 // @Filename: /dir/secret_file.ts
 /*secret_file*/

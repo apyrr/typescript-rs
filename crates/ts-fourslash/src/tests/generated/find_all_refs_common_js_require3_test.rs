@@ -14,7 +14,9 @@ pub fn test_find_all_refs_common_js_require3() {
 }
 
 fn run_test_find_all_refs_common_js_require3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsCommonJsRequire3") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @Filename: /a.js
 function f() { }

@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_server() {
 }
 
 fn run_test_quickinfo_verbosity_server(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityServer") {
+        return;
+    }
     let content = r"// @lib: es5
 type FooType = string | number
 const foo/*a*/: FooType = 1";

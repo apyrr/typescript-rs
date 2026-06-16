@@ -14,7 +14,9 @@ pub fn test_path_completions_package_json_imports_ignore_matching_node_module2()
 }
 
 fn run_test_path_completions_package_json_imports_ignore_matching_node_module2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestPathCompletionsPackageJsonImportsIgnoreMatchingNodeModule2") {
+        return;
+    }
     let content = r##"// @module: node18
 // @Filename: /package.json
 {

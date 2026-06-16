@@ -14,7 +14,9 @@ pub fn test_incremental_parsing_insert_into_method1() {
 }
 
 fn run_test_incremental_parsing_insert_into_method1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIncrementalParsingInsertIntoMethod1") {
+        return;
+    }
     let content = r"class C {
     public foo1() { }
     public foo2() {

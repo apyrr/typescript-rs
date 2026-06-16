@@ -14,7 +14,9 @@ pub fn test_goto_definition_constructor_function() {
 }
 
 fn run_test_goto_definition_constructor_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGotoDefinitionConstructorFunction") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @checkJs: true
 // @noEmit: true

@@ -14,11 +14,13 @@ pub fn test_white_space_trimming2() {
 }
 
 fn run_test_white_space_trimming2(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"let noSubTemplate = ` + "`" + `/*    /*1*/` + "`" + `;
-let templateHead = ` + "`" + `/*    /*2*/${1 + 2}` + "`" + `;
-let templateMiddle = ` + "`" + `/*    ${1 + 2    /*3*/}` + "`" + `;
-let templateTail = ` + "`" + `/*    ${1 + 2}    /*4*/` + "`" + `;"#;
+    if should_skip_if_failing("TestWhiteSpaceTrimming2") {
+        return;
+    }
+    let content = r"let noSubTemplate = `/*    /*1*/`;
+let templateHead = `/*    /*2*/${1 + 2}`;
+let templateMiddle = `/*    ${1 + 2    /*3*/}`;
+let templateTail = `/*    ${1 + 2}    /*4*/`;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");
     f.insert(t, "\n");

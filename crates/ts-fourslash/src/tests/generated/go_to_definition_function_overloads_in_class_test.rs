@@ -14,7 +14,9 @@ pub fn test_go_to_definition_function_overloads_in_class() {
 }
 
 fn run_test_go_to_definition_function_overloads_in_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionFunctionOverloadsInClass") {
+        return;
+    }
     let content = r#"class clsInOverload {
     static fnOverload();
     static [|/*staticFunctionOverload*/fnOverload|](foo: string);

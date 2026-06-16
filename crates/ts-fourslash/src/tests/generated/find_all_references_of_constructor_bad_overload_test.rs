@@ -14,7 +14,9 @@ pub fn test_find_all_references_of_constructor_bad_overload() {
 }
 
 fn run_test_find_all_references_of_constructor_bad_overload(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllReferencesOfConstructor_badOverload") {
+        return;
+    }
     let content = r"class C {
     /*1*/constructor(n: number);
     /*2*/constructor(){}

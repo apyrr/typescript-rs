@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_local_02() {
 }
 
 fn run_test_go_to_implementation_local_02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationLocal_02") {
+        return;
+    }
     let content = r"const x = { [|hello|]: () => {} };
 
 x.he/*function_call*/llo();

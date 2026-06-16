@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_no_error_truncation1() {
 }
 
 fn run_test_quickinfo_verbosity_no_error_truncation1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityNoErrorTruncation1") {
+        return;
+    }
     let content = r"// @noErrorTruncation: true
 type /*1*/T = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 0,

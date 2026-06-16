@@ -14,7 +14,9 @@ pub fn test_format_class_expression() {
 }
 
 fn run_test_format_class_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatClassExpression") {
+        return;
+    }
     let content = r"class Thing extends (
     class/*classOpenBrace*/
     {

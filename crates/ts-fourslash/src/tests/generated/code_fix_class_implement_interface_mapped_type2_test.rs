@@ -14,10 +14,12 @@ pub fn test_code_fix_class_implement_interface_mapped_type2() {
 }
 
 fn run_test_code_fix_class_implement_interface_mapped_type2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceMappedType2") {
+        return;
+    }
     let content = r#"type ListenerTemplate<T, S extends string, I extends string = "${1}"> = {
     [K in keyof T as K extends string
-        ? S extends ` + "`" + `${infer F}${I}${infer R}` + "`" + ` ? ` + "`" + `${F}${K}${R}` + "`" + ` : K : K]
+        ? S extends `${infer F}${I}${infer R}` ? `${F}${K}${R}` : K : K]
         : (listener: (payload: T[K]) => void) => void;
 };
 type ListenActionable<E> = ListenerTemplate<E, "add*Listener" | "remove*Listener", "*">;

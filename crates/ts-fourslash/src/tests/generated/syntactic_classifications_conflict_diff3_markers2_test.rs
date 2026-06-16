@@ -14,7 +14,9 @@ pub fn test_syntactic_classifications_conflict_diff3_markers2() {
 }
 
 fn run_test_syntactic_classifications_conflict_diff3_markers2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSyntacticClassificationsConflictDiff3Markers2") {
+        return;
+    }
     let content = r"<<<<<<< HEAD
 class C { }
 ||||||| merged common ancestors

@@ -14,7 +14,9 @@ pub fn test_broken_class_error_recovery() {
 }
 
 fn run_test_broken_class_error_recovery(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestBrokenClassErrorRecovery") {
+        return;
+    }
     let content = r"class Foo {
     constructor() { var x = [1, 2, 3 }
 }

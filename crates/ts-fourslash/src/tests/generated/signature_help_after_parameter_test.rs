@@ -14,7 +14,9 @@ pub fn test_signature_help_after_parameter() {
 }
 
 fn run_test_signature_help_after_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpAfterParameter") {
+        return;
+    }
     let content = r"type Type = (a, b, c) => void
 const a: Type = (a/*1*/, b/*2*/) => {}
 const b: Type = function (a/*3*/, b/*4*/) {}

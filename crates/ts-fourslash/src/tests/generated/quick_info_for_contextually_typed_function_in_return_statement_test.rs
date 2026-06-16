@@ -14,7 +14,9 @@ pub fn test_quick_info_for_contextually_typed_function_in_return_statement() {
 }
 
 fn run_test_quick_info_for_contextually_typed_function_in_return_statement(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForContextuallyTypedFunctionInReturnStatement") {
+        return;
+    }
     let content = r"interface Accumulator {
     clear(): void;
     add(x: number): void;

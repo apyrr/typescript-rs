@@ -14,7 +14,9 @@ pub fn test_completions_is_type_only_completion() {
 }
 
 fn run_test_completions_is_type_only_completion(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsIsTypeOnlyCompletion") {
+        return;
+    }
     let content = r#"// @noLib: true
 // @Filename: /abc.ts
 export type Abc = number;

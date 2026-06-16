@@ -14,7 +14,9 @@ pub fn test_formatting_jsx_texts4() {
 }
 
 fn run_test_formatting_jsx_texts4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingJsxTexts4") {
+        return;
+    }
     let content = r#"//@Filename: file.tsx
 function foo() {
 const a = <ns: foobar   x : test1   x :test2="string"  x:test3={true?1:0}  />;

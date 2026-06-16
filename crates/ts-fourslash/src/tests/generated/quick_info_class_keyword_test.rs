@@ -14,7 +14,9 @@ pub fn test_quick_info_class_keyword() {
 }
 
 fn run_test_quick_info_class_keyword(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoClassKeyword") {
+        return;
+    }
     let content = r"[1].forEach(cla/*1*/ss {});
 [1].forEach(cla/*2*/ss OK{});";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

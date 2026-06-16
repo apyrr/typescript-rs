@@ -14,7 +14,9 @@ pub fn test_jsx_element_extends_no_crash2() {
 }
 
 fn run_test_jsx_element_extends_no_crash2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsxElementExtendsNoCrash2") {
+        return;
+    }
     let content = r"// @filename: index.tsx
 <T extends/>";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

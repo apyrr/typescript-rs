@@ -14,7 +14,9 @@ pub fn test_go_to_definition_script_import_server() {
 }
 
 fn run_test_go_to_definition_script_import_server(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionScriptImportServer") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @Filename: /home/src/workspaces/project/scriptThing.ts
 /*1d*/console.log("woooo side effects")

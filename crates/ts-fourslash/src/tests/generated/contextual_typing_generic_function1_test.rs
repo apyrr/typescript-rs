@@ -14,7 +14,9 @@ pub fn test_contextual_typing_generic_function1() {
 }
 
 fn run_test_contextual_typing_generic_function1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestContextualTypingGenericFunction1") {
+        return;
+    }
     let content = r"var obj: { f<T>(x: T): T } = { f: <S>(/*1*/x) => x };
 var obj2: <T>(x: T) => T = <S>(/*2*/x) => x;
 

@@ -14,7 +14,9 @@ pub fn test_outlining_spans_for_arrow_function_body() {
 }
 
 fn run_test_outlining_spans_for_arrow_function_body(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOutliningSpansForArrowFunctionBody") {
+        return;
+    }
     let content = r#"() => 42;
 () => ( 42 );
 () =>[| {

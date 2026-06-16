@@ -14,7 +14,9 @@ pub fn test_find_references_jsx_tag_name() {
 }
 
 fn run_test_find_references_jsx_tag_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindReferencesJSXTagName") {
+        return;
+    }
     let content = r#"// @Filename: index.tsx
 import { /*1*/SubmissionComp } from "./RedditSubmission"
 function displaySubreddit(subreddit: string) {

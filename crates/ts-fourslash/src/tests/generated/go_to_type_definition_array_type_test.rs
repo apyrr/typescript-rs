@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition_array_type() {
 }
 
 fn run_test_go_to_type_definition_array_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinition_arrayType") {
+        return;
+    }
     let content = r"// @lib: es5
 type User = { name: string };
 declare const users: User[]

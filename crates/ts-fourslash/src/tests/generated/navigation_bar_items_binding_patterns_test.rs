@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_binding_patterns() {
 }
 
 fn run_test_navigation_bar_items_binding_patterns(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsBindingPatterns") {
+        return;
+    }
     let content = r"'use strict'
 var foo, {}
 var bar, []

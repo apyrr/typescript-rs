@@ -14,7 +14,9 @@ pub fn test_quick_info_narrowed_type_of_alias_symbol() {
 }
 
 fn run_test_quick_info_narrowed_type_of_alias_symbol(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoNarrowedTypeOfAliasSymbol") {
+        return;
+    }
     let content = r#"// @strict: true
 // @Filename: modules.ts
 export declare const someEnv: string | undefined;

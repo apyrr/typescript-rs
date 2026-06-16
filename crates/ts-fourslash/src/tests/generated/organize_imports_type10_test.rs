@@ -14,7 +14,9 @@ pub fn test_organize_imports_type10() {
 }
 
 fn run_test_organize_imports_type10(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsType10") {
+        return;
+    }
     let content = r#"import {
     type Type1,
     type Type2,

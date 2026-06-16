@@ -14,7 +14,9 @@ pub fn test_tsx_completion15() {
 }
 
 fn run_test_tsx_completion15(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxCompletion15") {
+        return;
+    }
     let content = r"//@module: commonjs
 //@jsx: preserve
 declare namespace JSX {

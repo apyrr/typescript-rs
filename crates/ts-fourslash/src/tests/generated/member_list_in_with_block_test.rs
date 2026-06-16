@@ -14,7 +14,9 @@ pub fn test_member_list_in_with_block() {
 }
 
 fn run_test_member_list_in_with_block(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListInWithBlock") {
+        return;
+    }
     let content = r"class c {
     static x: number;
     public foo() {

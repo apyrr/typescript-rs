@@ -14,7 +14,9 @@ pub fn test_get_edits_for_file_rename_js_simple() {
 }
 
 fn run_test_get_edits_for_file_rename_js_simple(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetEditsForFileRename_js_simple") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: /a.js
 import b from "./b.js";

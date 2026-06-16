@@ -14,7 +14,9 @@ pub fn test_rename_alias2() {
 }
 
 fn run_test_rename_alias2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameAlias2") {
+        return;
+    }
     let content = r#"[|module [|{| "contextRangeIndex": 0 |}SomeModule|] { export class SomeClass { } }|]
 import M = [|SomeModule|];
 import C = M.SomeClass;"#;

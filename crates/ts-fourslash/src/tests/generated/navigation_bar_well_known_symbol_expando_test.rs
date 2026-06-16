@@ -14,7 +14,9 @@ pub fn test_navigation_bar_well_known_symbol_expando() {
 }
 
 fn run_test_navigation_bar_well_known_symbol_expando(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarWellKnownSymbolExpando") {
+        return;
+    }
     let content = r"function f() {}
 f[Symbol.iterator] = function() {}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

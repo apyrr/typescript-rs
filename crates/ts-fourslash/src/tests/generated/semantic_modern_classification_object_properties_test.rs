@@ -14,7 +14,9 @@ pub fn test_semantic_modern_classification_object_properties() {
 }
 
 fn run_test_semantic_modern_classification_object_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemanticModernClassificationObjectProperties") {
+        return;
+    }
     let content = r"let x = 1, y = 1;
 const a1 = { e: 1 };
 var a2 = { x };";

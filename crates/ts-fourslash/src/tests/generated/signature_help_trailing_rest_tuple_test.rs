@@ -14,7 +14,9 @@ pub fn test_signature_help_trailing_rest_tuple() {
 }
 
 fn run_test_signature_help_trailing_rest_tuple(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpTrailingRestTuple") {
+        return;
+    }
     let content = r#"export function leading(allCaps: boolean, ...names: string[]): void {
 }
 

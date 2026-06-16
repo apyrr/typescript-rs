@@ -14,7 +14,9 @@ pub fn test_get_outlining_spans_depth_else_if() {
 }
 
 fn run_test_get_outlining_spans_depth_else_if(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOutliningSpansDepthElseIf") {
+        return;
+    }
     let content = r"if (1)[| {
     1;
 }|] else if (1)[| {

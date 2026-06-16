@@ -14,7 +14,9 @@ pub fn test_node_next_path_completions() {
 }
 
 fn run_test_node_next_path_completions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNodeNextPathCompletions") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/node_modules/dependency/package.json
 {
     "type": "module",

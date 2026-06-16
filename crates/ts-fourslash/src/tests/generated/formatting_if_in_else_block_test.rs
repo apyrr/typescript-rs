@@ -14,7 +14,9 @@ pub fn test_formatting_if_in_else_block() {
 }
 
 fn run_test_formatting_if_in_else_block(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingIfInElseBlock") {
+        return;
+    }
     let content = r"if (true) {
 }
 else {

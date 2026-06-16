@@ -14,7 +14,9 @@ pub fn test_generic_function_signature_help3_multi_file() {
 }
 
 fn run_test_generic_function_signature_help3_multi_file(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericFunctionSignatureHelp3MultiFile") {
+        return;
+    }
     let content = r"// @Filename: genericFunctionSignatureHelp_0.ts
 function foo1<T>(x: number, callback: (y1: T) => number) { }
 // @Filename: genericFunctionSignatureHelp_1.ts

@@ -14,7 +14,9 @@ pub fn test_recursive_internal_module_import() {
 }
 
 fn run_test_recursive_internal_module_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRecursiveInternalModuleImport") {
+        return;
+    }
     let content = r"namespace M {
     import A = B;
     import /**/B = A;

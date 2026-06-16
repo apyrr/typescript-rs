@@ -14,7 +14,9 @@ pub fn test_tsx_rename4() {
 }
 
 fn run_test_tsx_rename4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxRename4") {
+        return;
+    }
     let content = r#"// @jsx: preserve
 //@Filename: file.tsx
 declare namespace JSX {

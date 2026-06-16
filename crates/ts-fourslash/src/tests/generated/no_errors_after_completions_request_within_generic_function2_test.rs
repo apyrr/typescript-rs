@@ -14,7 +14,9 @@ pub fn test_no_errors_after_completions_request_within_generic_function2() {
 }
 
 fn run_test_no_errors_after_completions_request_within_generic_function2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNoErrorsAfterCompletionsRequestWithinGenericFunction2") {
+        return;
+    }
     let content = r"// @strict: true
 
 // repro from #50818#issuecomment-1278324638

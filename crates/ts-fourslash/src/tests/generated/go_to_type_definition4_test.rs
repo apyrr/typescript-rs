@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition4() {
 }
 
 fn run_test_go_to_type_definition4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinition4") {
+        return;
+    }
     let content = r#"// @Filename: foo.ts
 export type /*def0*/T = string;
 export const /*def1*/T = "";

@@ -14,7 +14,9 @@ pub fn test_import_completions_package_json_exports_trailing_slash1() {
 }
 
 fn run_test_import_completions_package_json_exports_trailing_slash1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportCompletionsPackageJsonExportsTrailingSlash1") {
+        return;
+    }
     let content = r#"// @module: node18
 // @moduleResolution: nodenext
 // @Filename: /node_modules/pkg/package.json

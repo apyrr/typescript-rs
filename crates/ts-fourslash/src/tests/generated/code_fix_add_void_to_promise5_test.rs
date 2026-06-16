@@ -14,7 +14,9 @@ pub fn test_code_fix_add_void_to_promise5() {
 }
 
 fn run_test_code_fix_add_void_to_promise5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddVoidToPromise5") {
+        return;
+    }
     let content = r"// @target: esnext
 // @lib: es2015
 // @strict: true

@@ -14,7 +14,9 @@ pub fn test_error_in_incomplete_method_in_object_literal() {
 }
 
 fn run_test_error_in_incomplete_method_in_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestErrorInIncompleteMethodInObjectLiteral") {
+        return;
+    }
     let content = r"var x: { f(): string } = { f( }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_number_of_errors_in_current_file(1);

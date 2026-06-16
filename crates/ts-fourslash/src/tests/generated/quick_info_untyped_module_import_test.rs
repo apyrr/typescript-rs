@@ -14,7 +14,9 @@ pub fn test_quick_info_untyped_module_import() {
 }
 
 fn run_test_quick_info_untyped_module_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoUntypedModuleImport") {
+        return;
+    }
     let content = r#"// @strict: false
 // @Filename: node_modules/foo/index.js
  /*index*/{}

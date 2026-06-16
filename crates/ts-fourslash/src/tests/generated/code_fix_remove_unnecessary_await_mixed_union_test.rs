@@ -14,7 +14,9 @@ pub fn test_code_fix_remove_unnecessary_await_mixed_union() {
 }
 
 fn run_test_code_fix_remove_unnecessary_await_mixed_union(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixRemoveUnnecessaryAwait_mixedUnion") {
+        return;
+    }
     let content = r"// @target: esnext
 async function fn1(a: Promise<void> | void) {
   await a;

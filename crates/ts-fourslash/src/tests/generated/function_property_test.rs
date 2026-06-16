@@ -14,7 +14,9 @@ pub fn test_function_property() {
 }
 
 fn run_test_function_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFunctionProperty") {
+        return;
+    }
     let content = r"var a = {
     x(a: number) { }
 };

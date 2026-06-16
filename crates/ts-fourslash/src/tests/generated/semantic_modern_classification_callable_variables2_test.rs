@@ -14,7 +14,9 @@ pub fn test_semantic_modern_classification_callable_variables2() {
 }
 
 fn run_test_semantic_modern_classification_callable_variables2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemanticModernClassificationCallableVariables2") {
+        return;
+    }
     let content = r#"import "node";
 var fs = require("fs")
 require.resolve('react');

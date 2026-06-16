@@ -14,7 +14,9 @@ pub fn test_completions_class_member_import_type_node_parameter1() {
 }
 
 fn run_test_completions_class_member_import_type_node_parameter1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsClassMemberImportTypeNodeParameter1") {
+        return;
+    }
     let content = r#"// @module: node18
 // @Filename: /generation.d.ts
 export type GenerationConfigType = { max_length?: number };

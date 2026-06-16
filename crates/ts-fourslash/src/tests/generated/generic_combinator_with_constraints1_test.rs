@@ -14,7 +14,9 @@ pub fn test_generic_combinator_with_constraints1() {
 }
 
 fn run_test_generic_combinator_with_constraints1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericCombinatorWithConstraints1") {
+        return;
+    }
     let content = r"function apply<T, U extends Date>(source: T[], selector: (x: T) => U) {
     var /*1*/xs = source.map(selector); // any[]
     var /*2*/xs2 = source.map((x: T, a, b): U => { return null }); // any[] 

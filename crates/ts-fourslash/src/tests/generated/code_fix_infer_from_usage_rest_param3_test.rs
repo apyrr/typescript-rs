@@ -14,7 +14,9 @@ pub fn test_code_fix_infer_from_usage_rest_param3() {
 }
 
 fn run_test_code_fix_infer_from_usage_rest_param3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixInferFromUsageRestParam3") {
+        return;
+    }
     let content = r"// @noImplicitAny: true
 function f(a: number, [|...rest |]){
     a;

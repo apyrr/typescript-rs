@@ -14,7 +14,9 @@ pub fn test_references_for_inherited_properties9() {
 }
 
 fn run_test_references_for_inherited_properties9(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForInheritedProperties9") {
+        return;
+    }
     let content = r"class D extends C {
     /*1*/prop1: string;
 }

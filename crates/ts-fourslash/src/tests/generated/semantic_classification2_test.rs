@@ -14,7 +14,9 @@ pub fn test_semantic_classification2() {
 }
 
 fn run_test_semantic_classification2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemanticClassification2") {
+        return;
+    }
     let content = r"interface /*0*/Thing {
     toExponential(): number;
 }

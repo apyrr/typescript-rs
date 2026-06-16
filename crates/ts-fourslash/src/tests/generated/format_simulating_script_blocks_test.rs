@@ -14,7 +14,9 @@ pub fn test_format_simulating_script_blocks() {
 }
 
 fn run_test_format_simulating_script_blocks(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatSimulatingScriptBlocks") {
+        return;
+    }
     let content = r#"/* BEGIN EXTERNAL SOURCE */
 /*begin5*/
                         var a = 1;

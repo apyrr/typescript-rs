@@ -14,7 +14,9 @@ pub fn test_smart_selection_behind_caret() {
 }
 
 fn run_test_smart_selection_behind_caret(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_behindCaret") {
+        return;
+    }
     let content = r"let/**/ x: string";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_selection_ranges(t, &[]);

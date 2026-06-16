@@ -14,7 +14,9 @@ pub fn test_go_to_definition_return1() {
 }
 
 fn run_test_go_to_definition_return1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionReturn1") {
+        return;
+    }
     let content = r"function /*end*/foo() {
     [|/*start*/return|] 10;
 }";

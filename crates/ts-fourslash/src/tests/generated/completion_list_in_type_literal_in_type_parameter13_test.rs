@@ -14,7 +14,9 @@ pub fn test_completion_list_in_type_literal_in_type_parameter13() {
 }
 
 fn run_test_completion_list_in_type_literal_in_type_parameter13(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInTypeLiteralInTypeParameter13") {
+        return;
+    }
     let content = r"// @jsx: preserve
 // @filename: a.tsx
 interface Foo {

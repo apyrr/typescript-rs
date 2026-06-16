@@ -14,7 +14,9 @@ pub fn test_overload_object_literal_crash() {
 }
 
 fn run_test_overload_object_literal_crash(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOverloadObjectLiteralCrash") {
+        return;
+    }
     let content = r#"interface Foo {
     extend<T>(...objs: any[]): T;
     extend<T>(deep, target: T): T;

@@ -14,7 +14,9 @@ pub fn test_member_list_in_with_block3() {
 }
 
 fn run_test_member_list_in_with_block3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListInWithBlock3") {
+        return;
+    }
     let content = r"var x = { a: 0 };
 with(x./*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

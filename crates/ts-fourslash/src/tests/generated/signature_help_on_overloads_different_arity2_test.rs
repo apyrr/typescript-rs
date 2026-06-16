@@ -14,7 +14,9 @@ pub fn test_signature_help_on_overloads_different_arity2() {
 }
 
 fn run_test_signature_help_on_overloads_different_arity2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpOnOverloadsDifferentArity2") {
+        return;
+    }
     let content = r"declare function f(s: string);
 declare function f(n: number);
 declare function f(s: string, b: boolean);

@@ -14,7 +14,9 @@ pub fn test_contextual_typing_return_expressions() {
 }
 
 fn run_test_contextual_typing_return_expressions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestContextualTypingReturnExpressions") {
+        return;
+    }
     let content = r"interface A { }
 var f44: (x: A) => (y: A) => A = /*1*/x => /*2*/y => /*3*/x;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

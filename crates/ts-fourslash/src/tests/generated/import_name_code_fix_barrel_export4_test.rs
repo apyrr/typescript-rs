@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_barrel_export4() {
 }
 
 fn run_test_import_name_code_fix_barrel_export4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_barrelExport4") {
+        return;
+    }
     let content = r#"// @module: preserve
 // @moduleResolution: bundler
 // @Filename: /foo/a.ts

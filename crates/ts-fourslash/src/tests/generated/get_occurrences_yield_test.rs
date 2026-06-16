@@ -14,7 +14,9 @@ pub fn test_get_occurrences_yield() {
 }
 
 fn run_test_get_occurrences_yield(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesYield") {
+        return;
+    }
     let content = r"function* f() {
  [|yield|] 100;
  [|y/**/ield|] [|yield|] 200;

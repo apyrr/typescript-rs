@@ -14,7 +14,9 @@ pub fn test_malformed_object_literal() {
 }
 
 fn run_test_malformed_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMalformedObjectLiteral") {
+        return;
+    }
     let content = r#"var tt = { aa };/**/
 var y = /*1*/"unclosed string literal
 /*2*/var x = "closed string literal""#;

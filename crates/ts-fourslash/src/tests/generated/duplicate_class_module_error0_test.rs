@@ -14,7 +14,9 @@ pub fn test_duplicate_class_module_error0() {
 }
 
 fn run_test_duplicate_class_module_error0(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDuplicateClassModuleError0") {
+        return;
+    }
     let content = r#"module A
 {
     class B

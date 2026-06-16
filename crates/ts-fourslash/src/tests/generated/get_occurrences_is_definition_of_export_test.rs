@@ -14,7 +14,9 @@ pub fn test_get_occurrences_is_definition_of_export() {
 }
 
 fn run_test_get_occurrences_is_definition_of_export(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIsDefinitionOfExport") {
+        return;
+    }
     let content = r#"// @Filename: m.ts
 export var /*1*/x = 12;
 // @Filename: main.ts

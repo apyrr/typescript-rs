@@ -14,7 +14,9 @@ pub fn test_rename_namespace() {
 }
 
 fn run_test_rename_namespace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameNamespace") {
+        return;
+    }
     let content = r"namespace /**/NS {
     export const enum E {
         A = 'a'

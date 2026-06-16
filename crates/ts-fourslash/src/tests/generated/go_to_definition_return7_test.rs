@@ -14,7 +14,9 @@ pub fn test_go_to_definition_return7() {
 }
 
 fn run_test_go_to_definition_return7(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionReturn7") {
+        return;
+    }
     let content = r"function foo(a: string, b: string): string;
 function foo(a: number, b: number): number;
 function /*end*/foo(a: any, b: any): any {

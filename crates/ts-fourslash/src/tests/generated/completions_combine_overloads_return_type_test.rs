@@ -14,7 +14,9 @@ pub fn test_completions_combine_overloads_return_type() {
 }
 
 fn run_test_completions_combine_overloads_return_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsCombineOverloads_returnType") {
+        return;
+    }
     let content = r"interface A { a: number }
 interface B { b: number }
 declare function f(n: number): A;

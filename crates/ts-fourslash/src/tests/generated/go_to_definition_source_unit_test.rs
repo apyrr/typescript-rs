@@ -14,7 +14,9 @@ pub fn test_go_to_definition_source_unit() {
 }
 
 fn run_test_go_to_definition_source_unit(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionSourceUnit") {
+        return;
+    }
     let content = r#"// @Filename: a.ts
  //MyFile Comments
  //more comments

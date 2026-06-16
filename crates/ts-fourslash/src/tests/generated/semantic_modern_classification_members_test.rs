@@ -14,7 +14,9 @@ pub fn test_semantic_modern_classification_members() {
 }
 
 fn run_test_semantic_modern_classification_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemanticModernClassificationMembers") {
+        return;
+    }
     let content = r"class A {
   static x = 9;
   f = 9;

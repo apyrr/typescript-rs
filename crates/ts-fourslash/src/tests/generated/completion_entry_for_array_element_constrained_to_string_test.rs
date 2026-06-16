@@ -14,7 +14,9 @@ pub fn test_completion_entry_for_array_element_constrained_to_string() {
 }
 
 fn run_test_completion_entry_for_array_element_constrained_to_string(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionEntryForArrayElementConstrainedToString") {
+        return;
+    }
     let content = r"declare function test<T extends 'a' | 'b'>(a: { foo: T[] }): void
 
 test({ foo: [/*ts*/] })";

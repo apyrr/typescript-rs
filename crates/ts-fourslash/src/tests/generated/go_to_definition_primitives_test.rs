@@ -14,7 +14,9 @@ pub fn test_go_to_definition_primitives() {
 }
 
 fn run_test_go_to_definition_primitives(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionPrimitives") {
+        return;
+    }
     let content = r"var x: st/*primitive*/ring;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_go_to_definition(t, &["primitive".to_string()]);

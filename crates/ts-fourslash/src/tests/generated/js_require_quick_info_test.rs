@@ -14,7 +14,9 @@ pub fn test_js_require_quick_info() {
 }
 
 fn run_test_js_require_quick_info(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsRequireQuickInfo") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: a.js
 const /**/x = require("./b");

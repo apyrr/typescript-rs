@@ -14,7 +14,9 @@ pub fn test_code_fix_undeclared_property_object_literal() {
 }
 
 fn run_test_code_fix_undeclared_property_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixUndeclaredPropertyObjectLiteral") {
+        return;
+    }
     let content = r#"// @strict: false
 [|class A {
     constructor() {

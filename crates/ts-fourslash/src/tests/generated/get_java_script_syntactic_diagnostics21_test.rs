@@ -14,7 +14,9 @@ pub fn test_get_java_script_syntactic_diagnostics21() {
 }
 
 fn run_test_get_java_script_syntactic_diagnostics21(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetJavaScriptSyntacticDiagnostics21") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @experimentalDecorators: true
 // @Filename: a.js

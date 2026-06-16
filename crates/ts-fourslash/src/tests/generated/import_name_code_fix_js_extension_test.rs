@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_js_extension() {
 }
 
 fn run_test_import_name_code_fix_js_extension(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_jsExtension") {
+        return;
+    }
     let content = r#"// @moduleResolution: bundler
 // @noLib: true
 // @jsx: preserve

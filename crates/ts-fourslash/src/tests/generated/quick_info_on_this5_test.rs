@@ -14,7 +14,9 @@ pub fn test_quick_info_on_this5() {
 }
 
 fn run_test_quick_info_on_this5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnThis5") {
+        return;
+    }
     let content = r"// @noImplicitThis: true
 const foo = {
     num: 0,

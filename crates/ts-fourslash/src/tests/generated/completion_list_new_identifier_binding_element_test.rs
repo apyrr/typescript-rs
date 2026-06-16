@@ -14,7 +14,9 @@ pub fn test_completion_list_new_identifier_binding_element() {
 }
 
 fn run_test_completion_list_new_identifier_binding_element(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListNewIdentifierBindingElement") {
+        return;
+    }
     let content = r"var { x:html/*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(t, MarkerInput::Name("1".to_string()), None);

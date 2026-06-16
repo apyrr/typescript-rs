@@ -14,7 +14,9 @@ pub fn test_get_outlining_for_single_line_comments() {
 }
 
 fn run_test_get_outlining_for_single_line_comments(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOutliningForSingleLineComments") {
+        return;
+    }
     let content = r"[|// Single line comments at the start of the file
 // line 2
 // line 3

@@ -14,7 +14,9 @@ pub fn test_references_for_statics_and_members_with_same_names() {
 }
 
 fn run_test_references_for_statics_and_members_with_same_names(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForStaticsAndMembersWithSameNames") {
+        return;
+    }
     let content = r"namespace FindRef4 {
 	namespace MixedStaticsClassTest {
 		export class Foo {

@@ -14,7 +14,9 @@ pub fn test_completions_unique_symbol2() {
 }
 
 fn run_test_completions_unique_symbol2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsUniqueSymbol2") {
+        return;
+    }
     let content = r"const a = {
     KEY_1: 'key_1',
     KEY_2: 'key_2',

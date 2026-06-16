@@ -14,7 +14,9 @@ pub fn test_completion_list_at_this_type() {
 }
 
 fn run_test_completion_list_at_this_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtThisType") {
+        return;
+    }
     let content = r#"// @stableTypeOrdering: true
 class Test {
     foo() {}

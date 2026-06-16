@@ -14,7 +14,9 @@ pub fn test_insert_var_after_empty_type_param_list() {
 }
 
 fn run_test_insert_var_after_empty_type_param_list(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInsertVarAfterEmptyTypeParamList") {
+        return;
+    }
     let content = r"class Dictionary<> { }
 var x;
 /**/";

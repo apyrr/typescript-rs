@@ -14,7 +14,9 @@ pub fn test_semicolon_formatting_nested_statements() {
 }
 
 fn run_test_semicolon_formatting_nested_statements(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemicolonFormattingNestedStatements") {
+        return;
+    }
     let content = r"if (true)
 if (true)/*parentOutsideBlock*/
 if (true) {

@@ -14,7 +14,9 @@ pub fn test_completion_list_protected_members() {
 }
 
 fn run_test_completion_list_protected_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListProtectedMembers") {
+        return;
+    }
     let content = r"class Base {
     protected y;
     constructor(protected x) {}

@@ -14,7 +14,9 @@ pub fn test_array_concat_type_check1() {
 }
 
 fn run_test_array_concat_type_check1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestArrayConcatTypeCheck1") {
+        return;
+    }
     let content = r#"a.concat(/*2*/"hello"/*1*/, 'world');
 
 a.concat(/*3*/'Hello');

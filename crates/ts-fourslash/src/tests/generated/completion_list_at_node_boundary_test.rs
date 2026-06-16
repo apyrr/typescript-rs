@@ -14,7 +14,9 @@ pub fn test_completion_list_at_node_boundary() {
 }
 
 fn run_test_completion_list_at_node_boundary(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtNodeBoundary") {
+        return;
+    }
     let content = r"interface Iterator<T, U> {
     (value: T, index: any, list: any): U;
 }

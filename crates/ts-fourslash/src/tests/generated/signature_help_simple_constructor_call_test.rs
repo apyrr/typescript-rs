@@ -14,7 +14,9 @@ pub fn test_signature_help_simple_constructor_call() {
 }
 
 fn run_test_signature_help_simple_constructor_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpSimpleConstructorCall") {
+        return;
+    }
     let content = r"class ConstructorCall {
     constructor(str: string, num: number) {
     }

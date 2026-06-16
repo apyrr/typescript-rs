@@ -14,7 +14,9 @@ pub fn test_auto_import_relative_path_to_monorepo_package() {
 }
 
 fn run_test_auto_import_relative_path_to_monorepo_package(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportRelativePathToMonorepoPackage") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/tsconfig.json
 {
   "compilerOptions": {

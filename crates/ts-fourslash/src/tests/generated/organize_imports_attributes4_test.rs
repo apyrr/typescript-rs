@@ -14,7 +14,9 @@ pub fn test_organize_imports_attributes4() {
 }
 
 fn run_test_organize_imports_attributes4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsAttributes4") {
+        return;
+    }
     let content = r#"import { A } from "./a" with { foo: "foo", bar: "bar" };
 import { B } from "./a" with { bar: "bar", foo: "foo" };
 import { D } from "./a" with { bar: "foo", foo: "bar" };

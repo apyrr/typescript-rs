@@ -14,7 +14,9 @@ pub fn test_generic_type_alias_intersection_completions() {
 }
 
 fn run_test_generic_type_alias_intersection_completions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericTypeAliasIntersectionCompletions") {
+        return;
+    }
     let content = r"type MixinCtor<A, B> = new () => A & B & { constructor: MixinCtor<A, B> };
 function merge<A, B>(a: { prototype: A }, b: { prototype: B }): MixinCtor<A, B> {
   let merged = function() { }

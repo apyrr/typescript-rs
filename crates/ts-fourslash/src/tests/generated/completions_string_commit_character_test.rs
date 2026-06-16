@@ -14,7 +14,9 @@ pub fn test_completions_string_commit_character() {
 }
 
 fn run_test_completions_string_commit_character(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsStringCommitCharacter") {
+        return;
+    }
     let content = r#"// @Filename: file1.ts
 const a: "aa" | "bb" = "/**/""#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

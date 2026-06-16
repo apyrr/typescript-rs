@@ -14,7 +14,9 @@ pub fn test_code_fix_wrap_jsx_in_fragment_with_grammar_error1() {
 }
 
 fn run_test_code_fix_wrap_jsx_in_fragment_with_grammar_error1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixWrapJsxInFragmentWithGrammarError1") {
+        return;
+    }
     let content = r"// @jsx: react-jsxdev
 // @Filename: /a.tsx
 [|<div abc={{ foo = 10 }}></div><div abc={{ foo = 10 }}></div>|]";

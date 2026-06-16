@@ -14,7 +14,9 @@ pub fn test_signature_help_jsx() {
 }
 
 fn run_test_signature_help_jsx(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpJSX") {
+        return;
+    }
     let content = r"//@Filename: test.tsx
 //@jsx: react
 declare var React: any;

@@ -14,7 +14,9 @@ pub fn test_white_space_trimming() {
 }
 
 fn run_test_white_space_trimming(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestWhiteSpaceTrimming") {
+        return;
+    }
     let content = r"if (true) {     
   //    
    /*err*/}";

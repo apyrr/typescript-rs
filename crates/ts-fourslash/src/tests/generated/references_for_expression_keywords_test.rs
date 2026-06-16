@@ -14,7 +14,9 @@ pub fn test_references_for_expression_keywords() {
 }
 
 fn run_test_references_for_expression_keywords(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForExpressionKeywords") {
+        return;
+    }
     let content = r#"class C {
     static x = 1;
 }

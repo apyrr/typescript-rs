@@ -14,7 +14,9 @@ pub fn test_quick_info_on_this2() {
 }
 
 fn run_test_quick_info_on_this2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnThis2") {
+        return;
+    }
     let content = r"class Bar<T> {
     public explicitThis(this: this) {
         console.log(th/*1*/is);

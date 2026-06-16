@@ -14,7 +14,9 @@ pub fn test_indentation_in_jsx2() {
 }
 
 fn run_test_indentation_in_jsx2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIndentationInJsx2") {
+        return;
+    }
     let content = r"//@Filename: file.tsx
 <div>/*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

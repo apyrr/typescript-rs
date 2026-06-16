@@ -14,7 +14,9 @@ pub fn test_formatting_single_line_with_new_line_option_set() {
 }
 
 fn run_test_formatting_single_line_with_new_line_option_set(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingSingleLineWithNewLineOptionSet") {
+        return;
+    }
     let content = r"/*1*/namespace Default{}
 /*2*/function foo(){}
 /*3*/if (true){}

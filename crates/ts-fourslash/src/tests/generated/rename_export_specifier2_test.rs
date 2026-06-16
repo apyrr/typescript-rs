@@ -14,7 +14,9 @@ pub fn test_rename_export_specifier2() {
 }
 
 fn run_test_rename_export_specifier2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameExportSpecifier2") {
+        return;
+    }
     let content = r"// @Filename: a.ts
 const name = {};
 export { name/**/ };

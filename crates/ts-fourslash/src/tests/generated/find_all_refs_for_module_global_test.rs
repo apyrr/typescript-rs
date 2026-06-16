@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_module_global() {
 }
 
 fn run_test_find_all_refs_for_module_global(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForModuleGlobal") {
+        return;
+    }
     let content = r#"// @Filename: /node_modules/foo/index.d.ts
 export const x = 0;
 // @Filename: /b.ts

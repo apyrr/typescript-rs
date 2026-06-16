@@ -14,7 +14,9 @@ pub fn test_rename_js_property_assignment4() {
 }
 
 fn run_test_rename_js_property_assignment4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameJsPropertyAssignment4") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @Filename: /a.js
 function f() {

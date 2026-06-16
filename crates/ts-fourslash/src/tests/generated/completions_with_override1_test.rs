@@ -14,7 +14,9 @@ pub fn test_completions_with_override1() {
 }
 
 fn run_test_completions_with_override1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsWithOverride1") {
+        return;
+    }
     let content = r"class A {
     foo () {} 
     bar () {}

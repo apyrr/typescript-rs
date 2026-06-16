@@ -14,7 +14,9 @@ pub fn test_completions_class_member_import_type_node_parameter4() {
 }
 
 fn run_test_completions_class_member_import_type_node_parameter4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsClassMemberImportTypeNodeParameter4") {
+        return;
+    }
     let content = r#"// @module: node18
 // @FileName: /other/cls.d.ts
 export declare class Cls {

@@ -14,7 +14,9 @@ pub fn test_quick_info_on_object_literal_with_only_getter() {
 }
 
 fn run_test_quick_info_on_object_literal_with_only_getter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnObjectLiteralWithOnlyGetter") {
+        return;
+    }
     let content = r"function /*1*/makePoint(x: number) {
     return {
         get x() { return x; },

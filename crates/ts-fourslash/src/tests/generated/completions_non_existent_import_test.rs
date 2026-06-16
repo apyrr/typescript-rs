@@ -14,7 +14,9 @@ pub fn test_completions_non_existent_import() {
 }
 
 fn run_test_completions_non_existent_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsNonExistentImport") {
+        return;
+    }
     let content = r#"import { NonExistentType } from "non-existent-module";
 let foo: /**/"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

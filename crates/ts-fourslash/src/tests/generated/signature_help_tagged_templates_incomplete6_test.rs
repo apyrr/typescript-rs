@@ -14,11 +14,13 @@ pub fn test_signature_help_tagged_templates_incomplete6() {
 }
 
 fn run_test_signature_help_tagged_templates_incomplete6(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpTaggedTemplatesIncomplete6") {
+        return;
+    }
     let content = r#"function f(templateStrings, x, y, z) { return 10; }
 function g(templateStrings, x, y, z) { return ""; }
 
-f ` + "`" + `   ${  123 } ${/*1*/  }   ` + "`" + `"#;
+f `   ${  123 } ${/*1*/  }   `"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     for marker in f.marker_names() {
         f.go_to_marker(t, &marker);

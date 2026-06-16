@@ -14,7 +14,9 @@ pub fn test_call_hierarchy_jsx_element() {
 }
 
 fn run_test_call_hierarchy_jsx_element(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCallHierarchyJsxElement") {
+        return;
+    }
     let content = r"// @jsx: preserve
 // @filename: main.tsx
 function foo() {

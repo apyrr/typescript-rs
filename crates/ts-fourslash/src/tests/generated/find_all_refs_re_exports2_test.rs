@@ -14,7 +14,9 @@ pub fn test_find_all_refs_re_exports2() {
 }
 
 fn run_test_find_all_refs_re_exports2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsReExports2") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 export function /*1*/foo(): void {}
 // @Filename: /b.ts

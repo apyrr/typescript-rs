@@ -14,7 +14,9 @@ pub fn test_references_for_numeric_literal_property_names() {
 }
 
 fn run_test_references_for_numeric_literal_property_names(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForNumericLiteralPropertyNames") {
+        return;
+    }
     let content = r#"class Foo {
     public /*1*/12: any;
 }

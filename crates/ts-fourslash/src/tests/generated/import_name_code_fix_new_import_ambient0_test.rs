@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_ambient0() {
 }
 
 fn run_test_import_name_code_fix_new_import_ambient0(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportAmbient0") {
+        return;
+    }
     let content = r#"[|f1/*0*/();|]
 // @Filename: ambientModule.ts
 declare module "ambient-module" {

@@ -14,7 +14,9 @@ pub fn test_completion_list_in_fat_arrow() {
 }
 
 fn run_test_completion_list_in_fat_arrow(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInFatArrow") {
+        return;
+    }
     let content = r"var items = [0, 1, 2];
 items.forEach((n) => {
     /**/

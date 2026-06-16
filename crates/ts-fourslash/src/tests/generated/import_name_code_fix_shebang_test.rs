@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_shebang() {
 }
 
 fn run_test_import_name_code_fix_shebang(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixShebang") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 export const foo = 0;
 // @Filename: /b.ts

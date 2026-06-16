@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_file_quote_style_mixed1() {
 }
 
 fn run_test_import_name_code_fix_new_import_file_quote_style_mixed1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportFileQuoteStyleMixed1") {
+        return;
+    }
     let content = r#"[|import { v2 } from './module2';
 import { v3 } from "./module3";
 

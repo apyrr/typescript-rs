@@ -14,7 +14,9 @@ pub fn test_this_predicate_function_completions03() {
 }
 
 fn run_test_this_predicate_function_completions03(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestThisPredicateFunctionCompletions03") {
+        return;
+    }
     let content = r"class RoyalGuard {
     isLeader(): this is LeadGuard {
         return this instanceof LeadGuard;

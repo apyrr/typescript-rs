@@ -14,7 +14,9 @@ pub fn test_qualified_name_import_declaration_with_variable_entity_names() {
 }
 
 fn run_test_qualified_name_import_declaration_with_variable_entity_names(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQualifiedName_import-declaration-with-variable-entity-names") {
+        return;
+    }
     let content = r#"namespace Alpha {
     export var [|{| "name" : "def" |}x|] = 100;
 }

@@ -14,7 +14,9 @@ pub fn test_format_function_and_constructor_type() {
 }
 
 fn run_test_format_function_and_constructor_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatFunctionAndConstructorType") {
+        return;
+    }
     let content = r"function renderElement(
     element: Element,
     renderNode:

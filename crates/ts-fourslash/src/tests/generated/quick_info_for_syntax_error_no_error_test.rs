@@ -14,7 +14,9 @@ pub fn test_quick_info_for_syntax_error_no_error() {
 }
 
 fn run_test_quick_info_for_syntax_error_no_error(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForSyntaxErrorNoError") {
+        return;
+    }
     let content = r"namespace X {
     export =
 }

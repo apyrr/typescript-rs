@@ -14,7 +14,9 @@ pub fn test_completion_list_on_super() {
 }
 
 fn run_test_completion_list_on_super(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOnSuper") {
+        return;
+    }
     let content = r"class TAB<T>{
     foo<T>(x: T) {
     }

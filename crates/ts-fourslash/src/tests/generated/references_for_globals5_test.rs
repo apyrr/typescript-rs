@@ -14,7 +14,9 @@ pub fn test_references_for_globals5() {
 }
 
 fn run_test_references_for_globals5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForGlobals5") {
+        return;
+    }
     let content = r"// @Filename: referencesForGlobals_1.ts
 namespace globalModule {
     export var x;

@@ -14,7 +14,9 @@ pub fn test_quick_info_widened_types() {
 }
 
 fn run_test_quick_info_widened_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoWidenedTypes") {
+        return;
+    }
     let content = r"// @strict: false
 var /*1*/a = null;                   // var a: any
 var /*2*/b = undefined;              // var b: any

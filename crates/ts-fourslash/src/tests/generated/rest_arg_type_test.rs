@@ -14,7 +14,9 @@ pub fn test_rest_arg_type() {
 }
 
 fn run_test_rest_arg_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRestArgType") {
+        return;
+    }
     let content = r"class Test {
     private _priv(.../*1*/restArgs) {
     }

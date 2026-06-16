@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_interface_10() {
 }
 
 fn run_test_go_to_implementation_interface_10(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationInterface_10") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 interface /*def*/A {
 	foo: boolean;

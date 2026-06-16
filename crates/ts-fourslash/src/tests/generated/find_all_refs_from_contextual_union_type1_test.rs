@@ -14,7 +14,9 @@ pub fn test_find_all_refs_from_contextual_union_type1() {
 }
 
 fn run_test_find_all_refs_from_contextual_union_type1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsFromContextualUnionType1") {
+        return;
+    }
     let content = r#"// @strict: true
 function test1(arg: { prop: "foo" }) {}
 test1({ /*1*/prop: "bar" });

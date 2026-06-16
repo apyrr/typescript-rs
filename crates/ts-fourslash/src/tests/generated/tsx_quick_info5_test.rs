@@ -14,7 +14,9 @@ pub fn test_tsx_quick_info5() {
 }
 
 fn run_test_tsx_quick_info5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxQuickInfo5") {
+        return;
+    }
     let content = r#"//@Filename: file.tsx
 // @jsx: preserve
 // @noLib: true

@@ -14,7 +14,9 @@ pub fn test_code_fix_generate_definitions() {
 }
 
 fn run_test_code_fix_generate_definitions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixGenerateDefinitions") {
+        return;
+    }
     let content = r#"// @Filename: /node_modules/foo/index.d.ts
 module.exports = 0;
 // @Filename: /a.ts

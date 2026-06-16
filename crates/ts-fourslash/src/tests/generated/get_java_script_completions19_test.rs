@@ -14,7 +14,9 @@ pub fn test_get_java_script_completions19() {
 }
 
 fn run_test_get_java_script_completions19(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetJavaScriptCompletions19") {
+        return;
+    }
     let content = r"// @allowNonTsExtensions: true
 // @Filename: file.js
 function fn() {

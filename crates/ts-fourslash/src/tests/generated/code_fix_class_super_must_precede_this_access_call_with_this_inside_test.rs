@@ -14,7 +14,9 @@ pub fn test_code_fix_class_super_must_precede_this_access_call_with_this_inside(
 }
 
 fn run_test_code_fix_class_super_must_precede_this_access_call_with_this_inside(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassSuperMustPrecedeThisAccess_callWithThisInside") {
+        return;
+    }
     let content = r"class Base{
     constructor(id: number) { id; }
 }

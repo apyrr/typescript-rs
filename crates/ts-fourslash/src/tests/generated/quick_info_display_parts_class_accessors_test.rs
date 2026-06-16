@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_class_accessors() {
 }
 
 fn run_test_quick_info_display_parts_class_accessors(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsClassAccessors") {
+        return;
+    }
     let content = r#"class c {
     public get /*1*/publicProperty() { return ""; }
     public set /*1s*/publicProperty(x: string) { }

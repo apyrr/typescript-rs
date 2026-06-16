@@ -14,7 +14,9 @@ pub fn test_go_to_definition_object_literal_properties() {
 }
 
 fn run_test_go_to_definition_object_literal_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionObjectLiteralProperties") {
+        return;
+    }
     let content = r"var o = {
     /*valueDefinition*/value: 0,
     get /*getterDefinition*/getter() {return 0 },

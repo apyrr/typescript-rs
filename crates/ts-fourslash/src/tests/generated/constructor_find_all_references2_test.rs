@@ -14,7 +14,9 @@ pub fn test_constructor_find_all_references2() {
 }
 
 fn run_test_constructor_find_all_references2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestConstructorFindAllReferences2") {
+        return;
+    }
     let content = r"export class C {
     /**/private constructor() { }
     public foo() { }

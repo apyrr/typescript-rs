@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_multiline_string_identifiers1() {
 }
 
 fn run_test_navigation_bar_items_multiline_string_identifiers1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsMultilineStringIdentifiers1") {
+        return;
+    }
     let content = r#"declare module "Multiline\r\nMadness" {
 }
 

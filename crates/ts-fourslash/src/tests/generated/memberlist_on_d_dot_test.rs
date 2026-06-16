@@ -14,7 +14,9 @@ pub fn test_memberlist_on_d_dot() {
 }
 
 fn run_test_memberlist_on_d_dot(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberlistOnDDot") {
+        return;
+    }
     let content = r"var q = '';
 q/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_format_control_flow_constructs() {
 }
 
 fn run_test_format_control_flow_constructs(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatControlFlowConstructs") {
+        return;
+    }
     let content = r"if (true)/**/
 {     
 }";

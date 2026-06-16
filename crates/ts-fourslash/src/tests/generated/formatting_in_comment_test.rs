@@ -14,7 +14,9 @@ pub fn test_formatting_in_comment() {
 }
 
 fn run_test_formatting_in_comment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingInComment") {
+        return;
+    }
     let content = r"class A {
 foo(              ); // /*1*/
 }

@@ -14,7 +14,9 @@ pub fn test_code_fix_require_in_ts3() {
 }
 
 fn run_test_code_fix_require_in_ts3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixRequireInTs3") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 const { a, b: { c } } = [|require("a")|];"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

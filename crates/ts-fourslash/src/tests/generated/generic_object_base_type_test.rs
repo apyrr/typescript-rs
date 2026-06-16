@@ -14,7 +14,9 @@ pub fn test_generic_object_base_type() {
 }
 
 fn run_test_generic_object_base_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericObjectBaseType") {
+        return;
+    }
     let content = r#"// @strict: false
 class C<T> {
     constructor(){}

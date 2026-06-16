@@ -14,7 +14,9 @@ pub fn test_format_insert_space_after_close_brace_before_close_bracket() {
 }
 
 fn run_test_format_insert_space_after_close_brace_before_close_bracket(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatInsertSpaceAfterCloseBraceBeforeCloseBracket") {
+        return;
+    }
     let content = r"[{}]";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     {

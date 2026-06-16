@@ -14,7 +14,9 @@ pub fn test_tsx_signature_help1() {
 }
 
 fn run_test_tsx_signature_help1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxSignatureHelp1") {
+        return;
+    }
     let content = r"// @jsx: preserve
 //@Filename: file.tsx
 import React = require('react');

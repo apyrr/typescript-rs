@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_namespace_05() {
 }
 
 fn run_test_go_to_implementation_namespace_05(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationNamespace_05") {
+        return;
+    }
     let content = r"namespace /*implementation0*/Foo./*implementation2*/Baz {
     export function hello() {}
 }

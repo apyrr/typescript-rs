@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition_enum_members() {
 }
 
 fn run_test_go_to_type_definition_enum_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinitionEnumMembers") {
+        return;
+    }
     let content = r"enum E {
     value1,
     /*definition*/value2

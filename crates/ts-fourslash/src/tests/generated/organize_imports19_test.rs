@@ -14,7 +14,9 @@ pub fn test_organize_imports19() {
 }
 
 fn run_test_organize_imports19(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImports19") {
+        return;
+    }
     let content = r"const a = 1;
 export { a };
 

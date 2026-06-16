@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition_promise_type() {
 }
 
 fn run_test_go_to_type_definition_promise_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinition_promiseType") {
+        return;
+    }
     let content = r#"// @lib: es5,es2015.promise
 type User = { name: string };
 async function /*reference*/getUser() { return { name: "Bob" } satisfies User as User }

@@ -14,11 +14,13 @@ pub fn test_signature_help_tagged_templates1() {
 }
 
 fn run_test_signature_help_tagged_templates1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpTaggedTemplates1") {
+        return;
+    }
     let content = r#"function f(templateStrings, x, y, z) { return 10; }
 function g(templateStrings, x, y, z) { return ""; }
 
-f ` + "`" + `/*1*/ qwe/*2*/rty /*3*/$/*4*/{ 123 }/*5*/ as/*6*/df /*7*/$/*8*/{   41234   }/*9*/  zxc/*10*/vb /*11*/$/*12*/{ g ` + "`" + `    ` + "`" + ` }/*13*/  /*14*/  /*15*/` + "`" + `"#;
+f `/*1*/ qwe/*2*/rty /*3*/$/*4*/{ 123 }/*5*/ as/*6*/df /*7*/$/*8*/{   41234   }/*9*/  zxc/*10*/vb /*11*/$/*12*/{ g `    ` }/*13*/  /*14*/  /*15*/`"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     for marker in f.marker_names() {
         f.go_to_marker(t, &marker);

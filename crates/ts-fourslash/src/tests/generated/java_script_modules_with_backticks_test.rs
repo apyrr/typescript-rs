@@ -14,13 +14,15 @@ pub fn test_java_script_modules_with_backticks() {
 }
 
 fn run_test_java_script_modules_with_backticks(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"// @allowJs: true
+    if should_skip_if_failing("TestJavaScriptModulesWithBackticks") {
+        return;
+    }
+    let content = r"// @allowJs: true
 // @Filename: a.js
 exports.x = 0;
 // @Filename: consumer.js
-var a = require(` + "`" + `./a` + "`" + `);
-a./**/;"#;
+var a = require(`./a`);
+a./**/;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(
         t,

@@ -14,7 +14,9 @@ pub fn test_quick_info_imported_types() {
 }
 
 fn run_test_quick_info_imported_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoImportedTypes") {
+        return;
+    }
     let content = r"// @Filename: quickInfoImportedTypes.ts
 /** This is an interface */
 export interface Foo {

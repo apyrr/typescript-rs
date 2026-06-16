@@ -14,7 +14,9 @@ pub fn test_smart_indent_named_import() {
 }
 
 fn run_test_smart_indent_named_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentNamedImport") {
+        return;
+    }
     let content = r"import {/*0*/
     numbers as bn,/*1*/
     list/*2*/

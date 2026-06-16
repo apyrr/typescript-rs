@@ -14,7 +14,9 @@ pub fn test_organize_imports_type8() {
 }
 
 fn run_test_organize_imports_type8(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsType8") {
+        return;
+    }
     let content = r#"import { type A, type a, b, B } from "foo";
 console.log(a, b, A, B);"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

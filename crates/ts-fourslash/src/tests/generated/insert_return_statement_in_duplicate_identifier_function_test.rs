@@ -14,7 +14,9 @@ pub fn test_insert_return_statement_in_duplicate_identifier_function() {
 }
 
 fn run_test_insert_return_statement_in_duplicate_identifier_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInsertReturnStatementInDuplicateIdentifierFunction") {
+        return;
+    }
     let content = r"// @strict: true
 class foo { };
 function foo() { /**/ }";

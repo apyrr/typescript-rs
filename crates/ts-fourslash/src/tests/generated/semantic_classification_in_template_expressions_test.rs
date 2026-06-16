@@ -14,8 +14,10 @@ pub fn test_semantic_classification_in_template_expressions() {
 }
 
 fn run_test_semantic_classification_in_template_expressions(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"module /*0*/M {
+    if should_skip_if_failing("TestSemanticClassificationInTemplateExpressions") {
+        return;
+    }
+    let content = r"module /*0*/M {
     export class /*1*/C {
         static x;
     }
@@ -23,7 +25,7 @@ fn run_test_semantic_classification_in_template_expressions(t: &mut TestingT) {
         E1 = 0
     }
 }
-` + "`" + `abcd${ /*3*/M./*4*/C.x + /*5*/M./*6*/E.E1}efg` + "`" + `"#;
+`abcd${ /*3*/M./*4*/C.x + /*5*/M./*6*/E.E1}efg`";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_semantic_tokens(
         t,

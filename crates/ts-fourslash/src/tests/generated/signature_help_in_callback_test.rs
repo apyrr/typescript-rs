@@ -14,7 +14,9 @@ pub fn test_signature_help_in_callback() {
 }
 
 fn run_test_signature_help_in_callback(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpInCallback") {
+        return;
+    }
     let content = r"declare function forEach(f: () => void);
 forEach(/*1*/() => {
     /*2*/

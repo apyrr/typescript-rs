@@ -14,7 +14,9 @@ pub fn test_find_all_references_js_require_destructuring1() {
 }
 
 fn run_test_find_all_references_js_require_destructuring1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllReferencesJsRequireDestructuring1") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @noEmit: true
 // @checkJs: true

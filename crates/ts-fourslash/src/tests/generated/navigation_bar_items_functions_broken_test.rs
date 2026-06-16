@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_functions_broken() {
 }
 
 fn run_test_navigation_bar_items_functions_broken(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsFunctionsBroken") {
+        return;
+    }
     let content = r"function f() {
     function;
 }";

@@ -14,7 +14,9 @@ pub fn test_format_object_binding_pattern() {
 }
 
 fn run_test_format_object_binding_pattern(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatObjectBindingPattern") {
+        return;
+    }
     let content = r"const {
 x,
 y,

@@ -14,7 +14,9 @@ pub fn test_debugger_statement_indent() {
 }
 
 fn run_test_debugger_statement_indent(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDebuggerStatementIndent") {
+        return;
+    }
     let content = r"if (false) {
     debugger;
 /**/";

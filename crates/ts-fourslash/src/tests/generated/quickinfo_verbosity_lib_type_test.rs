@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_lib_type() {
 }
 
 fn run_test_quickinfo_verbosity_lib_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityLibType") {
+        return;
+    }
     let content = r#"// @lib: es5
 interface Apple {
     color: string;

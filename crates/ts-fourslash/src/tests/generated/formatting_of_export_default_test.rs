@@ -14,7 +14,9 @@ pub fn test_formatting_of_export_default() {
 }
 
 fn run_test_formatting_of_export_default(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOfExportDefault") {
+        return;
+    }
     let content = r"namespace Foo {
 /*1*/    export        default        class        Test { }
 }

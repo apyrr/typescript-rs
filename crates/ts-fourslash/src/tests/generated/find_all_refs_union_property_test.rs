@@ -14,7 +14,9 @@ pub fn test_find_all_refs_union_property() {
 }
 
 fn run_test_find_all_refs_union_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsUnionProperty") {
+        return;
+    }
     let content = r#"type T =
     | { /*t0*/type: "a", /*p0*/prop: number }
     | { /*t1*/type: "b", /*p1*/prop: string };

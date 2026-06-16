@@ -14,7 +14,9 @@ pub fn test_return_recursive_type() {
 }
 
 fn run_test_return_recursive_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReturnRecursiveType") {
+        return;
+    }
     let content = r"interface MyInt {
     (): void;
 }

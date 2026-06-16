@@ -14,7 +14,9 @@ pub fn test_get_occurrences_is_definition_of_function() {
 }
 
 fn run_test_get_occurrences_is_definition_of_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIsDefinitionOfFunction") {
+        return;
+    }
     let content = r"/*1*/function /*2*/func(x: number) {
 }
 /*3*/func(x)";

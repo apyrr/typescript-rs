@@ -14,7 +14,9 @@ pub fn test_rename_name_on_enum_member() {
 }
 
 fn run_test_rename_name_on_enum_member(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameNameOnEnumMember") {
+        return;
+    }
     let content = r"enum e {
     firstMember,
     secondMember,

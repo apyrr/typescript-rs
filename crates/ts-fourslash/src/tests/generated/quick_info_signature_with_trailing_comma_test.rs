@@ -14,7 +14,9 @@ pub fn test_quick_info_signature_with_trailing_comma() {
 }
 
 fn run_test_quick_info_signature_with_trailing_comma(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoSignatureWithTrailingComma") {
+        return;
+    }
     let content = r"declare function f<T>(a: T): T;
 /**/f(2,);";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

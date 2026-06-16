@@ -14,7 +14,9 @@ pub fn test_type_of_a_fundule() {
 }
 
 fn run_test_type_of_a_fundule(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTypeOfAFundule") {
+        return;
+    }
     let content = r"function m1() { return 1; }
 namespace m1 { export var y = 2; }
 function foo13() {

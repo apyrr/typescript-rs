@@ -14,7 +14,9 @@ pub fn test_rename_inherited_properties8() {
 }
 
 fn run_test_rename_inherited_properties8(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameInheritedProperties8") {
+        return;
+    }
     let content = r#"class C implements D {
     [|[|{| "contextRangeIndex": 0 |}prop1|]: string;|]
 }

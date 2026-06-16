@@ -14,7 +14,9 @@ pub fn test_incremental_parsing_dynamic_import3() {
 }
 
 fn run_test_incremental_parsing_dynamic_import3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIncrementalParsingDynamicImport3") {
+        return;
+    }
     let content = r"// @lib: es2015
 // @Filename: ./foo.ts
 export function bar() { return 1; }

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_undefined_symbols() {
 }
 
 fn run_test_go_to_definition_undefined_symbols(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionUndefinedSymbols") {
+        return;
+    }
     let content = r"some/*undefinedValue*/Variable;
 var a: some/*undefinedType*/Type;
 var x = {}; x.some/*undefinedProperty*/Property;

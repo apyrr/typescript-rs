@@ -14,7 +14,9 @@ pub fn test_tsx_find_all_references11() {
 }
 
 fn run_test_tsx_find_all_references11(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxFindAllReferences11") {
+        return;
+    }
     let content = r"//@Filename: file.tsx
 // @jsx: preserve
 // @noLib: true

@@ -14,7 +14,9 @@ pub fn test_remove_export_from_interface_error0() {
 }
 
 fn run_test_remove_export_from_interface_error0(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRemoveExportFromInterfaceError0") {
+        return;
+    }
     let content = r"namespace M {
 export class C1 { }
     /*1*/export interface I { n: number; }

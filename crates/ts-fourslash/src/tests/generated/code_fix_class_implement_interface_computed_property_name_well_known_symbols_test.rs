@@ -16,7 +16,11 @@ pub fn test_code_fix_class_implement_interface_computed_property_name_well_known
 fn run_test_code_fix_class_implement_interface_computed_property_name_well_known_symbols(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestCodeFixClassImplementInterfaceComputedPropertyNameWellKnownSymbols",
+    ) {
+        return;
+    }
     let content = r#"// @strict: false
 // @lib: es2017
 interface I<Species> {

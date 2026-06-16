@@ -14,7 +14,9 @@ pub fn test_completions_for_self_type_parameter_in_constraint1() {
 }
 
 fn run_test_completions_for_self_type_parameter_in_constraint1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsForSelfTypeParameterInConstraint1") {
+        return;
+    }
     let content = r#"type StateMachine<Config> = {
   initial?: "states" extends keyof Config ? keyof Config["states"] : never;
   states?: Record<string, {}>;

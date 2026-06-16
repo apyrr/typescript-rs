@@ -14,7 +14,9 @@ pub fn test_navigation_bar_computed_property_name() {
 }
 
 fn run_test_navigation_bar_computed_property_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarComputedPropertyName") {
+        return;
+    }
     let content = r#"function F(key, value) {
     return {
         [key]: value,

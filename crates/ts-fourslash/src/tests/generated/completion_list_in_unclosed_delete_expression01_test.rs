@@ -14,7 +14,9 @@ pub fn test_completion_list_in_unclosed_delete_expression01() {
 }
 
 fn run_test_completion_list_in_unclosed_delete_expression01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInUnclosedDeleteExpression01") {
+        return;
+    }
     let content = r"var x;
 var y = delete /*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

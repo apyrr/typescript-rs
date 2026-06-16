@@ -14,10 +14,12 @@ pub fn test_formatting_templates_with_newline() {
 }
 
 fn run_test_formatting_templates_with_newline(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"` + "`" + `${1}` + "`" + `;
-` + "`" + `
-` + "`" + `;/**/1"#;
+    if should_skip_if_failing("TestFormattingTemplatesWithNewline") {
+        return;
+    }
+    let content = r"`${1}`;
+`
+`;/**/1";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");
     f.insert(t, "\n");

@@ -14,7 +14,9 @@ pub fn test_quick_info_from_empty_block_comment() {
 }
 
 fn run_test_quick_info_from_empty_block_comment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoFromEmptyBlockComment") {
+        return;
+    }
     let content = r"/**/
 class Foo {
 }

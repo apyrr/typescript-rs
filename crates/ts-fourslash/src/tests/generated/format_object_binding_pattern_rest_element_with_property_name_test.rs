@@ -14,7 +14,9 @@ pub fn test_format_object_binding_pattern_rest_element_with_property_name() {
 }
 
 fn run_test_format_object_binding_pattern_rest_element_with_property_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatObjectBindingPattern_restElementWithPropertyName") {
+        return;
+    }
     let content = r"const { ...a: b } = {};";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");

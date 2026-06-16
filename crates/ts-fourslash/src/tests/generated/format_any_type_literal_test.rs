@@ -14,7 +14,9 @@ pub fn test_format_any_type_literal() {
 }
 
 fn run_test_format_any_type_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatAnyTypeLiteral") {
+        return;
+    }
     let content = r"function foo(x: { } /*objLit*/){
 /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

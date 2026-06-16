@@ -14,7 +14,9 @@ pub fn test_constructor_brace_formatting() {
 }
 
 fn run_test_constructor_brace_formatting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestConstructorBraceFormatting") {
+        return;
+    }
     let content = r"class X {
     constructor () {}/*target*/
  /**/";

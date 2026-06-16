@@ -14,7 +14,9 @@ pub fn test_generic_combinators1() {
 }
 
 fn run_test_generic_combinators1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericCombinators1") {
+        return;
+    }
     let content = r"interface Collection<T> {
     length: number;
     add(x: T): void;
@@ -75,10 +77,6 @@ var /*23*/r8a = _.map</*error1*/B/*error2*/, string>(c5, (/*8*/x) => { return x.
     f.verify_quick_info_at(t, "21", "var r7a: Collection<A>", "");
     f.verify_quick_info_at(t, "22", "var r7b: Collection<A>", "");
     f.verify_quick_info_at(t, "23", "var r8a: Collection<string>", "");
-    f.verify_error_exists_between_markers(
-        &f.marker_by_name("error1"),
-        &f.marker_by_name("error2"),
-        0,
-    );
+    f.verify_error_exists_between_markers(&f.marker_by_name("error1"), &f.marker_by_name("error2"));
     done();
 }

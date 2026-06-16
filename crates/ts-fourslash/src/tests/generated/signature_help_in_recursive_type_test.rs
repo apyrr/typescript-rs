@@ -14,7 +14,9 @@ pub fn test_signature_help_in_recursive_type() {
 }
 
 fn run_test_signature_help_in_recursive_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpInRecursiveType") {
+        return;
+    }
     let content = r"type Tail<T extends any[]> =
 	((...args: T) => any) extends ((head: any, ...tail: infer R) => any) ? R : never;
 

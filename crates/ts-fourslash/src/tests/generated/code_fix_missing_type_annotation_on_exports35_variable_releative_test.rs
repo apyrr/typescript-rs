@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports35_variable_releative() {
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports35_variable_releative(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports35-variable-releative") {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 // @Filename: /code.ts

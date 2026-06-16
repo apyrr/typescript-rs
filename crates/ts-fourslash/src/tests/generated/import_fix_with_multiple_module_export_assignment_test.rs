@@ -14,7 +14,9 @@ pub fn test_import_fix_with_multiple_module_export_assignment() {
 }
 
 fn run_test_import_fix_with_multiple_module_export_assignment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportFixWithMultipleModuleExportAssignment") {
+        return;
+    }
     let content = r"// @module: esnext
 // @allowJs: true
 // @checkJs: true

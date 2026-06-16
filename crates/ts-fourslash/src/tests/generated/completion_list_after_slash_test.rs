@@ -14,7 +14,9 @@ pub fn test_completion_list_after_slash() {
 }
 
 fn run_test_completion_list_after_slash(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAfterSlash") {
+        return;
+    }
     let content = r"var a = 0;
 a/./**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

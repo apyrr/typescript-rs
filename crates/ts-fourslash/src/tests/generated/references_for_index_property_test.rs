@@ -14,7 +14,9 @@ pub fn test_references_for_index_property() {
 }
 
 fn run_test_references_for_index_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForIndexProperty") {
+        return;
+    }
     let content = r#"class Foo {
     /*1*/property: number;
     /*2*/method(): void { }

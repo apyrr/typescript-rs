@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_indented_identifier() {
 }
 
 fn run_test_import_name_code_fix_indented_identifier(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixIndentedIdentifier") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 [|import * as b from "./b";
 {

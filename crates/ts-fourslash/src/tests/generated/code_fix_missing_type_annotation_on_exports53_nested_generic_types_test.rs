@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports53_nested_generic_types()
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports53_nested_generic_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports53-nested-generic-types") {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 export interface Foo<T, U = T[]> {}

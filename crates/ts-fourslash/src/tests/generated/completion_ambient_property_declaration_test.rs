@@ -14,7 +14,9 @@ pub fn test_completion_ambient_property_declaration() {
 }
 
 fn run_test_completion_ambient_property_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionAmbientPropertyDeclaration") {
+        return;
+    }
     let content = r"class C {
     /*1*/ declare property: number;
     /*2*/

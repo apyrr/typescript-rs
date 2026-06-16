@@ -16,17 +16,21 @@ pub fn test_quick_info_on_jsx_intrinsic_declared_using_template_literal_type_sig
 fn run_test_quick_info_on_jsx_intrinsic_declared_using_template_literal_type_signatures(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
-    let content = r#"// @jsx: react
+    if should_skip_if_failing(
+        "TestQuickInfoOnJsxIntrinsicDeclaredUsingTemplateLiteralTypeSignatures",
+    ) {
+        return;
+    }
+    let content = r"// @jsx: react
 // @filename: /a.tsx
 declare namespace JSX {
   interface IntrinsicElements {
-    [k: ` + "`" + `foo${string}` + "`" + `]: any;
-    [k: ` + "`" + `foobar${string}` + "`" + `]: any;
+    [k: `foo${string}`]: any;
+    [k: `foobar${string}`]: any;
   }
 }
 </*1*/foobaz />;
-</*2*/foobarbaz />;"#;
+</*2*/foobarbaz />;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_hover(t, &[]);
     done();

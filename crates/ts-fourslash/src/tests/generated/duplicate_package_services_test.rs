@@ -14,7 +14,9 @@ pub fn test_duplicate_package_services() {
 }
 
 fn run_test_duplicate_package_services(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDuplicatePackageServices") {
+        return;
+    }
     let content = r#"// @noImplicitReferences: true
 // @Filename: /node_modules/a/index.d.ts
 import [|X/*useAX*/|] from "x";

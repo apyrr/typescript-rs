@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_var_with_string_types01() {
 }
 
 fn run_test_quick_info_display_parts_var_with_string_types01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsVarWithStringTypes01") {
+        return;
+    }
     let content = r#"let /*1*/hello: "hello" | 'hello' = "hello";
 let /*2*/world: 'world' = "world";
 let /*3*/helloOrWorld: "hello" | 'world';"#;

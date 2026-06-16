@@ -14,7 +14,9 @@ pub fn test_completion_no_parent_location() {
 }
 
 fn run_test_completion_no_parent_location(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionNoParentLocation") {
+        return;
+    }
     let content = r"// @lib: es5
 /**/
 type foo = any;

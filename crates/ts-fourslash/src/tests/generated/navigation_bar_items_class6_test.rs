@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_class6() {
 }
 
 fn run_test_navigation_bar_items_class6(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsClass6") {
+        return;
+    }
     let content = r"function Z() { }
 
 Z.foo = 42

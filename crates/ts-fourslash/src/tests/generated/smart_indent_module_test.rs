@@ -14,7 +14,9 @@ pub fn test_smart_indent_module() {
 }
 
 fn run_test_smart_indent_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentModule") {
+        return;
+    }
     let content = r"namespace Foo {
     /*insideModule*/
 }

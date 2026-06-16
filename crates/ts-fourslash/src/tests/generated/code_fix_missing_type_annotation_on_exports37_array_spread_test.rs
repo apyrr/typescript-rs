@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports37_array_spread() {
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports37_array_spread(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports37-array-spread") {
+        return;
+    }
     let content = r#"// @isolatedDeclarations: true
 // @declaration: true
 // @Filename: /code.ts

@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_jsx_react17() {
 }
 
 fn run_test_import_name_code_fix_jsx_react17(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_jsxReact17") {
+        return;
+    }
     let content = r#"// @jsx: preserve
 // @module: commonjs
 // @Filename: /node_modules/@types/react/index.d.ts

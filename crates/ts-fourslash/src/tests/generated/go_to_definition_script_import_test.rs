@@ -14,7 +14,9 @@ pub fn test_go_to_definition_script_import() {
 }
 
 fn run_test_go_to_definition_script_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionScriptImport") {
+        return;
+    }
     let content = r#"// @filename: scriptThing.ts
 /*1d*/console.log("woooo side effects")
 // @filename: stylez.css

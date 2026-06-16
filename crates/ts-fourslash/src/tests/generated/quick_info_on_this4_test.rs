@@ -14,7 +14,9 @@ pub fn test_quick_info_on_this4() {
 }
 
 fn run_test_quick_info_on_this4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnThis4") {
+        return;
+    }
     let content = r"interface ContextualInterface {
     m: number;
     method(this: this, n: number);

@@ -14,7 +14,9 @@ pub fn test_completions_properties_with_promise_union_type() {
 }
 
 fn run_test_completions_properties_with_promise_union_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsPropertiesWithPromiseUnionType") {
+        return;
+    }
     let content = r"// @strict: true
 type MyType = {
   foo: string;

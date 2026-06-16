@@ -14,7 +14,9 @@ pub fn test_go_to_definition_union_type_property1() {
 }
 
 fn run_test_go_to_definition_union_type_property1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionUnionTypeProperty1") {
+        return;
+    }
     let content = r"interface One {
     /*propertyDefinition1*/commonProperty: number;
     commonFunction(): number;

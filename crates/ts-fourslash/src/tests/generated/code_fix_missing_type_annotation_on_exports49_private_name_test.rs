@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports49_private_name() {
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports49_private_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports49-private-name") {
+        return;
+    }
     let content = r#"// @isolatedDeclarations: true
 // @declaration: true
 // @moduleResolution: bundler

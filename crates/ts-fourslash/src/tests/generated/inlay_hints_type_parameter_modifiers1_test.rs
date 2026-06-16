@@ -14,7 +14,9 @@ pub fn test_inlay_hints_type_parameter_modifiers1() {
 }
 
 fn run_test_inlay_hints_type_parameter_modifiers1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsTypeParameterModifiers1") {
+        return;
+    }
     let content = r"function test1() {
   return function <const T>(a: T) {};
 }";

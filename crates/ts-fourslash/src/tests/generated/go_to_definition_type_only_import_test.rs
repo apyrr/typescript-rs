@@ -14,7 +14,9 @@ pub fn test_go_to_definition_type_only_import() {
 }
 
 fn run_test_go_to_definition_type_only_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionTypeOnlyImport") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 enum /*1*/SyntaxKind { SourceFile }
 export type { SyntaxKind }

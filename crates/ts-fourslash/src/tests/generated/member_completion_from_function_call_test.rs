@@ -14,7 +14,9 @@ pub fn test_member_completion_from_function_call() {
 }
 
 fn run_test_member_completion_from_function_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberCompletionFromFunctionCall") {
+        return;
+    }
     let content = r"declare interface ifoo {
     text: (value: any) => ifoo;
 }

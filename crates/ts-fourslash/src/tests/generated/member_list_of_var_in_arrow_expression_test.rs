@@ -14,7 +14,9 @@ pub fn test_member_list_of_var_in_arrow_expression() {
 }
 
 fn run_test_member_list_of_var_in_arrow_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListOfVarInArrowExpression") {
+        return;
+    }
     let content = r"interface IMap<T> {
     [key: string]: T;
 }

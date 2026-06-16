@@ -14,7 +14,9 @@ pub fn test_completions_import_default_export_crash1() {
 }
 
 fn run_test_completions_import_default_export_crash1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImportDefaultExportCrash1") {
+        return;
+    }
     let content = r"// @module: node18
 // @allowJs: true
 // @Filename: /node_modules/dom7/index.d.ts

@@ -14,7 +14,9 @@ pub fn test_semantic_classification_modules() {
 }
 
 fn run_test_semantic_classification_modules(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemanticClassificationModules") {
+        return;
+    }
     let content = r"module /*0*/M {
     export var v;
     export interface /*1*/I {

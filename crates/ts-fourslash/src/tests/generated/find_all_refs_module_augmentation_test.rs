@@ -14,7 +14,9 @@ pub fn test_find_all_refs_module_augmentation() {
 }
 
 fn run_test_find_all_refs_module_augmentation(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsModuleAugmentation") {
+        return;
+    }
     let content = r#"// @Filename: /node_modules/foo/index.d.ts
 /*1*/export type /*2*/T = number;
 // @Filename: /a.ts

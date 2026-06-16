@@ -14,7 +14,9 @@ pub fn test_formatting_conditional_types() {
 }
 
 fn run_test_formatting_conditional_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingConditionalTypes") {
+        return;
+    }
     let content = r"/*L1*/type Diff1<T, U> = T extends U?never:T;
 /*L2*/type Diff2<T, U> = T    extends    U  ?    never   :     T;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

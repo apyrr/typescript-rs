@@ -14,7 +14,9 @@ pub fn test_parameter_with_nested_destructuring() {
 }
 
 fn run_test_parameter_with_nested_destructuring(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestParameterWithNestedDestructuring") {
+        return;
+    }
     let content = r"[[{ a: 'hello', b: [1] }]]
   .map(([{ a, b: [c] }]) => /*1*/a + /*2*/c);
 function f([[/*3*/a]]: [[string]], { b1: { /*4*/b2 } }: { b1: { b2: string; } }) {}";

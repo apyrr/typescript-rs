@@ -14,7 +14,9 @@ pub fn test_type_check_after_resolve() {
 }
 
 fn run_test_type_check_after_resolve(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTypeCheckAfterResolve") {
+        return;
+    }
     let content = r"/*start*/class Point implements /*IPointRef*/IPoint {
     getDist() {
         ssss;

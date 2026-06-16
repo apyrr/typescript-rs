@@ -14,7 +14,9 @@ pub fn test_smart_indent_do_statement() {
 }
 
 fn run_test_smart_indent_do_statement(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentDoStatement") {
+        return;
+    }
     let content = r"do /*1*/ {
 } while (true)
 

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_constructor_of_class_expression01() {
 }
 
 fn run_test_go_to_definition_constructor_of_class_expression01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionConstructorOfClassExpression01") {
+        return;
+    }
     let content = r"var x = class C {
     /*definition*/constructor() {
         var other = new [|/*xusage*/C|];

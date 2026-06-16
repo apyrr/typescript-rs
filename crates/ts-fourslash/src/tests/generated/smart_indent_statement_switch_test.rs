@@ -14,7 +14,9 @@ pub fn test_smart_indent_statement_switch() {
 }
 
 fn run_test_smart_indent_statement_switch(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentStatementSwitch") {
+        return;
+    }
     let content = r#"function Foo() {
     var x;
     switch (x) {

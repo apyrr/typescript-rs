@@ -14,7 +14,9 @@ pub fn test_formatting_object_literal_open_curly_newline_typing() {
 }
 
 fn run_test_formatting_object_literal_open_curly_newline_typing(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingObjectLiteralOpenCurlyNewlineTyping") {
+        return;
+    }
     let content = r"
 var varName =/**/
 ";

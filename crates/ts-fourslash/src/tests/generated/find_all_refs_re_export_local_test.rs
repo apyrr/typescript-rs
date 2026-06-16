@@ -14,7 +14,9 @@ pub fn test_find_all_refs_re_export_local() {
 }
 
 fn run_test_find_all_refs_re_export_local(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsReExportLocal") {
+        return;
+    }
     let content = r#"// @noLib: true
 // @strict: false
 // @Filename: /a.ts

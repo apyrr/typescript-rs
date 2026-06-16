@@ -14,7 +14,9 @@ pub fn test_go_to_definition_yield2() {
 }
 
 fn run_test_go_to_definition_yield2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionYield2") {
+        return;
+    }
     let content = r"function* outerGen() {
     function* /*end*/gen() {
         [|/*start*/yield|] 0;

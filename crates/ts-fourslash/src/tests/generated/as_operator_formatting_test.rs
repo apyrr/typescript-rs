@@ -14,7 +14,9 @@ pub fn test_as_operator_formatting() {
 }
 
 fn run_test_as_operator_formatting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAsOperatorFormatting") {
+        return;
+    }
     let content = r"/**/var x = 3   as  number;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

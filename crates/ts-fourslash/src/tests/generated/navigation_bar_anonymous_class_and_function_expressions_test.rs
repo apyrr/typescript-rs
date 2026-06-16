@@ -14,7 +14,9 @@ pub fn test_navigation_bar_anonymous_class_and_function_expressions() {
 }
 
 fn run_test_navigation_bar_anonymous_class_and_function_expressions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarAnonymousClassAndFunctionExpressions") {
+        return;
+    }
     let content = r#"global.cls = class { };
 (function() {
     const x = () => {
@@ -33,7 +35,7 @@ fn run_test_navigation_bar_anonymous_class_and_function_expressions(t: &mut Test
     // These will only show up as childItems.
     function z() {}
     console.log(function() {})
-    describe("this", 'function', ` + "`" + `is a function` + "`" + `, ` + "`" + `with template literal ${"a"}` + "`" + `, () => {});
+    describe("this", 'function', `is a function`, `with template literal ${"a"}`, () => {});
     [].map(() => {});
 })
 (function classes() {

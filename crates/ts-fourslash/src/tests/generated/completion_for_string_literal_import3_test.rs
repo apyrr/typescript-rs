@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal_import3() {
 }
 
 fn run_test_completion_for_string_literal_import3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteralImport3") {
+        return;
+    }
     let content = r#"// @filename: /globals.d.ts
 declare module "*.css";
 // @filename: /a.ts

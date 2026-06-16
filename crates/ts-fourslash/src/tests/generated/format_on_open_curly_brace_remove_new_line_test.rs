@@ -14,7 +14,9 @@ pub fn test_format_on_open_curly_brace_remove_new_line() {
 }
 
 fn run_test_format_on_open_curly_brace_remove_new_line(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatOnOpenCurlyBraceRemoveNewLine") {
+        return;
+    }
     let content = r"if(true)
 /**/ }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

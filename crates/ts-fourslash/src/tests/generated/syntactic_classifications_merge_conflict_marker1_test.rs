@@ -14,7 +14,9 @@ pub fn test_syntactic_classifications_merge_conflict_marker1() {
 }
 
 fn run_test_syntactic_classifications_merge_conflict_marker1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSyntacticClassificationsMergeConflictMarker1") {
+        return;
+    }
     let content = r#"<<<<<<< HEAD
 "AAAA"
 =======

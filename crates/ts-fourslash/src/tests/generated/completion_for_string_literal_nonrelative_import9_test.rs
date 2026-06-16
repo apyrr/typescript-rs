@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal_nonrelative_import9() {
 }
 
 fn run_test_completion_for_string_literal_nonrelative_import9(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteralNonrelativeImport9") {
+        return;
+    }
     let content = r#"// @Filename: tsconfig.json
 {
     "compilerOptions": {

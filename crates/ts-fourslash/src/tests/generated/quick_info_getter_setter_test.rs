@@ -14,7 +14,9 @@ pub fn test_quick_info_getter_setter() {
 }
 
 fn run_test_quick_info_getter_setter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoGetterSetter") {
+        return;
+    }
     let content = r#"// @target: es2015
 class C {
     #x = Promise.resolve("")

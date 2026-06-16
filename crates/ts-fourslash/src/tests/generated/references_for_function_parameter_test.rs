@@ -14,7 +14,9 @@ pub fn test_references_for_function_parameter() {
 }
 
 fn run_test_references_for_function_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForFunctionParameter") {
+        return;
+    }
     let content = r"var x;
 var n;
 

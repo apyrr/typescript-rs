@@ -14,7 +14,9 @@ pub fn test_go_to_definition_satisfies_expression1() {
 }
 
 fn run_test_go_to_definition_satisfies_expression1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionSatisfiesExpression1") {
+        return;
+    }
     let content = r"const STRINGS = {
     [|/*definition*/title|]: 'A Title',
 } satisfies Record<string,string>;

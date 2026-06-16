@@ -14,7 +14,9 @@ pub fn test_auto_import_provider2() {
 }
 
 fn run_test_auto_import_provider2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportProvider2") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/node_modules/direct-dependency/package.json
 { "name": "direct-dependency", "dependencies": { "indirect-dependency": "*" } }
 // @Filename: /home/src/workspaces/project/node_modules/direct-dependency/index.d.ts

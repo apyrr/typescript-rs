@@ -14,13 +14,15 @@ pub fn test_tsx_quick_info7() {
 }
 
 fn run_test_tsx_quick_info7(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxQuickInfo7") {
+        return;
+    }
     let content = r#"//@Filename: file.tsx
 // @jsx: preserve
 // @noLib: true
 declare function OverloadComponent<U>(attr: {b: U, a?: string, "ignore-prop": boolean}): JSX.Element;
 declare function OverloadComponent<T, U>(attr: {b: U, a: T}): JSX.Element;
-declare function OverloadComponent(): JSX.Element; // effective argument type of ` + "`" + `{}` + "`" + `, needs to be last
+declare function OverloadComponent(): JSX.Element; // effective argument type of `{}`, needs to be last
 function Baz<T extends {b: number}, U extends {a: boolean, b:string}>(arg1: T, arg2: U) {
     let a0 = <Overloa/*1*/dComponent {...arg1} a="hello" ignore-prop />;
     let a1 = <Overloa/*2*/dComponent {...arg2} ignore-pro="hello world" />;

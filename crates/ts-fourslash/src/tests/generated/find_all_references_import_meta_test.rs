@@ -14,7 +14,9 @@ pub fn test_find_all_references_import_meta() {
 }
 
 fn run_test_find_all_references_import_meta(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllReferencesImportMeta") {
+        return;
+    }
     let content = r"// Haha that's so meta!
 
 let x = import.meta/**/;";

@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_dollar() {
 }
 
 fn run_test_import_name_code_fix_dollar(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_dollar") {
+        return;
+    }
     let content = r#"// @module: esnext
 // @moduleResolution: bundler
 // @Filename: /node_modules/qwik/index.d.ts

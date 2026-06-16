@@ -14,7 +14,9 @@ pub fn test_find_all_refs_re_export_right_name_wrong_symbol() {
 }
 
 fn run_test_find_all_refs_re_export_right_name_wrong_symbol(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsReExportRightNameWrongSymbol") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 [|export const /*a*/[|{| "isWriteAccess": true, "isDefinition": true, "contextRangeIndex": 0 |}x|] = 0;|]
 // @Filename: /b.ts

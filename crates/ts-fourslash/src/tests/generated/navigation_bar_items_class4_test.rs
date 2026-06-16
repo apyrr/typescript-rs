@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_class4() {
 }
 
 fn run_test_navigation_bar_items_class4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsClass4") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @filename: /foo.js
 class Foo {}

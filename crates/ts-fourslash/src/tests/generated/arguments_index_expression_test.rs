@@ -14,7 +14,9 @@ pub fn test_arguments_index_expression() {
 }
 
 fn run_test_arguments_index_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestArgumentsIndexExpression") {
+        return;
+    }
     let content = r"function f() {
     var x = /**/arguments[0];
 }";

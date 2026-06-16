@@ -14,7 +14,9 @@ pub fn test_indent_after_function_closing_braces() {
 }
 
 fn run_test_indent_after_function_closing_braces(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIndentAfterFunctionClosingBraces") {
+        return;
+    }
     let content = r"class foo {
     public f() {
         return 0;

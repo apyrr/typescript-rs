@@ -14,7 +14,9 @@ pub fn test_syntactic_classifications_jsx1() {
 }
 
 fn run_test_syntactic_classifications_jsx1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSyntacticClassificationsJsx1") {
+        return;
+    }
     let content = r#"// @Filename: file1.tsx
 let x  = <div a = "some-value" b = {1}>
     some jsx text

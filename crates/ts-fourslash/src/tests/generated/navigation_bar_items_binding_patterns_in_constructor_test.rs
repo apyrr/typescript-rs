@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_binding_patterns_in_constructor() {
 }
 
 fn run_test_navigation_bar_items_binding_patterns_in_constructor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsBindingPatternsInConstructor") {
+        return;
+    }
     let content = r"class A {
     x: any
     constructor([a]: any) {

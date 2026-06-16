@@ -14,7 +14,9 @@ pub fn test_completions_union() {
 }
 
 fn run_test_completions_union(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsUnion") {
+        return;
+    }
     let content = r"interface I { x: number; }
 interface Many<T> extends ReadonlyArray<T> { extra: number; }
 class C { private priv: number; }

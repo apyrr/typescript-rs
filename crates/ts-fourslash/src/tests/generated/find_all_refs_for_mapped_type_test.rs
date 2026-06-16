@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_mapped_type() {
 }
 
 fn run_test_find_all_refs_for_mapped_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForMappedType") {
+        return;
+    }
     let content = r#"interface T { /*1*/a: number };
 type U = { [K in keyof T]: string };
 type V = { [K in keyof U]: boolean };

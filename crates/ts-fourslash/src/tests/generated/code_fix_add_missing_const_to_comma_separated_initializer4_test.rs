@@ -14,7 +14,9 @@ pub fn test_code_fix_add_missing_const_to_comma_separated_initializer4() {
 }
 
 fn run_test_code_fix_add_missing_const_to_comma_separated_initializer4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddMissingConstToCommaSeparatedInitializer4") {
+        return;
+    }
     let content = r"let y: any;
 x = 0, y = 0;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

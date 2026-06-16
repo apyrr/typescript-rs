@@ -14,7 +14,9 @@ pub fn test_quick_info_for_getter_and_setter() {
 }
 
 fn run_test_quick_info_for_getter_and_setter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForGetterAndSetter") {
+        return;
+    }
     let content = r"class Test {
     constructor() {
         this.value;

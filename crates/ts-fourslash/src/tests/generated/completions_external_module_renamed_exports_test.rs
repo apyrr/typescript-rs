@@ -14,7 +14,9 @@ pub fn test_completions_external_module_renamed_exports() {
 }
 
 fn run_test_completions_external_module_renamed_exports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsExternalModuleRenamedExports") {
+        return;
+    }
     let content = r#"// @Filename: other.ts
 export {};
 // @Filename: index.ts

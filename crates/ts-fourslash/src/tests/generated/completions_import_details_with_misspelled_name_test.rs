@@ -14,7 +14,9 @@ pub fn test_completions_import_details_with_misspelled_name() {
 }
 
 fn run_test_completions_import_details_with_misspelled_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImport_details_withMisspelledName") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 export const abc = 0;
 // @Filename: /b.ts

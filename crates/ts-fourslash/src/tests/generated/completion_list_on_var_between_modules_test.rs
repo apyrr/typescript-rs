@@ -14,7 +14,9 @@ pub fn test_completion_list_on_var_between_modules() {
 }
 
 fn run_test_completion_list_on_var_between_modules(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOnVarBetweenModules") {
+        return;
+    }
     let content = r"namespace M1 {
     export class C1 {
     }

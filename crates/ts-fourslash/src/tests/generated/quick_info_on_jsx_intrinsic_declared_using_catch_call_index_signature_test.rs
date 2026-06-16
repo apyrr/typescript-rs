@@ -16,7 +16,9 @@ pub fn test_quick_info_on_jsx_intrinsic_declared_using_catch_call_index_signatur
 fn run_test_quick_info_on_jsx_intrinsic_declared_using_catch_call_index_signature(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnJsxIntrinsicDeclaredUsingCatchCallIndexSignature") {
+        return;
+    }
     let content = r#"// @jsx: react
 // @filename: /a.tsx
 declare namespace JSX {

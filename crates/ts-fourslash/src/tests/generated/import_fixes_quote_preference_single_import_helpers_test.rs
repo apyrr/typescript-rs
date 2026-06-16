@@ -14,7 +14,9 @@ pub fn test_import_fixes_quote_preference_single_import_helpers() {
 }
 
 fn run_test_import_fixes_quote_preference_single_import_helpers(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportFixes_quotePreferenceSingle_importHelpers") {
+        return;
+    }
     let content = r"// @importHelpers: true
 // @filename: /a.ts
 export default () => {};

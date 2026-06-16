@@ -14,7 +14,9 @@ pub fn test_completion_list_outside_of_for_loop01() {
 }
 
 fn run_test_completion_list_outside_of_for_loop01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOutsideOfForLoop01") {
+        return;
+    }
     let content = r"for (let i = 0; i < 10; i++) i;/*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(

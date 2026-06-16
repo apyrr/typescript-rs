@@ -14,7 +14,9 @@ pub fn test_go_to_definition_return4() {
 }
 
 fn run_test_go_to_definition_return4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionReturn4") {
+        return;
+    }
     let content = r"[|/*start*/return|];";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_go_to_definition(t, &["start".to_string()]);

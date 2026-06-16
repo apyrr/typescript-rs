@@ -14,7 +14,9 @@ pub fn test_signature_help_incomplete_calls() {
 }
 
 fn run_test_signature_help_incomplete_calls(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpIncompleteCalls") {
+        return;
+    }
     let content = r#"namespace IncompleteCalls {
     class Foo {
         public f1() { }

@@ -14,13 +14,15 @@ pub fn test_failure_to_implement_class() {
 }
 
 fn run_test_failure_to_implement_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFailureToImplementClass") {
+        return;
+    }
     let content = r"interface IExec {
     exec: (filename: string, cmdLine: string) => boolean;
 }
 class /*1*/NodeExec/*2*/ implements IExec { }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
-    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"), 0);
+    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"));
     f.verify_number_of_errors_in_current_file(1);
     done();
 }

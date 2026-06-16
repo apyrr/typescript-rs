@@ -14,7 +14,9 @@ pub fn test_double_underscore_renames() {
 }
 
 fn run_test_double_underscore_renames(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDoubleUnderscoreRenames") {
+        return;
+    }
     let content = r#"// @Filename: fileA.ts
 [|export function [|{| "contextRangeIndex": 0 |}__foo|]() {
 }|]

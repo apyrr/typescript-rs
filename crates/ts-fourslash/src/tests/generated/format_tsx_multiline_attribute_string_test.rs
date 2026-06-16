@@ -14,7 +14,9 @@ pub fn test_format_tsx_multiline_attribute_string() {
 }
 
 fn run_test_format_tsx_multiline_attribute_string(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatTsxMultilineAttributeString") {
+        return;
+    }
     let content = r#"// @Filename: foo.tsx
 (
     <input

@@ -14,7 +14,9 @@ pub fn test_switch_indenting() {
 }
 
 fn run_test_switch_indenting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSwitchIndenting") {
+        return;
+    }
     let content = r"switch (null) {
     case 0:
         /**/

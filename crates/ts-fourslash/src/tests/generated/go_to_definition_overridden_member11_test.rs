@@ -14,7 +14,9 @@ pub fn test_go_to_definition_overridden_member11() {
 }
 
 fn run_test_go_to_definition_overridden_member11(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionOverriddenMember11") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @checkJs: true
 // @noEmit: true

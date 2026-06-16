@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_require_add_to_existing() {
 }
 
 fn run_test_import_name_code_fix_require_add_to_existing(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_require_addToExisting") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @checkJs: true
 // @Filename: blah.js

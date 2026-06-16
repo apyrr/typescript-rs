@@ -14,7 +14,9 @@ pub fn test_signature_help_optional_call2() {
 }
 
 fn run_test_signature_help_optional_call2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpOptionalCall2") {
+        return;
+    }
     let content = r"// @strict: false
 declare const fnTest: undefined | ((str: string, num: number) => void);
 fnTest?.(/*1*/);";

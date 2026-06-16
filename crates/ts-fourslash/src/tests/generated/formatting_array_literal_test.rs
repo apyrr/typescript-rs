@@ -14,7 +14,9 @@ pub fn test_formatting_array_literal() {
 }
 
 fn run_test_formatting_array_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingArrayLiteral") {
+        return;
+    }
     let content = r"/*1*/x= [];
 y = [
 /*2*/           1,

@@ -14,7 +14,9 @@ pub fn test_code_fix_convert_to_type_only_import3() {
 }
 
 fn run_test_code_fix_convert_to_type_only_import3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixConvertToTypeOnlyImport3") {
+        return;
+    }
     let content = r#"// @module: esnext
 // @verbatimModuleSyntax: true
 // @Filename: exports1.ts

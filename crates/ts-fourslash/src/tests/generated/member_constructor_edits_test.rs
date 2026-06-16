@@ -14,7 +14,9 @@ pub fn test_member_constructor_edits() {
 }
 
 fn run_test_member_constructor_edits(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberConstructorEdits") {
+        return;
+    }
     let content = r#" namespace M {
      export class A {
 		 constructor(a: string) {}

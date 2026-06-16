@@ -14,7 +14,9 @@ pub fn test_code_fix_spelling3() {
 }
 
 fn run_test_code_fix_spelling3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixSpelling3") {
+        return;
+    }
     let content = r"[|class C {
     state = 'hi'
     doStuff() {

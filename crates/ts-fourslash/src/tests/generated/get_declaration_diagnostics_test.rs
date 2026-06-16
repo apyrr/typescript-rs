@@ -14,7 +14,9 @@ pub fn test_get_declaration_diagnostics() {
 }
 
 fn run_test_get_declaration_diagnostics(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetDeclarationDiagnostics") {
+        return;
+    }
     let content = r#"// @strict: false
 // @declaration: true
 // @outFile: true

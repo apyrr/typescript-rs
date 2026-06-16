@@ -14,7 +14,9 @@ pub fn test_smart_indent_on_function_parameters() {
 }
 
 fn run_test_smart_indent_on_function_parameters(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentOnFunctionParameters") {
+        return;
+    }
     let content = r"function foo(a,
         /*2*/b,/*0*/
              //ABC/*3*/

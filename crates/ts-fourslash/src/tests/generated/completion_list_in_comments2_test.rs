@@ -14,7 +14,9 @@ pub fn test_completion_list_in_comments2() {
 }
 
 fn run_test_completion_list_in_comments2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInComments2") {
+        return;
+    }
     let content = r#"// */{| "name" : "1" |}"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(t, MarkerInput::Name("1".to_string()), None);

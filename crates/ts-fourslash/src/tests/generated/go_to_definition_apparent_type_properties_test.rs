@@ -14,7 +14,9 @@ pub fn test_go_to_definition_apparent_type_properties() {
 }
 
 fn run_test_go_to_definition_apparent_type_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionApparentTypeProperties") {
+        return;
+    }
     let content = r#"interface Number {
     /*definition*/myObjectMethod(): number;
 }

@@ -14,7 +14,9 @@ pub fn test_organize_imports17() {
 }
 
 fn run_test_organize_imports17(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImports17") {
+        return;
+    }
     let content = r#"import { Both } from "module-specifiers-unsorted";
 import { aa, CaseInsensitively, sorted } from "aardvark";"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

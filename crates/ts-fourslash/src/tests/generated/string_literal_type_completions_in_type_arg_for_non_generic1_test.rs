@@ -14,7 +14,9 @@ pub fn test_string_literal_type_completions_in_type_arg_for_non_generic1() {
 }
 
 fn run_test_string_literal_type_completions_in_type_arg_for_non_generic1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestStringLiteralTypeCompletionsInTypeArgForNonGeneric1") {
+        return;
+    }
     let content = r#"interface Foo {}
 type Bar = {};
 

@@ -14,7 +14,9 @@ pub fn test_space_before_and_after_binary_operators() {
 }
 
 fn run_test_space_before_and_after_binary_operators(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSpaceBeforeAndAfterBinaryOperators") {
+        return;
+    }
     let content = r"let i = 0;
 /*1*/(i++,i++);
 /*2*/(i++,++i);

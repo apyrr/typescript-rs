@@ -14,7 +14,9 @@ pub fn test_find_all_references_triple_slash() {
 }
 
 fn run_test_find_all_references_triple_slash(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllReferencesTripleSlash") {
+        return;
+    }
     let content = r#"// @checkJs: true
 // @Filename: /node_modules/@types/globals/index.d.ts
 declare const someAmbientGlobal: unknown;

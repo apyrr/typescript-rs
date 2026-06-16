@@ -14,7 +14,9 @@ pub fn test_formatting_for_loop_semicolons() {
 }
 
 fn run_test_formatting_for_loop_semicolons(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingForLoopSemicolons") {
+        return;
+    }
     let content = r"/*1*/for (;;) { }
 /*2*/for (var x;x<0;x++) { }
 /*3*/for (var x ;x<0 ;x++) { }";

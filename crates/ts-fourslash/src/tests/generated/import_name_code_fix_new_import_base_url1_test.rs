@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_base_url1() {
 }
 
 fn run_test_import_name_code_fix_new_import_base_url1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportBaseUrl1") {
+        return;
+    }
     let content = r#"// @Filename: /tsconfig.json
 {
     "compilerOptions": {

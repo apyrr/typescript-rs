@@ -14,7 +14,9 @@ pub fn test_smart_indent_enum() {
 }
 
 fn run_test_smart_indent_enum(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentEnum") {
+        return;
+    }
     let content = r#"enum Foo3 {
     {| "indentation": 4|}
     val1,

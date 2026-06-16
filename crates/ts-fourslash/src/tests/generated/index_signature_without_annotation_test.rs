@@ -14,7 +14,9 @@ pub fn test_index_signature_without_annotation() {
 }
 
 fn run_test_index_signature_without_annotation(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIndexSignatureWithoutAnnotation") {
+        return;
+    }
     let content = r"interface B {
     1: any;
 }

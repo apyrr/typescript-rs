@@ -14,7 +14,9 @@ pub fn test_formatting_in_expressions_in_tsx() {
 }
 
 fn run_test_formatting_in_expressions_in_tsx(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingInExpressionsInTsx") {
+        return;
+    }
     let content = r#"// @Filename: test.tsx
 import * as React from "react";
 <div

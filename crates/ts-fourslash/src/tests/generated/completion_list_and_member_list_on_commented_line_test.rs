@@ -14,7 +14,9 @@ pub fn test_completion_list_and_member_list_on_commented_line() {
 }
 
 fn run_test_completion_list_and_member_list_on_commented_line(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAndMemberListOnCommentedLine") {
+        return;
+    }
     let content = r"// /**/
 var";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

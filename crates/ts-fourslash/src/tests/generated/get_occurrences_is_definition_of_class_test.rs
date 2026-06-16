@@ -14,7 +14,9 @@ pub fn test_get_occurrences_is_definition_of_class() {
 }
 
 fn run_test_get_occurrences_is_definition_of_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIsDefinitionOfClass") {
+        return;
+    }
     let content = r"/*1*/class /*2*/C {
     n: number;
     constructor() {

@@ -14,27 +14,29 @@ pub fn test_format_no_space_after_template_head_and_middle() {
 }
 
 fn run_test_format_no_space_after_template_head_and_middle(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"const a1 = ` + "`" + `${ 1 }${ 1 }` + "`" + `;
-const a2 = ` + "`" + `
+    if should_skip_if_failing("TestFormatNoSpaceAfterTemplateHeadAndMiddle") {
+        return;
+    }
+    let content = r"const a1 = `${ 1 }${ 1 }`;
+const a2 = `
     ${ 1 }${ 1 }
-` + "`" + `;
-const a3 = ` + "`" + `
+`;
+const a3 = `
 
-
-    ${ 1 }${ 1 }
-` + "`" + `;
-const a4 = ` + "`" + `
 
     ${ 1 }${ 1 }
+`;
+const a4 = `
 
-` + "`" + `;
-const a5 = ` + "`" + `text ${ 1 } text ${ 1 } text` + "`" + `;
-const a6 = ` + "`" + `
+    ${ 1 }${ 1 }
+
+`;
+const a5 = `text ${ 1 } text ${ 1 } text`;
+const a6 = `
     text ${ 1 }
     text ${ 1 }
     text
-` + "`" + `;"#;
+`;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     {
         let mut opts = f.get_options();

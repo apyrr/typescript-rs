@@ -14,7 +14,9 @@ pub fn test_ng_proxy2() {
 }
 
 fn run_test_ng_proxy2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNgProxy2") {
+        return;
+    }
     let content = r#"// @Filename: tsconfig.json
 {
     "compilerOptions": {

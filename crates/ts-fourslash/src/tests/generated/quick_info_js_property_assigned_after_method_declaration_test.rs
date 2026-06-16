@@ -14,7 +14,9 @@ pub fn test_quick_info_js_property_assigned_after_method_declaration() {
 }
 
 fn run_test_quick_info_js_property_assigned_after_method_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoJsPropertyAssignedAfterMethodDeclaration") {
+        return;
+    }
     let content = r"// @noLib: true
 // @allowJs: true
 // @noImplicitThis: true

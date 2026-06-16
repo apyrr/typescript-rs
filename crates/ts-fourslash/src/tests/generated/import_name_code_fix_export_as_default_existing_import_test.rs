@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_export_as_default_existing_import() {
 }
 
 fn run_test_import_name_code_fix_export_as_default_existing_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixExportAsDefaultExistingImport") {
+        return;
+    }
     let content = r#"import [|{ v1, v2, v3 }|] from "./module";
 v4/*0*/();
 // @Filename: module.ts

@@ -14,7 +14,9 @@ pub fn test_signature_help_function_parameter() {
 }
 
 fn run_test_signature_help_function_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpFunctionParameter") {
+        return;
+    }
     let content = r#"function parameterFunction(callback: (a: number, b: string) => void) {
     callback(/*parameterFunction1*/5, /*parameterFunction2*/"");
 }"#;

@@ -14,7 +14,9 @@ pub fn test_rename_info_for_function_expression01() {
 }
 
 fn run_test_rename_info_for_function_expression01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameInfoForFunctionExpression01") {
+        return;
+    }
     let content = r"var x = function /**/[|f|](g: any, h: any) {
     f(f, g);
 }";

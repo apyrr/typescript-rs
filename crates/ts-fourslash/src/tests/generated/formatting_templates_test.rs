@@ -14,9 +14,11 @@ pub fn test_formatting_templates() {
 }
 
 fn run_test_formatting_templates(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"String.call ` + "`" + `${123}` + "`" + `/*1*/
-String.call ` + "`" + `${123} ${456}` + "`" + `/*2*/"#;
+    if should_skip_if_failing("TestFormattingTemplates") {
+        return;
+    }
+    let content = r"String.call `${123}`/*1*/
+String.call `${123} ${456}`/*2*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");
     f.insert(t, ";");

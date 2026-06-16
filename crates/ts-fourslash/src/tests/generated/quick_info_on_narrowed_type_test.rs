@@ -14,7 +14,9 @@ pub fn test_quick_info_on_narrowed_type() {
 }
 
 fn run_test_quick_info_on_narrowed_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnNarrowedType") {
+        return;
+    }
     let content = r#"// @strictNullChecks: true
 function foo(strOrNum: string | number) {
     if (typeof /*1*/strOrNum === "number") {

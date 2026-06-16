@@ -14,7 +14,9 @@ pub fn test_function_indentation() {
 }
 
 fn run_test_function_indentation(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFunctionIndentation") {
+        return;
+    }
     let content = r#"namespace M {
 export =
 C;

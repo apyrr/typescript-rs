@@ -14,7 +14,9 @@ pub fn test_quick_info_of_generic_type_assertions1() {
 }
 
 fn run_test_quick_info_of_generic_type_assertions1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOfGenericTypeAssertions1") {
+        return;
+    }
     let content = r"function f<T>(x: T): T { return null; }
 var /*1*/r = <T>(x: T) => x;
 var /*2*/r2 = < <T>(x: T) => T>f;

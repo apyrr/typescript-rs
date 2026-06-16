@@ -14,7 +14,9 @@ pub fn test_go_to_source13_nodenext() {
 }
 
 fn run_test_go_to_source13_nodenext(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToSource13_nodenext") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/node_modules/left-pad/package.json
 {
   "name": "left-pad",

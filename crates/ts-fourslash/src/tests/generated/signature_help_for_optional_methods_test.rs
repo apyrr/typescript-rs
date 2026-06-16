@@ -14,7 +14,9 @@ pub fn test_signature_help_for_optional_methods() {
 }
 
 fn run_test_signature_help_for_optional_methods(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpForOptionalMethods") {
+        return;
+    }
     let content = r"// @strict: true
 interface Obj {
     optionalMethod?: (current: any) => any;

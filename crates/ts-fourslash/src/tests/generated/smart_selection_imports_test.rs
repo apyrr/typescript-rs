@@ -14,7 +14,9 @@ pub fn test_smart_selection_imports() {
 }
 
 fn run_test_smart_selection_imports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_imports") {
+        return;
+    }
     let content = r"import { /**/x as y, z } from './z';
 import { b } from './';
 

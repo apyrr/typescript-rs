@@ -14,7 +14,9 @@ pub fn test_find_all_refs_inherited_properties1() {
 }
 
 fn run_test_find_all_refs_inherited_properties1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsInheritedProperties1") {
+        return;
+    }
     let content = r"class class1 extends class1 {
    /*1*/doStuff() { }
    /*2*/propName: string;

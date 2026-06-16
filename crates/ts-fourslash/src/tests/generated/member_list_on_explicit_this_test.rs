@@ -14,7 +14,9 @@ pub fn test_member_list_on_explicit_this() {
 }
 
 fn run_test_member_list_on_explicit_this(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListOnExplicitThis") {
+        return;
+    }
     let content = r"interface Restricted {
    n: number;
 }

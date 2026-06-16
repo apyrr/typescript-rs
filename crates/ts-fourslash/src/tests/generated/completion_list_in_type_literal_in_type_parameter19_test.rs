@@ -14,8 +14,10 @@ pub fn test_completion_list_in_type_literal_in_type_parameter19() {
 }
 
 fn run_test_completion_list_in_type_literal_in_type_parameter19(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"class Foo<T extends 'one' | 'two'> {}
+    if should_skip_if_failing("TestCompletionListInTypeLiteralInTypeParameter19") {
+        return;
+    }
+    let content = r"class Foo<T extends 'one' | 'two'> {}
 function foo<T extends 'one' | 'two'>() {}
 declare function tag<T extends 'one' | 'two'>(x: TemplateStringsArray): void;
 declare function decorator<T extends 'one' | 'two'>(...args: unknown[]): never
@@ -25,8 +27,8 @@ new Foo<'/*1*/'>();
 foo<'/*2*/'>();
 foo<'/*3*/'>;
 Foo<'/*4*/'>;
-tag<'/*5*/'>` + "`" + `` + "`" + `;
-class { @decorator<'/*6*/'>; method() {} }"#;
+tag<'/*5*/'>``;
+class { @decorator<'/*6*/'>; method() {} }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(
         t,

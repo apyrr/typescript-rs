@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_variable_in_implements_clause01() {
 }
 
 fn run_test_find_all_refs_for_variable_in_implements_clause01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForVariableInImplementsClause01") {
+        return;
+    }
     let content = r"var Base = class { };
 class C extends Base implements /**/Base { }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

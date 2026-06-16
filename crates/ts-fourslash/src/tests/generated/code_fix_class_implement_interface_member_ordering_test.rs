@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_member_ordering() {
 }
 
 fn run_test_code_fix_class_implement_interface_member_ordering(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceMemberOrdering") {
+        return;
+    }
     let content = r"// @lib: es2017
 /** asdf */
 interface I {

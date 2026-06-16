@@ -14,7 +14,9 @@ pub fn test_completion_list_in_return_with_contextual_this() {
 }
 
 fn run_test_completion_list_in_return_with_contextual_this(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInReturnWithContextualThis") {
+        return;
+    }
     let content = r"interface Ctx {
     foo(): {
         x: number

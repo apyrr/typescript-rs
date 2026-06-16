@@ -14,7 +14,9 @@ pub fn test_auto_imports_custom_conditions() {
 }
 
 fn run_test_auto_imports_custom_conditions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportsCustomConditions") {
+        return;
+    }
     let content = r#"// @module: esnext
 // @moduleResolution: bundler
 // @customConditions: custom

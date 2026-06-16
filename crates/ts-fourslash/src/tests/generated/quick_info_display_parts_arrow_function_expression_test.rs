@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_arrow_function_expression() {
 }
 
 fn run_test_quick_info_display_parts_arrow_function_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsArrowFunctionExpression") {
+        return;
+    }
     let content = r"var /*1*/x = /*5*/a => 10;
 var /*2*/y = (/*6*/a, /*7*/b) => 10;
 var /*3*/z = (/*8*/a: number) => 10;

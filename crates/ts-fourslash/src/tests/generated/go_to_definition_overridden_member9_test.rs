@@ -14,7 +14,9 @@ pub fn test_go_to_definition_overridden_member9() {
 }
 
 fn run_test_go_to_definition_overridden_member9(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionOverriddenMember9") {
+        return;
+    }
     let content = r"// @noImplicitOverride: true
 interface I {
     m(): void;

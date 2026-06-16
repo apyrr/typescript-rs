@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_index_signature() {
 }
 
 fn run_test_quickinfo_verbosity_index_signature(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityIndexSignature") {
+        return;
+    }
     let content = r"type Key = string | number;
 interface Apple {
     banana: number;

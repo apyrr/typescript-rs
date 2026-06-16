@@ -14,7 +14,9 @@ pub fn test_generic_calls_with_optional_params1() {
 }
 
 fn run_test_generic_calls_with_optional_params1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericCallsWithOptionalParams1") {
+        return;
+    }
     let content = r#"class Collection<T> {
     public add(x: T) { }
 }

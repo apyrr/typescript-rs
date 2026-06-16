@@ -14,7 +14,9 @@ pub fn test_signature_help_negative_tests2() {
 }
 
 fn run_test_signature_help_negative_tests2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpNegativeTests2") {
+        return;
+    }
     let content = r"class clsOverload { constructor(); constructor(test: string); constructor(test?: string) { } }
 var x = new clsOverload/*beforeOpenParen*/()/*afterCloseParen*/;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

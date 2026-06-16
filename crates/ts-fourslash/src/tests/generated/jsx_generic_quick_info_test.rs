@@ -14,7 +14,9 @@ pub fn test_jsx_generic_quick_info() {
 }
 
 fn run_test_jsx_generic_quick_info(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsxGenericQuickInfo") {
+        return;
+    }
     let content = r#"//@Filename: file.tsx
 declare namespace JSX {
     interface Element { }

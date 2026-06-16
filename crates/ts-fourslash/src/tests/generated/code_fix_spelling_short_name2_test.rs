@@ -14,7 +14,9 @@ pub fn test_code_fix_spelling_short_name2() {
 }
 
 fn run_test_code_fix_spelling_short_name2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixSpellingShortName2") {
+        return;
+    }
     let content = r"export let ab = 1;
 abc;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

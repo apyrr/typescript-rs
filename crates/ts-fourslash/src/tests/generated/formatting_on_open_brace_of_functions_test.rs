@@ -14,7 +14,9 @@ pub fn test_formatting_on_open_brace_of_functions() {
 }
 
 fn run_test_formatting_on_open_brace_of_functions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnOpenBraceOfFunctions") {
+        return;
+    }
     let content = r"/**/function T2_y()
 {
 Plugin.T1.t1_x();

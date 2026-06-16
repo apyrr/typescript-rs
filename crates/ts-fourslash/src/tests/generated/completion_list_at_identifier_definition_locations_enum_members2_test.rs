@@ -14,7 +14,9 @@ pub fn test_completion_list_at_identifier_definition_locations_enum_members2() {
 }
 
 fn run_test_completion_list_at_identifier_definition_locations_enum_members2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtIdentifierDefinitionLocations_enumMembers2") {
+        return;
+    }
     let content = r"var aa = 1;
 enum a { foo, /*enumValueName3*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

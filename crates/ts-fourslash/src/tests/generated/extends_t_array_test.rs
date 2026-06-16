@@ -14,7 +14,9 @@ pub fn test_extends_t_array() {
 }
 
 fn run_test_extends_t_array(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExtendsTArray") {
+        return;
+    }
     let content = r"// @strict: false
 interface I1<T> {
     (a: T): T;

@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_interface_method_06() {
 }
 
 fn run_test_go_to_implementation_interface_method_06(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationInterfaceMethod_06") {
+        return;
+    }
     let content = r"interface SuperFoo {
     hello (): void;
 }

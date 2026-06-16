@@ -14,7 +14,9 @@ pub fn test_navigation_bar_merging() {
 }
 
 fn run_test_navigation_bar_merging(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarMerging") {
+        return;
+    }
     let content = r"// @Filename: file1.ts
 namespace a {
     function foo() {}

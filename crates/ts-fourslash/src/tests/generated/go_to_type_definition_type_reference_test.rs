@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition_type_reference() {
 }
 
 fn run_test_go_to_type_definition_type_reference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinition_typeReference") {
+        return;
+    }
     let content = r"type User = { name: string };
 type Box<T> = { value: T };
 declare const boxedUser: Box<User>

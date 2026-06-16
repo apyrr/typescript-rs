@@ -14,7 +14,9 @@ pub fn test_find_all_refs_re_exports_use_in_import_type() {
 }
 
 fn run_test_find_all_refs_re_exports_use_in_import_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsReExportsUseInImportType") {
+        return;
+    }
     let content = r#"// @Filename: /foo/types/types.ts
 [|export type /*full0*/[|{| "isWriteAccess": true, "isDefinition": true, "contextRangeIndex": 0 |}Full|] = { prop: string; };|]
 // @Filename: /foo/types/index.ts

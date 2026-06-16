@@ -14,7 +14,9 @@ pub fn test_get_occurrences_switch_case_default5() {
 }
 
 fn run_test_get_occurrences_switch_case_default5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesSwitchCaseDefault5") {
+        return;
+    }
     let content = r"switch/*1*/ (10) {
     case/*2*/ 1:
     case/*3*/ 2:

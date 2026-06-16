@@ -14,7 +14,9 @@ pub fn test_reference_to_empty_object() {
 }
 
 fn run_test_reference_to_empty_object(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferenceToEmptyObject") {
+        return;
+    }
     let content = r"// @lib: es5
 const obj = {}/*1*/;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

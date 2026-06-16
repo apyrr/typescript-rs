@@ -14,7 +14,9 @@ pub fn test_chained_fat_arrow_formatting() {
 }
 
 fn run_test_chained_fat_arrow_formatting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestChainedFatArrowFormatting") {
+        return;
+    }
     let content = r"var fn = () => () => null/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

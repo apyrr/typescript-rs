@@ -14,7 +14,9 @@ pub fn test_export_equal_types() {
 }
 
 fn run_test_export_equal_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExportEqualTypes") {
+        return;
+    }
     let content = r"// @module: commonjs
 // @lib: es5
 // @strict: false

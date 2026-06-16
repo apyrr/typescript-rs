@@ -14,7 +14,9 @@ pub fn test_references_for_exported_values() {
 }
 
 fn run_test_references_for_exported_values(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForExportedValues") {
+        return;
+    }
     let content = r"namespace M {
     /*1*/export var /*2*/variable = 0;
 

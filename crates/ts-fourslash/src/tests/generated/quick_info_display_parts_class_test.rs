@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_class() {
 }
 
 fn run_test_quick_info_display_parts_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsClass") {
+        return;
+    }
     let content = r"class /*1*/c {
 }
 var /*2*/cInstance = new /*3*/c();

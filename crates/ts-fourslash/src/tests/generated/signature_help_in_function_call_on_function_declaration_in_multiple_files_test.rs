@@ -16,7 +16,10 @@ pub fn test_signature_help_in_function_call_on_function_declaration_in_multiple_
 fn run_test_signature_help_in_function_call_on_function_declaration_in_multiple_files(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpInFunctionCallOnFunctionDeclarationInMultipleFiles")
+    {
+        return;
+    }
     let content = r"// @Filename: signatureHelpInFunctionCallOnFunctionDeclarationInMultipleFiles_file0.ts
 declare function fn(x: string, y: number);
 // @Filename: signatureHelpInFunctionCallOnFunctionDeclarationInMultipleFiles_file1.ts

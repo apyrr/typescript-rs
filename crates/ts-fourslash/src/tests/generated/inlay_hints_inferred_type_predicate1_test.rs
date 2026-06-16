@@ -14,7 +14,9 @@ pub fn test_inlay_hints_inferred_type_predicate1() {
 }
 
 fn run_test_inlay_hints_inferred_type_predicate1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInferredTypePredicate1") {
+        return;
+    }
     let content = r"// @strict: true
 function test(x: unknown) {
   return typeof x === 'number';

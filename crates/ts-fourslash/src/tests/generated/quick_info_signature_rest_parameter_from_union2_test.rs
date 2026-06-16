@@ -14,7 +14,9 @@ pub fn test_quick_info_signature_rest_parameter_from_union2() {
 }
 
 fn run_test_quick_info_signature_rest_parameter_from_union2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoSignatureRestParameterFromUnion2") {
+        return;
+    }
     let content = r#"// @strict: false
 declare const rest:
   | ((a?: { a: true }, ...rest: string[]) => unknown)

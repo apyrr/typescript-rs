@@ -14,7 +14,9 @@ pub fn test_completion_list_at_identifier_definition_locations_properties() {
 }
 
 fn run_test_completion_list_at_identifier_definition_locations_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtIdentifierDefinitionLocations_properties") {
+        return;
+    }
     let content = r"var aa = 1;
 class A1 {
     /*property1*/

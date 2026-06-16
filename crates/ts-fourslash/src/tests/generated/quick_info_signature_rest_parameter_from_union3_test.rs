@@ -14,7 +14,9 @@ pub fn test_quick_info_signature_rest_parameter_from_union3() {
 }
 
 fn run_test_quick_info_signature_rest_parameter_from_union3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoSignatureRestParameterFromUnion3") {
+        return;
+    }
     let content = r"declare const fn:
   | ((a: { x: number }, b: { x: number }) => number)
   | ((...a: { y: number }[]) => number);

@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_items2() {
 }
 
 fn run_test_navigation_bar_items_items2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsItems2") {
+        return;
+    }
     let content = r"/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

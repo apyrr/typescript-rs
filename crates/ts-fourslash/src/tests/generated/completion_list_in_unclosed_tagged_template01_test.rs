@@ -14,9 +14,11 @@ pub fn test_completion_list_in_unclosed_tagged_template01() {
 }
 
 fn run_test_completion_list_in_unclosed_tagged_template01(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"var x;
-var y = (p) => x ` + "`" + `abc ${ /*1*/"#;
+    if should_skip_if_failing("TestCompletionListInUnclosedTaggedTemplate01") {
+        return;
+    }
+    let content = r"var x;
+var y = (p) => x `abc ${ /*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(
         t,

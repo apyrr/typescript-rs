@@ -14,7 +14,9 @@ pub fn test_formatting_global_augmentation1() {
 }
 
 fn run_test_formatting_global_augmentation1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingGlobalAugmentation1") {
+        return;
+    }
     let content = r"/*1*/declare          global                      {
 }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

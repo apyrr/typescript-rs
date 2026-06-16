@@ -14,7 +14,9 @@ pub fn test_parameter_info_on_parameter_type() {
 }
 
 fn run_test_parameter_info_on_parameter_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestParameterInfoOnParameterType") {
+        return;
+    }
     let content = r#"function foo(a: string) { };
 var b = "test";
 foo("test"/*1*/);

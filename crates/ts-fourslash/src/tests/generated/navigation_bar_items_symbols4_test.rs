@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_symbols4() {
 }
 
 fn run_test_navigation_bar_items_symbols4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsSymbols4") {
+        return;
+    }
     let content = r#"// @checkJs: true
 // @allowJs: true
 // @target: es6

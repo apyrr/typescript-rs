@@ -14,7 +14,9 @@ pub fn test_format_conflict_diff3_marker1() {
 }
 
 fn run_test_format_conflict_diff3_marker1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatConflictDiff3Marker1") {
+        return;
+    }
     let content = r"class C {
 <<<<<<< HEAD
 v = 1;

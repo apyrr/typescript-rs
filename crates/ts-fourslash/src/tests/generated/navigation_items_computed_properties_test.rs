@@ -14,14 +14,16 @@ pub fn test_navigation_items_computed_properties() {
 }
 
 fn run_test_navigation_items_computed_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationItemsComputedProperties") {
+        return;
+    }
     let content = r#"// @noLib: true
 [|{| "name": "C", "kind": "class" |}class C {
     [|{| "name": "foo", "kind": "method", "containerName": "C", "containerKind": "class" |}foo() { }|]
     ["hi" + "bye"]() { }
     [|{| "name": "bar", "kind": "method", "containerName": "C", "containerKind": "class" |}bar() { }|]
 }|]"#;
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     for range in f.ranges() {
         f.verify_workspace_symbol(&[workspace_symbol_case_from_range_with_pattern(
             &range,

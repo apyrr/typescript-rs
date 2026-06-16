@@ -14,7 +14,9 @@ pub fn test_quick_info_not_inside_comment() {
 }
 
 fn run_test_quick_info_not_inside_comment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfo_notInsideComment") {
+        return;
+    }
     let content = r"a/* /**/ */.b";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

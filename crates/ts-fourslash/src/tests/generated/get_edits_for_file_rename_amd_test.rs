@@ -14,7 +14,9 @@ pub fn test_get_edits_for_file_rename_amd() {
 }
 
 fn run_test_get_edits_for_file_rename_amd(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetEditsForFileRename_amd") {
+        return;
+    }
     let content = r#"// @moduleResolution: classic
 // @Filename: /src/user.ts
 import { x } from "old";

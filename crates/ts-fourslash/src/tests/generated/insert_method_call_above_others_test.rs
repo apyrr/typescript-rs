@@ -14,7 +14,9 @@ pub fn test_insert_method_call_above_others() {
 }
 
 fn run_test_insert_method_call_above_others(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInsertMethodCallAboveOthers") {
+        return;
+    }
     let content = r"/**/ 
 paired.reduce();
 paired.map(() => undefined);";

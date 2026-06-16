@@ -14,7 +14,9 @@ pub fn test_navigation_items_exact_match() {
 }
 
 fn run_test_navigation_items_exact_match(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationItemsExactMatch") {
+        return;
+    }
     let content = r#"// @noLib: true
 [|{| "name": "Shapes", "kind": "module" |}namespace Shapes {
     [|{| "name": "Point", "kind": "class", "kindModifiers": "export", "containerName": "Shapes", "containerKind": "module" |}export class Point {
@@ -27,7 +29,7 @@ fn run_test_navigation_items_exact_match(t: &mut TestingT) {
 }|]
 
 var [|{| "name": "xyz", "kind": "var" |}xyz = new Shapes.Point()|];"#;
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     for range in f.ranges() {
         f.verify_workspace_symbol(&[workspace_symbol_case_from_range_with_pattern(
             &range,

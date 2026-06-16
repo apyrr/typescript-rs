@@ -14,7 +14,9 @@ pub fn test_remove_parameter_between_comment_and_parameter() {
 }
 
 fn run_test_remove_parameter_between_comment_and_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRemoveParameterBetweenCommentAndParameter") {
+        return;
+    }
     let content = r"function fn(/* comment! */ /**/a: number, c) { }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

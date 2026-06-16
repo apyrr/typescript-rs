@@ -14,7 +14,9 @@ pub fn test_get_edits_for_file_rename_keep_file_extensions() {
 }
 
 fn run_test_get_edits_for_file_rename_keep_file_extensions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetEditsForFileRename_keepFileExtensions") {
+        return;
+    }
     let content = r#"// @Filename: /tsconfig.json
 {
   "compilerOptions": {

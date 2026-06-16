@@ -14,7 +14,9 @@ pub fn test_quick_info_inherit_doc3() {
 }
 
 fn run_test_quick_info_inherit_doc3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoInheritDoc3") {
+        return;
+    }
     let content = r"// @noEmit: true
 // @allowJs: true
 // @Filename: quickInfoInheritDoc3.ts

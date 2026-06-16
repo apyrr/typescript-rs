@@ -14,7 +14,9 @@ pub fn test_generic_function_return_type2() {
 }
 
 fn run_test_generic_function_return_type2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericFunctionReturnType2") {
+        return;
+    }
     let content = r"class C<T> {
     constructor(x: T) { }
     foo(x: T) {

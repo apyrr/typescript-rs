@@ -14,7 +14,9 @@ pub fn test_formatting_on_empty_interface_literal() {
 }
 
 fn run_test_formatting_on_empty_interface_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnEmptyInterfaceLiteral") {
+        return;
+    }
     let content = r"/*1*/    function    foo  (  x  :    {    }    )    {    }
 
 /*2*/foo    (  {     }   )    ;

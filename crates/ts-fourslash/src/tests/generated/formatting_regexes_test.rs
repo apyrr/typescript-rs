@@ -14,7 +14,9 @@ pub fn test_formatting_regexes() {
 }
 
 fn run_test_formatting_regexes(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingRegexes") {
+        return;
+    }
     let content = r"removeAllButLast(sortedTypes, undefinedType, /keepNullableType**/ true)/*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

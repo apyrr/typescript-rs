@@ -14,7 +14,9 @@ pub fn test_go_to_definition_object_literal_properties1() {
 }
 
 fn run_test_go_to_definition_object_literal_properties1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionObjectLiteralProperties1") {
+        return;
+    }
     let content = r"interface PropsBag {
    /*first*/propx: number
 }

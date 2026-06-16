@@ -14,7 +14,9 @@ pub fn test_no_signature_help_on_new_keyword() {
 }
 
 fn run_test_no_signature_help_on_new_keyword(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNoSignatureHelpOnNewKeyword") {
+        return;
+    }
     let content = r"class Foo { }
 new/*1*/ Foo
 new /*2*/Foo(/*3*/)";

@@ -14,7 +14,9 @@ pub fn test_completions_import_from_jsx_tag() {
 }
 
 fn run_test_completions_import_from_jsx_tag(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImportFromJSXTag") {
+        return;
+    }
     let content = r#"// @jsx: react
 // @Filename: /types.d.ts
 declare namespace JSX {

@@ -14,7 +14,9 @@ pub fn test_inlay_hints_interactive_multifile_function_calls() {
 }
 
 fn run_test_inlay_hints_interactive_multifile_function_calls(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInteractiveMultifileFunctionCalls") {
+        return;
+    }
     let content = r#"// @Target: esnext
 // @module: node18
 // @Filename: aaa.mts

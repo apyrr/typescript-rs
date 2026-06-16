@@ -14,7 +14,9 @@ pub fn test_completions_optional_kind_modifier() {
 }
 
 fn run_test_completions_optional_kind_modifier(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsOptionalKindModifier") {
+        return;
+    }
     let content = r"interface A { a?: number; method?(): number; };
 function f(x: A) {
 x./*a*/;

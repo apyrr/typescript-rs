@@ -14,7 +14,9 @@ pub fn test_quick_info_on_var_in_arrow_expression() {
 }
 
 fn run_test_quick_info_on_var_in_arrow_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnVarInArrowExpression") {
+        return;
+    }
     let content = r"interface IMap<T> {
     [key: string]: T;
 }

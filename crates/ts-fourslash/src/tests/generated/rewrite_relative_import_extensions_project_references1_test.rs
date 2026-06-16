@@ -14,7 +14,9 @@ pub fn test_rewrite_relative_import_extensions_project_references1() {
 }
 
 fn run_test_rewrite_relative_import_extensions_project_references1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRewriteRelativeImportExtensionsProjectReferences1") {
+        return;
+    }
     let content = r#"// @Filename: packages/common/tsconfig.json
 {
     "compilerOptions": {

@@ -14,7 +14,9 @@ pub fn test_formatting_on_nested_statements() {
 }
 
 fn run_test_formatting_on_nested_statements(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnNestedStatements") {
+        return;
+    }
     let content = r"{
 /*1*/{
 /*3*/test

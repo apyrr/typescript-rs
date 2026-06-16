@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal16() {
 }
 
 fn run_test_completion_for_string_literal16(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteral16") {
+        return;
+    }
     let content = r#"interface Foo {
     a: string;
     b: number;

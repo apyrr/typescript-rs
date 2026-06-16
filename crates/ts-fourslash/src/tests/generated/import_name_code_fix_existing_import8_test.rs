@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_existing_import8() {
 }
 
 fn run_test_import_name_code_fix_existing_import8(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixExistingImport8") {
+        return;
+    }
     let content = r#"import [|{v1, v2, v3,}|] from "./module";
 v4/*0*/();
 // @Filename: module.ts

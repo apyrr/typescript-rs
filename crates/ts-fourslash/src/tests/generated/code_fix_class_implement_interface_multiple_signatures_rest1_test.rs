@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_multiple_signatures_rest1() {
 }
 
 fn run_test_code_fix_class_implement_interface_multiple_signatures_rest1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceMultipleSignaturesRest1") {
+        return;
+    }
     let content = r"interface I {
     method(a: number, ...b: string[]): boolean;
     method(a: string, ...b: number[]): Function;

@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_in_different_files() {
 }
 
 fn run_test_go_to_implementation_in_different_files(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementation_inDifferentFiles") {
+        return;
+    }
     let content = r"// @lib: es5
 // @Filename: /home/src/workspaces/project/bar.ts
 import {Foo} from './foo'

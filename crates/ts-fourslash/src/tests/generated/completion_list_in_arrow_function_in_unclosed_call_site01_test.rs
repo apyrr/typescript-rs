@@ -14,7 +14,9 @@ pub fn test_completion_list_in_arrow_function_in_unclosed_call_site01() {
 }
 
 fn run_test_completion_list_in_arrow_function_in_unclosed_call_site01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInArrowFunctionInUnclosedCallSite01") {
+        return;
+    }
     let content = r"declare function foo(...params: any[]): any;
 function getAllFiles(rootFileNames: string[]) {
     var processedFiles = rootFileNames.map(fileName => foo(/*1*/";

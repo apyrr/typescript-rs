@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_file_with_no_trailing_newline() {
 }
 
 fn run_test_import_name_code_fix_file_with_no_trailing_newline(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_fileWithNoTrailingNewline") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 export const foo = 0;
 // @Filename: /b.ts

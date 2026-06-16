@@ -14,7 +14,9 @@ pub fn test_single_line_type_literal_formatting() {
 }
 
 fn run_test_single_line_type_literal_formatting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSingleLineTypeLiteralFormatting") {
+        return;
+    }
     let content = r"function of1(b: { r: { c: number/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_class_incomplete() {
 }
 
 fn run_test_quick_info_display_parts_class_incomplete(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsClassIncomplete") {
+        return;
+    }
     let content = r"/*1*/class /*2*/ {
 }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_let_quick_info_and_completion_list() {
 }
 
 fn run_test_let_quick_info_and_completion_list(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestLetQuickInfoAndCompletionList") {
+        return;
+    }
     let content = r"let /*1*/a = 10;
 /*2*/a = 30;
 function foo() {

@@ -14,7 +14,9 @@ pub fn test_rename_js_exports03() {
 }
 
 fn run_test_rename_js_exports03(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameJsExports03") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: a.js
 class /*1*/A {

@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_some_properties_present() {
 }
 
 fn run_test_code_fix_class_implement_interface_some_properties_present(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceSomePropertiesPresent") {
+        return;
+    }
     let content = r"// @strict: false
 
 interface I {

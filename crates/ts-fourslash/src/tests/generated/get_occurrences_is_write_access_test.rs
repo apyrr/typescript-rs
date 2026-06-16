@@ -14,7 +14,9 @@ pub fn test_get_occurrences_is_write_access() {
 }
 
 fn run_test_get_occurrences_is_write_access(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIsWriteAccess") {
+        return;
+    }
     let content = r#"var [|{| "isWriteAccess": true |}x|] = 0;
 var assignmentRightHandSide = [|{| "isWriteAccess": false |}x|];
 var assignmentRightHandSide2 = 1 + [|{| "isWriteAccess": false |}x|];

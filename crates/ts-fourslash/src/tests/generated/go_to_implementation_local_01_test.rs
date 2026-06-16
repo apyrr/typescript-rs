@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_local_01() {
 }
 
 fn run_test_go_to_implementation_local_01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationLocal_01") {
+        return;
+    }
     let content = r"const [|hello|] = function() {};
 he/*function_call*/llo();";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

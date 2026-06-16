@@ -14,7 +14,9 @@ pub fn test_completion_list_in_unclosed_function13() {
 }
 
 fn run_test_completion_list_in_unclosed_function13(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInUnclosedFunction13") {
+        return;
+    }
     let content = r#"interface MyType {
 }
 

@@ -14,7 +14,9 @@ pub fn test_format_type_alias() {
 }
 
 fn run_test_format_type_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatTypeAlias") {
+        return;
+    }
     let content = r"type   Alias = /*typeKeyword*/
 /*indent*/
 number;/*autoformat*/";

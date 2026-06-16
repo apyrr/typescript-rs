@@ -14,7 +14,9 @@ pub fn test_smart_indent_statement_try_catch_finally() {
 }
 
 fn run_test_smart_indent_statement_try_catch_finally(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentStatementTryCatchFinally") {
+        return;
+    }
     let content = r#"function tryCatch() {
     {| "indentation": 4 |}
     try {

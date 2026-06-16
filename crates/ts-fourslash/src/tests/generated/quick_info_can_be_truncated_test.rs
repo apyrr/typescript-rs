@@ -14,7 +14,9 @@ pub fn test_quick_info_can_be_truncated() {
 }
 
 fn run_test_quick_info_can_be_truncated(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoCanBeTruncated") {
+        return;
+    }
     let content = r#"// @stableTypeOrdering: true
 // @noLib: true
 interface Foo {

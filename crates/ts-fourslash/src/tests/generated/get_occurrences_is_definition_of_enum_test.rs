@@ -14,7 +14,9 @@ pub fn test_get_occurrences_is_definition_of_enum() {
 }
 
 fn run_test_get_occurrences_is_definition_of_enum(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIsDefinitionOfEnum") {
+        return;
+    }
     let content = r"/*1*/enum /*2*/E {
     First,
     Second

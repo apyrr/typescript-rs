@@ -14,7 +14,9 @@ pub fn test_completion_before_semantic_diagnostics_in_arrow_function1() {
 }
 
 fn run_test_completion_before_semantic_diagnostics_in_arrow_function1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionBeforeSemanticDiagnosticsInArrowFunction1") {
+        return;
+    }
     let content = r"var f4 = <T>(x: T/**/ ) => {
 }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

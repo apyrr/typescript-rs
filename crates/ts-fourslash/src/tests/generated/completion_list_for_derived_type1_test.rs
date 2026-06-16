@@ -14,7 +14,9 @@ pub fn test_completion_list_for_derived_type1() {
 }
 
 fn run_test_completion_list_for_derived_type1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListForDerivedType1") {
+        return;
+    }
     let content = r"interface IFoo {
     bar(): IFoo;
 }

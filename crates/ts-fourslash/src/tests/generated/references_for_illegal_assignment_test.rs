@@ -14,7 +14,9 @@ pub fn test_references_for_illegal_assignment() {
 }
 
 fn run_test_references_for_illegal_assignment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForIllegalAssignment") {
+        return;
+    }
     let content = r"f/*1*/oo = fo/*2*/o;
 var /*bar*/bar = function () { };
 bar = bar + 1;";

@@ -14,7 +14,9 @@ pub fn test_signature_help_with_triggers02() {
 }
 
 fn run_test_signature_help_with_triggers02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpWithTriggers02") {
+        return;
+    }
     let content = r"declare function foo<T>(x: T, y: T): T;
 declare function bar<U>(x: U, y: U): U;
 

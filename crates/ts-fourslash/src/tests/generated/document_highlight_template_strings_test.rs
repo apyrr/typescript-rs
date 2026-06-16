@@ -14,14 +14,16 @@ pub fn test_document_highlight_template_strings() {
 }
 
 fn run_test_document_highlight_template_strings(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightTemplateStrings") {
+        return;
+    }
     let content = r#"type Foo = "[|a|]" | "b";
 
 class C {
-   p: Foo = ` + "`" + `[|a|]` + "`" + `;
+   p: Foo = `[|a|]`;
    m() {
        switch (this.p) {
-           case ` + "`" + `[|a|]` + "`" + `:
+           case `[|a|]`:
                return 1;
            case "b":
                return 2;

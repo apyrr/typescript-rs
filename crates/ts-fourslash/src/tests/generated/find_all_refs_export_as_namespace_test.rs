@@ -14,7 +14,9 @@ pub fn test_find_all_refs_export_as_namespace() {
 }
 
 fn run_test_find_all_refs_export_as_namespace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsExportAsNamespace") {
+        return;
+    }
     let content = r#"// @Filename: /node_modules/a/index.d.ts
 export function /*0*/f(): void;
 export as namespace A;

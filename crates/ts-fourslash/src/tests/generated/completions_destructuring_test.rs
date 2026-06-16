@@ -14,7 +14,9 @@ pub fn test_completions_destructuring() {
 }
 
 fn run_test_completions_destructuring(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsDestructuring") {
+        return;
+    }
     let content = r"const points = [{ x: 1, y: 2 }];
 points.forEach(({ /*a*/ }) => { });
 const { /*b*/ } = points[0];

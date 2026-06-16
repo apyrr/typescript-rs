@@ -14,7 +14,9 @@ pub fn test_code_fix_infer_from_usage_binding_element() {
 }
 
 fn run_test_code_fix_infer_from_usage_binding_element(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixInferFromUsageBindingElement") {
+        return;
+    }
     let content = r"function f([car, cdr]) {
     return car + cdr + 1
 }";

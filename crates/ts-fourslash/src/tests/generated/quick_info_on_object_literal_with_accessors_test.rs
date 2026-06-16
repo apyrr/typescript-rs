@@ -14,7 +14,9 @@ pub fn test_quick_info_on_object_literal_with_accessors() {
 }
 
 fn run_test_quick_info_on_object_literal_with_accessors(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnObjectLiteralWithAccessors") {
+        return;
+    }
     let content = r"function /*1*/makePoint(x: number) {
     return {
         b: 10,

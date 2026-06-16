@@ -14,7 +14,9 @@ pub fn test_completions_literal_from_inference_within_inferred_type2() {
 }
 
 fn run_test_completions_literal_from_inference_within_inferred_type2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsLiteralFromInferenceWithinInferredType2") {
+        return;
+    }
     let content = r#"// @Filename: /a.tsx
 type Values<T> = T[keyof T];
 
@@ -25,7 +27,7 @@ type IsNever<T> = [T] extends [never] ? 1 : 0;
 type GetIds<T, Gathered extends string = never> = IsNever<T> extends 1
   ? Gathered
   : "id" extends keyof T
-  ? GetIds<Values<GetStates<T>>, Gathered | ` + "`" + `#${T["id"] & string}` + "`" + `>
+  ? GetIds<Values<GetStates<T>>, Gathered | `#${T["id"] & string}`>
   : GetIds<Values<GetStates<T>>, Gathered>;
 
 type StateConfig<
@@ -40,7 +42,7 @@ type StateConfig<
   states?: {
     [K in keyof TStates]: StateConfig<GetStates<TStates[K]>, TIds>;
   };
-  on?: Record<string, TIds | ` + "`" + `.${keyof TStates & string}` + "`" + `>;
+  on?: Record<string, TIds | `.${keyof TStates & string}`>;
 };
 
 declare function createMachine<const T extends StateConfig<GetStates<T>, GetIds<T>>>(

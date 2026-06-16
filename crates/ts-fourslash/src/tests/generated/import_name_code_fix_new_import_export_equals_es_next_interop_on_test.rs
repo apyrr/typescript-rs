@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_export_equals_es_next_interop_on() {
 }
 
 fn run_test_import_name_code_fix_new_import_export_equals_es_next_interop_on(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportExportEqualsESNextInteropOn") {
+        return;
+    }
     let content = r#"// @EsModuleInterop: true
 // @Module: es2015
 // @Filename: /foo.d.ts

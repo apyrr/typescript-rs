@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_default0() {
 }
 
 fn run_test_import_name_code_fix_new_import_default0(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportDefault0") {
+        return;
+    }
     let content = r"[|f1/*0*/();|]
 // @Filename: module.ts
 export default function f1() { };";

@@ -14,7 +14,9 @@ pub fn test_code_fix_add_missing_await_top_level() {
 }
 
 fn run_test_code_fix_add_missing_await_top_level(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddMissingAwait_topLevel") {
+        return;
+    }
     let content = r"declare function getPromise(): Promise<string>;
 const p = getPromise();
 while (true) {

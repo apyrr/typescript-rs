@@ -14,7 +14,9 @@ pub fn test_generic_parameter_help_type_references() {
 }
 
 fn run_test_generic_parameter_help_type_references(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericParameterHelpTypeReferences") {
+        return;
+    }
     let content = r"interface IFoo { }
 
 class testClass<T extends IFoo, U, M extends IFoo> {

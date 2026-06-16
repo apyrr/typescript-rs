@@ -14,7 +14,9 @@ pub fn test_formatting_on_closing_bracket() {
 }
 
 fn run_test_formatting_on_closing_bracket(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnClosingBracket") {
+        return;
+    }
     let content = r"function f( ) {/*1*/
 var     x = 3;/*2*/
     var z = 2   ;/*3*/

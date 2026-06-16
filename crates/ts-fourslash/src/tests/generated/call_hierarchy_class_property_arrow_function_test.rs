@@ -14,7 +14,9 @@ pub fn test_call_hierarchy_class_property_arrow_function() {
 }
 
 fn run_test_call_hierarchy_class_property_arrow_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCallHierarchyClassPropertyArrowFunction") {
+        return;
+    }
     let content = r"class C {
     caller = () => {
         this.callee();

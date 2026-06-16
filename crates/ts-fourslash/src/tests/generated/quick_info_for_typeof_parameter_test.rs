@@ -14,7 +14,9 @@ pub fn test_quick_info_for_typeof_parameter() {
 }
 
 fn run_test_quick_info_for_typeof_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForTypeofParameter") {
+        return;
+    }
     let content = r"function foo() {
     var y/*ref1*/1: string;
     var x: typeof y/*ref2*/1;

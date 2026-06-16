@@ -14,7 +14,9 @@ pub fn test_completion_list_super_members() {
 }
 
 fn run_test_completion_list_super_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListSuperMembers") {
+        return;
+    }
     let content = r"class Base {
     private privateInstanceMethod() { }
     public publicInstanceMethod() { }

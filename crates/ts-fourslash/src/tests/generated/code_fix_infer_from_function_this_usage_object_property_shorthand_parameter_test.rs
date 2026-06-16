@@ -16,7 +16,11 @@ pub fn test_code_fix_infer_from_function_this_usage_object_property_shorthand_pa
 fn run_test_code_fix_infer_from_function_this_usage_object_property_shorthand_parameter(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestCodeFixInferFromFunctionThisUsageObjectPropertyShorthandParameter",
+    ) {
+        return;
+    }
     let content = r#"// @noImplicitThis: true
 function returnThisMember([| |]suffix: string) {
      return this.member + suffix;

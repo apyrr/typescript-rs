@@ -16,7 +16,10 @@ pub fn test_code_fix_top_level_for_await_module_missing_compiler_options_in_ts_c
 fn run_test_code_fix_top_level_for_await_module_missing_compiler_options_in_ts_config(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixTopLevelForAwait_module_missingCompilerOptionsInTsConfig")
+    {
+        return;
+    }
     let content = r#"// @filename: /dir/a.ts
 declare const p: number[];
 for await (const _ of p);

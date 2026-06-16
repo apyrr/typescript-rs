@@ -14,7 +14,9 @@ pub fn test_overload_quick_info() {
 }
 
 fn run_test_overload_quick_info(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOverloadQuickInfo") {
+        return;
+    }
     let content = r"function Foo(a: string, b: number, c: boolean);
 function Foo(a: any, name: string, age: number);
 function Foo(fred: any[], name: string, age: number);

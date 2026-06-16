@@ -14,7 +14,9 @@ pub fn test_code_fix_add_missing_function_declaration20() {
 }
 
 fn run_test_code_fix_add_missing_function_declaration20(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddMissingFunctionDeclaration20") {
+        return;
+    }
     let content = r"const a = {
    b: { f(x: number) {} }
 }

@@ -14,7 +14,9 @@ pub fn test_correupted_try_expressions_dont_crash_getting_outline_spans() {
 }
 
 fn run_test_correupted_try_expressions_dont_crash_getting_outline_spans(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCorreuptedTryExpressionsDontCrashGettingOutlineSpans") {
+        return;
+    }
     let content = r"try[| {
   var x = [
     {% try[||] %}|][|{% except %}|] 

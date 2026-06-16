@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_type_literals() {
 }
 
 fn run_test_code_fix_class_implement_interface_type_literals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceTypeLiterals") {
+        return;
+    }
     let content = r"type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
 export type DeepPartial<T> = T extends Builtin ? T :

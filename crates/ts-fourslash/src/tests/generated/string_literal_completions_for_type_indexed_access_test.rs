@@ -14,7 +14,9 @@ pub fn test_string_literal_completions_for_type_indexed_access() {
 }
 
 fn run_test_string_literal_completions_for_type_indexed_access(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestStringLiteralCompletionsForTypeIndexedAccess") {
+        return;
+    }
     let content = r#"type Foo = { a: string; b: number; c: boolean; };
 type A = Foo["/*1*/"];
 type AorB = Foo["a" | "/*2*/"];"#;

@@ -14,7 +14,9 @@ pub fn test_indentation_in_augmentations1() {
 }
 
 fn run_test_indentation_in_augmentations1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIndentationInAugmentations1") {
+        return;
+    }
     let content = r"// @module: amd
 export {}
 declare global {/*1*/";

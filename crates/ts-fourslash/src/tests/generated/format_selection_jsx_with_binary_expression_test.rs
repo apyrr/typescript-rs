@@ -14,7 +14,9 @@ pub fn test_format_selection_jsx_with_binary_expression() {
 }
 
 fn run_test_format_selection_jsx_with_binary_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatSelectionJsxWithBinaryExpression") {
+        return;
+    }
     let content = r"//@Filename: file.tsx
 function TestWidget() {
     const test = true;

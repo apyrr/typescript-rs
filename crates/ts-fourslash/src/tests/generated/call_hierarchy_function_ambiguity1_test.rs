@@ -14,7 +14,9 @@ pub fn test_call_hierarchy_function_ambiguity1() {
 }
 
 fn run_test_call_hierarchy_function_ambiguity1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCallHierarchyFunctionAmbiguity1") {
+        return;
+    }
     let content = r"// @filename: a.d.ts
 declare function foo(x?: number): void;
 // @filename: b.d.ts

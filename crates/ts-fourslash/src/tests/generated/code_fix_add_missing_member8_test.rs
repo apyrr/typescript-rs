@@ -14,7 +14,9 @@ pub fn test_code_fix_add_missing_member8() {
 }
 
 fn run_test_code_fix_add_missing_member8(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddMissingMember8") {
+        return;
+    }
     let content = r"// @Filename: a.ts
 declare var x: [1, 2];
 x.b;";

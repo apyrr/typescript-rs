@@ -14,7 +14,9 @@ pub fn test_member_list_in_reopened_enum() {
 }
 
 fn run_test_member_list_in_reopened_enum(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListInReopenedEnum") {
+        return;
+    }
     let content = r"namespace M {
     enum E {
         A, B

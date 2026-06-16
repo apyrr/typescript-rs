@@ -14,7 +14,9 @@ pub fn test_completion_list_at_eof2() {
 }
 
 fn run_test_completion_list_at_eof2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtEOF2") {
+        return;
+    }
     let content = r"namespace Shapes {
     export class Point {
         constructor(public x: number, public y: number) { }

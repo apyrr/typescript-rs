@@ -14,7 +14,9 @@ pub fn test_completion_list_for_import_attributes() {
 }
 
 fn run_test_completion_list_for_import_attributes(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListForImportAttributes") {
+        return;
+    }
     let content = r#"// @module: esnext
 // @target: esnext
 // @filename: ./a.ts

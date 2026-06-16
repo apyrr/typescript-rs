@@ -14,7 +14,9 @@ pub fn test_completion_list_at_identifier_definition_locations_generics() {
 }
 
 fn run_test_completion_list_at_identifier_definition_locations_generics(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtIdentifierDefinitionLocations_Generics") {
+        return;
+    }
     let content = r"interface A</*genericName1*/
 class A</*genericName2*/
 class B<T, /*genericName3*/

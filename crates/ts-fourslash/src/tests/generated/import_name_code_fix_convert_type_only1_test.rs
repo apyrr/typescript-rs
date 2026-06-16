@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_convert_type_only1() {
 }
 
 fn run_test_import_name_code_fix_convert_type_only1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixConvertTypeOnly1") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 export class A {}
 export class B {}

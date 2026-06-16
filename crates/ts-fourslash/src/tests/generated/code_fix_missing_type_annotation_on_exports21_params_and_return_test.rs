@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports21_params_and_return() {
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports21_params_and_return(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports21-params-and-return") {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 // @lib: es2019

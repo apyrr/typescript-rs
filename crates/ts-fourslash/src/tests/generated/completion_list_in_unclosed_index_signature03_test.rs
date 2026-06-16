@@ -14,7 +14,9 @@ pub fn test_completion_list_in_unclosed_index_signature03() {
 }
 
 fn run_test_completion_list_in_unclosed_index_signature03(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInUnclosedIndexSignature03") {
+        return;
+    }
     let content = r"class C {
     [foo: string]: { x: typeof /*1*/
 }";

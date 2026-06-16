@@ -14,7 +14,9 @@ pub fn test_organize_imports_no_format_options() {
 }
 
 fn run_test_organize_imports_no_format_options(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsNoFormatOptions") {
+        return;
+    }
     let content = r#"import {
   stat,
   statSync,

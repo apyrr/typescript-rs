@@ -14,7 +14,9 @@ pub fn test_signature_help_rest_args3() {
 }
 
 fn run_test_signature_help_rest_args3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpRestArgs3") {
+        return;
+    }
     let content = r"// @target: esnext
 // @lib: esnext
 const layers = Object.assign({}, /*1*/...[]);";

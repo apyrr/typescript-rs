@@ -14,7 +14,9 @@ pub fn test_quick_info_on_generic_with_constraints1() {
 }
 
 fn run_test_quick_info_on_generic_with_constraints1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnGenericWithConstraints1") {
+        return;
+    }
     let content = r"interface Fo/*1*/o<T/*2*/T extends Date> {}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_quick_info_at(t, "1", "interface Foo<TT extends Date>", "");

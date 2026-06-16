@@ -14,7 +14,9 @@ pub fn test_insert_interface_and_check_type_literal_field() {
 }
 
 fn run_test_insert_interface_and_check_type_literal_field(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInsertInterfaceAndCheckTypeLiteralField") {
+        return;
+    }
     let content = r"/*addC*/
 interface G<T, U> { }
 var v2: G<{ a: /*checkParam*/C }, C>;";

@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports28_long_types() {
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports28_long_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports28-long-types") {
+        return;
+    }
     let content = r"// @strict: false
 // @isolatedDeclarations: true
 // @declaration: true

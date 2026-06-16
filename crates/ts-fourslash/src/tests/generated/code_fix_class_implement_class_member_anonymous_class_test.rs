@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_class_member_anonymous_class() {
 }
 
 fn run_test_code_fix_class_implement_class_member_anonymous_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementClassMemberAnonymousClass") {
+        return;
+    }
     let content = r"// @strict: false
 class A {
     foo() {

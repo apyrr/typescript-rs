@@ -14,7 +14,9 @@ pub fn test_get_occurrences_protected1() {
 }
 
 fn run_test_get_occurrences_protected1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesProtected1") {
+        return;
+    }
     let content = r"namespace m {
     export class C1 {
         public pub1;

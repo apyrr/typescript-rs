@@ -14,7 +14,9 @@ pub fn test_code_fix_ambient_class_implement_class_method_via_heritage() {
 }
 
 fn run_test_code_fix_ambient_class_implement_class_method_via_heritage(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAmbientClassImplementClassMethodViaHeritage") {
+        return;
+    }
     let content = r"class C1 {
     f1() {}
 }

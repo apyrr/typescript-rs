@@ -14,7 +14,9 @@ pub fn test_completions_conditional_member() {
 }
 
 fn run_test_completions_conditional_member(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsConditionalMember") {
+        return;
+    }
     let content = r"declare function f<T extends string>(
   p: { a: T extends 'foo' ? { x: string } : { y: string } }
 ): void;

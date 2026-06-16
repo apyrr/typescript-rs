@@ -14,7 +14,9 @@ pub fn test_auto_import_provider_imports_map2() {
 }
 
 fn run_test_auto_import_provider_imports_map2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportProvider_importsMap2") {
+        return;
+    }
     let content = r##"// @Filename: /home/src/workspaces/project/tsconfig.json
 {
   "compilerOptions": {

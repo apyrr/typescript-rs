@@ -14,7 +14,9 @@ pub fn test_completion_list_in_contextually_typed_argument() {
 }
 
 fn run_test_completion_list_in_contextually_typed_argument(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInContextuallyTypedArgument") {
+        return;
+    }
     let content = r"interface MyPoint {
     x1: number;
     y1: number;

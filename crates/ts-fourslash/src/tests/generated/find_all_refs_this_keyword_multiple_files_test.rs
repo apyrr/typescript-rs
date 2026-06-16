@@ -14,7 +14,9 @@ pub fn test_find_all_refs_this_keyword_multiple_files() {
 }
 
 fn run_test_find_all_refs_this_keyword_multiple_files(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsThisKeywordMultipleFiles") {
+        return;
+    }
     let content = r"// @Filename: file1.ts
 /*1*/this; /*2*/this;
 // @Filename: file2.ts

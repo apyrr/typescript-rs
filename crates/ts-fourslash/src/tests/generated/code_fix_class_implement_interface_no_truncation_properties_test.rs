@@ -14,12 +14,14 @@ pub fn test_code_fix_class_implement_interface_no_truncation_properties() {
 }
 
 fn run_test_code_fix_class_implement_interface_no_truncation_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceNoTruncationProperties") {
+        return;
+    }
     let content = r#"type props = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
-type manyprops = ` + "`" + `${props}${props}` + "`" + `;
+type manyprops = `${props}${props}`;
 
 interface Foo<T extends string> {
-    manyProps(a: {[K in T]: {[K2 in T]: ` + "`" + `${K}.${K2}` + "`" + `}}): void;
+    manyProps(a: {[K in T]: {[K2 in T]: `${K}.${K2}`}}): void;
 }
     
 class Bar implements Foo<manyprops> {

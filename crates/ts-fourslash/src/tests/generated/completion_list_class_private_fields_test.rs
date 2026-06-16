@@ -14,7 +14,9 @@ pub fn test_completion_list_class_private_fields() {
 }
 
 fn run_test_completion_list_class_private_fields(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListClassPrivateFields") {
+        return;
+    }
     let content = r"class A {
     #private = 1;
 }

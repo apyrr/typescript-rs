@@ -14,7 +14,9 @@ pub fn test_code_fix_spelling_js5() {
 }
 
 fn run_test_code_fix_spelling_js5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixSpellingJs5") {
+        return;
+    }
     let content = r"// @allowjs: true
 // @noEmit: true
 // @filename: a.js

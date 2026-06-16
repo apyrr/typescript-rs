@@ -14,7 +14,9 @@ pub fn test_format_colon_and_q_mark() {
 }
 
 fn run_test_format_colon_and_q_mark(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatColonAndQMark") {
+        return;
+    }
     let content = r"class foo {/*1*/
     constructor (n?: number, m = 5, o?: string) { }/*2*/
     x:number = 1?2:3;/*3*/

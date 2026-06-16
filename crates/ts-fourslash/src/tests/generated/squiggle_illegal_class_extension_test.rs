@@ -14,10 +14,12 @@ pub fn test_squiggle_illegal_class_extension() {
 }
 
 fn run_test_squiggle_illegal_class_extension(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSquiggleIllegalClassExtension") {
+        return;
+    }
     let content = r"class Foo extends /*1*/Bar/*2*/ { }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
-    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"), 0);
+    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"));
     f.verify_number_of_errors_in_current_file(1);
     done();
 }

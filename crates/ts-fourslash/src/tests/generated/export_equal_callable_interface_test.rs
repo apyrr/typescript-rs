@@ -14,7 +14,9 @@ pub fn test_export_equal_callable_interface() {
 }
 
 fn run_test_export_equal_callable_interface(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExportEqualCallableInterface") {
+        return;
+    }
     let content = r"// @lib: es5
 // @Filename: exportEqualCallableInterface_file0.ts
 interface x {

@@ -14,7 +14,9 @@ pub fn test_quick_info_element_access_declaration() {
 }
 
 fn run_test_quick_info_element_access_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoElementAccessDeclaration") {
+        return;
+    }
     let content = r#"// @checkJs: true
 // @allowJs: true
 // @Filename: a.js

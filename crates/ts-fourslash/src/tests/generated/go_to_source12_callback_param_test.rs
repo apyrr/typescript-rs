@@ -14,7 +14,9 @@ pub fn test_go_to_source12_callback_param() {
 }
 
 fn run_test_go_to_source12_callback_param(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToSource12_callbackParam") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @moduleResolution: bundler
 // @Filename: /home/src/workspaces/project/node_modules/@types/yargs/package.json

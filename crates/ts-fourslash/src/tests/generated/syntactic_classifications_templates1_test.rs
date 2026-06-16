@@ -14,12 +14,14 @@ pub fn test_syntactic_classifications_templates1() {
 }
 
 fn run_test_syntactic_classifications_templates1(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"var v = 10e0;
+    if should_skip_if_failing("TestSyntacticClassificationsTemplates1") {
+        return;
+    }
+    let content = r"var v = 10e0;
 var x = {
-    p1: ` + "`" + `hello world` + "`" + `,
-    p2: ` + "`" + `goodbye ${0} cruel ${0} world` + "`" + `,
-};"#;
+    p1: `hello world`,
+    p2: `goodbye ${0} cruel ${0} world`,
+};";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_semantic_tokens(
         t,

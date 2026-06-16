@@ -14,7 +14,9 @@ pub fn test_auto_import_package_json_filter_existing_import2() {
 }
 
 fn run_test_auto_import_package_json_filter_existing_import2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportPackageJsonFilterExistingImport2") {
+        return;
+    }
     let content = r"// @lib: es5
 // @module: preserve
 // @Filename: /home/src/workspaces/project/node_modules/@types/react/index.d.ts

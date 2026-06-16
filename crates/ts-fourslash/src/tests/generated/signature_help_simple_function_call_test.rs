@@ -14,7 +14,9 @@ pub fn test_signature_help_simple_function_call() {
 }
 
 fn run_test_signature_help_simple_function_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpSimpleFunctionCall") {
+        return;
+    }
     let content = r#"// Simple function test
 function functionCall(str: string, num: number) {
 }

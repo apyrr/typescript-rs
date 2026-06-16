@@ -14,7 +14,9 @@ pub fn test_unreachable_code_after_edit() {
 }
 
 fn run_test_unreachable_code_after_edit(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnreachableCodeAfterEdit") {
+        return;
+    }
     let content = r"// @allowUnreachableCode: false
 // @lib: es2015
 // @Filename: /base/browser/browser.ts

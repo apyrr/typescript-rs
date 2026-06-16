@@ -14,7 +14,9 @@ pub fn test_rename_rest() {
 }
 
 fn run_test_rename_rest(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameRest") {
+        return;
+    }
     let content = r#"interface Gen {
     x: number;
     [|[|{| "contextRangeIndex": 0 |}parent|]: Gen;|]

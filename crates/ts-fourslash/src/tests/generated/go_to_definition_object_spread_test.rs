@@ -14,7 +14,9 @@ pub fn test_go_to_definition_object_spread() {
 }
 
 fn run_test_go_to_definition_object_spread(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionObjectSpread") {
+        return;
+    }
     let content = r"interface A1 { /*1*/a: number };
 interface A2 { /*2*/a?: number };
 let a1: A1;

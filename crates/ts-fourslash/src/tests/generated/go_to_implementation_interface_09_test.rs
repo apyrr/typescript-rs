@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_interface_09() {
 }
 
 fn run_test_go_to_implementation_interface_09(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationInterface_09") {
+        return;
+    }
     let content = r#"// @Filename: def.d.ts
 export interface Interface { P: number }
 // @Filename: ref.ts

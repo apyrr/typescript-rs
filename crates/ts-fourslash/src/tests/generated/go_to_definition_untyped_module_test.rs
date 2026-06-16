@@ -14,7 +14,9 @@ pub fn test_go_to_definition_untyped_module() {
 }
 
 fn run_test_go_to_definition_untyped_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinition_untypedModule") {
+        return;
+    }
     let content = r#"// @Filename: /node_modules/foo/index.js
 not read
 // @Filename: /a.ts

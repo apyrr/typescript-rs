@@ -14,7 +14,9 @@ pub fn test_array_call_and_construct_typings() {
 }
 
 fn run_test_array_call_and_construct_typings(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestArrayCallAndConstructTypings") {
+        return;
+    }
     let content = r#"var a/*1*/1 = new Array();
 var a/*2*/2 = new Array(1);
 var a/*3*/3 = new Array<boolean>();

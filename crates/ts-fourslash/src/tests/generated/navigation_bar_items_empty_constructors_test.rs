@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_empty_constructors() {
 }
 
 fn run_test_navigation_bar_items_empty_constructors(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsEmptyConstructors") {
+        return;
+    }
     let content = r"class Test {
     constructor() {
     }

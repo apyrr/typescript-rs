@@ -14,7 +14,9 @@ pub fn test_definition() {
 }
 
 fn run_test_definition(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDefinition") {
+        return;
+    }
     let content = r"// @Filename: b.ts
 import n = require([|'./a/*1*/'|]);
 var x = new n.Foo();

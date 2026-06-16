@@ -14,7 +14,9 @@ pub fn test_rename_js_property_assignment3() {
 }
 
 fn run_test_rename_js_property_assignment3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameJsPropertyAssignment3") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: a.js
 var C = class  {

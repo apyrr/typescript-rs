@@ -14,7 +14,9 @@ pub fn test_go_to_definition_await1() {
 }
 
 fn run_test_go_to_definition_await1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionAwait1") {
+        return;
+    }
     let content = r"async function /*end1*/foo() {
     [|/*start1*/await|] Promise.resolve(0);
 }

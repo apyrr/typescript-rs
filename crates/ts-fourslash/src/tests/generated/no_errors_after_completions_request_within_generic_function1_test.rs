@@ -14,7 +14,9 @@ pub fn test_no_errors_after_completions_request_within_generic_function1() {
 }
 
 fn run_test_no_errors_after_completions_request_within_generic_function1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNoErrorsAfterCompletionsRequestWithinGenericFunction1") {
+        return;
+    }
     let content = r"// @strict: true
 
 declare function func<T extends { foo: 1 }>(arg: T): void;

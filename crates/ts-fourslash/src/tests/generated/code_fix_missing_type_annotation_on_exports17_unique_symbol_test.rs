@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports17_unique_symbol() {
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports17_unique_symbol(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports17-unique-symbol") {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 // @lib: es2019

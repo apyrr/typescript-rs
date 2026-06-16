@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_in_namespace() {
 }
 
 fn run_test_code_fix_class_implement_interface_in_namespace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceInNamespace") {
+        return;
+    }
     let content = r"namespace N1 {
     export interface I1 {
         f1():string;

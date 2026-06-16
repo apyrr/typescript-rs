@@ -14,7 +14,9 @@ pub fn test_smart_indent_after_fat_arrow_var() {
 }
 
 fn run_test_smart_indent_after_fat_arrow_var(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentAfterFatArrowVar") {
+        return;
+    }
     let content = r"var x = r => r => r;
 /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

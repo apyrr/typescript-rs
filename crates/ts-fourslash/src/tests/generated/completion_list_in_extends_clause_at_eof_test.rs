@@ -14,7 +14,9 @@ pub fn test_completion_list_in_extends_clause_at_eof() {
 }
 
 fn run_test_completion_list_in_extends_clause_at_eof(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInExtendsClauseAtEOF") {
+        return;
+    }
     let content = r"declare namespace mod {
     class Foo { }
 }

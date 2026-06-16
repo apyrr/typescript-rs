@@ -14,7 +14,9 @@ pub fn test_go_to_definition_yield4() {
 }
 
 fn run_test_go_to_definition_yield4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionYield4") {
+        return;
+    }
     let content = r"function* gen() {
     class C { [/*start*/yield 10]() {} }
 }";

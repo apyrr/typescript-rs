@@ -14,7 +14,9 @@ pub fn test_get_edits_for_file_rename_casing() {
 }
 
 fn run_test_get_edits_for_file_rename_casing(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetEditsForFileRename_casing") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 import { foo } from "./dir/fOo";
 // @Filename: /dir/fOo.ts

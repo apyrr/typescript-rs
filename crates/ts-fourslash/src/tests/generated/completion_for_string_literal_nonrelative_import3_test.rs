@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal_nonrelative_import3() {
 }
 
 fn run_test_completion_for_string_literal_nonrelative_import3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteralNonrelativeImport3") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: tests/test0.ts
 import * as foo1 from "fake-module//*import_as0*/

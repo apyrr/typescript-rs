@@ -14,7 +14,9 @@ pub fn test_get_jsx_outlining_spans() {
 }
 
 fn run_test_get_jsx_outlining_spans(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetJSXOutliningSpans") {
+        return;
+    }
     let content = r#"import React, { Component } from 'react';
 
 export class Home extends Component[| {

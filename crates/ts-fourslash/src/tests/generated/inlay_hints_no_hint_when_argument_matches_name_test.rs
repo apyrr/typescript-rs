@@ -14,7 +14,9 @@ pub fn test_inlay_hints_no_hint_when_argument_matches_name() {
 }
 
 fn run_test_inlay_hints_no_hint_when_argument_matches_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsNoHintWhenArgumentMatchesName") {
+        return;
+    }
     let content = r"function foo (a: number, b: number) {}
 declare const a: 1;
 foo(a, 2);

@@ -14,7 +14,9 @@ pub fn test_call_hierarchy_container_name_server() {
 }
 
 fn run_test_call_hierarchy_container_name_server(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCallHierarchyContainerNameServer") {
+        return;
+    }
     let content = r"// @lib: es5
 function /**/f() {}
 

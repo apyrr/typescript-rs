@@ -14,7 +14,9 @@ pub fn test_smart_selection_mapped_types() {
 }
 
 fn run_test_smart_selection_mapped_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_mappedTypes") {
+        return;
+    }
     let content = r"type M = { /*1*/-re/*2*/adonly /*3*/[K in ke/*4*/yof any]/*5*/-/*6*/?: any };";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_selection_ranges(t, &[]);

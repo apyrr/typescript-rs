@@ -14,7 +14,9 @@ pub fn test_quick_info_for_function_declaration() {
 }
 
 fn run_test_quick_info_for_function_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForFunctionDeclaration") {
+        return;
+    }
     let content = r"interface A<T> { }
 
 function ma/*makeA*/keA<T>(t: T): A<T> { return null; }

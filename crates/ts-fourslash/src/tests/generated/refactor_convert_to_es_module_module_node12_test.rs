@@ -14,7 +14,9 @@ pub fn test_refactor_convert_to_es_module_module_node12() {
 }
 
 fn run_test_refactor_convert_to_es_module_module_node12(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRefactorConvertToEsModule_module_node12") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @target: esnext
 // @module: node16

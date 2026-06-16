@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_empty_multiline_body() {
 }
 
 fn run_test_code_fix_class_implement_interface_empty_multiline_body(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceEmptyMultilineBody") {
+        return;
+    }
     let content = r"// @lib: es2017
 interface I {
     x: number;

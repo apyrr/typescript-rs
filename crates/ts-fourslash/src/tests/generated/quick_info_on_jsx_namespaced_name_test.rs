@@ -14,7 +14,9 @@ pub fn test_quick_info_on_jsx_namespaced_name() {
 }
 
 fn run_test_quick_info_on_jsx_namespaced_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnJsxNamespacedName") {
+        return;
+    }
     let content = r#"// @jsx: react
 // @Filename: /types.d.ts
 declare namespace JSX {

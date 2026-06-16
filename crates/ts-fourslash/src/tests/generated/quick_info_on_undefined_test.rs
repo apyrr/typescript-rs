@@ -14,7 +14,9 @@ pub fn test_quick_info_on_undefined() {
 }
 
 fn run_test_quick_info_on_undefined(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnUndefined") {
+        return;
+    }
     let content = r"function foo(a: string) {
 }
 foo(/*1*/undefined);

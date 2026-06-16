@@ -14,7 +14,9 @@ pub fn test_references_for_overrides() {
 }
 
 fn run_test_references_for_overrides(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForOverrides") {
+        return;
+    }
     let content = r#"namespace FindRef3 {
 	namespace SimpleClassTest {
 		export class Foo {

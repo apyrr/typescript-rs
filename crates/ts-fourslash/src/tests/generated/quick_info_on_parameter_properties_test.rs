@@ -14,7 +14,9 @@ pub fn test_quick_info_on_parameter_properties() {
 }
 
 fn run_test_quick_info_on_parameter_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnParameterProperties") {
+        return;
+    }
     let content = r"interface IFoo {
   /** this is the name of blabla 
    *  - use blabla 

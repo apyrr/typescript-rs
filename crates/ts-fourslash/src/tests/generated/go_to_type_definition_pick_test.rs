@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition_pick() {
 }
 
 fn run_test_go_to_type_definition_pick(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinition_Pick") {
+        return;
+    }
     let content = r#"// @lib: es5
 type User = { id: number; name: string; };
 declare const user: Pick<User, "name">

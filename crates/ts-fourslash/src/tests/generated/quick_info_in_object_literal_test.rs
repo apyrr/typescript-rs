@@ -14,7 +14,9 @@ pub fn test_quick_info_in_object_literal() {
 }
 
 fn run_test_quick_info_in_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoInObjectLiteral") {
+        return;
+    }
     let content = r#"interface Foo {
     doStuff(x: string, callback: (a: string) => string);
 }

@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_type_parameter_in_function() {
 }
 
 fn run_test_quick_info_display_parts_type_parameter_in_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsTypeParameterInFunction") {
+        return;
+    }
     let content = r#"function /*1*/foo</*2*/U>(/*3*/a: /*4*/U) {
     return /*5*/a;
 }

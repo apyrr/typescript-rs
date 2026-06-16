@@ -14,7 +14,9 @@ pub fn test_completion_list_invalid_member_names_with_existing_identifier() {
 }
 
 fn run_test_completion_list_invalid_member_names_with_existing_identifier(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInvalidMemberNames_withExistingIdentifier") {
+        return;
+    }
     let content = r#"declare const x: { "foo ": "space in the name", };
 x[|.fo/*0*/|];
 x[|./*1*/|]

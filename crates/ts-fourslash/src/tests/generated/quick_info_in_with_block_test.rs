@@ -14,7 +14,9 @@ pub fn test_quick_info_in_with_block() {
 }
 
 fn run_test_quick_info_in_with_block(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoInWithBlock") {
+        return;
+    }
     let content = r"with (x) {
     function /*1*/f() { }
     var /*2*/b = /*3*/f;

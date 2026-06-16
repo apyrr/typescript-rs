@@ -14,7 +14,9 @@ pub fn test_organize_imports_paths_unicode4() {
 }
 
 fn run_test_organize_imports_paths_unicode4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsPathsUnicode4") {
+        return;
+    }
     let content = r#"import * as Ab from "./Ab";
 import * as _aB from "./_aB";
 import * as aB from "./aB";

@@ -14,9 +14,11 @@ pub fn test_call_hierarchy_tagged_template() {
 }
 
 fn run_test_call_hierarchy_tagged_template(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"function foo() {
-    bar` + "`" + `a${1}b` + "`" + `;
+    if should_skip_if_failing("TestCallHierarchyTaggedTemplate") {
+        return;
+    }
+    let content = r"function foo() {
+    bar`a${1}b`;
 }
 
 function /**/bar(array: TemplateStringsArray, ...args: any[]) {
@@ -24,7 +26,7 @@ function /**/bar(array: TemplateStringsArray, ...args: any[]) {
 }
 
 function baz() {
-}"#;
+}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");
     f.verify_baseline_call_hierarchy(t);

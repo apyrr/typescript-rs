@@ -14,7 +14,9 @@ pub fn test_completions_import_declaration_attributes_error_module_specifier1() 
 }
 
 fn run_test_completions_import_declaration_attributes_error_module_specifier1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImportDeclarationAttributesErrorModuleSpecifier1") {
+        return;
+    }
     let content = r#"// @strict: true
 // @filename: global.d.ts
 interface ImportAttributes { 

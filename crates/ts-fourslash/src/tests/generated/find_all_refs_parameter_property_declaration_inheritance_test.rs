@@ -14,7 +14,9 @@ pub fn test_find_all_refs_parameter_property_declaration_inheritance() {
 }
 
 fn run_test_find_all_refs_parameter_property_declaration_inheritance(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsParameterPropertyDeclaration_inheritance") {
+        return;
+    }
     let content = r"class C {
 	constructor(public /*0*/x: string) {
 		/*1*/x;

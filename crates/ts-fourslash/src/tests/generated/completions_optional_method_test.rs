@@ -14,7 +14,9 @@ pub fn test_completions_optional_method() {
 }
 
 fn run_test_completions_optional_method(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsOptionalMethod") {
+        return;
+    }
     let content = r"// @strictNullChecks: true
 declare const x: { m?(): void };
 x./**/";

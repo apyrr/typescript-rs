@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_default_export03() {
 }
 
 fn run_test_find_all_refs_for_default_export03(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForDefaultExport03") {
+        return;
+    }
     let content = r"/*1*/function /*2*/f() {
     return 100;
 }

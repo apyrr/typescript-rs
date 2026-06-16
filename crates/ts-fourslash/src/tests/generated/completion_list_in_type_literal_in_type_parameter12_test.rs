@@ -14,7 +14,9 @@ pub fn test_completion_list_in_type_literal_in_type_parameter12() {
 }
 
 fn run_test_completion_list_in_type_literal_in_type_parameter12(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInTypeLiteralInTypeParameter12") {
+        return;
+    }
     let content = r"interface Foo {
     kind: 'foo';
     one: string;

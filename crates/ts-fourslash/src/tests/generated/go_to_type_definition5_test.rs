@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition5() {
 }
 
 fn run_test_go_to_type_definition5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinition5") {
+        return;
+    }
     let content = r"// @Filename: foo.ts
 let Foo: /*definition*/unresolved;
 type Foo = { x: string };

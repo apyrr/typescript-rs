@@ -14,7 +14,9 @@ pub fn test_references_for_object_literal_properties() {
 }
 
 fn run_test_references_for_object_literal_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForObjectLiteralProperties") {
+        return;
+    }
     let content = r#"var x = { /*1*/add: 0, b: "string" };
 x["/*2*/add"];
 x./*3*/add;

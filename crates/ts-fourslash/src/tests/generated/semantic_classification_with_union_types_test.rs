@@ -14,7 +14,9 @@ pub fn test_semantic_classification_with_union_types() {
 }
 
 fn run_test_semantic_classification_with_union_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemanticClassificationWithUnionTypes") {
+        return;
+    }
     let content = r"module /*0*/M {
     export interface /*1*/I {
     }

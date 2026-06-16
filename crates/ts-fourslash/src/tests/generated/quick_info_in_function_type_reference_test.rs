@@ -14,7 +14,9 @@ pub fn test_quick_info_in_function_type_reference() {
 }
 
 fn run_test_quick_info_in_function_type_reference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoInFunctionTypeReference") {
+        return;
+    }
     let content = r"function map(fn: (variab/*1*/le1: string) => void) {
 }
 var x = <{ (fn: (va/*2*/riable2: string) => void, a: string): void; }> () => { };";

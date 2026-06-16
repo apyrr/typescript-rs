@@ -14,7 +14,9 @@ pub fn test_completions_paths_json_module_with_amd() {
 }
 
 fn run_test_completions_paths_json_module_with_amd(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsPathsJsonModuleWithAmd") {
+        return;
+    }
     let content = r#"// @module: amd
 // @resolveJsonModule: true
 // @Filename: /project/test.json

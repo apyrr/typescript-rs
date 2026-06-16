@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_mapped_type1() {
 }
 
 fn run_test_code_fix_class_implement_interface_mapped_type1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceMappedType1") {
+        return;
+    }
     let content = r"interface I<X> {
     x: { readonly [K in keyof X]: X[K] };
 }

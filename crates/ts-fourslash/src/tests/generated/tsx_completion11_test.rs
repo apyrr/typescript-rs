@@ -14,7 +14,9 @@ pub fn test_tsx_completion11() {
 }
 
 fn run_test_tsx_completion11(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxCompletion11") {
+        return;
+    }
     let content = r"//@module: commonjs
 //@jsx: preserve
 //@Filename: exporter.tsx

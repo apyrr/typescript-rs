@@ -14,7 +14,9 @@ pub fn test_import_completions_package_json_imports_pattern_caps_in_path2() {
 }
 
 fn run_test_import_completions_package_json_imports_pattern_caps_in_path2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportCompletionsPackageJsonImportsPattern_capsInPath2") {
+        return;
+    }
     let content = r##"// @module: node18
 // @Filename: /Dev/package.json
 {

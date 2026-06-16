@@ -14,7 +14,9 @@ pub fn test_export_in_object_literal() {
 }
 
 fn run_test_export_in_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExportInObjectLiteral") {
+        return;
+    }
     let content = r"// @Filename: a.ts
 const k = {
     [|export|] f() { }

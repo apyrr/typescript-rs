@@ -14,7 +14,9 @@ pub fn test_jsx_tag_name_completion_closed() {
 }
 
 fn run_test_jsx_tag_name_completion_closed(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsxTagNameCompletionClosed") {
+        return;
+    }
     let content = r"//@Filename: file.tsx
 interface NestedInterface {
     Foo: NestedInterface;

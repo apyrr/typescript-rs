@@ -14,7 +14,9 @@ pub fn test_recursive_wrapped_type_parameters1() {
 }
 
 fn run_test_recursive_wrapped_type_parameters1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRecursiveWrappedTypeParameters1") {
+        return;
+    }
     let content = r"interface I<T> {
 	a: T;
 	b: I<T>;

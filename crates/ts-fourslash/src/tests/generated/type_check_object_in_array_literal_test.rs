@@ -14,7 +14,9 @@ pub fn test_type_check_object_in_array_literal() {
 }
 
 fn run_test_type_check_object_in_array_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTypeCheckObjectInArrayLiteral") {
+        return;
+    }
     let content = r"declare function create<T>(initialValues);
 create([{}]);";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

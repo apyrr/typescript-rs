@@ -14,7 +14,9 @@ pub fn test_generic_method_param() {
 }
 
 fn run_test_generic_method_param(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericMethodParam") {
+        return;
+    }
     let content = r"class C<T> {
     /*1*/
 }

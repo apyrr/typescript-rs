@@ -14,7 +14,9 @@ pub fn test_type_check_after_adding_generic_parameter() {
 }
 
 fn run_test_type_check_after_adding_generic_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTypeCheckAfterAddingGenericParameter") {
+        return;
+    }
     let content = r"function f<x, x>() { }
 function f2<X, X>(b: X): X { return null; }
 class C<X> {

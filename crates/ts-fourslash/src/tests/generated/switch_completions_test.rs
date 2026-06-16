@@ -14,7 +14,9 @@ pub fn test_switch_completions() {
 }
 
 fn run_test_switch_completions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSwitchCompletions") {
+        return;
+    }
     let content = r#"enum E { A, B }
 declare const e: E;
 switch (e) {

@@ -14,7 +14,9 @@ pub fn test_go_to_source11_property_of_alias() {
 }
 
 fn run_test_go_to_source11_property_of_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToSource11_propertyOfAlias") {
+        return;
+    }
     let content = r"// @lib: es5
 // @moduleResolution: bundler
 // @Filename: /home/src/workspaces/project/a.js

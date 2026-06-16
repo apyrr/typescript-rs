@@ -14,7 +14,9 @@ pub fn test_go_to_definition_multiple_definitions() {
 }
 
 fn run_test_go_to_definition_multiple_definitions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionMultipleDefinitions") {
+        return;
+    }
     let content = r"// @Filename: a.ts
 interface /*interfaceDefinition1*/IFoo {
     instance1: number;

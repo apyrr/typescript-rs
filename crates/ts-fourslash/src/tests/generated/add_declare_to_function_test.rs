@@ -14,7 +14,9 @@ pub fn test_add_declare_to_function() {
 }
 
 fn run_test_add_declare_to_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAddDeclareToFunction") {
+        return;
+    }
     let content = r"/*1*/function parseInt(s/*2*/:string):number;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "2");

@@ -14,7 +14,9 @@ pub fn test_quickinfo_for_union_property() {
 }
 
 fn run_test_quickinfo_for_union_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoForUnionProperty") {
+        return;
+    }
     let content = r"interface One {
     commonProperty: number;
     commonFunction(): number;

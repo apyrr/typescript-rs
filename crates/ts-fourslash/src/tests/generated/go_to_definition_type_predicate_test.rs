@@ -14,7 +14,9 @@ pub fn test_go_to_definition_type_predicate() {
 }
 
 fn run_test_go_to_definition_type_predicate(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionTypePredicate") {
+        return;
+    }
     let content = r#"class /*classDeclaration*/A {}
 function f(/*parameterDeclaration*/parameter: any): [|/*parameterName*/parameter|] is [|/*typeReference*/A|] {
     return typeof parameter === "string";

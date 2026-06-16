@@ -14,7 +14,9 @@ pub fn test_auto_import_paths_config_dir() {
 }
 
 fn run_test_auto_import_paths_config_dir(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportPathsConfigDir") {
+        return;
+    }
     let content = r#"// @Filename: tsconfig.json
 {
     "compilerOptions": {

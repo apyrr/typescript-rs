@@ -14,7 +14,9 @@ pub fn test_string_literal_completions_for_string_enum_contextual_type() {
 }
 
 fn run_test_string_literal_completions_for_string_enum_contextual_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestStringLiteralCompletionsForStringEnumContextualType") {
+        return;
+    }
     let content = r#"const enum E {
     A = "A",
 }

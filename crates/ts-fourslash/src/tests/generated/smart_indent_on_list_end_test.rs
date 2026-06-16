@@ -14,7 +14,9 @@ pub fn test_smart_indent_on_list_end() {
 }
 
 fn run_test_smart_indent_on_list_end(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentOnListEnd") {
+        return;
+    }
     let content = r#"var a = []
 /*1*/
 | {}

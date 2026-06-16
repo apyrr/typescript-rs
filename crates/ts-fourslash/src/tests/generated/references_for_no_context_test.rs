@@ -14,7 +14,9 @@ pub fn test_references_for_no_context() {
 }
 
 fn run_test_references_for_no_context(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForNoContext") {
+        return;
+    }
     let content = r"namespace modTest {
     //Declare
     export var modVar:number;

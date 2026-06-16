@@ -14,7 +14,9 @@ pub fn test_unused_label_after_edit() {
 }
 
 fn run_test_unused_label_after_edit(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedLabelAfterEdit") {
+        return;
+    }
     let content = r"// @allowUnusedLabels: false
 myLabel: while (true) {
     if (Math.random() > 0.5) {

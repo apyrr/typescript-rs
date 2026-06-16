@@ -14,7 +14,9 @@ pub fn test_quickinfo_verbosity_index_type() {
 }
 
 fn run_test_quickinfo_verbosity_index_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoVerbosityIndexType") {
+        return;
+    }
     let content = r#"interface T1 {
 	banana: string;
 	grape: number;

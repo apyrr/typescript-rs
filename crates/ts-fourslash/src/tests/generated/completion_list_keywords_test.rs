@@ -14,7 +14,9 @@ pub fn test_completion_list_keywords() {
 }
 
 fn run_test_completion_list_keywords(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListKeywords") {
+        return;
+    }
     let content = r"// @noLib: true
 /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

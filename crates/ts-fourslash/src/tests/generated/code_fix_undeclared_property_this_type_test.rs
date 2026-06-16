@@ -14,7 +14,9 @@ pub fn test_code_fix_undeclared_property_this_type() {
 }
 
 fn run_test_code_fix_undeclared_property_this_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixUndeclaredPropertyThisType") {
+        return;
+    }
     let content = r"[|class A {
     constructor() {
         this.mythis = this;

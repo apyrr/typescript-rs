@@ -14,7 +14,9 @@ pub fn test_format_on_enter_function_declaration() {
 }
 
 fn run_test_format_on_enter_function_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatOnEnterFunctionDeclaration") {
+        return;
+    }
     let content = r"/*0*/function listAPIFiles(path: string): string[] {/*1*/ }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

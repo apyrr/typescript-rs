@@ -14,7 +14,9 @@ pub fn test_find_references_jsx_tag_name3() {
 }
 
 fn run_test_find_references_jsx_tag_name3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindReferencesJSXTagName3") {
+        return;
+    }
     let content = r"// @jsx: preserve
 // @Filename: /a.tsx
 namespace JSX {

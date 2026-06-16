@@ -14,7 +14,9 @@ pub fn test_signature_help01() {
 }
 
 fn run_test_signature_help01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelp01") {
+        return;
+    }
     let content = r"// @lib: es5
 function foo(data: number) {
 }

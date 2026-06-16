@@ -14,7 +14,9 @@ pub fn test_completions_type_keywords() {
 }
 
 fn run_test_completions_type_keywords(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsTypeKeywords") {
+        return;
+    }
     let content = r"// @noLib: true
 type T = /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

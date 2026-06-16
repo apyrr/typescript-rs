@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_root_dirs1() {
 }
 
 fn run_test_import_name_code_fix_new_import_root_dirs1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportRootDirs1") {
+        return;
+    }
     let content = r#"// @Filename: a/f1.ts
 [|foo/*0*/();|]
 // @Filename: a/b/index.ts

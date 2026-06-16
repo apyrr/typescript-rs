@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_external_module_alias() {
 }
 
 fn run_test_quick_info_display_parts_external_module_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsExternalModuleAlias") {
+        return;
+    }
     let content = r#"// @Filename: quickInfoDisplayPartsExternalModuleAlias_file0.ts
 export namespace m1 {
     export class c {

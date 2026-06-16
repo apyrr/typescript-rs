@@ -14,7 +14,9 @@ pub fn test_add_function_in_duplicated_constructor_class_body() {
 }
 
 fn run_test_add_function_in_duplicated_constructor_class_body(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAddFunctionInDuplicatedConstructorClassBody") {
+        return;
+    }
     let content = r"class Foo {
     constructor() { }
     constructor() { }

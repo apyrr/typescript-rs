@@ -14,7 +14,9 @@ pub fn test_proto_property_in_object_literal() {
 }
 
 fn run_test_proto_property_in_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestProtoPropertyInObjectLiteral") {
+        return;
+    }
     let content = r#"var o1 = {
     "__proto__": 10
 };

@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_super_00() {
 }
 
 fn run_test_go_to_implementation_super_00(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationSuper_00") {
+        return;
+    }
     let content = r"class [|Foo|] {
     constructor() {}
 }

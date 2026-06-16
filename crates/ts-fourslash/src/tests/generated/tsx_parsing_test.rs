@@ -14,7 +14,9 @@ pub fn test_tsx_parsing() {
 }
 
 fn run_test_tsx_parsing(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxParsing") {
+        return;
+    }
     let content = r#"var x = <div id="foo" master="bar"></div>;
 var y = /**/x;"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

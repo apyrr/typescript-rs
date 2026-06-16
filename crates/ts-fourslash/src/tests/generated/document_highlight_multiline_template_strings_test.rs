@@ -14,12 +14,14 @@ pub fn test_document_highlight_multiline_template_strings() {
 }
 
 fn run_test_document_highlight_multiline_template_strings(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"const foo = ` + "`" + `
+    if should_skip_if_failing("TestDocumentHighlightMultilineTemplateStrings") {
+        return;
+    }
+    let content = r"const foo = `
     a
     [|b|]
     c
-` + "`" + `"#;
+`";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_document_highlights(
         t,

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_instanceof1() {
 }
 
 fn run_test_go_to_definition_instanceof1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionInstanceof1") {
+        return;
+    }
     let content = r"// @lib: es5
 class /*end*/ C {
 }

@@ -14,7 +14,9 @@ pub fn test_go_to_definition_same_file() {
 }
 
 fn run_test_go_to_definition_same_file(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionSameFile") {
+        return;
+    }
     let content = r"var /*localVariableDefinition*/localVariable;
 function /*localFunctionDefinition*/localFunction() { }
 class /*localClassDefinition*/localClass { }

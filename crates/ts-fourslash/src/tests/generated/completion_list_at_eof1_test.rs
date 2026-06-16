@@ -14,7 +14,9 @@ pub fn test_completion_list_at_eof1() {
 }
 
 fn run_test_completion_list_at_eof1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtEOF1") {
+        return;
+    }
     let content = r"if(0 === ''.";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_eof(t);

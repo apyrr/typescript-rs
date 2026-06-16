@@ -14,7 +14,9 @@ pub fn test_completions_default_export() {
 }
 
 fn run_test_completions_default_export(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsDefaultExport") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 export default function f() {}
 // @Filename: /b.ts

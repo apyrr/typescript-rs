@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_pnpm1() {
 }
 
 fn run_test_import_name_code_fix_pnpm1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_pnpm1") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/tsconfig.json
 { "compilerOptions": { "module": "commonjs", "types": ["*"], "lib": ["es5"] } }
 // @Filename: /home/src/workspaces/project/node_modules/.pnpm/@types+react@17.0.7/node_modules/@types/react/index.d.ts

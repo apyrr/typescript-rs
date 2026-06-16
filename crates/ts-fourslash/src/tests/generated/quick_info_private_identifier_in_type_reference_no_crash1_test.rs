@@ -14,7 +14,9 @@ pub fn test_quick_info_private_identifier_in_type_reference_no_crash1() {
 }
 
 fn run_test_quick_info_private_identifier_in_type_reference_no_crash1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoPrivateIdentifierInTypeReferenceNoCrash1") {
+        return;
+    }
     let content = r#"// @target: esnext
 class Foo {
   #prop: string = "";

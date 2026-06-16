@@ -14,7 +14,9 @@ pub fn test_completions_commit_characters_global() {
 }
 
 fn run_test_completions_commit_characters_global(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsCommitCharactersGlobal") {
+        return;
+    }
     let content = r#"// @lib: es5
 declare function func(a: string, b: number): { a: string, b: number };
 const x1 = func(/*1*/)
@@ -34,7 +36,7 @@ const x10: [/*10*/]
 const x11: [ ]
 let x12;
 x12 = /*12*/
-const x13 = ` + "`" + `hello, ${/*13*/}` + "`" + `
+const x13 = `hello, ${/*13*/}`
 interface I<T> {
     [/*14*/]: T;
 }

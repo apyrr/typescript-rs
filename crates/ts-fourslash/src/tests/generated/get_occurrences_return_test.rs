@@ -14,7 +14,9 @@ pub fn test_get_occurrences_return() {
 }
 
 fn run_test_get_occurrences_return(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesReturn") {
+        return;
+    }
     let content = r"function f(a: number) {
     if (a > 0) {
         [|ret/**/urn|] (function () {

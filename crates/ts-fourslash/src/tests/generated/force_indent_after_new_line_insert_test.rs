@@ -14,7 +14,9 @@ pub fn test_force_indent_after_new_line_insert() {
 }
 
 fn run_test_force_indent_after_new_line_insert(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestForceIndentAfterNewLineInsert") {
+        return;
+    }
     let content = r"function f1()
 { return 0; }
 function f2()

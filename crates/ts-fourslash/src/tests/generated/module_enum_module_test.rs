@@ -14,7 +14,9 @@ pub fn test_module_enum_module() {
 }
 
 fn run_test_module_enum_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestModuleEnumModule") {
+        return;
+    }
     let content = r"namespace A {
     var o;
 }

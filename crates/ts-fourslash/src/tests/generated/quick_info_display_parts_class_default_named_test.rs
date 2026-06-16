@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_class_default_named() {
 }
 
 fn run_test_quick_info_display_parts_class_default_named(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsClassDefaultNamed") {
+        return;
+    }
     let content = r"/*1*/export /*2*/default /*3*/class /*4*/C /*5*/ {
 }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

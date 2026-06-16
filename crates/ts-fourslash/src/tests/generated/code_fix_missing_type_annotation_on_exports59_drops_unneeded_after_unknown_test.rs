@@ -16,7 +16,11 @@ pub fn test_code_fix_missing_type_annotation_on_exports59_drops_unneeded_after_u
 fn run_test_code_fix_missing_type_annotation_on_exports59_drops_unneeded_after_unknown(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestCodeFixMissingTypeAnnotationOnExports59-drops-unneeded-after-unknown",
+    ) {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 

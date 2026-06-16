@@ -14,7 +14,9 @@ pub fn test_rename_label2() {
 }
 
 fn run_test_rename_label2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameLabel2") {
+        return;
+    }
     let content = r"/**/foo: {
     break foo;
 }";

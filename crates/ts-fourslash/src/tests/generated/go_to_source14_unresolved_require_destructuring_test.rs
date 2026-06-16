@@ -14,7 +14,9 @@ pub fn test_go_to_source14_unresolved_require_destructuring() {
 }
 
 fn run_test_go_to_source14_unresolved_require_destructuring(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToSource14_unresolvedRequireDestructuring") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @allowJs: true
 // @Filename: /home/src/workspaces/project/index.js

@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_type_alias() {
 }
 
 fn run_test_navigation_bar_items_type_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsTypeAlias") {
+        return;
+    }
     let content = r"type T = number | string;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_document_symbol(t);

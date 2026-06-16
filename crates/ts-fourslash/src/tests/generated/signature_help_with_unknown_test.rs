@@ -14,7 +14,9 @@ pub fn test_signature_help_with_unknown() {
 }
 
 fn run_test_signature_help_with_unknown(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpWithUnknown") {
+        return;
+    }
     let content = r"eval(\/*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_signature_help(t, &[]);

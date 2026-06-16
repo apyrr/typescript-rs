@@ -14,7 +14,9 @@ pub fn test_go_to_definition_index_signature2() {
 }
 
 fn run_test_go_to_definition_index_signature2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionIndexSignature2") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @Filename: /a.js
 const o = {};

@@ -14,7 +14,9 @@ pub fn test_find_all_refs_import_star_of_export_equals() {
 }
 
 fn run_test_find_all_refs_import_star_of_export_equals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsImportStarOfExportEquals") {
+        return;
+    }
     let content = r#"// @allowSyntheticDefaultimports: true
 // @Filename: /node_modules/a/index.d.ts
 [|declare function /*a0*/[|{| "isWriteAccess": true, "isDefinition": true, "contextRangeIndex": 0 |}a|](): void;|]

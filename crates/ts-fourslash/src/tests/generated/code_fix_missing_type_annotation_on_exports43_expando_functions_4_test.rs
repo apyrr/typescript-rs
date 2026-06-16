@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports43_expando_functions_4() 
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports43_expando_functions_4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports43-expando-functions-4") {
+        return;
+    }
     let content = r#"// @isolatedDeclarations: true
 // @declaration: true
 // @lib: es2019

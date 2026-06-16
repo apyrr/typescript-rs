@@ -14,7 +14,9 @@ pub fn test_completion_list_in_object_literal3() {
 }
 
 fn run_test_completion_list_in_object_literal3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInObjectLiteral3") {
+        return;
+    }
     let content = r"interface IASTNode {
     name: string;
     children: IASTNode[];

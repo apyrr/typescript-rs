@@ -14,7 +14,9 @@ pub fn test_organize_imports_attributes2() {
 }
 
 fn run_test_organize_imports_attributes2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsAttributes2") {
+        return;
+    }
     let content = r#"import { A } from "./a";
 import { C } from "./a" with { type: "a" };
 import { Z } from "./z";

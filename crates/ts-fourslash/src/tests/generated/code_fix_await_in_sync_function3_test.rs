@@ -14,7 +14,9 @@ pub fn test_code_fix_await_in_sync_function3() {
 }
 
 fn run_test_code_fix_await_in_sync_function3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAwaitInSyncFunction3") {
+        return;
+    }
     let content = r"const f = {
     get a() {
         return await Promise.resolve();

@@ -14,7 +14,9 @@ pub fn test_quick_info_assertion_node_not_reused_when_type_not_equivalent1() {
 }
 
 fn run_test_quick_info_assertion_node_not_reused_when_type_not_equivalent1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoAssertionNodeNotReusedWhenTypeNotEquivalent1") {
+        return;
+    }
     let content = r#"// @strict: true
 type Wrapper<T> = {
   _type: T;

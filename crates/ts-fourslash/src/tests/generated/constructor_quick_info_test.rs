@@ -14,7 +14,9 @@ pub fn test_constructor_quick_info() {
 }
 
 fn run_test_constructor_quick_info(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestConstructorQuickInfo") {
+        return;
+    }
     let content = r"class SS<T>{}
 
 var x/*1*/1 = new SS<number>();

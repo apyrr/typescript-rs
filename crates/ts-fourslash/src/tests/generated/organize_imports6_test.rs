@@ -14,7 +14,9 @@ pub fn test_organize_imports6() {
 }
 
 fn run_test_organize_imports6(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImports6") {
+        return;
+    }
     let content = r#"import * as something from "path"; /* small comment */ // single line one.
 /* some comment here
 * and there

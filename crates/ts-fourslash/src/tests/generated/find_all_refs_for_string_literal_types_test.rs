@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_string_literal_types() {
 }
 
 fn run_test_find_all_refs_for_string_literal_types(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForStringLiteralTypes") {
+        return;
+    }
     let content = r#"type Options = "/*1*/option 1" | "option 2";
 let myOption: Options = "/*2*/option 1";"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

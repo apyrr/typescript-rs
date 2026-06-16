@@ -14,7 +14,9 @@ pub fn test_local_get_references() {
 }
 
 fn run_test_local_get_references(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestLocalGetReferences") {
+        return;
+    }
     let content = r#"// @Filename: localGetReferences_1.ts
 // Comment Refence Test: g/*43*/lobalVar
 // References to a variable declared in global.
@@ -184,7 +186,7 @@ namespace remotemodTest {
 	class remotetestCls {
 		static remoteboo = remotefoo;
 	}
-` + "`" + `
+`
 	function remotetestFn(){
         static remoteboo = remotefoo;
 

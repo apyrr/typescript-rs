@@ -14,7 +14,9 @@ pub fn test_get_occurrences_class_expression_public() {
 }
 
 fn run_test_get_occurrences_class_expression_public(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesClassExpressionPublic") {
+        return;
+    }
     let content = r"let A = class Foo {
     [|public|] foo;
     [|public|] public;

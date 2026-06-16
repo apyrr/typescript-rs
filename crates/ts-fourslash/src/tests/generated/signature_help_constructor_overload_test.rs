@@ -14,7 +14,9 @@ pub fn test_signature_help_constructor_overload() {
 }
 
 fn run_test_signature_help_constructor_overload(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpConstructorOverload") {
+        return;
+    }
     let content = r"class clsOverload { constructor(); constructor(test: string); constructor(test?: string) { } }
 var x = new clsOverload(/*1*/);
 var y = new clsOverload(/*2*/'');";

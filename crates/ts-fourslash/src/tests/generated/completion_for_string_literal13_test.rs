@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal13() {
 }
 
 fn run_test_completion_for_string_literal13(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteral13") {
+        return;
+    }
     let content = r#"// @lib: es5
 interface SymbolConstructor {
     readonly species: symbol;

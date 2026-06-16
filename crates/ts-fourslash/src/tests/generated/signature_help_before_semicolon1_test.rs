@@ -14,7 +14,9 @@ pub fn test_signature_help_before_semicolon1() {
 }
 
 fn run_test_signature_help_before_semicolon1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpBeforeSemicolon1") {
+        return;
+    }
     let content = r"function Foo(arg1: string, arg2: string) {
 }
 

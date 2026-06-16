@@ -14,7 +14,9 @@ pub fn test_document_highlight_at_inherited_properties2() {
 }
 
 fn run_test_document_highlight_at_inherited_properties2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightAtInheritedProperties2") {
+        return;
+    }
     let content = r"// @Filename: file1.ts
 class class1 extends class1 {
    [|doStuff|]() { }

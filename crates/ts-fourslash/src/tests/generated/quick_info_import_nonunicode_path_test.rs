@@ -14,7 +14,9 @@ pub fn test_quick_info_import_nonunicode_path() {
 }
 
 fn run_test_quick_info_import_nonunicode_path(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoImportNonunicodePath") {
+        return;
+    }
     let content = r#"// @Filename: /江南今何在/tmp.ts
 export const foo = 1;
 // @Filename: /test.ts

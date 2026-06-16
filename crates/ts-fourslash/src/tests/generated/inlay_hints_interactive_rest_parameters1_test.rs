@@ -14,7 +14,9 @@ pub fn test_inlay_hints_interactive_rest_parameters1() {
 }
 
 fn run_test_inlay_hints_interactive_rest_parameters1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInteractiveRestParameters1") {
+        return;
+    }
     let content = r"function foo1(a: number, ...b: number[]) {}
 foo1(1, 1, 1, 1);
 type Args2 = [a: number, b: number]

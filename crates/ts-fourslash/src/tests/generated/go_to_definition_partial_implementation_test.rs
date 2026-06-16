@@ -14,7 +14,9 @@ pub fn test_go_to_definition_partial_implementation() {
 }
 
 fn run_test_go_to_definition_partial_implementation(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionPartialImplementation") {
+        return;
+    }
     let content = r"// @Filename: goToDefinitionPartialImplementation_1.ts
 namespace A {
     export interface /*Part1Definition*/IA {

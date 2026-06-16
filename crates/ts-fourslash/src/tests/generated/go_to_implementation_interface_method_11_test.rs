@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_interface_method_11() {
 }
 
 fn run_test_go_to_implementation_interface_method_11(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationInterfaceMethod_11") {
+        return;
+    }
     let content = r"interface Foo {
    hel/*reference*/lo(): void;
 }

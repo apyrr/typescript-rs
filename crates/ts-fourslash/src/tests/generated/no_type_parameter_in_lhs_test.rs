@@ -14,7 +14,9 @@ pub fn test_no_type_parameter_in_lhs() {
 }
 
 fn run_test_no_type_parameter_in_lhs(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNoTypeParameterInLHS") {
+        return;
+    }
     let content = r"interface I<T> { }
 class C<T> {}
 var /*1*/i: I<any>;

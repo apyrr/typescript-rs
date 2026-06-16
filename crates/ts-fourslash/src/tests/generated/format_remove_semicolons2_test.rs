@@ -14,7 +14,9 @@ pub fn test_format_remove_semicolons2() {
 }
 
 fn run_test_format_remove_semicolons2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatRemoveSemicolons2") {
+        return;
+    }
     let content = r"namespace ts {
     let x = 0;
     //

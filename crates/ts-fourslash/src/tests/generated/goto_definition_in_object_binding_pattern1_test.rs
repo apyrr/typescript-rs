@@ -14,7 +14,9 @@ pub fn test_goto_definition_in_object_binding_pattern1() {
 }
 
 fn run_test_goto_definition_in_object_binding_pattern1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGotoDefinitionInObjectBindingPattern1") {
+        return;
+    }
     let content = r"function bar<T>(onfulfilled: (value: T) => void) {
   return undefined;
 }

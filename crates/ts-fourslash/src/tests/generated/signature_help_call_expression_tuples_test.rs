@@ -14,7 +14,9 @@ pub fn test_signature_help_call_expression_tuples() {
 }
 
 fn run_test_signature_help_call_expression_tuples(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpCallExpressionTuples") {
+        return;
+    }
     let content = r"function fnTest(str: string, num: number) { }
 declare function wrap<A extends any[], R>(fn: (...a: A) => R) : (...a: A) => R;
 var fnWrapped = wrap(fnTest);

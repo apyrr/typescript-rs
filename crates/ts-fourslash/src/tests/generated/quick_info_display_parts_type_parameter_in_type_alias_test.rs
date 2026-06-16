@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_type_parameter_in_type_alias() {
 }
 
 fn run_test_quick_info_display_parts_type_parameter_in_type_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsTypeParameterInTypeAlias") {
+        return;
+    }
     let content = r"type /*0*/List</*1*/T> = /*2*/T[]
 type /*3*/List2</*4*/T extends string> = /*5*/T[];";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

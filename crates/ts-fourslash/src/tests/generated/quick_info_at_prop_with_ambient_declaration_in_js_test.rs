@@ -14,7 +14,9 @@ pub fn test_quick_info_at_prop_with_ambient_declaration_in_js() {
 }
 
 fn run_test_quick_info_at_prop_with_ambient_declaration_in_js(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoAtPropWithAmbientDeclarationInJs") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @filename: /a.js
 class C {

@@ -14,7 +14,9 @@ pub fn test_import_statement_completions3() {
 }
 
 fn run_test_import_statement_completions3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportStatementCompletions3") {
+        return;
+    }
     let content = r"// @Filename: ./$foo.ts
 export function foo() {}
 // @Filename: ./bar.ts

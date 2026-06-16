@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_external_modules() {
 }
 
 fn run_test_quick_info_display_parts_external_modules(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsExternalModules") {
+        return;
+    }
     let content = r"export namespace /*1*/m {
     var /*2*/namespaceElemWithoutExport = 10;
     export var /*3*/namespaceElemWithExport = 10;

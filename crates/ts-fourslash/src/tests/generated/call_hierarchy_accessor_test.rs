@@ -14,7 +14,9 @@ pub fn test_call_hierarchy_accessor() {
 }
 
 fn run_test_call_hierarchy_accessor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCallHierarchyAccessor") {
+        return;
+    }
     let content = r"function foo() {
     new C().bar;
 }

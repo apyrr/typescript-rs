@@ -14,7 +14,9 @@ pub fn test_linked_editing_jsx_tag11() {
 }
 
 fn run_test_linked_editing_jsx_tag11(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestLinkedEditingJsxTag11") {
+        return;
+    }
     let content = r#"// @Filename: /customElements.tsx
 const jsx = <fbt:enum knownProp="accepted"
     unknownProp="rejected">

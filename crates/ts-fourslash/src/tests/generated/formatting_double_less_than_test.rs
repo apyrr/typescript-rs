@@ -14,7 +14,9 @@ pub fn test_formatting_double_less_than() {
 }
 
 fn run_test_formatting_double_less_than(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingDoubleLessThan") {
+        return;
+    }
     let content = r"/*1*/if (<number>foo < <number>bar) {}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");

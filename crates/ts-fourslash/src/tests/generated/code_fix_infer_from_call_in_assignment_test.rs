@@ -14,7 +14,9 @@ pub fn test_code_fix_infer_from_call_in_assignment() {
 }
 
 fn run_test_code_fix_infer_from_call_in_assignment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixInferFromCallInAssignment") {
+        return;
+    }
     let content = r"// @noImplicitAny: true
 function inferAny( [| app |] ) {
     const result = app.use('hi')

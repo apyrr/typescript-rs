@@ -14,7 +14,9 @@ pub fn test_declaration_maps_go_to_definition_relative_source_root() {
 }
 
 fn run_test_declaration_maps_go_to_definition_relative_source_root(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDeclarationMapsGoToDefinitionRelativeSourceRoot") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @Filename: index.ts
 export class Foo {

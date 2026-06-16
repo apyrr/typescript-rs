@@ -14,7 +14,9 @@ pub fn test_completion_list_on_function_call_with_optional_argument() {
 }
 
 fn run_test_completion_list_on_function_call_with_optional_argument(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOnFunctionCallWithOptionalArgument") {
+        return;
+    }
     let content = r"declare function Foo(arg1?: Function): { q: number };
 Foo(function () { } )./**/;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

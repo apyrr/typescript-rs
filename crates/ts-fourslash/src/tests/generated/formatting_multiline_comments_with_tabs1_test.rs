@@ -14,7 +14,9 @@ pub fn test_formatting_multiline_comments_with_tabs1() {
 }
 
 fn run_test_formatting_multiline_comments_with_tabs1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingMultilineCommentsWithTabs1") {
+        return;
+    }
     let content = r"var f = function (j) {
 
 	switch (j) {

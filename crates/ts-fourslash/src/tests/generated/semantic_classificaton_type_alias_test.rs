@@ -14,7 +14,9 @@ pub fn test_semantic_classificaton_type_alias() {
 }
 
 fn run_test_semantic_classificaton_type_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemanticClassificatonTypeAlias") {
+        return;
+    }
     let content = r"type /*0*/Alias = number
 var x: /*1*/Alias;
 var y = </*2*/Alias>{};

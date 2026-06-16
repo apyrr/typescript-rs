@@ -14,7 +14,9 @@ pub fn test_quick_info_for_contextually_typed_arrow_function_in_super_call() {
 }
 
 fn run_test_quick_info_for_contextually_typed_arrow_function_in_super_call(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForContextuallyTypedArrowFunctionInSuperCall") {
+        return;
+    }
     let content = r"class A<T1, T2> {
     constructor(private map: (value: T1) => T2) {
 

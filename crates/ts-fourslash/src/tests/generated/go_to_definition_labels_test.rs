@@ -14,7 +14,9 @@ pub fn test_go_to_definition_labels() {
 }
 
 fn run_test_go_to_definition_labels(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionLabels") {
+        return;
+    }
     let content = r"/*label1Definition*/label1: while (true) {
     /*label2Definition*/label2: while (true) {
         break [|/*1*/label1|];

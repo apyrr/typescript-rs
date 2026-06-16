@@ -14,7 +14,9 @@ pub fn test_find_all_refs_type_parameter_in_merged_interface() {
 }
 
 fn run_test_find_all_refs_type_parameter_in_merged_interface(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsTypeParameterInMergedInterface") {
+        return;
+    }
     let content = r"interface I</*1*/T> { a: /*2*/T }
 interface I</*3*/T> { b: /*4*/T }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

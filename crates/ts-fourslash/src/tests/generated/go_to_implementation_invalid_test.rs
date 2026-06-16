@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_invalid() {
 }
 
 fn run_test_go_to_implementation_invalid(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationInvalid") {
+        return;
+    }
     let content = r#"var x1 = 50/*0*/0;
 var x2 = "hel/*1*/lo";
 /*2*/"#;

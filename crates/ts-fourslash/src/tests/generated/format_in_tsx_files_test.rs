@@ -14,7 +14,9 @@ pub fn test_format_in_tsx_files() {
 }
 
 fn run_test_format_in_tsx_files(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatInTsxFiles") {
+        return;
+    }
     let content = r"//@Filename: file.tsx
 interface I<T1, T2> {
     next: I</* */

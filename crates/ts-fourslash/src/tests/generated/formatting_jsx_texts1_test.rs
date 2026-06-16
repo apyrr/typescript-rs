@@ -14,7 +14,9 @@ pub fn test_formatting_jsx_texts1() {
 }
 
 fn run_test_formatting_jsx_texts1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingJsxTexts1") {
+        return;
+    }
     let content = r"//@Filename: file.tsx
 <option>
     homu   ;      homu

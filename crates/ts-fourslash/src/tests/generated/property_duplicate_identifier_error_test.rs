@@ -14,7 +14,9 @@ pub fn test_property_duplicate_identifier_error() {
 }
 
 fn run_test_property_duplicate_identifier_error(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestPropertyDuplicateIdentifierError") {
+        return;
+    }
     let content = r"export class C {
     x: number;
     get x(): number { return 1; }

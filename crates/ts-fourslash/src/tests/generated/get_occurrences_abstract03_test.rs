@@ -14,7 +14,9 @@ pub fn test_get_occurrences_abstract03() {
 }
 
 fn run_test_get_occurrences_abstract03(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesAbstract03") {
+        return;
+    }
     let content = r"function f() {
     [|abstract|] class A {
         [|abstract|] m(): void;

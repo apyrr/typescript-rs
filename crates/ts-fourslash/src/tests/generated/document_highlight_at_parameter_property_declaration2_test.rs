@@ -14,7 +14,9 @@ pub fn test_document_highlight_at_parameter_property_declaration2() {
 }
 
 fn run_test_document_highlight_at_parameter_property_declaration2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightAtParameterPropertyDeclaration2") {
+        return;
+    }
     let content = r#"// @Filename: file1.ts
 class Foo {
     // This is not valid syntax: parameter property can't be binding pattern

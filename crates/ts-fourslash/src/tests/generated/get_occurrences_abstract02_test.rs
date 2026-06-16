@@ -14,7 +14,9 @@ pub fn test_get_occurrences_abstract02() {
 }
 
 fn run_test_get_occurrences_abstract02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesAbstract02") {
+        return;
+    }
     let content = r"// Not valid TS (abstract methods can only appear in abstract classes)
 class Animal {
     [|abstract|] walk(): void;

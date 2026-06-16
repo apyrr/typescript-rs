@@ -14,7 +14,9 @@ pub fn test_go_to_definition_union_type_property2() {
 }
 
 fn run_test_go_to_definition_union_type_property2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionUnionTypeProperty2") {
+        return;
+    }
     let content = r"interface HasAOrB {
     /*propertyDefinition1*/a: string;
     b: string;

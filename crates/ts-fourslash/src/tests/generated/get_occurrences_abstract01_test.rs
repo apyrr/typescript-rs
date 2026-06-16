@@ -14,7 +14,9 @@ pub fn test_get_occurrences_abstract01() {
 }
 
 fn run_test_get_occurrences_abstract01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesAbstract01") {
+        return;
+    }
     let content = r"[|abstract|] class Animal {
     [|abstract|] prop1; // Does not compile
     [|abstract|] abstract();

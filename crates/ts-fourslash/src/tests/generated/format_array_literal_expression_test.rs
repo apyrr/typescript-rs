@@ -14,7 +14,9 @@ pub fn test_format_array_literal_expression() {
 }
 
 fn run_test_format_array_literal_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatArrayLiteralExpression") {
+        return;
+    }
     let content = r"export let Things = [{
     Hat: 'hat', /*1*/
     Glove: 'glove',

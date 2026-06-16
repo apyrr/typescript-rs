@@ -14,7 +14,9 @@ pub fn test_find_all_refs_default_import() {
 }
 
 fn run_test_find_all_refs_default_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsDefaultImport") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 export default function /*0*/a() {}
 // @Filename: /b.ts

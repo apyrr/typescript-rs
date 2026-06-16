@@ -14,7 +14,9 @@ pub fn test_inlay_hints_function_parameter_types5() {
 }
 
 fn run_test_inlay_hints_function_parameter_types5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsFunctionParameterTypes5") {
+        return;
+    }
     let content = r"declare const STATE_SIGNAL: unique symbol;
 
 declare function test(

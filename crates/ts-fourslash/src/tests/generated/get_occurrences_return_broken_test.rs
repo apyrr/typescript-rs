@@ -14,7 +14,9 @@ pub fn test_get_occurrences_return_broken() {
 }
 
 fn run_test_get_occurrences_return_broken(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesReturnBroken") {
+        return;
+    }
     let content = r"ret/*1*/urn;
 retu/*2*/rn;
 function f(a: number) {

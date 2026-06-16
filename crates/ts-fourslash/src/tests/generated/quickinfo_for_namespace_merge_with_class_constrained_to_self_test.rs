@@ -14,7 +14,9 @@ pub fn test_quickinfo_for_namespace_merge_with_class_constrained_to_self() {
 }
 
 fn run_test_quickinfo_for_namespace_merge_with_class_constrained_to_self(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoForNamespaceMergeWithClassConstrainedToSelf") {
+        return;
+    }
     let content = r"declare namespace AMap {
     namespace MassMarks {
         interface Data {

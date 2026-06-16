@@ -14,7 +14,9 @@ pub fn test_completions_generic_indexed_access1() {
 }
 
 fn run_test_completions_generic_indexed_access1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsGenericIndexedAccess1") {
+        return;
+    }
     let content = r"interface Sample {
   addBook: { name: string, year: number }
 }

@@ -14,7 +14,9 @@ pub fn test_path_completions_types_versions_wildcard2() {
 }
 
 fn run_test_path_completions_types_versions_wildcard2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestPathCompletionsTypesVersionsWildcard2") {
+        return;
+    }
     let content = r#"// @module: commonjs
 // @resolveJsonModule: false
 // @Filename: /node_modules/foo/package.json

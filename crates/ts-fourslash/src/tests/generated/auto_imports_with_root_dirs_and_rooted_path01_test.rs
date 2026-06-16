@@ -14,7 +14,9 @@ pub fn test_auto_imports_with_root_dirs_and_rooted_path01() {
 }
 
 fn run_test_auto_imports_with_root_dirs_and_rooted_path01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportsWithRootDirsAndRootedPath01") {
+        return;
+    }
     let content = r#"// @Filename: /dir/foo.ts
  export function foo() {}
 // @Filename: /dir/bar.ts

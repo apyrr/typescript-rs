@@ -14,7 +14,9 @@ pub fn test_document_highlight_at_parameter_property_declaration1() {
 }
 
 fn run_test_document_highlight_at_parameter_property_declaration1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightAtParameterPropertyDeclaration1") {
+        return;
+    }
     let content = r#"// @Filename: file1.ts
 class Foo {
     constructor(private [|privateParam|]: number,

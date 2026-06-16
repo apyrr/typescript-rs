@@ -14,7 +14,9 @@ pub fn test_contextually_typed_parameters() {
 }
 
 fn run_test_contextually_typed_parameters(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestContextuallyTypedParameters") {
+        return;
+    }
     let content = r"declare function foo(cb: (this: any, x: number, y: string, z: boolean) => void): void;
 
 foo(function(this, a, ...args) {

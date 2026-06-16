@@ -14,7 +14,9 @@ pub fn test_completions_recommended_equals() {
 }
 
 fn run_test_completions_recommended_equals(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsRecommended_equals") {
+        return;
+    }
     let content = r"enum Enu {}
 declare const e: Enu;
 e === /*a*/;

@@ -14,7 +14,9 @@ pub fn test_completion_list_after_function() {
 }
 
 fn run_test_completion_list_after_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAfterFunction") {
+        return;
+    }
     let content = r"// Outside the function
 declare function f1(a: number);/*1*/
 

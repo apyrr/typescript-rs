@@ -14,7 +14,9 @@ pub fn test_quick_info_union_of_namespaces() {
 }
 
 fn run_test_quick_info_union_of_namespaces(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoUnionOfNamespaces") {
+        return;
+    }
     let content = r"declare const x: typeof A | typeof B;
 x./**/f;
 

@@ -14,7 +14,9 @@ pub fn test_get_java_script_completions14() {
 }
 
 fn run_test_get_java_script_completions14(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetJavaScriptCompletions14") {
+        return;
+    }
     let content = r"// @allowNonTsExtensions: true
 // @Filename: file1.js
 interface Number {

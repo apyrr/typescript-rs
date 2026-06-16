@@ -14,7 +14,9 @@ pub fn test_completions_class_members1() {
 }
 
 fn run_test_completions_class_members1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsClassMembers1") {
+        return;
+    }
     let content = r#"interface I {
     method(): void;
 }

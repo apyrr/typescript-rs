@@ -14,7 +14,9 @@ pub fn test_module_members_of_generic_type() {
 }
 
 fn run_test_module_members_of_generic_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestModuleMembersOfGenericType") {
+        return;
+    }
     let content = r"namespace M {
     export var x = <T>(x: T) => x;
 }

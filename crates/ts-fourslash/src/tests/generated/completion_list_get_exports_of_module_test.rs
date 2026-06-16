@@ -14,7 +14,9 @@ pub fn test_completion_list_get_exports_of_module() {
 }
 
 fn run_test_completion_list_get_exports_of_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionList_getExportsOfModule") {
+        return;
+    }
     let content = r#"declare module "x" {
     declare var x: number;
     export = x;

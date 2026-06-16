@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_paths_with_leading_dot_slash() {
 }
 
 fn run_test_import_name_code_fix_new_import_paths_with_leading_dot_slash(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportPaths_withLeadingDotSlash") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 [|foo|]
 // @Filename: /thisHasPathMapping.ts

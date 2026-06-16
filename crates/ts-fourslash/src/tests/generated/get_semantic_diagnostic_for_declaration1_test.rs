@@ -14,7 +14,9 @@ pub fn test_get_semantic_diagnostic_for_declaration1() {
 }
 
 fn run_test_get_semantic_diagnostic_for_declaration1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetSemanticDiagnosticForDeclaration1") {
+        return;
+    }
     let content = r"// @declaration: true
 // @Filename: File.d.ts
 declare var v: string;";

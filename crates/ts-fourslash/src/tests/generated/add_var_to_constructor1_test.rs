@@ -14,7 +14,9 @@ pub fn test_add_var_to_constructor1() {
 }
 
 fn run_test_add_var_to_constructor1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAddVarToConstructor1") {
+        return;
+    }
     let content = r"
 //_modes. // produces an internal error - please implement in derived class
 

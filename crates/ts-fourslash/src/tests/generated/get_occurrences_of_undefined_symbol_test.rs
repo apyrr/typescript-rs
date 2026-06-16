@@ -14,7 +14,9 @@ pub fn test_get_occurrences_of_undefined_symbol() {
 }
 
 fn run_test_get_occurrences_of_undefined_symbol(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesOfUndefinedSymbol") {
+        return;
+    }
     let content = r"var obj1: {
     (bar: any): any;
     new (bar: any): any;

@@ -14,7 +14,9 @@ pub fn test_quick_info_for_object_binding_element_name06() {
 }
 
 fn run_test_quick_info_for_object_binding_element_name06(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForObjectBindingElementName06") {
+        return;
+    }
     let content = r"type Foo = {
     /**
      * Thing is a bar

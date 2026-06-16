@@ -14,7 +14,9 @@ pub fn test_completion_list_at_end_of_word_in_arrow_function01() {
 }
 
 fn run_test_completion_list_at_end_of_word_in_arrow_function01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtEndOfWordInArrowFunction01") {
+        return;
+    }
     let content = r"xyz => x/*1*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(

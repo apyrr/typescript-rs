@@ -14,7 +14,9 @@ pub fn test_references_for_ambients2() {
 }
 
 fn run_test_references_for_ambients2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForAmbients2") {
+        return;
+    }
     let content = r#"// @Filename: /defA.ts
 declare module "a" {
     /*1*/export type /*2*/T = number;

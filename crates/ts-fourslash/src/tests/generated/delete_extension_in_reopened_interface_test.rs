@@ -14,7 +14,9 @@ pub fn test_delete_extension_in_reopened_interface() {
 }
 
 fn run_test_delete_extension_in_reopened_interface(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDeleteExtensionInReopenedInterface") {
+        return;
+    }
     let content = r"interface A { a: number; }
 interface B { b: number; }
 

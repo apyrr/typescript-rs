@@ -14,7 +14,9 @@ pub fn test_completions_literal_directly_in_argument_with_nullable_constraint() 
 }
 
 fn run_test_completions_literal_directly_in_argument_with_nullable_constraint(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsLiteralDirectlyInArgumentWithNullableConstraint") {
+        return;
+    }
     let content = r"// @strict: true
 
 declare function func<

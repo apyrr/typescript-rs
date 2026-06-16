@@ -14,7 +14,9 @@ pub fn test_navigation_bar_items_class1() {
 }
 
 fn run_test_navigation_bar_items_class1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarItemsClass1") {
+        return;
+    }
     let content = r"function Foo() {}
 class Foo {}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

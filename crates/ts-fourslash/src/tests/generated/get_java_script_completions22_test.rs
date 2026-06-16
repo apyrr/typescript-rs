@@ -14,7 +14,9 @@ pub fn test_get_java_script_completions22() {
 }
 
 fn run_test_get_java_script_completions22(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetJavaScriptCompletions22") {
+        return;
+    }
     let content = r"// @allowNonTsExtensions: true
 // @Filename: file.js
 const abc = {};

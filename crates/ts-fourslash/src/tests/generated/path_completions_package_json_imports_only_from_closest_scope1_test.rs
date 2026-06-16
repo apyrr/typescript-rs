@@ -14,7 +14,9 @@ pub fn test_path_completions_package_json_imports_only_from_closest_scope1() {
 }
 
 fn run_test_path_completions_package_json_imports_only_from_closest_scope1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestPathCompletionsPackageJsonImportsOnlyFromClosestScope1") {
+        return;
+    }
     let content = r##"// @module: node18
 // @Filename: /package.json
 {

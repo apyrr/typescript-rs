@@ -14,7 +14,9 @@ pub fn test_completion_in_type_of2() {
 }
 
 fn run_test_completion_in_type_of2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionInTypeOf2") {
+        return;
+    }
     let content = r"namespace m1c {
     export class C { foo(): void; }
 }

@@ -14,7 +14,9 @@ pub fn test_rename_parameter_property_declaration1() {
 }
 
 fn run_test_rename_parameter_property_declaration1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameParameterPropertyDeclaration1") {
+        return;
+    }
     let content = r#"class Foo {
     constructor([|private [|{| "contextRangeIndex": 0 |}privateParam|]: number|]) {
         let localPrivate = [|privateParam|];

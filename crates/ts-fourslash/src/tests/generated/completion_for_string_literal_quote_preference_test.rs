@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal_quote_preference() {
 }
 
 fn run_test_completion_for_string_literal_quote_preference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteral_quotePreference") {
+        return;
+    }
     let content = r"enum A {
     A,
     B,

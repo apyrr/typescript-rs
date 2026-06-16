@@ -14,7 +14,9 @@ pub fn test_auto_import_node_next_js_require() {
 }
 
 fn run_test_auto_import_node_next_js_require(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportNodeNextJSRequire") {
+        return;
+    }
     let content = r"// @module: node18
 // @allowJs: true
 // @checkJs: true

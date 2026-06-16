@@ -14,7 +14,9 @@ pub fn test_completion_entry_on_narrowed_type() {
 }
 
 fn run_test_completion_entry_on_narrowed_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionEntryOnNarrowedType") {
+        return;
+    }
     let content = r#"function foo(strOrNum: string | number) {
     /*1*/
     if (typeof strOrNum === "number") {

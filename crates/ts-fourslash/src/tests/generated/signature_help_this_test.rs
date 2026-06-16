@@ -14,7 +14,9 @@ pub fn test_signature_help_this() {
 }
 
 fn run_test_signature_help_this(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpThis") {
+        return;
+    }
     let content = r"class Foo<T> {
     public implicitAny(n: number) {
     }

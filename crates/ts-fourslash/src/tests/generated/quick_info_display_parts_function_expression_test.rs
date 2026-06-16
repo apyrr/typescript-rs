@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_function_expression() {
 }
 
 fn run_test_quick_info_display_parts_function_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsFunctionExpression") {
+        return;
+    }
     let content = r"var /*1*/x = function /*2*/foo() {
     /*3*/foo();
 };

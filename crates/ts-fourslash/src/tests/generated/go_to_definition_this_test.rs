@@ -14,7 +14,9 @@ pub fn test_go_to_definition_this() {
 }
 
 fn run_test_go_to_definition_this(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionThis") {
+        return;
+    }
     let content = r"function f(/*fnDecl*/this: number) {
     return [|/*fnUse*/this|];
 }

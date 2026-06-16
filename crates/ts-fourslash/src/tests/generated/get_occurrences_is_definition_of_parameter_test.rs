@@ -14,7 +14,9 @@ pub fn test_get_occurrences_is_definition_of_parameter() {
 }
 
 fn run_test_get_occurrences_is_definition_of_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesIsDefinitionOfParameter") {
+        return;
+    }
     let content = r"function f(/*1*/x: number) {
   return /*2*/x + 1
 }";

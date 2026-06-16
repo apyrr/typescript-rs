@@ -14,7 +14,9 @@ pub fn test_smart_indent_statement_for() {
 }
 
 fn run_test_smart_indent_statement_for(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentStatementFor") {
+        return;
+    }
     let content = r"function Foo() {
     for (var i = 0; i < 10; i++) {
         /*insideStatement*/

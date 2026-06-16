@@ -14,7 +14,9 @@ pub fn test_signature_help_in_adjacent_block_body() {
 }
 
 fn run_test_signature_help_in_adjacent_block_body(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpInAdjacentBlockBody") {
+        return;
+    }
     let content = r"declare function foo(...args);
 
 foo(() => {/*1*/}/*2*/)";

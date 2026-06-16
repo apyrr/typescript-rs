@@ -14,7 +14,9 @@ pub fn test_tsx_quick_info1() {
 }
 
 fn run_test_tsx_quick_info1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxQuickInfo1") {
+        return;
+    }
     let content = r"//@Filename: file.tsx
 var x1 = <di/*1*/v></di/*2*/v>
 class MyElement {}

@@ -14,7 +14,9 @@ pub fn test_this_predicate_function_completions02() {
 }
 
 fn run_test_this_predicate_function_completions02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestThisPredicateFunctionCompletions02") {
+        return;
+    }
     let content = r"interface Sundries {
     broken: boolean;
 }

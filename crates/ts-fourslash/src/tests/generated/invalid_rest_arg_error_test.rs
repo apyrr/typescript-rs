@@ -14,9 +14,11 @@ pub fn test_invalid_rest_arg_error() {
 }
 
 fn run_test_invalid_rest_arg_error(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInvalidRestArgError") {
+        return;
+    }
     let content = r"function b(.../*1*/)/*2*/ {}  ";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
-    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"), 0);
+    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"));
     done();
 }

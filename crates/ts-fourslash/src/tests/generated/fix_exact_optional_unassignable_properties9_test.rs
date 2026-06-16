@@ -14,7 +14,9 @@ pub fn test_fix_exact_optional_unassignable_properties9() {
 }
 
 fn run_test_fix_exact_optional_unassignable_properties9(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFixExactOptionalUnassignableProperties9") {
+        return;
+    }
     let content = r"// @strictNullChecks: true
 // @exactOptionalPropertyTypes: true
 interface IAny {

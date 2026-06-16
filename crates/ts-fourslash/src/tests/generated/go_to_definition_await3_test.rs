@@ -14,7 +14,9 @@ pub fn test_go_to_definition_await3() {
 }
 
 fn run_test_go_to_definition_await3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionAwait3") {
+        return;
+    }
     let content = r"class C {
     notAsync() {
       [|/*start1*/await|] Promise.resolve(0);

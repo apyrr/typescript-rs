@@ -14,7 +14,9 @@ pub fn test_completion_list_outside_of_closed_function_declaration01() {
 }
 
 fn run_test_completion_list_outside_of_closed_function_declaration01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOutsideOfClosedFunctionDeclaration01") {
+        return;
+    }
     let content = r"// no a or b
 /*1*/function f (a, b) {}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

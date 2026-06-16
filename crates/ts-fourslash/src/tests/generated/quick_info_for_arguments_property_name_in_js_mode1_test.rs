@@ -14,7 +14,9 @@ pub fn test_quick_info_for_arguments_property_name_in_js_mode1() {
 }
 
 fn run_test_quick_info_for_arguments_property_name_in_js_mode1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForArgumentsPropertyNameInJsMode1") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @filename: a.js
 const foo = {

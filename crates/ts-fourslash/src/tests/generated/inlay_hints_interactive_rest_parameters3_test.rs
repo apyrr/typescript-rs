@@ -14,7 +14,9 @@ pub fn test_inlay_hints_interactive_rest_parameters3() {
 }
 
 fn run_test_inlay_hints_interactive_rest_parameters3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestInlayHintsInteractiveRestParameters3") {
+        return;
+    }
     let content = r"function fn(x: number, y: number, a: number, b: number) {
     return x + y + a + b;
 }

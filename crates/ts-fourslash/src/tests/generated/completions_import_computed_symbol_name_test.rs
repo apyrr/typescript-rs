@@ -14,7 +14,9 @@ pub fn test_completions_import_computed_symbol_name() {
 }
 
 fn run_test_completions_import_computed_symbol_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImport_computedSymbolName") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/tsconfig.json
 { "compilerOptions": { "module": "commonjs", "lib": ["es5"] } }
 // @Filename: /home/src/workspaces/project/node_modules/@types/ts-node/index.d.ts

@@ -14,14 +14,16 @@ pub fn test_navigate_to_import() {
 }
 
 fn run_test_navigate_to_import(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigateToImport") {
+        return;
+    }
     let content = r"// @lib: es5
 // @Filename: library.ts
 [|export function foo() {}|]
 [|export function bar() {}|]
 // @Filename: user.ts
 import {foo, [|bar as baz|]} from './library';";
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_workspace_symbol(&[
         workspace_symbol_case(
             "foo",

@@ -14,7 +14,9 @@ pub fn test_find_all_references_of_constructor() {
 }
 
 fn run_test_find_all_references_of_constructor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllReferencesOfConstructor") {
+        return;
+    }
     let content = r#"// @Filename: a.ts
 export class C {
     /*0*/constructor(n: number);

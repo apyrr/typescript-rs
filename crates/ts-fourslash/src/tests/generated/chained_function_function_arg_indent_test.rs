@@ -14,7 +14,9 @@ pub fn test_chained_function_function_arg_indent() {
 }
 
 fn run_test_chained_function_function_arg_indent(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestChainedFunctionFunctionArgIndent") {
+        return;
+    }
     let content = r#"declare var $: any;
 $(".contentDiv").each(function (index, element) {/**/
     // <-- ensure cursor is here after return on above
@@ -25,5 +27,6 @@ $(".contentDiv").each(function (index, element) {/**/
     f.verify_indentation(t, 4);
     f.insert(t, "}");
     f.verify_indentation(t, 4);
+    // keep arguments indented
     done();
 }

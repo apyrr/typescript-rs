@@ -14,7 +14,9 @@ pub fn test_get_outlining_spans_for_unbalanced_end_region() {
 }
 
 fn run_test_get_outlining_spans_for_unbalanced_end_region(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOutliningSpansForUnbalancedEndRegion") {
+        return;
+    }
     let content = r"// bottom-heavy region balance
 [|// #region matched
 

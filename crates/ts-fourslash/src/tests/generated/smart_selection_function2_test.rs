@@ -14,7 +14,9 @@ pub fn test_smart_selection_function2() {
 }
 
 fn run_test_smart_selection_function2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartSelection_function2") {
+        return;
+    }
     let content = r"function f2() {
     /**/
 }";

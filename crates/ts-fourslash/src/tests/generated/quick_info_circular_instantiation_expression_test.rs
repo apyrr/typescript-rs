@@ -14,7 +14,9 @@ pub fn test_quick_info_circular_instantiation_expression() {
 }
 
 fn run_test_quick_info_circular_instantiation_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoCircularInstantiationExpression") {
+        return;
+    }
     let content = r#"declare function foo<T>(t: T): typeof foo<T>;
 /**/foo("");"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

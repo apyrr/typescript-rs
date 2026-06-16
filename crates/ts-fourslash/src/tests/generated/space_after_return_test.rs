@@ -14,7 +14,9 @@ pub fn test_space_after_return() {
 }
 
 fn run_test_space_after_return(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSpaceAfterReturn") {
+        return;
+    }
     let content = r"function f( ) {
 return       1;/*1*/
 return[1];/*2*/

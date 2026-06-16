@@ -14,7 +14,9 @@ pub fn test_formatting_in_destructuring5() {
 }
 
 fn run_test_formatting_in_destructuring5(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingInDestructuring5") {
+        return;
+    }
     let content = r"let a, b;
 /*1*/if (false)[a, b] = [1, 2];
 /*2*/if (true)        [a, b] = [1, 2];

@@ -14,7 +14,9 @@ pub fn test_rename_parameter_property_declaration3() {
 }
 
 fn run_test_rename_parameter_property_declaration3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameParameterPropertyDeclaration3") {
+        return;
+    }
     let content = r#"class Foo {
     constructor([|protected [|{| "contextRangeIndex": 0 |}protectedParam|]: number|]) {
         let protectedParam = [|protectedParam|];

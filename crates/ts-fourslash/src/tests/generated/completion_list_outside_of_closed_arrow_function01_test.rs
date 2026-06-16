@@ -14,7 +14,9 @@ pub fn test_completion_list_outside_of_closed_arrow_function01() {
 }
 
 fn run_test_completion_list_outside_of_closed_arrow_function01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOutsideOfClosedArrowFunction01") {
+        return;
+    }
     let content = r"// no a or b
 /*1*/(a, b) => { }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

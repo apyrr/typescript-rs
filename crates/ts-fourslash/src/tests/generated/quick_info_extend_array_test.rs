@@ -14,7 +14,9 @@ pub fn test_quick_info_extend_array() {
 }
 
 fn run_test_quick_info_extend_array(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoExtendArray") {
+        return;
+    }
     let content = r"interface Foo<T> extends Array<T> { }
 var x: Foo<string>;
 var /*1*/r = x[0];

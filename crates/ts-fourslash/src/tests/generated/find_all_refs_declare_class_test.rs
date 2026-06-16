@@ -14,7 +14,9 @@ pub fn test_find_all_refs_declare_class() {
 }
 
 fn run_test_find_all_refs_declare_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsDeclareClass") {
+        return;
+    }
     let content = r"/*1*/declare class /*2*/C {
     static m(): void;
 }";

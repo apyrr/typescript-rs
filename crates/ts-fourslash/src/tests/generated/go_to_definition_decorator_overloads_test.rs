@@ -14,7 +14,9 @@ pub fn test_go_to_definition_decorator_overloads() {
 }
 
 fn run_test_go_to_definition_decorator_overloads(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionDecoratorOverloads") {
+        return;
+    }
     let content = r"// @Target: ES6
 // @experimentaldecorators: true
 async function f() {}

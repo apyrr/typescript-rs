@@ -14,7 +14,9 @@ pub fn test_unused_imports8_fs() {
 }
 
 fn run_test_unused_imports8_fs(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedImports8FS") {
+        return;
+    }
     let content = r#"// @noUnusedLocals: true
 // @Filename: file2.ts
 [|import {Calculator as calc, test as t1, test2 as t2} from "./file1"|]

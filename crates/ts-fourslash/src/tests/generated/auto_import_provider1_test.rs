@@ -14,7 +14,9 @@ pub fn test_auto_import_provider1() {
 }
 
 fn run_test_auto_import_provider1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportProvider1") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/node_modules/@angular/forms/package.json
 { "name": "@angular/forms", "typings": "./forms.d.ts" }
 // @Filename: /home/src/workspaces/project/node_modules/@angular/forms/forms.d.ts

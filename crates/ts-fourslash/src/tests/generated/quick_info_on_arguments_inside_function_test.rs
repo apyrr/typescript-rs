@@ -14,7 +14,9 @@ pub fn test_quick_info_on_arguments_inside_function() {
 }
 
 fn run_test_quick_info_on_arguments_inside_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnArgumentsInsideFunction") {
+        return;
+    }
     let content = r"function foo(x: string) {
     return /*1*/arguments;
 }";

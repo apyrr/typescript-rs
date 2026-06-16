@@ -16,7 +16,11 @@ pub fn test_quick_info_contextually_typed_signature_optional_parameter_from_inte
 fn run_test_quick_info_contextually_typed_signature_optional_parameter_from_intersection1(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestQuickInfoContextuallyTypedSignatureOptionalParameterFromIntersection1",
+    ) {
+        return;
+    }
     let content = r"// @strict: true
 const optionals: ((a?: number) => unknown) & ((b?: string) => unknown) = (
   arg,

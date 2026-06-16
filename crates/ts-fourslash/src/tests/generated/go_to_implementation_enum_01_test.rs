@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_enum_01() {
 }
 
 fn run_test_go_to_implementation_enum_01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationEnum_01") {
+        return;
+    }
     let content = r"enum [|Foo|] {
     Foo1 = function initializer() { return 5 } (),
     Foo2 = 6

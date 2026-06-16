@@ -14,7 +14,9 @@ pub fn test_go_to_definition_shorthand_property05() {
 }
 
 fn run_test_go_to_definition_shorthand_property05(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionShorthandProperty05") {
+        return;
+    }
     let content = r"interface Foo {
     /*3*/foo(): void
 }

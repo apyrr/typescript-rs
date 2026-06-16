@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_type_alias_00() {
 }
 
 fn run_test_go_to_implementation_type_alias_00(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationTypeAlias_00") {
+        return;
+    }
     let content = r#"// @Filename: def.d.ts
 export type TypeAlias = { P: number }
 // @Filename: ref.ts

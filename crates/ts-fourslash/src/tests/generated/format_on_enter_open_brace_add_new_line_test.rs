@@ -14,7 +14,9 @@ pub fn test_format_on_enter_open_brace_add_new_line() {
 }
 
 fn run_test_format_on_enter_open_brace_add_new_line(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatOnEnterOpenBraceAddNewLine") {
+        return;
+    }
     let content = r"if(true) {/*0*/}
 if(false)/*1*/{
 }";

@@ -14,7 +14,9 @@ pub fn test_rename_re_export_default() {
 }
 
 fn run_test_rename_re_export_default(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameReExportDefault") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 export { default } from "./b";
 [|export { default as [|{| "contextRangeIndex": 0 |}b|] } from "./b";|]

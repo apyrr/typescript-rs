@@ -14,7 +14,9 @@ pub fn test_signature_help_on_type_predicates() {
 }
 
 fn run_test_signature_help_on_type_predicates(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpOnTypePredicates") {
+        return;
+    }
     let content = r"function f1(a: any): a is number {}
 function f2<T>(a: any): a is T {}
 function f3(a: any, ...b): a is number {}

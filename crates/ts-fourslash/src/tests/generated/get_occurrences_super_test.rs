@@ -14,7 +14,9 @@ pub fn test_get_occurrences_super() {
 }
 
 fn run_test_get_occurrences_super(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesSuper") {
+        return;
+    }
     let content = r"class SuperType {
     superMethod() {
     }

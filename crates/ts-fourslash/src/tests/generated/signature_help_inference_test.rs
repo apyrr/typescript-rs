@@ -14,7 +14,9 @@ pub fn test_signature_help_inference() {
 }
 
 fn run_test_signature_help_inference(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpInference") {
+        return;
+    }
     let content = r#"declare function f<T extends string>(a: T, b: T, c: T): void;
 f("x", /**/);"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

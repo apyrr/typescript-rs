@@ -14,7 +14,9 @@ pub fn test_import_completions_package_json_exports_specifier_ends_in_ts() {
 }
 
 fn run_test_import_completions_package_json_exports_specifier_ends_in_ts(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportCompletionsPackageJsonExportsSpecifierEndsInTs") {
+        return;
+    }
     let content = r#"// @module: node18
 // @Filename: /node_modules/pkg/package.json
 {

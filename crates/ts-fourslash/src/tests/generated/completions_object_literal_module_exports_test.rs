@@ -14,7 +14,9 @@ pub fn test_completions_object_literal_module_exports() {
 }
 
 fn run_test_completions_object_literal_module_exports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsObjectLiteralModuleExports") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @checkJs: true
 // @Filename: index.js

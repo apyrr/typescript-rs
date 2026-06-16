@@ -14,7 +14,9 @@ pub fn test_navigation_bar_merging_grandchildren() {
 }
 
 fn run_test_navigation_bar_merging_grandchildren(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarMerging_grandchildren") {
+        return;
+    }
     let content = r"// Should not merge grandchildren with property assignments
 const o = {
     a: {

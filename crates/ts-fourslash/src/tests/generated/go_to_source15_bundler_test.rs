@@ -14,7 +14,9 @@ pub fn test_go_to_source15_bundler() {
 }
 
 fn run_test_go_to_source15_bundler(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToSource15_bundler") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/project/tsconfig.json
 { "compilerOptions": { "module": "esnext", "moduleResolution": "bundler", "lib": ["es5"] } }
 // @Filename: /home/src/workspaces/project/node_modules/react/package.json

@@ -14,7 +14,9 @@ pub fn test_quick_info_for_aliased_generic() {
 }
 
 fn run_test_quick_info_for_aliased_generic(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForAliasedGeneric") {
+        return;
+    }
     let content = r"namespace M {
     export namespace N {
         export class C<T> { }

@@ -14,7 +14,9 @@ pub fn test_incremental_resolve_constructor_declaration() {
 }
 
 fn run_test_incremental_resolve_constructor_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIncrementalResolveConstructorDeclaration") {
+        return;
+    }
     let content = r#"class c1 {
     private b: number;
     constructor(a: string) {

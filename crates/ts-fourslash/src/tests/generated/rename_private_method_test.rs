@@ -14,7 +14,9 @@ pub fn test_rename_private_method() {
 }
 
 fn run_test_rename_private_method(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenamePrivateMethod") {
+        return;
+    }
     let content = r#"class Foo {
    [|[|{| "contextRangeIndex": 0 |}#foo|]() { }|]
    callFoo() {

@@ -14,7 +14,9 @@ pub fn test_quick_info_for_generic_constraints1() {
 }
 
 fn run_test_quick_info_for_generic_constraints1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForGenericConstraints1") {
+        return;
+    }
     let content = r"function foo4<T extends Date>(te/**/st: T): T;
 function foo4<T extends Date>(test: any): any { return null; }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

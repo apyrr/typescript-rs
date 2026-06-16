@@ -14,7 +14,9 @@ pub fn test_quickinfo_is_consistent() {
 }
 
 fn run_test_quickinfo_is_consistent(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickinfoIsConsistent") {
+        return;
+    }
     let content = r"declare var /*1*/f: (x: number) => number;
 function baz() {
     var x = /*2*/f(3);

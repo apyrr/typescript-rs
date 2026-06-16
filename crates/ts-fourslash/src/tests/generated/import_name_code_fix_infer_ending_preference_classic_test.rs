@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_infer_ending_preference_classic() {
 }
 
 fn run_test_import_name_code_fix_infer_ending_preference_classic(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixInferEndingPreference_classic") {
+        return;
+    }
     let content = r#"// @module: esnext
 // @checkJs: true
 // @allowJs: true

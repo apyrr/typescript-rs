@@ -14,7 +14,9 @@ pub fn test_formatting_block_in_case_clauses() {
 }
 
 fn run_test_formatting_block_in_case_clauses(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingBlockInCaseClauses") {
+        return;
+    }
     let content = r"switch (1) {
     case 1:
         {

@@ -14,7 +14,9 @@ pub fn test_format_try_finally() {
 }
 
 fn run_test_format_try_finally(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatTryFinally") {
+        return;
+    }
     let content = r"if (true) try  {
     // ...
 }   finally    {

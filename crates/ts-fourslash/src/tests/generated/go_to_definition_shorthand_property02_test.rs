@@ -14,7 +14,9 @@ pub fn test_go_to_definition_shorthand_property02() {
 }
 
 fn run_test_go_to_definition_shorthand_property02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionShorthandProperty02") {
+        return;
+    }
     let content = r"let x = {
     [|f/*1*/oo|]
 }";

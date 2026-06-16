@@ -14,7 +14,9 @@ pub fn test_type_arg_completion() {
 }
 
 fn run_test_type_arg_completion(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTypeArgCompletion") {
+        return;
+    }
     let content = r"class Base {
 }
 class Derived extends Base {

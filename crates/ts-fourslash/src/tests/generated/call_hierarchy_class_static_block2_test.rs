@@ -14,7 +14,9 @@ pub fn test_call_hierarchy_class_static_block2() {
 }
 
 fn run_test_call_hierarchy_class_static_block2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCallHierarchyClassStaticBlock2") {
+        return;
+    }
     let content = r"class C {
     /**/static {
         function foo() {

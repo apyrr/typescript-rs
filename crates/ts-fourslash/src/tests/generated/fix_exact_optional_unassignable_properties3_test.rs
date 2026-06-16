@@ -14,7 +14,9 @@ pub fn test_fix_exact_optional_unassignable_properties3() {
 }
 
 fn run_test_fix_exact_optional_unassignable_properties3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFixExactOptionalUnassignableProperties3") {
+        return;
+    }
     let content = r"// @strictNullChecks: true
 // @exactOptionalPropertyTypes: true
 // @Filename: fixExactOptionalUnassignableProperties2.ts

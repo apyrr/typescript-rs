@@ -14,7 +14,9 @@ pub fn test_go_to_source16_callback_param_different_file() {
 }
 
 fn run_test_go_to_source16_callback_param_different_file(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToSource16_callbackParamDifferentFile") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @moduleResolution: bundler
 // @Filename: /home/src/workspaces/project/node_modules/@types/yargs/package.json

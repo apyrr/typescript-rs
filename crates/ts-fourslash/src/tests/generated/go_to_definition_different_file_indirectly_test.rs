@@ -14,7 +14,9 @@ pub fn test_go_to_definition_different_file_indirectly() {
 }
 
 fn run_test_go_to_definition_different_file_indirectly(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionDifferentFileIndirectly") {
+        return;
+    }
     let content = r"// @Filename: Remote2.ts
 var /*remoteVariableDefinition*/rem2Var;
 function /*remoteFunctionDefinition*/rem2Fn() { }

@@ -14,7 +14,9 @@ pub fn test_remove_declare_function_exports() {
 }
 
 fn run_test_remove_declare_function_exports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRemoveDeclareFunctionExports") {
+        return;
+    }
     let content = r"declare namespace M {
     function RegExp2(pattern: string): RegExp2;
     export function RegExp2(pattern: string, flags: string): RegExp2;

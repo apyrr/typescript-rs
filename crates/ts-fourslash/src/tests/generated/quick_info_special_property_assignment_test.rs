@@ -14,7 +14,9 @@ pub fn test_quick_info_special_property_assignment() {
 }
 
 fn run_test_quick_info_special_property_assignment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoSpecialPropertyAssignment") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @Filename: /a.js
 class C {

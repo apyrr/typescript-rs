@@ -14,7 +14,9 @@ pub fn test_smart_indent_actual_indentation() {
 }
 
 fn run_test_smart_indent_actual_indentation(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentActualIndentation") {
+        return;
+    }
     let content = r"        class A {
             /*1*/
         }

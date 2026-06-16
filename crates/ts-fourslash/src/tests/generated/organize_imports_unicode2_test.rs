@@ -14,7 +14,9 @@ pub fn test_organize_imports_unicode2() {
 }
 
 fn run_test_organize_imports_unicode2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsUnicode2") {
+        return;
+    }
     let content = r"import {
     a2,
     a100,

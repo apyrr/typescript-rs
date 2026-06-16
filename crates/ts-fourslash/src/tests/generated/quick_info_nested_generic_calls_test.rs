@@ -14,7 +14,9 @@ pub fn test_quick_info_nested_generic_calls() {
 }
 
 fn run_test_quick_info_nested_generic_calls(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoNestedGenericCalls") {
+        return;
+    }
     let content = r#"// @strict: true
 /*1*/m({ foo: /*2*/$("foo") });
 m({ foo: /*3*/$("foo") });

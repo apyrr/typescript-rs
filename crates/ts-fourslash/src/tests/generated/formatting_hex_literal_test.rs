@@ -14,7 +14,9 @@ pub fn test_formatting_hex_literal() {
 }
 
 fn run_test_formatting_hex_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingHexLiteral") {
+        return;
+    }
     let content = r"var x =  0x1,y;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_document(t, "");

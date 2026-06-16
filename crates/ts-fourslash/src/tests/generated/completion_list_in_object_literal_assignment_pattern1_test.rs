@@ -14,7 +14,9 @@ pub fn test_completion_list_in_object_literal_assignment_pattern1() {
 }
 
 fn run_test_completion_list_in_object_literal_assignment_pattern1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListInObjectLiteralAssignmentPattern1") {
+        return;
+    }
     let content = r"let x = { a: 1, b: 2 };
 let y = ({ /**/ } = x, 1);";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

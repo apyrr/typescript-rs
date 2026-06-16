@@ -14,7 +14,9 @@ pub fn test_rename_this() {
 }
 
 fn run_test_rename_this(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameThis") {
+        return;
+    }
     let content = r#"function f([|this|]) {
     return [|this|];
 }

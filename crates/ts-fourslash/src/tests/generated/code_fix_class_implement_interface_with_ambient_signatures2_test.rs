@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_with_ambient_signatures2() {
 }
 
 fn run_test_code_fix_class_implement_interface_with_ambient_signatures2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceWithAmbientSignatures2") {
+        return;
+    }
     let content = r"declare class A {
     method(): void;
 }

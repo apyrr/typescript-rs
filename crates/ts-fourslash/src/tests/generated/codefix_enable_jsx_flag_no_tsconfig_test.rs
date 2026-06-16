@@ -14,7 +14,9 @@ pub fn test_codefix_enable_jsx_flag_no_tsconfig() {
 }
 
 fn run_test_codefix_enable_jsx_flag_no_tsconfig(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodefixEnableJsxFlag_noTsconfig") {
+        return;
+    }
     let content = r"// @Filename: /dir/a.tsx
 export const Component = () => <></>";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

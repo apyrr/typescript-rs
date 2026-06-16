@@ -14,7 +14,9 @@ pub fn test_unused_imports7_fs() {
 }
 
 fn run_test_unused_imports7_fs(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnusedImports7FS") {
+        return;
+    }
     let content = r#"// @noUnusedLocals: true
 // @Filename: file2.ts
 [| import * as n from "./file1" |]

@@ -14,7 +14,9 @@ pub fn test_remove_declare_in_module() {
 }
 
 fn run_test_remove_declare_in_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRemoveDeclareInModule") {
+        return;
+    }
     let content = r"/**/export namespace Foo {
     function a(): void {}
 }

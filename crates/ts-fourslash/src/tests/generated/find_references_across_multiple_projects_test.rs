@@ -14,7 +14,9 @@ pub fn test_find_references_across_multiple_projects() {
 }
 
 fn run_test_find_references_across_multiple_projects(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindReferencesAcrossMultipleProjects") {
+        return;
+    }
     let content = r#"//@Filename: a.ts
 /*1*/var /*2*/x: number;
 //@Filename: b.ts

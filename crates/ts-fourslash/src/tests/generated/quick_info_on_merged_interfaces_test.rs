@@ -14,7 +14,9 @@ pub fn test_quick_info_on_merged_interfaces() {
 }
 
 fn run_test_quick_info_on_merged_interfaces(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnMergedInterfaces") {
+        return;
+    }
     let content = r"namespace M {
     interface A<T> {
         (): string;

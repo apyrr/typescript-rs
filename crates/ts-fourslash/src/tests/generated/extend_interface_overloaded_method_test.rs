@@ -14,7 +14,9 @@ pub fn test_extend_interface_overloaded_method() {
 }
 
 fn run_test_extend_interface_overloaded_method(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestExtendInterfaceOverloadedMethod") {
+        return;
+    }
     let content = r"// @strict: false
 interface A<T> {
     foo(a: T): B<T>;

@@ -14,7 +14,9 @@ pub fn test_space_after_statement_conditions() {
 }
 
 fn run_test_space_after_statement_conditions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSpaceAfterStatementConditions") {
+        return;
+    }
     let content = r"let i = 0;
 
 if(i<0) ++i;

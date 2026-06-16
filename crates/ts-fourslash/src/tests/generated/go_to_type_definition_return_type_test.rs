@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition_return_type() {
 }
 
 fn run_test_go_to_type_definition_return_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinition_returnType") {
+        return;
+    }
     let content = r"interface /*I*/I { x: number; }
 interface /*J*/J { y: number; }
 

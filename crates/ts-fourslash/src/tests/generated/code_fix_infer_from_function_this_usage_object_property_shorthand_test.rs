@@ -14,7 +14,9 @@ pub fn test_code_fix_infer_from_function_this_usage_object_property_shorthand() 
 }
 
 fn run_test_code_fix_infer_from_function_this_usage_object_property_shorthand(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixInferFromFunctionThisUsageObjectPropertyShorthand") {
+        return;
+    }
     let content = r#"// @noImplicitThis: true
 function returnThisMember([| |]) {
      return this.member;

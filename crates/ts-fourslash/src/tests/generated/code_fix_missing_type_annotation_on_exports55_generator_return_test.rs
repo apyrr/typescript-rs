@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports55_generator_return() {
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports55_generator_return(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports55-generator-return") {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 // @lib: es2015

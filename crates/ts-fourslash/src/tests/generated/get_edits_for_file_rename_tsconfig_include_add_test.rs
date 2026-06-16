@@ -14,7 +14,9 @@ pub fn test_get_edits_for_file_rename_tsconfig_include_add() {
 }
 
 fn run_test_get_edits_for_file_rename_tsconfig_include_add(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetEditsForFileRename_tsconfig_include_add") {
+        return;
+    }
     let content = r#"// @Filename: /src/tsconfig.json
 {
     "include": ["dir"],

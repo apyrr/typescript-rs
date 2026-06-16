@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_object_spread() {
 }
 
 fn run_test_find_all_refs_for_object_spread(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForObjectSpread") {
+        return;
+    }
     let content = r"interface A1 { readonly /*0*/a: string };
 interface A2 { /*1*/a?: number };
 let a1: A1;

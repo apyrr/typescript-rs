@@ -14,7 +14,9 @@ pub fn test_code_fix_missing_type_annotation_on_exports32_inline_short_hand() {
 }
 
 fn run_test_code_fix_missing_type_annotation_on_exports32_inline_short_hand(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixMissingTypeAnnotationOnExports32-inline-short-hand") {
+        return;
+    }
     let content = r"// @isolatedDeclarations: true
 // @declaration: true
 // @Filename: /code.ts

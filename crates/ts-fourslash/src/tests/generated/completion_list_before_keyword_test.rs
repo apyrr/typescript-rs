@@ -14,7 +14,9 @@ pub fn test_completion_list_before_keyword() {
 }
 
 fn run_test_completion_list_before_keyword(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListBeforeKeyword") {
+        return;
+    }
     let content = r"// Completion after dot in named type, when the following line has a keyword
 namespace TypeModule1 {
     export class C1 {}

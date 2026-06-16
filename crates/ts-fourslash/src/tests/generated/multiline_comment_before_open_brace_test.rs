@@ -14,7 +14,9 @@ pub fn test_multiline_comment_before_open_brace() {
 }
 
 fn run_test_multiline_comment_before_open_brace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMultilineCommentBeforeOpenBrace") {
+        return;
+    }
     let content = r"function test() /*1*//* %^ */
 {
     if (true) /*2*//* %^ */

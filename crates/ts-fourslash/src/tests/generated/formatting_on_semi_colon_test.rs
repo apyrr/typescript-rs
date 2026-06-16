@@ -14,7 +14,9 @@ pub fn test_formatting_on_semi_colon() {
 }
 
 fn run_test_formatting_on_semi_colon(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnSemiColon") {
+        return;
+    }
     let content = r"var  a=b+c^d-e*++f";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_eof(t);

@@ -14,7 +14,9 @@ pub fn test_auto_import_provider9() {
 }
 
 fn run_test_auto_import_provider9(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportProvider9") {
+        return;
+    }
     let content = r#"// @lib: es5
 // @module: preserve
 // @Filename: /home/src/workspaces/project/index.ts

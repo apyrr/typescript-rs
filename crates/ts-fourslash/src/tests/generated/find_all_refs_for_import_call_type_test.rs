@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_import_call_type() {
 }
 
 fn run_test_find_all_refs_for_import_call_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForImportCallType") {
+        return;
+    }
     let content = r#"// @Filename: /app.ts
 export function he/**/llo() {};
 // @Filename: /re-export.ts

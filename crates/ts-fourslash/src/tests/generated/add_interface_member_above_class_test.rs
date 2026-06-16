@@ -14,7 +14,9 @@ pub fn test_add_interface_member_above_class() {
 }
 
 fn run_test_add_interface_member_above_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAddInterfaceMemberAboveClass") {
+        return;
+    }
     let content = r"
 interface Intersection {
     /*insertHere*/

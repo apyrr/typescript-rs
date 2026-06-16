@@ -14,7 +14,9 @@ pub fn test_references_is_available_through_global_no_crash() {
 }
 
 fn run_test_references_is_available_through_global_no_crash(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesIsAvailableThroughGlobalNoCrash") {
+        return;
+    }
     let content = r#"// @Filename: /packages/playwright-core/bundles/utils/node_modules/@types/debug/index.d.ts
 declare var debug: debug.Debug & { debug: debug.Debug; default: debug.Debug };
 export = debug;

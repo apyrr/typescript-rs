@@ -14,7 +14,9 @@ pub fn test_semantic_modern_classification_interfaces() {
 }
 
 fn run_test_semantic_modern_classification_interfaces(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSemanticModernClassificationInterfaces") {
+        return;
+    }
     let content = r"interface Pos { x: number, y: number };
 const p = { x: 1, y: 2 } as Pos;
 const foo = (o: Pos) => o.x + o.y;";

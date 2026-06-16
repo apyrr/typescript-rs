@@ -14,7 +14,9 @@ pub fn test_completion_entry_for_property_constrained_to_string() {
 }
 
 fn run_test_completion_entry_for_property_constrained_to_string(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionEntryForPropertyConstrainedToString") {
+        return;
+    }
     let content = r#"declare function test<P extends "a" | "b">(p: { type: P }): void;
 
 test({ type: /*ts*/ })"#;

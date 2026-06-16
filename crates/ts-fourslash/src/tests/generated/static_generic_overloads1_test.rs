@@ -14,7 +14,9 @@ pub fn test_static_generic_overloads1() {
 }
 
 fn run_test_static_generic_overloads1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestStaticGenericOverloads1") {
+        return;
+    }
     let content = r"class A<T> {
     static B<S>(v: A<S>): A<S>;
     static B<S>(v: S): A<S>;

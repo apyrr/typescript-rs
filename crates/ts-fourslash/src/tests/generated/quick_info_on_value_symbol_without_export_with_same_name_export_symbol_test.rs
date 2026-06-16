@@ -16,7 +16,9 @@ pub fn test_quick_info_on_value_symbol_without_export_with_same_name_export_symb
 fn run_test_quick_info_on_value_symbol_without_export_with_same_name_export_symbol(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnValueSymbolWithoutExportWithSameNameExportSymbol") {
+        return;
+    }
     let content = r"// @strict: true
 
 declare function num(): number

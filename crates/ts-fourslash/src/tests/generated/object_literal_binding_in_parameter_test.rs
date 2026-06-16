@@ -14,7 +14,9 @@ pub fn test_object_literal_binding_in_parameter() {
 }
 
 fn run_test_object_literal_binding_in_parameter(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestObjectLiteralBindingInParameter") {
+        return;
+    }
     let content = r"interface I { x1: number; x2: string }
 function f(cb: (ev: I) => any) { }
 f(({/*1*/}) => 0);

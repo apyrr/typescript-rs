@@ -14,7 +14,9 @@ pub fn test_completions_literal_from_inference_within_inferred_type3() {
 }
 
 fn run_test_completions_literal_from_inference_within_inferred_type3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsLiteralFromInferenceWithinInferredType3") {
+        return;
+    }
     let content = r#"// @stableTypeOrdering: true
 declare function test<T>(a: {
   [K in keyof T]: {

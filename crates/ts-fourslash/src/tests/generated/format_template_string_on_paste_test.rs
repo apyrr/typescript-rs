@@ -14,8 +14,10 @@ pub fn test_format_template_string_on_paste() {
 }
 
 fn run_test_format_template_string_on_paste(t: &mut TestingT) {
-    skip_if_failing(t);
-    let content = r#"const x = ` + "`" + `${0}/*0*/abc/*1*/` + "`" + `;"#;
+    if should_skip_if_failing("TestFormatTemplateStringOnPaste") {
+        return;
+    }
+    let content = r"const x = `${0}/*0*/abc/*1*/`;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.format_selection(t, "0", "1");
     f.verify_current_file_content(t, r"const x = `${0}abc`;");

@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_shorthand_property_assignment_02() {
 }
 
 fn run_test_go_to_implementation_shorthand_property_assignment_02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationShorthandPropertyAssignment_02") {
+        return;
+    }
     let content = r"interface Foo {
 	 hello(): void;
 }

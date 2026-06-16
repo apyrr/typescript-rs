@@ -14,7 +14,9 @@ pub fn test_refactor_convert_to_es_module_not_in_commonjs_project() {
 }
 
 fn run_test_refactor_convert_to_es_module_not_in_commonjs_project(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRefactorConvertToEsModule_notInCommonjsProject") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @target: es5
 // @Filename: /a.js

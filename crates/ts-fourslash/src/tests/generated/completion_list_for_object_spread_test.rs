@@ -14,7 +14,9 @@ pub fn test_completion_list_for_object_spread() {
 }
 
 fn run_test_completion_list_for_object_spread(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListForObjectSpread") {
+        return;
+    }
     let content = r"let o = { a: 1, b: 'no' }
 let o2 = { b: 'yes', c: true }
 let swap = { a: 'yes', b: -1 };

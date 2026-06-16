@@ -14,7 +14,9 @@ pub fn test_quick_info_for_object_binding_element_name05() {
 }
 
 fn run_test_quick_info_for_object_binding_element_name05(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoForObjectBindingElementName05") {
+        return;
+    }
     let content = r"interface A {
     /**
      * A description of a

@@ -14,7 +14,9 @@ pub fn test_jsx_element_missing_opening_tag_no_crash() {
 }
 
 fn run_test_jsx_element_missing_opening_tag_no_crash(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsxElementMissingOpeningTagNoCrash") {
+        return;
+    }
     let content = r"//@Filename: file.tsx
 declare function Foo(): any;
 let x = <></Fo/*$*/o>;";

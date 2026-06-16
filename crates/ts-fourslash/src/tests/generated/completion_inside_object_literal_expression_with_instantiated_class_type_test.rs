@@ -16,7 +16,11 @@ pub fn test_completion_inside_object_literal_expression_with_instantiated_class_
 fn run_test_completion_inside_object_literal_expression_with_instantiated_class_type(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestCompletionInsideObjectLiteralExpressionWithInstantiatedClassType",
+    ) {
+        return;
+    }
     let content = r#"class C1 {
     public a: string;
     protected b: string;

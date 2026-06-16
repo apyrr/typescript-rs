@@ -14,7 +14,9 @@ pub fn test_code_fix_add_missing_function_declaration16() {
 }
 
 fn run_test_code_fix_add_missing_function_declaration16(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddMissingFunctionDeclaration16") {
+        return;
+    }
     let content = r#"// @moduleResolution: bundler
 // @filename: /node_modules/test/index.js
 export const x = 1;

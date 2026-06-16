@@ -14,7 +14,9 @@ pub fn test_format_multiline_types_with_mapped() {
 }
 
 fn run_test_format_multiline_types_with_mapped(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatMultilineTypesWithMapped") {
+        return;
+    }
     let content = r"type Z = 'z'
 type A = {
   a: 'a'

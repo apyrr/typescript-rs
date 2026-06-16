@@ -14,7 +14,9 @@ pub fn test_completions_type_assertion_keywords() {
 }
 
 fn run_test_completions_type_assertion_keywords(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsTypeAssertionKeywords") {
+        return;
+    }
     let content = r"// @lib: es5
 const a = {
   b: 42 as /*0*/

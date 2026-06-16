@@ -14,7 +14,9 @@ pub fn test_references_for_statement_keywords() {
 }
 
 fn run_test_references_for_statement_keywords(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForStatementKeywords") {
+        return;
+    }
     let content = r#"// @filename: /main.ts
 // import ... = ...
 [|{| "id": "importEqualsDecl1" |}/*importEqualsDecl1_importKeyword*/[|import|] [|{| "isWriteAccess": true, "isDefinition": true, "contextRangeId": "importEqualsDecl1" |}A|] = /*importEqualsDecl1_requireKeyword*/[|require|]("[|{| "isWriteAccess": false, "isDefinition": false, "contextRangeId": "importEqualsDecl1" |}./a|]");|]

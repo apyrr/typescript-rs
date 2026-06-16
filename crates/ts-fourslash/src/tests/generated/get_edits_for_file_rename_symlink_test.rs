@@ -14,7 +14,9 @@ pub fn test_get_edits_for_file_rename_symlink() {
 }
 
 fn run_test_get_edits_for_file_rename_symlink(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetEditsForFileRename_symlink") {
+        return;
+    }
     let content = r"// @Filename: /foo.ts
 // @Symlink: /node_modules/foo/index.ts
 export const x = 0;

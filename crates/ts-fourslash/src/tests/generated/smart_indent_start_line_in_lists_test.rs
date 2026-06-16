@@ -14,7 +14,9 @@ pub fn test_smart_indent_start_line_in_lists() {
 }
 
 fn run_test_smart_indent_start_line_in_lists(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentStartLineInLists") {
+        return;
+    }
     let content = r"foo(function () {
 }).then(function () {/*1*/
 })";

@@ -14,7 +14,9 @@ pub fn test_code_fix_add_missing_const_to_array_destructuring3() {
 }
 
 fn run_test_code_fix_add_missing_const_to_array_destructuring3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixAddMissingConstToArrayDestructuring3") {
+        return;
+    }
     let content = r"let x: any;
 [x, y] = [0, 1];";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_formatting_on_interfaces() {
 }
 
 fn run_test_formatting_on_interfaces(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnInterfaces") {
+        return;
+    }
     let content = r"/*1*/interface Blah 
 {
 }";

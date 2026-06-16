@@ -14,7 +14,9 @@ pub fn test_rename_export_crash() {
 }
 
 fn run_test_rename_export_crash(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameExportCrash") {
+        return;
+    }
     let content = r#"// @allowNonTsExtensions: true
 // @Filename: Foo.js
 let a;

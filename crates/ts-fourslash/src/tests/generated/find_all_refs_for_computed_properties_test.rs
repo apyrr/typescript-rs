@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_computed_properties() {
 }
 
 fn run_test_find_all_refs_for_computed_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForComputedProperties") {
+        return;
+    }
     let content = r#"interface I {
     ["/*0*/prop1"]: () => void;
 }

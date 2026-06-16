@@ -14,7 +14,9 @@ pub fn test_add_function_above_multi_line_lambda_expression() {
 }
 
 fn run_test_add_function_above_multi_line_lambda_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAddFunctionAboveMultiLineLambdaExpression") {
+        return;
+    }
     let content = r"/**/
 () =>
    // do something

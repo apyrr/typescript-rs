@@ -14,7 +14,9 @@ pub fn test_go_to_definition_overridden_member3() {
 }
 
 fn run_test_go_to_definition_overridden_member3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionOverriddenMember3") {
+        return;
+    }
     let content = r"// @noImplicitOverride: true
 abstract class Foo {
 	abstract /*2*/m() {}

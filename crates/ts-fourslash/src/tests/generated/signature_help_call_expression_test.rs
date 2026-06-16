@@ -14,7 +14,9 @@ pub fn test_signature_help_call_expression() {
 }
 
 fn run_test_signature_help_call_expression(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpCallExpression") {
+        return;
+    }
     let content = r"function fnTest(str: string, num: number) { }
 fnTest(/*1*/'', /*2*/5);";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_quick_info_recursive_object_literal() {
 }
 
 fn run_test_quick_info_recursive_object_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoRecursiveObjectLiteral") {
+        return;
+    }
     let content = r"var a = { f: /**/a";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_quick_info_at(t, "", "var a: any", "");

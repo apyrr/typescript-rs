@@ -14,7 +14,9 @@ pub fn test_go_to_definition_class_static_blocks() {
 }
 
 fn run_test_go_to_definition_class_static_blocks(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionClassStaticBlocks") {
+        return;
+    }
     let content = r"class ClassStaticBocks {
     static x;
     [|/*classStaticBocks1*/static|] {}

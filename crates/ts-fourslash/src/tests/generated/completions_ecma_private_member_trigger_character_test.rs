@@ -14,7 +14,9 @@ pub fn test_completions_ecma_private_member_trigger_character() {
 }
 
 fn run_test_completions_ecma_private_member_trigger_character(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsECMAPrivateMemberTriggerCharacter") {
+        return;
+    }
     let content = r"// @target: esnext
 class K {
   #value: number;

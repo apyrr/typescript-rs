@@ -14,7 +14,9 @@ pub fn test_js_signature_41059() {
 }
 
 fn run_test_js_signature_41059(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJsSignature-41059") {
+        return;
+    }
     let content = r"// @lib: esnext
 // @allowNonTsExtensions: true
 // @Filename: Foo.js

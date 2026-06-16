@@ -14,7 +14,9 @@ pub fn test_completion_list_builder_locations_parameters() {
 }
 
 fn run_test_completion_list_builder_locations_parameters(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListBuilderLocations_parameters") {
+        return;
+    }
     let content = r"var aa = 1;
 class bar1{ constructor(/*1*/
 class bar2{ constructor(a/*2*/

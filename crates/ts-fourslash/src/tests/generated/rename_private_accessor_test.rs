@@ -14,7 +14,9 @@ pub fn test_rename_private_accessor() {
 }
 
 fn run_test_rename_private_accessor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenamePrivateAccessor") {
+        return;
+    }
     let content = r#"class Foo {
    [|get [|{| "contextRangeIndex": 0 |}#foo|]() { return 1 }|]
    [|set [|{| "contextRangeIndex": 2 |}#foo|](value: number) { }|]

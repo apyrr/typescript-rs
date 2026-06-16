@@ -14,7 +14,9 @@ pub fn test_generic_clodule_completion_list() {
 }
 
 fn run_test_generic_clodule_completion_list(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericCloduleCompletionList") {
+        return;
+    }
     let content = r"class D<T> { x: number }
 namespace D { export function f() { } }
 var d: D<number>;

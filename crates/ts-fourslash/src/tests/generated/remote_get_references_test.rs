@@ -14,7 +14,9 @@ pub fn test_remote_get_references() {
 }
 
 fn run_test_remote_get_references(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRemoteGetReferences") {
+        return;
+    }
     let content = r#"// @Filename: remoteGetReferences_1.ts
 // Comment Refence Test: globalVar
 var globalVar: number = 2;

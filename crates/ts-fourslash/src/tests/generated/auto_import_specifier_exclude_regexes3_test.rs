@@ -14,7 +14,9 @@ pub fn test_auto_import_specifier_exclude_regexes3() {
 }
 
 fn run_test_auto_import_specifier_exclude_regexes3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportSpecifierExcludeRegexes3") {
+        return;
+    }
     let content = r#"// @module: preserve
 // @Filename: /node_modules/pkg/package.json
 {

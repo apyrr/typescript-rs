@@ -14,7 +14,9 @@ pub fn test_signature_help_empty_list() {
 }
 
 fn run_test_signature_help_empty_list(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpEmptyList") {
+        return;
+    }
     let content = r"function Foo(arg1: string, arg2: string) {
 }
 

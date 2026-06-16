@@ -14,7 +14,9 @@ pub fn test_completions_before_rest_arg1() {
 }
 
 fn run_test_completions_before_rest_arg1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsBeforeRestArg1") {
+        return;
+    }
     let content = r"// @target: esnext
 // @lib: esnext
 const layers = Object.assign({}, /*1*/...[]);";

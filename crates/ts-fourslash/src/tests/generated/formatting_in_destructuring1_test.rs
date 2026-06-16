@@ -14,7 +14,9 @@ pub fn test_formatting_in_destructuring1() {
 }
 
 fn run_test_formatting_in_destructuring1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingInDestructuring1") {
+        return;
+    }
     let content = r"interface let { }
 /*1*/var x: let         [];
 

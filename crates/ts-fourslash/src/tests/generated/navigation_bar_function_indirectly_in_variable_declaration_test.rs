@@ -14,7 +14,9 @@ pub fn test_navigation_bar_function_indirectly_in_variable_declaration() {
 }
 
 fn run_test_navigation_bar_function_indirectly_in_variable_declaration(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarFunctionIndirectlyInVariableDeclaration") {
+        return;
+    }
     let content = r"var a = {
     propA: function() {
         var c;

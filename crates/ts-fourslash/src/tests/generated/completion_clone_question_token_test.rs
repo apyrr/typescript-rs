@@ -14,7 +14,9 @@ pub fn test_completion_clone_question_token() {
 }
 
 fn run_test_completion_clone_question_token(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionCloneQuestionToken") {
+        return;
+    }
     let content = r"// @strict: false
 // @Filename: /file2.ts
 type TCallback<T = any> = (options: T) => any;

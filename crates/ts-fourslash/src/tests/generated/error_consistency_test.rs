@@ -14,7 +14,9 @@ pub fn test_error_consistency() {
 }
 
 fn run_test_error_consistency(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestErrorConsistency") {
+        return;
+    }
     let content = r"interface Int<T> {
 val<U>(f: (t: T) => U): Int<U>;
 }
@@ -22,10 +24,10 @@ declare var v1: Int<string>;
 var /*1*/v2/*2*/: Int<number> = v1;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_eof(t);
-    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"), 0);
+    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"));
     f.verify_number_of_errors_in_current_file(1);
     f.backspace(t, 1);
-    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"), 0);
+    f.verify_error_exists_between_markers(&f.marker_by_name("1"), &f.marker_by_name("2"));
     f.verify_number_of_errors_in_current_file(1);
     done();
 }

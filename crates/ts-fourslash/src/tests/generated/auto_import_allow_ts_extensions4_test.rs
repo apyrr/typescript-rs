@@ -14,7 +14,9 @@ pub fn test_auto_import_allow_ts_extensions4() {
 }
 
 fn run_test_auto_import_allow_ts_extensions4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportAllowTsExtensions4") {
+        return;
+    }
     let content = r#"// @moduleResolution: bundler
 // @allowImportingTsExtensions: true
 // @noEmit: true

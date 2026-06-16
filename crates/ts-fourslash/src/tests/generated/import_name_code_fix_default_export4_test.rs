@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_default_export4() {
 }
 
 fn run_test_import_name_code_fix_default_export4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixDefaultExport4") {
+        return;
+    }
     let content = r"// @Filename: /foo.ts
 const a = () => {};
 export default a;

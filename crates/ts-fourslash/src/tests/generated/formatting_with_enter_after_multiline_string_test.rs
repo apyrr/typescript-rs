@@ -14,7 +14,9 @@ pub fn test_formatting_with_enter_after_multiline_string() {
 }
 
 fn run_test_formatting_with_enter_after_multiline_string(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingWithEnterAfterMultilineString") {
+        return;
+    }
     let content = r#"class Greeter3 {
     stop() {
         /*2*/var s = "hello\

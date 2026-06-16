@@ -14,7 +14,9 @@ pub fn test_formatting_mapped_type() {
 }
 
 fn run_test_formatting_mapped_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingMappedType") {
+        return;
+    }
     let content = r"/*generic*/type t  < T  > =   {
 /*map*/   [   P   in   keyof    T  ]   :   T  [  P  ]
 };";

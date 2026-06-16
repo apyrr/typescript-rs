@@ -14,7 +14,9 @@ pub fn test_format_multiline_comment() {
 }
 
 fn run_test_format_multiline_comment(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatMultilineComment") {
+        return;
+    }
     let content = r"/*1*//** 1
  */*2*/2
 /*3*/ 3*/

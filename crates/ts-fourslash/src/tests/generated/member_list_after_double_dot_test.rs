@@ -14,7 +14,9 @@ pub fn test_member_list_after_double_dot() {
 }
 
 fn run_test_member_list_after_double_dot(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListAfterDoubleDot") {
+        return;
+    }
     let content = r"../**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(t, MarkerInput::Name("".to_string()), None);

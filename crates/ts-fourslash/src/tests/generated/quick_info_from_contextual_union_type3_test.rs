@@ -14,7 +14,9 @@ pub fn test_quick_info_from_contextual_union_type3() {
 }
 
 fn run_test_quick_info_from_contextual_union_type3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoFromContextualUnionType3") {
+        return;
+    }
     let content = r#"// @strict: true
 declare const foo1: <D extends Foo1<D>>(definition: D) => D;
 

@@ -14,7 +14,9 @@ pub fn test_formatting_skipped_tokens() {
 }
 
 fn run_test_formatting_skipped_tokens(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingSkippedTokens") {
+        return;
+    }
     let content = r"/*1*/foo(): Bar { }
 /*2*/function Foo      () #   { }
 /*3*/4+:5

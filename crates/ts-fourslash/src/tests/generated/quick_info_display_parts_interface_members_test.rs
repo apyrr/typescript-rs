@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_interface_members() {
 }
 
 fn run_test_quick_info_display_parts_interface_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsInterfaceMembers") {
+        return;
+    }
     let content = r"interface I {
     /*1*/property: string;
     /*2*/method(): string;

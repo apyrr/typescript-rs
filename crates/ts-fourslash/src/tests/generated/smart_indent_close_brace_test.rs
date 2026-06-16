@@ -14,7 +14,9 @@ pub fn test_smart_indent_close_brace() {
 }
 
 fn run_test_smart_indent_close_brace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentCloseBrace") {
+        return;
+    }
     let content = r#"class A {    
     {| "indentation": 0|}  }
 class B {    

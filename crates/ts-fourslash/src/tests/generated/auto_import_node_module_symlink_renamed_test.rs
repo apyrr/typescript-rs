@@ -14,7 +14,9 @@ pub fn test_auto_import_node_module_symlink_renamed() {
 }
 
 fn run_test_auto_import_node_module_symlink_renamed(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportNodeModuleSymlinkRenamed") {
+        return;
+    }
     let content = r#"// @Filename: /home/src/workspaces/solution/package.json
 {
     "name": "monorepo",

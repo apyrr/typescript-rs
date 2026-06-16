@@ -14,7 +14,9 @@ pub fn test_organize_imports_group_newline() {
 }
 
 fn run_test_organize_imports_group_newline(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsGroup_Newline") {
+        return;
+    }
     let content = r#"import c from "C";
 
 import d from "D";

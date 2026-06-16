@@ -14,7 +14,9 @@ pub fn test_rename_alias_external_module() {
 }
 
 fn run_test_rename_alias_external_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameAliasExternalModule") {
+        return;
+    }
     let content = r#"// @Filename: a.ts
 namespace SomeModule { export class SomeClass { } }
 export = SomeModule;

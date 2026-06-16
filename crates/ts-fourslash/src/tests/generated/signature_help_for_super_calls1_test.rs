@@ -14,7 +14,9 @@ pub fn test_signature_help_for_super_calls1() {
 }
 
 fn run_test_signature_help_for_super_calls1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpForSuperCalls1") {
+        return;
+    }
     let content = r"class A { }
 class B extends A { }
 class C extends B {

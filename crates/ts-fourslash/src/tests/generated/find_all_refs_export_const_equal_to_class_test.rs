@@ -14,7 +14,9 @@ pub fn test_find_all_refs_export_const_equal_to_class() {
 }
 
 fn run_test_find_all_refs_export_const_equal_to_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsExportConstEqualToClass") {
+        return;
+    }
     let content = r#"// @Filename: /a.ts
 class C {}
 export const /*0*/D = C;

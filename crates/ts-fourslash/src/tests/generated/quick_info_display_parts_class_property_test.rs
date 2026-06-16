@@ -14,7 +14,9 @@ pub fn test_quick_info_display_parts_class_property() {
 }
 
 fn run_test_quick_info_display_parts_class_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoDisplayPartsClassProperty") {
+        return;
+    }
     let content = r"class c {
     public /*1*/publicProperty: string;
     private /*2*/privateProperty: string;

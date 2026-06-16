@@ -14,7 +14,9 @@ pub fn test_completion_list_of_split_interface() {
 }
 
 fn run_test_completion_list_of_split_interface(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListOfSplitInterface") {
+        return;
+    }
     let content = r"interface A {
     a: number;
 }

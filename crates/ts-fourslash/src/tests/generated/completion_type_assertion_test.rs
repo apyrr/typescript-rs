@@ -14,7 +14,9 @@ pub fn test_completion_type_assertion() {
 }
 
 fn run_test_completion_type_assertion(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionTypeAssertion") {
+        return;
+    }
     let content = r"// @lib: es5
 var x = 'something'
 var y = this as/*1*/";

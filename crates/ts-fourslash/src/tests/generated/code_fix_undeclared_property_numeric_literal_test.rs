@@ -14,7 +14,9 @@ pub fn test_code_fix_undeclared_property_numeric_literal() {
 }
 
 fn run_test_code_fix_undeclared_property_numeric_literal(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixUndeclaredPropertyNumericLiteral") {
+        return;
+    }
     let content = r"[|class A {
     constructor() {
         this.x = 10;

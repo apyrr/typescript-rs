@@ -14,7 +14,9 @@ pub fn test_go_to_definition_switch_case4() {
 }
 
 fn run_test_go_to_definition_switch_case4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionSwitchCase4") {
+        return;
+    }
     let content = r"     switch (null) {
          case null: break;
      }

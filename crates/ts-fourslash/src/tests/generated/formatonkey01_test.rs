@@ -14,7 +14,9 @@ pub fn test_formatonkey01() {
 }
 
 fn run_test_formatonkey01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatonkey01") {
+        return;
+    }
     let content = r"// @lib: es5
 switch (1) {
     case 1:

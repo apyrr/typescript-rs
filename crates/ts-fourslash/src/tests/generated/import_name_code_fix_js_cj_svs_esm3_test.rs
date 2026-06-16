@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_js_cj_svs_esm3() {
 }
 
 fn run_test_import_name_code_fix_js_cj_svs_esm3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_jsCJSvsESM3") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @checkJs: true
 // @Filename: types/dep.d.ts

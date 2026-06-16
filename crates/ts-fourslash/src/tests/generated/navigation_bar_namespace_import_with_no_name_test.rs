@@ -14,7 +14,9 @@ pub fn test_navigation_bar_namespace_import_with_no_name() {
 }
 
 fn run_test_navigation_bar_namespace_import_with_no_name(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarNamespaceImportWithNoName") {
+        return;
+    }
     let content = r"import *{} from 'foo';";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_document_symbol(t);

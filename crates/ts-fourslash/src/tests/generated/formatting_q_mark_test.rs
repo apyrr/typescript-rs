@@ -14,7 +14,9 @@ pub fn test_formatting_q_mark() {
 }
 
 fn run_test_formatting_q_mark(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingQMark") {
+        return;
+    }
     let content = r"interface A {
 /*1*/    foo?     ();
 /*2*/    foo?             <T>();

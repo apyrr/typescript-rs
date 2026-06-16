@@ -14,7 +14,9 @@ pub fn test_signature_help_for_nonlocal_type_does_not_use_import_type() {
 }
 
 fn run_test_signature_help_for_nonlocal_type_does_not_use_import_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSignatureHelpForNonlocalTypeDoesNotUseImportType") {
+        return;
+    }
     let content = r#"// @Filename: exporter.ts
 export interface Thing {}
 export const Foo: () => Thing = null as any;

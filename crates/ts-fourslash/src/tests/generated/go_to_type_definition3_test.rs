@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition3() {
 }
 
 fn run_test_go_to_type_definition3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinition3") {
+        return;
+    }
     let content = r"type /*definition*/T = string;
 const x: /*reference*/T;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

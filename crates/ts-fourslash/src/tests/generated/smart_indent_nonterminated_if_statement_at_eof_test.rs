@@ -14,7 +14,9 @@ pub fn test_smart_indent_nonterminated_if_statement_at_eof() {
 }
 
 fn run_test_smart_indent_nonterminated_if_statement_at_eof(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentNonterminatedIfStatementAtEOF") {
+        return;
+    }
     let content = r"if (true)
 /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_references_for_properties_of_generic_type() {
 }
 
 fn run_test_references_for_properties_of_generic_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForPropertiesOfGenericType") {
+        return;
+    }
     let content = r#"interface IFoo<T> {
     /*1*/doSomething(v: T): T;
 }

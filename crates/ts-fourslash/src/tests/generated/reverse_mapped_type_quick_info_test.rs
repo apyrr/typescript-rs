@@ -14,7 +14,9 @@ pub fn test_reverse_mapped_type_quick_info() {
 }
 
 fn run_test_reverse_mapped_type_quick_info(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReverseMappedTypeQuickInfo") {
+        return;
+    }
     let content = r"interface IAction {
     type: string;
 }

@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_rest() {
 }
 
 fn run_test_find_all_refs_for_rest(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForRest") {
+        return;
+    }
     let content = r"interface Gen {
     x: number
     /*1*/parent: Gen;

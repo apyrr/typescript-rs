@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_file1() {
 }
 
 fn run_test_import_name_code_fix_new_import_file1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportFile1") {
+        return;
+    }
     let content = r#"[|/// <reference path="./tripleSlashReference.ts" />
 f1/*0*/();|]
 // @Filename: Module.ts

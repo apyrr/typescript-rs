@@ -14,7 +14,9 @@ pub fn test_get_occurrences_throw8() {
 }
 
 fn run_test_get_occurrences_throw8(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesThrow8") {
+        return;
+    }
     let content = r"try {
     throw 10;
 

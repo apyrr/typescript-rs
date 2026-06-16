@@ -14,32 +14,34 @@ pub fn test_rename_template_literals_computed_properties() {
 }
 
 fn run_test_rename_template_literals_computed_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameTemplateLiteralsComputedProperties") {
+        return;
+    }
     let content = r#"// @Filename: a.ts
 interface Obj {
-    [|[` + "`" + `[|{| "contextRangeIndex": 0 |}num|]` + "`" + `]: number;|]
+    [|[`[|{| "contextRangeIndex": 0 |}num|]`]: number;|]
     [|['[|{| "contextRangeIndex": 2 |}bool|]']: boolean;|]
 }
 
 let o: Obj = {
-    [|[` + "`" + `[|{| "contextRangeIndex": 4 |}num|]` + "`" + `]: 0|],
+    [|[`[|{| "contextRangeIndex": 4 |}num|]`]: 0|],
     [|['[|{| "contextRangeIndex": 6 |}bool|]']: true|],
 };
 
 o = {
     [|['[|{| "contextRangeIndex": 8 |}num|]']: 1|],
-    [|[` + "`" + `[|{| "contextRangeIndex": 10 |}bool|]` + "`" + `]: false|],
+    [|[`[|{| "contextRangeIndex": 10 |}bool|]`]: false|],
 };
 
 o.[|num|];
 o['[|num|]'];
 o["[|num|]"];
-o[` + "`" + `[|num|]` + "`" + `];
+o[`[|num|]`];
 
 o.[|bool|];
 o['[|bool|]'];
 o["[|bool|]"];
-o[` + "`" + `[|bool|]` + "`" + `];
+o[`[|bool|]`];
 
 export { o };
 // @allowJs: true
@@ -47,10 +49,10 @@ export { o };
 import { o as obj } from './a';
 
 obj.[|num|];
-obj[` + "`" + `[|num|]` + "`" + `];
+obj[`[|num|]`];
 
 obj.[|bool|];
-obj[` + "`" + `[|bool|]` + "`" + `];"#;
+obj[`[|bool|]`];"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_baseline_rename_at_ranges_with_text(t, "num");
     done();

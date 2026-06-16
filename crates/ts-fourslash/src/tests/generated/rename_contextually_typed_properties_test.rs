@@ -14,7 +14,9 @@ pub fn test_rename_contextually_typed_properties() {
 }
 
 fn run_test_rename_contextually_typed_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameContextuallyTypedProperties") {
+        return;
+    }
     let content = r#"interface I {
     [|[|{| "contextRangeIndex": 0 |}prop1|]: () => void;|]
     prop2(): void;

@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_member_type_alias() {
 }
 
 fn run_test_code_fix_class_implement_interface_member_type_alias(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceMemberTypeAlias") {
+        return;
+    }
     let content = r"type MyType = [string, number];
 interface I { x: MyType; test(a: MyType): void; }
 class C implements I {}";

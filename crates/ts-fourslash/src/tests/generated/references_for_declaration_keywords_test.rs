@@ -14,7 +14,9 @@ pub fn test_references_for_declaration_keywords() {
 }
 
 fn run_test_references_for_declaration_keywords(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForDeclarationKeywords") {
+        return;
+    }
     let content = r"class Base {}
 interface Implemented1 {}
 /*classDecl1_classKeyword*/class C1 /*classDecl1_extendsKeyword*/extends Base /*classDecl1_implementsKeyword*/implements Implemented1 {

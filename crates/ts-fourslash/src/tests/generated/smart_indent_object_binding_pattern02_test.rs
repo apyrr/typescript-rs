@@ -14,7 +14,9 @@ pub fn test_smart_indent_object_binding_pattern02() {
 }
 
 fn run_test_smart_indent_object_binding_pattern02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentObjectBindingPattern02") {
+        return;
+    }
     let content = r"var /*1*/{/*2*/a,/*3*/b:/*4*/k,/*5*/}/*6*/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "1");

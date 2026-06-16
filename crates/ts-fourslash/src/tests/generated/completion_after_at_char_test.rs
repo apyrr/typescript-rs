@@ -14,7 +14,9 @@ pub fn test_completion_after_at_char() {
 }
 
 fn run_test_completion_after_at_char(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionAfterAtChar") {
+        return;
+    }
     let content = r"// @lib: es5
 @a/**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

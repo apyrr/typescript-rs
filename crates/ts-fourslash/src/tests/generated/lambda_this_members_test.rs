@@ -14,7 +14,9 @@ pub fn test_lambda_this_members() {
 }
 
 fn run_test_lambda_this_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestLambdaThisMembers") {
+        return;
+    }
     let content = r"class Foo {
     a: number;
     b() {

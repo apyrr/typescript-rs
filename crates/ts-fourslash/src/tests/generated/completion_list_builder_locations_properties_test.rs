@@ -14,7 +14,9 @@ pub fn test_completion_list_builder_locations_properties() {
 }
 
 fn run_test_completion_list_builder_locations_properties(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListBuilderLocations_properties") {
+        return;
+    }
     let content = r"var aa = 1;
 class A1 {
     public static /*property1*/

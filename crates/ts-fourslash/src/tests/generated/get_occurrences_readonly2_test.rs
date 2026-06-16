@@ -14,7 +14,9 @@ pub fn test_get_occurrences_readonly2() {
 }
 
 fn run_test_get_occurrences_readonly2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesReadonly2") {
+        return;
+    }
     let content = r"type T = {
   [|readonly|] prop: string;
 }";

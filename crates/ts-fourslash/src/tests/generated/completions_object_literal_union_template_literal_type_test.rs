@@ -14,12 +14,14 @@ pub fn test_completions_object_literal_union_template_literal_type() {
 }
 
 fn run_test_completions_object_literal_union_template_literal_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsObjectLiteralUnionTemplateLiteralType") {
+        return;
+    }
     let content = r#"type UnionType = {
   key1: string;
 } | {
   key2: number;
-} | ` + "`" + `string literal ${string}` + "`" + `;
+} | `string literal ${string}`;
 
 const obj1: UnionType = {
   /*1*/

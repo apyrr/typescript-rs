@@ -14,7 +14,9 @@ pub fn test_triple_slash_ref_path_completion_rootdirs() {
 }
 
 fn run_test_triple_slash_ref_path_completion_rootdirs(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTripleSlashRefPathCompletionRootdirs") {
+        return;
+    }
     let content = r#"// @rootDirs: sub/src1,src2
 // @Filename: src2/test0.ts
 /// <reference path="./mo/*0*/

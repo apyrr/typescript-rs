@@ -14,7 +14,9 @@ pub fn test_document_highlights_module_import_files_to_search_with_invalid_file(
 }
 
 fn run_test_document_highlights_module_import_files_to_search_with_invalid_file(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlights_moduleImport_filesToSearchWithInvalidFile") {
+        return;
+    }
     let content = r#"// @Filename: /node_modules/@types/foo/index.d.ts
 export const x: number;
 // @Filename: /a.ts

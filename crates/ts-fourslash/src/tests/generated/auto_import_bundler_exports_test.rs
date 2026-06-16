@@ -14,7 +14,9 @@ pub fn test_auto_import_bundler_exports() {
 }
 
 fn run_test_auto_import_bundler_exports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestAutoImportBundlerExports") {
+        return;
+    }
     let content = r#"// @module: esnext
 // @moduleResolution: bundler
 // @Filename: /node_modules/dep/package.json

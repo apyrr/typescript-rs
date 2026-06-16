@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_interface_type_param_instantiation() {
 }
 
 fn run_test_code_fix_class_implement_interface_type_param_instantiation(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementInterfaceTypeParamInstantiation") {
+        return;
+    }
     let content = r"interface I<T> {
    x: T;
 }

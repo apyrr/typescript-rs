@@ -14,7 +14,9 @@ pub fn test_completion_typeof_expressions() {
 }
 
 fn run_test_completion_typeof_expressions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionTypeofExpressions") {
+        return;
+    }
     let content = r#"const x = "str";
 function test(arg: typeof x./*1*/) {}
 function test1(arg: typeof (x./*2*/)) {}"#;

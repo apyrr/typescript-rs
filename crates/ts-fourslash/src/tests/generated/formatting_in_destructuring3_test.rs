@@ -14,7 +14,9 @@ pub fn test_formatting_in_destructuring3() {
 }
 
 fn run_test_formatting_in_destructuring3(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingInDestructuring3") {
+        return;
+    }
     let content = r"/*1*/const {
 /*2*/    a,
 /*3*/    b,

@@ -14,7 +14,9 @@ pub fn test_formatting_non_null_assertion_operator() {
 }
 
 fn run_test_formatting_non_null_assertion_operator(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingNonNullAssertionOperator") {
+        return;
+    }
     let content = r"/*1*/ 'bar' ! ;
 /*2*/ ( 'bar' ) ! ;
 /*3*/ 'bar' [ 1 ] ! ;

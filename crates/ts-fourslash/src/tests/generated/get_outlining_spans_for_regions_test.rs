@@ -14,7 +14,9 @@ pub fn test_get_outlining_spans_for_regions() {
 }
 
 fn run_test_get_outlining_spans_for_regions(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOutliningSpansForRegions") {
+        return;
+    }
     let content = r"// region without label
 [|// #region
 

@@ -14,7 +14,9 @@ pub fn test_completion_after_backslash_following_string() {
 }
 
 fn run_test_completion_after_backslash_following_string(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionAfterBackslashFollowingString") {
+        return;
+    }
     let content = r#"// @lib: es5
 Harness.newLine = ""\n/**/"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_completion_list_private_members() {
 }
 
 fn run_test_completion_list_private_members(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListPrivateMembers") {
+        return;
+    }
     let content = r"class Foo {
     private x;
 }

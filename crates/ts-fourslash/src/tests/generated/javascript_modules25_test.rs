@@ -14,7 +14,9 @@ pub fn test_javascript_modules25() {
 }
 
 fn run_test_javascript_modules25(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestJavascriptModules25") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: mod.js
 function foo() { return {a: true}; }

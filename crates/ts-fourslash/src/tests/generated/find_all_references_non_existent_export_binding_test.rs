@@ -14,7 +14,9 @@ pub fn test_find_all_references_non_existent_export_binding() {
 }
 
 fn run_test_find_all_references_non_existent_export_binding(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllReferencesNonExistentExportBinding") {
+        return;
+    }
     let content = r#"// @Filename: /tsconfig.json
  { "compilerOptions": { "module": "commonjs" } }
 // @filename: /bar.ts

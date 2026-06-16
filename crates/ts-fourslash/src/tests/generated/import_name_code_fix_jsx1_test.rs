@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_jsx1() {
 }
 
 fn run_test_import_name_code_fix_jsx1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_jsx1") {
+        return;
+    }
     let content = r#"// @jsx: react
 // @Filename: /node_modules/react/index.d.ts
 export const React: any;

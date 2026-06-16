@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_new_import_paths_with_parent_relative_path() {
 }
 
 fn run_test_import_name_code_fix_new_import_paths_with_parent_relative_path(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFixNewImportPaths_withParentRelativePath") {
+        return;
+    }
     let content = r#"// @Filename: /src/a.ts
 [|foo|]
 // @Filename: /thisHasPathMapping.ts

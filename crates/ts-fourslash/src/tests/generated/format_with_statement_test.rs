@@ -14,7 +14,9 @@ pub fn test_format_with_statement() {
 }
 
 fn run_test_format_with_statement(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatWithStatement") {
+        return;
+    }
     let content = r"with /*1*/(foo.bar)
 
    {/*2*/

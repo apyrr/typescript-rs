@@ -14,7 +14,9 @@ pub fn test_function_type_predicate_formatting() {
 }
 
 fn run_test_function_type_predicate_formatting(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFunctionTypePredicateFormatting") {
+        return;
+    }
     let content = r"/**/function bar(a: A):     a        is       B    {}";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.go_to_marker(t, "");

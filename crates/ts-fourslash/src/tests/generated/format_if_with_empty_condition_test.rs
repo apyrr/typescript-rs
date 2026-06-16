@@ -14,7 +14,9 @@ pub fn test_format_if_with_empty_condition() {
 }
 
 fn run_test_format_if_with_empty_condition(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormatIfWithEmptyCondition") {
+        return;
+    }
     let content = r"if () {
 }";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

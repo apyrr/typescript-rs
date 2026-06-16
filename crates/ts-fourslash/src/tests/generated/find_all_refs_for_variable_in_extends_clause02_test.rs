@@ -14,7 +14,9 @@ pub fn test_find_all_refs_for_variable_in_extends_clause02() {
 }
 
 fn run_test_find_all_refs_for_variable_in_extends_clause02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsForVariableInExtendsClause02") {
+        return;
+    }
     let content = r"/*1*/interface /*2*/Base { }
 namespace n {
     var Base = class { };

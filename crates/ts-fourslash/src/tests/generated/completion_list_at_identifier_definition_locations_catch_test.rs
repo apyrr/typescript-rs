@@ -14,7 +14,9 @@ pub fn test_completion_list_at_identifier_definition_locations_catch() {
 }
 
 fn run_test_completion_list_at_identifier_definition_locations_catch(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtIdentifierDefinitionLocations_catch") {
+        return;
+    }
     let content = r"var aa = 1;
  try {} catch(/*catchVariable1*/
  try {} catch(a/*catchVariable2*/";

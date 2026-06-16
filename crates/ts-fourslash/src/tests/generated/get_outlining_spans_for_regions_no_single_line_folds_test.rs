@@ -14,7 +14,9 @@ pub fn test_get_outlining_spans_for_regions_no_single_line_folds() {
 }
 
 fn run_test_get_outlining_spans_for_regions_no_single_line_folds(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOutliningSpansForRegionsNoSingleLineFolds") {
+        return;
+    }
     let content = r"// @lib: es5
 [|//#region
 function foo()[| {

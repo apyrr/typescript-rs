@@ -14,7 +14,9 @@ pub fn test_no_quick_info_in_whitespace() {
 }
 
 fn run_test_no_quick_info_in_whitespace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNoQuickInfoInWhitespace") {
+        return;
+    }
     let content = r"class C {
 /*1*/    private _mspointerupHandler(args) {
         if (args.button === 3) {

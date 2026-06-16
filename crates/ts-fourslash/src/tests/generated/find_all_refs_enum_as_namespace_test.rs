@@ -14,7 +14,9 @@ pub fn test_find_all_refs_enum_as_namespace() {
 }
 
 fn run_test_find_all_refs_enum_as_namespace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsEnumAsNamespace") {
+        return;
+    }
     let content = r"/*1*/enum /*2*/E { A }
 let e: /*3*/E.A;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

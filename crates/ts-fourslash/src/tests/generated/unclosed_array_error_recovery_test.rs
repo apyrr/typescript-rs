@@ -14,7 +14,9 @@ pub fn test_unclosed_array_error_recovery() {
 }
 
 fn run_test_unclosed_array_error_recovery(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestUnclosedArrayErrorRecovery") {
+        return;
+    }
     let content = r"// @strict: false
 var table: number[;
 /**/table.push(1)";

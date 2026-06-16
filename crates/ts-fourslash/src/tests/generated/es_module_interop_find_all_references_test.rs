@@ -14,7 +14,9 @@ pub fn test_es_module_interop_find_all_references() {
 }
 
 fn run_test_es_module_interop_find_all_references(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestEsModuleInteropFindAllReferences") {
+        return;
+    }
     let content = r#"// @esModuleInterop: true
 // @Filename: /abc.d.ts
 declare module "a" {

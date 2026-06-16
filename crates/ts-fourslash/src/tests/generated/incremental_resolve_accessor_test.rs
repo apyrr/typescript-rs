@@ -14,7 +14,9 @@ pub fn test_incremental_resolve_accessor() {
 }
 
 fn run_test_incremental_resolve_accessor(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIncrementalResolveAccessor") {
+        return;
+    }
     let content = r#"class c1 {
     get p1(): string {
         return "30";

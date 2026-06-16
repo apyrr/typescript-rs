@@ -14,7 +14,9 @@ pub fn test_rename_js_this_property01() {
 }
 
 fn run_test_rename_js_this_property01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameJsThisProperty01") {
+        return;
+    }
     let content = r#"// @allowJs: true
 // @Filename: a.js
 function bar() {

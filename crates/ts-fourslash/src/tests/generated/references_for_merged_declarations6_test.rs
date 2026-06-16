@@ -14,7 +14,9 @@ pub fn test_references_for_merged_declarations6() {
 }
 
 fn run_test_references_for_merged_declarations6(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestReferencesForMergedDeclarations6") {
+        return;
+    }
     let content = r"interface Foo { }
 /*1*/module /*2*/Foo {
     export interface Bar { }

@@ -14,7 +14,9 @@ pub fn test_get_occurrences_readonly1() {
 }
 
 fn run_test_get_occurrences_readonly1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesReadonly1") {
+        return;
+    }
     let content = r"interface I {
   [|readonly|] prop: string;
 }";

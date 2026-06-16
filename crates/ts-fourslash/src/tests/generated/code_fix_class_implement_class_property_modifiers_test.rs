@@ -14,7 +14,9 @@ pub fn test_code_fix_class_implement_class_property_modifiers() {
 }
 
 fn run_test_code_fix_class_implement_class_property_modifiers(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixClassImplementClassPropertyModifiers") {
+        return;
+    }
     let content = r"// @strict: false
 abstract class A {
     abstract x: number;

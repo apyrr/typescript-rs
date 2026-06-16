@@ -14,7 +14,9 @@ pub fn test_find_all_refs_on_definition() {
 }
 
 fn run_test_find_all_refs_on_definition(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsOnDefinition") {
+        return;
+    }
     let content = r#"//@Filename: findAllRefsOnDefinition-import.ts
 export class Test{
 

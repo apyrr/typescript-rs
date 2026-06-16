@@ -14,7 +14,9 @@ pub fn test_completion_list_enum_values() {
 }
 
 fn run_test_completion_list_enum_values(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListEnumValues") {
+        return;
+    }
     let content = r"enum Colors {
     Red,
     Green

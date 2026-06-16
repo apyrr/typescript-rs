@@ -14,7 +14,9 @@ pub fn test_go_to_definition_external_module_name4() {
 }
 
 fn run_test_go_to_definition_external_module_name4(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionExternalModuleName4") {
+        return;
+    }
     let content = r"// @Filename: b.ts
 import n = require('unknown/*1*/');";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

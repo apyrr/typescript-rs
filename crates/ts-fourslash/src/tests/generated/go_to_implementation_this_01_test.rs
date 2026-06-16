@@ -14,7 +14,9 @@ pub fn test_go_to_implementation_this_01() {
 }
 
 fn run_test_go_to_implementation_this_01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToImplementationThis_01") {
+        return;
+    }
     let content = r"class [|Bar|] extends Foo {
     hello(): th/*this_type*/is {
         return this;

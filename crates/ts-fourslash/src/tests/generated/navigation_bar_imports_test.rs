@@ -14,7 +14,9 @@ pub fn test_navigation_bar_imports() {
 }
 
 fn run_test_navigation_bar_imports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigationBarImports") {
+        return;
+    }
     let content = r#"import a, {b} from "m";
 import c = require("m");
 import * as d from "m";"#;

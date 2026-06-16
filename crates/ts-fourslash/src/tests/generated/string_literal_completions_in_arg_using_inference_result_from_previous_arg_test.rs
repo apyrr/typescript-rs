@@ -16,7 +16,11 @@ pub fn test_string_literal_completions_in_arg_using_inference_result_from_previo
 fn run_test_string_literal_completions_in_arg_using_inference_result_from_previous_arg(
     t: &mut TestingT,
 ) {
-    skip_if_failing(t);
+    if should_skip_if_failing(
+        "TestStringLiteralCompletionsInArgUsingInferenceResultFromPreviousArg",
+    ) {
+        return;
+    }
     let content = r#"// @strict: true
 // https://github.com/microsoft/TypeScript/issues/55545
 enum myEnum {
@@ -35,7 +39,7 @@ function myFunction<K extends keyof typeof myEnum>(
 ) {}
 
 myFunction("valA", "/*ts1*/");
-myFunction("valA", ` + "`" + `/*ts2*/` + "`" + `);
+myFunction("valA", `/*ts2*/`);
 
 function myFunction2<K extends keyof typeof myEnum>(
   a: K,
@@ -43,7 +47,7 @@ function myFunction2<K extends keyof typeof myEnum>(
 ) {}
 
 myFunction2("valA", { b: "/*ts3*/" });
-myFunction2("valA", { b: ` + "`" + `/*ts4*/` + "`" + ` });"#;
+myFunction2("valA", { b: `/*ts4*/` });"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_completions(
         t,

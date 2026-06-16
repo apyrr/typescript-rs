@@ -14,7 +14,9 @@ pub fn test_document_highlight_variance_modifiers() {
 }
 
 fn run_test_document_highlight_variance_modifiers(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestDocumentHighlightVarianceModifiers") {
+        return;
+    }
     let content = r"type TFoo<Value> = { value: Value };
 type TBar<[|in|] [|out|] Value> = TFoo<Value>;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

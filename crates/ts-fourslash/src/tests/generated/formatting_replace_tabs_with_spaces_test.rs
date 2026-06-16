@@ -14,7 +14,9 @@ pub fn test_formatting_replace_tabs_with_spaces() {
 }
 
 fn run_test_formatting_replace_tabs_with_spaces(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingReplaceTabsWithSpaces") {
+        return;
+    }
     let content = r"namespace Foo {
 /*1*/				class Test { }
 /*2*/			class Test { }

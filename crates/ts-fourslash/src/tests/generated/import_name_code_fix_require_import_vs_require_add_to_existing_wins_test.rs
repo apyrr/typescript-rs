@@ -14,7 +14,9 @@ pub fn test_import_name_code_fix_require_import_vs_require_add_to_existing_wins(
 }
 
 fn run_test_import_name_code_fix_require_import_vs_require_add_to_existing_wins(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestImportNameCodeFix_require_importVsRequire_addToExistingWins") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @checkJs: true
 // @Filename: blah.js

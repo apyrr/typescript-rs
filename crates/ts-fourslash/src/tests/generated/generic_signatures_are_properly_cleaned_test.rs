@@ -14,7 +14,9 @@ pub fn test_generic_signatures_are_properly_cleaned() {
 }
 
 fn run_test_generic_signatures_are_properly_cleaned(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericSignaturesAreProperlyCleaned") {
+        return;
+    }
     let content = r"interface Int<T> {
 val<U>(f: (t: T) => U): Int<U>;
 }

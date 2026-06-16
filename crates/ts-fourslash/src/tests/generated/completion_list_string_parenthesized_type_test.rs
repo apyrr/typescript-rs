@@ -14,7 +14,9 @@ pub fn test_completion_list_string_parenthesized_type() {
 }
 
 fn run_test_completion_list_string_parenthesized_type(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListStringParenthesizedType") {
+        return;
+    }
     let content = r#"type T1 = "a" | "b" | "c";
 type T2<T extends T1> = {};
 

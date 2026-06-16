@@ -14,7 +14,9 @@ pub fn test_get_occurrences_try_catch_finally_broken() {
 }
 
 fn run_test_get_occurrences_try_catch_finally_broken(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetOccurrencesTryCatchFinallyBroken") {
+        return;
+    }
     let content = r"t /*1*/ry {
     t/*2*/ry {
     }

@@ -14,7 +14,9 @@ pub fn test_super_inside_inner_class() {
 }
 
 fn run_test_super_inside_inner_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSuperInsideInnerClass") {
+        return;
+    }
     let content = r"class Base {
 	constructor(n: number) {
 	}

@@ -14,7 +14,9 @@ pub fn test_find_all_refs_re_export_star_as() {
 }
 
 fn run_test_find_all_refs_re_export_star_as(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFindAllRefsReExportStarAs") {
+        return;
+    }
     let content = r"// @Filename: /leafModule.ts
 export const /*helloDef*/hello = () => 'Hello';
 // @Filename: /exporting.ts

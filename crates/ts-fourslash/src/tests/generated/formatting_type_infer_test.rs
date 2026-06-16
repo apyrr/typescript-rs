@@ -14,7 +14,9 @@ pub fn test_formatting_type_infer() {
 }
 
 fn run_test_formatting_type_infer(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingTypeInfer") {
+        return;
+    }
     let content = r"
 /*L1*/type C<T> = T extends Array<infer U> ? U : never;
 

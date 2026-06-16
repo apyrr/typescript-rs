@@ -14,7 +14,9 @@ pub fn test_get_java_script_syntactic_diagnostics01() {
 }
 
 fn run_test_get_java_script_syntactic_diagnostics01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetJavaScriptSyntacticDiagnostics01") {
+        return;
+    }
     let content = r"// @lib: es5
 // @allowJs: true
 // @Filename: a.js

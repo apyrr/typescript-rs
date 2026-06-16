@@ -14,7 +14,9 @@ pub fn test_occurrences01() {
 }
 
 fn run_test_occurrences01(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOccurrences01") {
+        return;
+    }
     let content = r"// @lib: es5
 foo: [|switch|] (10) {
     [|case|] 1:

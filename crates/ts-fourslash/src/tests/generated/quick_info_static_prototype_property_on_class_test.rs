@@ -14,7 +14,9 @@ pub fn test_quick_info_static_prototype_property_on_class() {
 }
 
 fn run_test_quick_info_static_prototype_property_on_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoStaticPrototypePropertyOnClass") {
+        return;
+    }
     let content = r"class c1 {
 }
 class c2<T> {

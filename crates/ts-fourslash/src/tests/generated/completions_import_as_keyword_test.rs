@@ -14,7 +14,9 @@ pub fn test_completions_import_as_keyword() {
 }
 
 fn run_test_completions_import_as_keyword(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsImport_asKeyword") {
+        return;
+    }
     let content = r"// @lib: es5
 // @Filename: /a.ts
 export function as() {}

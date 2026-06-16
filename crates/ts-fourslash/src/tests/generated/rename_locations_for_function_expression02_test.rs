@@ -14,7 +14,9 @@ pub fn test_rename_locations_for_function_expression02() {
 }
 
 fn run_test_rename_locations_for_function_expression02(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameLocationsForFunctionExpression02") {
+        return;
+    }
     let content = r#"function f() {
 
 }

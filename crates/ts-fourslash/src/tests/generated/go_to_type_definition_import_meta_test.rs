@@ -14,7 +14,9 @@ pub fn test_go_to_type_definition_import_meta() {
 }
 
 fn run_test_go_to_type_definition_import_meta(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToTypeDefinitionImportMeta") {
+        return;
+    }
     let content = r"// @lib: es5
 // @module: esnext
 // @Filename: foo.ts

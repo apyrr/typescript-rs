@@ -14,7 +14,9 @@ pub fn test_smart_indent_on_unclosed_function_declaration05() {
 }
 
 fn run_test_smart_indent_on_unclosed_function_declaration05(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestSmartIndentOnUnclosedFunctionDeclaration05") {
+        return;
+    }
     let content = r#"function f<A,B,C>(a: A, b:B, c, d: C): {
 {| "indent": 4 |}
 "#;

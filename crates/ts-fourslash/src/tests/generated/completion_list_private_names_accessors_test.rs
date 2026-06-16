@@ -14,7 +14,9 @@ pub fn test_completion_list_private_names_accessors() {
 }
 
 fn run_test_completion_list_private_names_accessors(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListPrivateNamesAccessors") {
+        return;
+    }
     let content = r"class Foo {
    get #x() { return 1 };
    set #x(value: number) { };

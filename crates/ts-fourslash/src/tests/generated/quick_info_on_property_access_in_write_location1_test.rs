@@ -14,7 +14,9 @@ pub fn test_quick_info_on_property_access_in_write_location1() {
 }
 
 fn run_test_quick_info_on_property_access_in_write_location1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestQuickInfoOnPropertyAccessInWriteLocation1") {
+        return;
+    }
     let content = r"// @strict: true
 // @exactOptionalPropertyTypes: true
 declare const xx: { prop?: number };

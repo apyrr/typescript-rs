@@ -14,7 +14,9 @@ pub fn test_code_fix_spelling_optional_chain() {
 }
 
 fn run_test_code_fix_spelling_optional_chain(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCodeFixSpelling_optionalChain") {
+        return;
+    }
     let content = r"// @strict: true
 function f(x: string | null) {
   [|x?.toLowrCase();|]

@@ -14,7 +14,9 @@ pub fn test_member_list_in_with_block2() {
 }
 
 fn run_test_member_list_in_with_block2(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestMemberListInWithBlock2") {
+        return;
+    }
     let content = r"interface IFoo {
     a: number;
 }

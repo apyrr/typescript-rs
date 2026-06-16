@@ -14,7 +14,9 @@ pub fn test_go_to_definition_meta_property() {
 }
 
 fn run_test_go_to_definition_meta_property(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGoToDefinitionMetaProperty") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 im/*1*/port.met/*2*/a;
 function /*functionDefinition*/f() { n/*3*/ew.[|t/*4*/arget|]; }

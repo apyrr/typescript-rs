@@ -14,7 +14,9 @@ pub fn test_incremental_update_to_class_implementing_generic_class() {
 }
 
 fn run_test_incremental_update_to_class_implementing_generic_class(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestIncrementalUpdateToClassImplementingGenericClass") {
+        return;
+    }
     let content = r#"declare function alert(message?: string): void;
 class Animal<T> {
     constructor(public name: T) { }

@@ -14,7 +14,9 @@ pub fn test_formatting_space_before_close_paren() {
 }
 
 fn run_test_formatting_space_before_close_paren(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingSpaceBeforeCloseParen") {
+        return;
+    }
     let content = r"/*1*/({});
 /*2*/(  {});
 /*3*/({foo:42});

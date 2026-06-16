@@ -14,7 +14,9 @@ pub fn test_completion_for_string_literal8() {
 }
 
 fn run_test_completion_for_string_literal8(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionForStringLiteral8") {
+        return;
+    }
     let content = r"// @stableTypeOrdering: true
 type As = 'arf' | 'abacus' | 'abaddon';
 let a: As;

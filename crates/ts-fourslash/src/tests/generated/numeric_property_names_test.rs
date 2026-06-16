@@ -14,7 +14,9 @@ pub fn test_numeric_property_names() {
 }
 
 fn run_test_numeric_property_names(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNumericPropertyNames") {
+        return;
+    }
     let content = r#"var /**/t2 = { 0: 1, 1: "" };"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_quick_info_at(t, "", "var t2: {\n    0: number;\n    1: string;\n}", "");

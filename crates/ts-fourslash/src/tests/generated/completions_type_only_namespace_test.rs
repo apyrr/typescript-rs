@@ -14,7 +14,9 @@ pub fn test_completions_type_only_namespace() {
 }
 
 fn run_test_completions_type_only_namespace(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionsTypeOnlyNamespace") {
+        return;
+    }
     let content = r"// @Filename: /a.ts
 export namespace ns {
   export class Box<T> {}

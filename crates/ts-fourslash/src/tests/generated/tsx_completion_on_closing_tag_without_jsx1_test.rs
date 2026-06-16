@@ -14,7 +14,9 @@ pub fn test_tsx_completion_on_closing_tag_without_jsx1() {
 }
 
 fn run_test_tsx_completion_on_closing_tag_without_jsx1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestTsxCompletionOnClosingTagWithoutJSX1") {
+        return;
+    }
     let content = r"//@Filename: file.tsx
 var x1 = <div><//**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

@@ -14,7 +14,9 @@ pub fn test_formatting_on_document_ready_function() {
 }
 
 fn run_test_formatting_on_document_ready_function(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnDocumentReadyFunction") {
+        return;
+    }
     let content = r"/*1*/$    (   document   )   .  ready  (   function   (   )   {
 /*2*/    alert    (           'i am ready'  )   ;
 /*3*/           }                 );";

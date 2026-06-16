@@ -14,7 +14,9 @@ pub fn test_formatting_on_comma_operator() {
 }
 
 fn run_test_formatting_on_comma_operator(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestFormattingOnCommaOperator") {
+        return;
+    }
     let content = r"var v1 = ((1, 2, 3), 4, 5, (6, 7));/*1*/
 function f1() {
     var a = 1;

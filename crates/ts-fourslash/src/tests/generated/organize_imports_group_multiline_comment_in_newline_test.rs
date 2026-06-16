@@ -14,7 +14,9 @@ pub fn test_organize_imports_group_multiline_comment_in_newline() {
 }
 
 fn run_test_organize_imports_group_multiline_comment_in_newline(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOrganizeImportsGroup_MultilineCommentInNewline") {
+        return;
+    }
     let content = r#"// polyfill
 import c from "C";
 /*

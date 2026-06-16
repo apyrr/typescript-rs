@@ -14,13 +14,15 @@ pub fn test_navigate_items_let() {
 }
 
 fn run_test_navigate_items_let(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestNavigateItemsLet") {
+        return;
+    }
     let content = r"// @noLib: true
 let [|c = 10|];
 function foo() {
     let [|d = 10|];
 }";
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_workspace_symbol(&[
         workspace_symbol_case(
             "c",

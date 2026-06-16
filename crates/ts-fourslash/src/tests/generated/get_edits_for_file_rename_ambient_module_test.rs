@@ -14,7 +14,9 @@ pub fn test_get_edits_for_file_rename_ambient_module() {
 }
 
 fn run_test_get_edits_for_file_rename_ambient_module(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGetEditsForFileRename_ambientModule") {
+        return;
+    }
     let content = r#"// @Filename: /tsconfig.json
 {}
 // @Filename: /sub/types.d.ts

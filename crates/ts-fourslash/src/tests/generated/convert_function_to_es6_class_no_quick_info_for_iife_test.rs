@@ -14,7 +14,9 @@ pub fn test_convert_function_to_es6_class_no_quick_info_for_iife() {
 }
 
 fn run_test_convert_function_to_es6_class_no_quick_info_for_iife(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestConvertFunctionToEs6Class_noQuickInfoForIIFE") {
+        return;
+    }
     let content = r"// @allowJs: true
 // @Filename: /a.js
 (/*1*/function () {

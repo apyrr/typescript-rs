@@ -14,7 +14,9 @@ pub fn test_generic_interface_with_inheritance_edit1() {
 }
 
 fn run_test_generic_interface_with_inheritance_edit1(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestGenericInterfaceWithInheritanceEdit1") {
+        return;
+    }
     let content = r"interface ChainedObject<T> {
     values(): ChainedArray<any>;
     pairs(): ChainedArray<any[]>;

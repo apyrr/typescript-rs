@@ -14,7 +14,9 @@ pub fn test_completion_list_at_identifier_definition_locations_interfaces() {
 }
 
 fn run_test_completion_list_at_identifier_definition_locations_interfaces(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestCompletionListAtIdentifierDefinitionLocations_interfaces") {
+        return;
+    }
     let content = r"var aa = 1;
 interface /*interfaceName1*/
 interface a/*interfaceName2*/";

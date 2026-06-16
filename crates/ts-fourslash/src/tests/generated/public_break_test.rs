@@ -14,7 +14,9 @@ pub fn test_public_break() {
 }
 
 fn run_test_public_break(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestPublicBreak") {
+        return;
+    }
     let content = r"public break;
 /**/";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());

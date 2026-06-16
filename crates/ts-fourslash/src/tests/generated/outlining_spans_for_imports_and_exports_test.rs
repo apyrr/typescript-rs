@@ -14,7 +14,9 @@ pub fn test_outlining_spans_for_imports_and_exports() {
 }
 
 fn run_test_outlining_spans_for_imports_and_exports(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestOutliningSpansForImportsAndExports") {
+        return;
+    }
     let content = r#"import { a1, a2 } from "a";
 ;
 import {

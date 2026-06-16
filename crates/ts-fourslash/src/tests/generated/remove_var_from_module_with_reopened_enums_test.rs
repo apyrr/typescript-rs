@@ -14,7 +14,9 @@ pub fn test_remove_var_from_module_with_reopened_enums() {
 }
 
 fn run_test_remove_var_from_module_with_reopened_enums(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRemoveVarFromModuleWithReopenedEnums") {
+        return;
+    }
     let content = r"namespace A {
     /**/var o;
 }

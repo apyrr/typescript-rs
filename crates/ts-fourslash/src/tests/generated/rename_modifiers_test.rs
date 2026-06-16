@@ -14,7 +14,9 @@ pub fn test_rename_modifiers() {
 }
 
 fn run_test_rename_modifiers(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing("TestRenameModifiers") {
+        return;
+    }
     let content = r#"[|[|declare|] [|abstract|] class [|{| "isWriteAccess": true, "isDefinition": true, "contextRangeDelta": -3 |}C1|] {
     [|[|static|] [|{| "isWriteAccess": true, "isDefinition": true, "contextRangeDelta": -2 |}a|];|]
     [|[|readonly|] [|{| "isWriteAccess": true, "isDefinition": true, "contextRangeDelta": -2 |}b|];|]
