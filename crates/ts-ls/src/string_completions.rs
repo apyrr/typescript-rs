@@ -1515,6 +1515,7 @@ impl LanguageService<'_> {
                             checker,
                             Some(*symbol),
                             location,
+                            None,
                             doc_format.clone(),
                             &mut vc,
                         );

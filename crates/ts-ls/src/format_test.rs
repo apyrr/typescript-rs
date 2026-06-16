@@ -11,20 +11,13 @@ use crate::lsutil;
 fn test_get_formatting_edits_after_keystroke_empty_file() {
     // Create an empty file
     let text = "";
-    let source_file = parser::parse_source_file(
-        ast::SourceFileParseOptions {
-            file_name: "/index.ts".to_string(),
-            path: "/index.ts".to_string(),
-        },
-        text.to_string(),
-        core::ScriptKind::TS,
-    );
+    let source_file = parse_source_file("/index.ts", text);
 
     // Create language service with nil program (we're only testing the formatting function)
     let lang_service = LanguageService::default();
 
     // Test formatting after keystroke with newline character at position 0
-    let ctx = core::Context::new();
+    let ctx = core::Context::background();
     let options = lsutil::get_default_format_code_settings();
 
     // This should not panic
@@ -45,20 +38,13 @@ fn test_get_formatting_edits_after_keystroke_empty_file() {
 fn test_get_formatting_edits_after_keystroke_simple_statement() {
     // Create a file with a simple statement
     let text = "const x = 1";
-    let source_file = parser::parse_source_file(
-        ast::SourceFileParseOptions {
-            file_name: "/index.ts".to_string(),
-            path: "/index.ts".to_string(),
-        },
-        text.to_string(),
-        core::ScriptKind::TS,
-    );
+    let source_file = parse_source_file("/index.ts", text);
 
     // Create language service with nil program
     let lang_service = LanguageService::default();
 
     // Test formatting after keystroke with newline character at end of statement
-    let ctx = core::Context::new();
+    let ctx = core::Context::background();
     let options = lsutil::get_default_format_code_settings();
 
     // This should not panic
@@ -72,6 +58,87 @@ fn test_get_formatting_edits_after_keystroke_simple_statement() {
 
     // Should return nil or empty edits, not panic
     let _ = edits;
+}
+
+#[test]
+fn test_format_on_semicolon_indents_statement_in_arrow_function_body() {
+    let text = r#"class C2 {
+    eventEmitter: any;
+    constructor() {
+        this.eventEmitter.on(5, (msg) => {
+console.log;
+        });
+    }
+}"#;
+    let position = text.find("console.log;").unwrap() as i32 + "console.log;".len() as i32;
+    let actual = apply_formatting_edits_after_keystroke(text, position, ";");
+    assert_eq!(
+        actual,
+        r#"class C2 {
+    eventEmitter: any;
+    constructor() {
+        this.eventEmitter.on(5, (msg) => {
+            console.log;
+        });
+    }
+}"#
+    );
+}
+
+#[test]
+fn test_format_on_enter_respects_control_block_new_line_option() {
+    let text = "if(true) {\n}\nif(false){\n}";
+    let position = text.find("{\n}").unwrap() as i32 + 2;
+    let mut options = lsutil::get_default_format_code_settings();
+    options.place_open_brace_on_new_line_for_control_blocks = core::TSTrue;
+    let actual = apply_formatting_edits_after_keystroke_with_options(text, position, "\n", options);
+    assert_eq!(actual, "if (true)\n{\n}\nif(false){\n}",);
+}
+
+fn apply_formatting_edits_after_keystroke(text: &str, position: i32, key: &str) -> String {
+    apply_formatting_edits_after_keystroke_with_options(
+        text,
+        position,
+        key,
+        lsutil::get_default_format_code_settings(),
+    )
+}
+
+fn apply_formatting_edits_after_keystroke_with_options(
+    text: &str,
+    position: i32,
+    key: &str,
+    options: lsutil::FormatCodeSettings,
+) -> String {
+    let source_file = parse_source_file("/index.ts", text);
+    let lang_service = LanguageService::default();
+    let edits = lang_service.get_formatting_edits_after_keystroke(
+        core::Context::background(),
+        &source_file,
+        options,
+        position,
+        key,
+    );
+    let mut actual = text.to_string();
+    for edit in edits.into_iter().rev() {
+        actual.replace_range(
+            edit.text_range.pos() as usize..edit.text_range.end() as usize,
+            &edit.new_text,
+        );
+    }
+    actual
+}
+
+fn parse_source_file(file_name: &str, text: &str) -> ast::SourceFile {
+    parser::parse_source_file(
+        ast::SourceFileParseOptions {
+            file_name: file_name.to_string(),
+            path: file_name.to_string(),
+            ..Default::default()
+        },
+        text.to_string(),
+        core::ScriptKind::TS,
+    )
 }
 
 // Test for issue: Crash in range formatting when requested on a line that is different from the containing function
@@ -113,17 +180,10 @@ fn test_get_formatting_edits_for_range_function_body() {
     ];
 
     for test_case in test_cases {
-        let source_file = parser::parse_source_file(
-            ast::SourceFileParseOptions {
-                file_name: "/test.ts".to_string(),
-                path: "/test.ts".to_string(),
-            },
-            test_case.text.to_string(),
-            core::ScriptKind::TS,
-        );
+        let source_file = parse_source_file("/test.ts", test_case.text);
 
         let lang_service = LanguageService::default();
-        let ctx = core::Context::new();
+        let ctx = core::Context::background();
         let options = lsutil::get_default_format_code_settings();
 
         // This should not panic

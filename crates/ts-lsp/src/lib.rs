@@ -42,7 +42,7 @@ pub use progress::*;
 pub use server::*;
 pub use stack_sanitizer::*;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "test-support"))]
 mod lsptestutil_bridge {
     use std::io;
 
@@ -84,6 +84,7 @@ mod lsptestutil_bridge {
                 default_library_path,
                 typings_location,
                 parse_cache: _,
+                compiler_options_for_inferred_projects,
                 npm_install,
                 progress_delay,
                 set_parent_process_id,
@@ -101,6 +102,7 @@ mod lsptestutil_bridge {
                         default_library_path,
                         typings_location,
                         parse_cache: None,
+                        compiler_options_for_inferred_projects,
                         npm_install,
                         progress_delay,
                         set_parent_process_id,

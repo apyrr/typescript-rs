@@ -624,7 +624,15 @@ impl<'a> RegistryBuilder<'a> {
             let package_json_changed = change.changed.has(&package_json_uri)
                 || change.deleted.has(&package_json_uri)
                 || change.created.has(&package_json_uri);
-            if self.base.directories.contains_key(dir_path) && !package_json_changed {
+            let missing_node_modules_bucket = self
+                .base
+                .directories
+                .get(dir_path)
+                .is_some_and(|dir| dir.has_node_modules && !self.node_modules.has(dir_path));
+            if self.base.directories.contains_key(dir_path)
+                && !package_json_changed
+                && !missing_node_modules_bucket
+            {
                 continue;
             }
             self.update_directory(dir_path.clone(), dir_name.clone(), package_json_changed);
@@ -847,7 +855,6 @@ impl<'a> RegistryBuilder<'a> {
                 }
             }
         }
-
         let file_exclude_patterns = self
             .user_preferences
             .parsed_auto_import_file_exclude_patterns(
@@ -917,7 +924,6 @@ impl<'a> RegistryBuilder<'a> {
             }
             None::<()>
         });
-
         // --- Phase 1: Discovery ---
         // Resolve package.json and realpath for each package in each bucket.
         for task in &mut node_modules_tasks {
@@ -1391,7 +1397,7 @@ impl<'a> RegistryBuilder<'a> {
         if let Some(file_exclude_patterns) = file_exclude_patterns {
             let count = package_entrypoints.len();
             package_entrypoints.retain(|entrypoint| {
-                !file_exclude_patterns.match_string(&entrypoint.resolved_file_name)
+                !entrypoint_matches_file_exclude_patterns(file_exclude_patterns, entrypoint)
             });
             skipped_entrypoints = count.saturating_sub(package_entrypoints.len()) as i32;
         }
@@ -1445,6 +1451,31 @@ impl<'a> RegistryBuilder<'a> {
             }
         }
 
+        let mut alias_root_files = root_files;
+        let extraction_root_file_count = alias_root_files.len();
+        let mut seen_alias_files = seen_files;
+        let package_files_for_resolution = vfs::vfsmatch::read_directory(
+            crate::autoimport::RegistryCloneHost::fs(self.host).as_ref(),
+            &self.host.get_current_directory(),
+            &package_json.package_directory,
+            &module::entrypoint_extensions(),
+            &["node_modules".to_string()],
+            &["**/*".to_string()],
+            vfs::vfsmatch::UNLIMITED_DEPTH,
+        );
+        // TypeScript-Go's alias resolver can lazily bind files reached while resolving
+        // re-exports. The Rust checker uses a fixed source-file index, so include package
+        // files in that index while still extracting exports only from package entrypoints.
+        for file_name in package_files_for_resolution {
+            let path = to_path(file_name.clone());
+            if !seen_alias_files.add_if_absent(path.clone()) {
+                continue;
+            }
+            if let Some(file) = self.host.get_source_file(&file_name, path) {
+                alias_root_files.push(file);
+            }
+        }
+
         let to_path_for_extractor = self.base.to_path.as_ref().map(|to_path| {
             let to_path = to_path.clone();
             Box::new(move |file_name: String| to_path(file_name))
@@ -1465,7 +1496,7 @@ impl<'a> RegistryBuilder<'a> {
         );
         let to_path_for_alias_resolver = to_path.clone();
         let alias_resolver = crate::autoimport::new_alias_resolver(
-            root_files,
+            alias_root_files,
             symlinks,
             self.host,
             resolver,
@@ -1484,7 +1515,11 @@ impl<'a> RegistryBuilder<'a> {
         );
 
         let mut non_module_files = collections::Set::default();
-        for entrypoint in &alias_resolver.root_files {
+        for entrypoint in alias_resolver
+            .root_files
+            .iter()
+            .take(extraction_root_file_count)
+        {
             let file_exports = extractor.extract_from_file(entrypoint);
             for name in entrypoint.ambient_module_names() {
                 result
@@ -1785,7 +1820,11 @@ impl<'a> RegistryBuilder<'a> {
             |dir_path| {
                 directories
                     .get(dir_path)
-                    .filter(|dir| dir.package_json.is_some())
+                    .filter(|dir| {
+                        dir.package_json
+                            .as_ref()
+                            .is_some_and(packagejson::InfoCacheEntry::exists)
+                    })
                     .cloned()
             },
         )
@@ -1828,6 +1867,15 @@ pub fn has_new_non_node_modules_files(
 pub fn is_ignored_file(program: &compiler::Program, file: &ast::SourceFile) -> bool {
     program.is_source_file_default_library_for_auto_imports(file.path())
         || program.is_global_typings_file_for_auto_imports(&file.file_name())
+}
+
+pub fn entrypoint_matches_file_exclude_patterns(
+    file_exclude_patterns: &vfs::vfsmatch::SpecMatcher,
+    entrypoint: &module::ResolvedEntrypoint,
+) -> bool {
+    file_exclude_patterns.match_string(&entrypoint.resolved_file_name)
+        || (!entrypoint.original_file_name.is_empty()
+            && file_exclude_patterns.match_string(&entrypoint.original_file_name))
 }
 
 // hasSymlinkToNodeModules checks if a file's realpath has a symlink that points

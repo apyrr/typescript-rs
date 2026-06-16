@@ -36,6 +36,7 @@ pub struct ServerOptions {
     pub default_library_path: String,
     pub typings_location: String,
     pub parse_cache: Option<project::ParseCache>,
+    pub compiler_options_for_inferred_projects: Option<core::CompilerOptions>,
     pub npm_install: Option<fn(cwd: String, args: Vec<String>) -> Result<Vec<u8>, io::Error>>,
     pub progress_delay: Duration,
     pub set_parent_process_id: Option<fn(parent_pid: i32)>,
@@ -52,6 +53,7 @@ impl Default for ServerOptions {
             default_library_path: String::new(),
             typings_location: String::new(),
             parse_cache: None,
+            compiler_options_for_inferred_projects: None,
             npm_install: None,
             progress_delay: Duration::default(),
             set_parent_process_id: None,
@@ -120,7 +122,7 @@ pub fn new_server(opts: ServerOptions) -> Server {
         client: None,
         init_complete: false,
         init_complete_signal,
-        compiler_options_for_inferred_projects: None,
+        compiler_options_for_inferred_projects: opts.compiler_options_for_inferred_projects,
         parse_cache: opts.parse_cache,
         npm_install,
         #[cfg(feature = "pprof")]
@@ -1014,6 +1016,13 @@ impl Server {
             } else {
                 ctx.clone()
             };
+            let request_ctx = self
+                .client_capabilities
+                .as_ref()
+                .map(|capabilities| {
+                    lsproto::with_client_capabilities(request_ctx.clone(), capabilities)
+                })
+                .unwrap_or(request_ctx);
 
             match self.handle_request_or_notification(request_ctx, &req) {
                 Ok(Some(do_async_work)) => {
@@ -2697,6 +2706,36 @@ pub fn handlers() -> HandlerMap {
         &mut handlers,
         lsproto::TextDocumentCompletionInfo.clone(),
         |s, ctx, ls, params| s.handle_completion(ctx, ls, &params),
+    );
+    register_language_service_document_request_handler(
+        &mut handlers,
+        lsproto::TextDocumentDiagnosticInfo.clone(),
+        |s, ctx, ls, params| s.handle_document_diagnostic(ctx, ls, &params),
+    );
+    register_language_service_document_request_handler(
+        &mut handlers,
+        lsproto::TextDocumentHoverInfo.clone(),
+        |s, ctx, ls, params| s.handle_hover(ctx, ls, &params),
+    );
+    register_language_service_document_request_handler(
+        &mut handlers,
+        lsproto::TextDocumentFormattingInfo.clone(),
+        |s, ctx, ls, params| s.handle_document_format(ctx, ls, &params),
+    );
+    register_language_service_document_request_handler(
+        &mut handlers,
+        lsproto::TextDocumentRangeFormattingInfo.clone(),
+        |s, ctx, ls, params| s.handle_document_range_format(ctx, ls, &params),
+    );
+    register_language_service_document_request_handler(
+        &mut handlers,
+        lsproto::TextDocumentOnTypeFormattingInfo.clone(),
+        |s, ctx, ls, params| s.handle_document_on_type_format(ctx, ls, &params),
+    );
+    register_language_service_with_auto_imports_request_handler(
+        &mut handlers,
+        lsproto::TextDocumentCodeActionInfo.clone(),
+        |s, ctx, ls, params| s.handle_code_action(ctx, ls, &params),
     );
     handlers.insert(
         lsproto::TextDocumentDocumentSymbolInfo.method.clone(),

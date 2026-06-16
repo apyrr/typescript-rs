@@ -24,6 +24,8 @@ pub(crate) use organizeimports::{
     compare_module_specifiers, detect_module_specifier_case_by_sort,
     detect_named_import_organization_by_sort, filter_import_declarations, get_comparers,
     get_detection_lists, get_external_module_name, get_module_specifier_expression,
+    get_named_import_specifier_sorting_with_detection,
+    get_organize_imports_string_comparer_with_detection,
 };
 pub(crate) use symbol_display::{
     SCRIPT_ELEMENT_KIND_MODIFIER_CJS, SCRIPT_ELEMENT_KIND_MODIFIER_CTS,

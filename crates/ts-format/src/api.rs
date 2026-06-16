@@ -150,7 +150,7 @@ pub fn format_node_lines(
 pub fn format_document(ctx: &Context, source_file: &ast::SourceFile) -> Vec<core::TextChange> {
     format_span(
         ctx,
-        core::new_text_range(0, source_file.end()),
+        core::new_text_range(0, source_file.store().loc(source_file.as_node()).end()),
         source_file,
         FORMAT_REQUEST_KIND_FORMAT_DOCUMENT,
     )
@@ -186,7 +186,11 @@ pub fn format_on_opening_curly(
     let Some(opening_curly) = opening_curly else {
         return Vec::new();
     };
-    let Some(curly_brace_range) = source_file.store().parent(opening_curly) else {
+    let Some(curly_brace_range) = opening_curly
+        .node
+        .and_then(|node| source_file.store().parent(node))
+        .or(opening_curly.parent)
+    else {
         return Vec::new();
     };
     let outermost_node =
@@ -230,7 +234,8 @@ pub fn format_on_closing_curly(
     );
     let outermost_node = preceding_token
         .as_ref()
-        .map(|node| util::find_outermost_node_within_list_level(source_file.store(), node));
+        .and_then(|token| token.node.or(token.parent))
+        .map(|node| util::find_outermost_node_within_list_level(source_file.store(), &node));
     format_node_lines(
         ctx,
         source_file,
@@ -251,7 +256,8 @@ pub fn format_on_semicolon(
     );
     let outermost_node = semicolon
         .as_ref()
-        .map(|node| util::find_outermost_node_within_list_level(source_file.store(), node));
+        .and_then(|token| token.node.or(token.parent))
+        .map(|node| util::find_outermost_node_within_list_level(source_file.store(), &node));
     format_node_lines(
         ctx,
         source_file,

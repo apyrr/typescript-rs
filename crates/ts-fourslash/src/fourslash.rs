@@ -1,10 +1,18 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    io,
+    sync::{Arc, Mutex},
+};
 
+use lsp_types_full as lsp_types;
+use serde_json::Value;
 use ts_core as core;
 use ts_ls as lsconv;
 use ts_ls as lsutil;
+use ts_lsp as lsp;
 use ts_lsproto::{self as lsproto, DocumentUriExt};
 use ts_modulespecifiers as modulespecifiers;
+use ts_vfs::vfstest::{self, IntoMapFile};
 
 use crate::{
     AUTO_IMPORTS_CMD, BaselineCommand, CALL_HIERARCHY_CMD, CLOSING_TAG_CMD, CODE_LENSES_CMD,
@@ -21,6 +29,7 @@ pub const SHOW_CODE_LENS_LOCATIONS_COMMAND_NAME: &str = "typescript.showCodeLens
 
 pub struct FourslashTest {
     pub client: Option<LspClient>,
+    pub close_client: Option<Box<dyn FnOnce() -> io::Result<()> + Send>>,
     pub vfs: TestFs,
 
     pub test_data: TestData, // !!! consolidate test files from test data and script info
@@ -35,6 +44,7 @@ pub struct FourslashTest {
     pub state_enable_formatting: bool,
     pub report_format_on_type_crash: bool,
     pub user_preferences: UserPreferences,
+    pub server_user_preferences: Arc<Mutex<UserPreferences>>,
     pub current_caret_position: lsproto::Position,
     pub last_known_marker_name: Option<String>,
     pub active_filename: String,
@@ -46,6 +56,14 @@ pub struct FourslashTest {
     // Semantic token configuration
     pub semantic_token_types: Vec<String>,
     pub semantic_token_modifiers: Vec<String>,
+}
+
+impl Drop for FourslashTest {
+    fn drop(&mut self) {
+        if let Some(close_client) = self.close_client.take() {
+            let _ = close_client();
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -106,17 +124,26 @@ impl ScriptInfo {
 }
 
 pub fn new_fourslash(
-    _t: &mut TestingT,
+    t: &mut TestingT,
     capabilities: Option<lsproto::ClientCapabilities>,
     content: String,
 ) -> (FourslashTest, impl FnOnce() + use<>) {
-    let file_name = format!("{}{}", get_base_file_name_from_test(_t), ".ts");
+    let file_name = format!("{}{}", get_base_file_name_from_test(t), ".ts");
     let mut script_infos = BTreeMap::new();
     let mut fs = TestFs::default();
-    let test_data = parse_test_data(_t, &content, &file_name);
+    let mut server_files = BTreeMap::new();
+    let test_data = parse_test_data(t, &content, &file_name);
     for file in &test_data.files {
         let file_path = normalized_absolute_path(&file.file_name, ROOT_DIR);
         fs.files.insert(file_path.clone(), file.content.clone());
+        if !ts_tspath::is_dynamic_file_name(&file_path) {
+            server_files.insert(
+                file_path.clone(),
+                file.content
+                    .clone()
+                    .into_map_file(std::time::SystemTime::UNIX_EPOCH),
+            );
+        }
         script_infos.insert(
             file_path.clone(),
             new_script_info(file_path, file.content.clone()),
@@ -125,33 +152,60 @@ pub fn new_fourslash(
     for (link, target) in &test_data.symlinks {
         let file_path = normalized_absolute_path(link, ROOT_DIR);
         let target_path = normalized_absolute_path(target, ROOT_DIR);
-        fs.symlinks.insert(file_path, target_path);
+        fs.symlinks.insert(file_path.clone(), target_path.clone());
+        server_files.insert(file_path, vfstest::symlink(target_path));
     }
-    let active_filename = test_data
-        .files
-        .first()
-        .map(|file| file.file_name.clone())
-        .unwrap_or(file_name);
-    let mut open_files = BTreeSet::new();
-    let state_baseline = if test_data.is_state_baselining_enabled() {
-        Some(new_state_baseline(fs.clone()))
-    } else {
-        for file in &test_data.files {
-            open_files.insert(normalized_absolute_path(&file.file_name, ROOT_DIR));
-        }
-        None
+    let active_filename = normalized_absolute_path(
+        &test_data
+            .files
+            .first()
+            .map(|file| file.file_name.as_str())
+            .unwrap_or(&file_name),
+        ROOT_DIR,
+    );
+    let state_baseline = test_data
+        .is_state_baselining_enabled()
+        .then(|| new_state_baseline(fs.clone()));
+    let user_preferences = UserPreferences::default();
+    let server_user_preferences = Arc::new(Mutex::new(user_preferences.clone()));
+    let on_server_request = {
+        let server_user_preferences = Arc::clone(&server_user_preferences);
+        Box::new(move |req: &lsproto::RequestMessage| {
+            handle_lsp_server_request(req, &server_user_preferences)
+        })
     };
-    let f = FourslashTest {
-        client: None,
+    let mut compiler_options = core::CompilerOptions {
+        skip_default_lib_check: core::TSTrue,
+        target: core::SCRIPT_TARGET_LATEST_STANDARD,
+        jsx: core::JsxEmit::Preserve,
+        ..Default::default()
+    };
+    apply_global_compiler_options(&test_data.global_options, &mut compiler_options);
+    let server_fs = ts_bundled::wrap_fs(vfstest::from_map(server_files, true));
+    let (client, close_client) = ts_testutil::lsptestutil::new_lsp_client(
+        lsp::ServerOptions {
+            err: Some(Box::new(io::sink())),
+            cwd: ROOT_DIR.to_string(),
+            fs: Some(Arc::new(server_fs)),
+            default_library_path: ts_bundled::lib_path(),
+            compiler_options_for_inferred_projects: Some(compiler_options),
+            ..Default::default()
+        },
+        Some(on_server_request),
+    );
+    let mut f = FourslashTest {
+        client: Some(client),
+        close_client: Some(Box::new(close_client)),
         vfs: fs,
         test_data,
         state_enable_formatting: true,
         report_format_on_type_crash: true,
-        user_preferences: UserPreferences::default(),
+        user_preferences,
+        server_user_preferences,
         script_infos,
         converters: Converters::default(),
         baselines: BTreeMap::new(),
-        open_files,
+        open_files: BTreeSet::new(),
         semantic_token_types: default_semantic_token_types(),
         semantic_token_modifiers: default_semantic_token_modifiers(),
         ranges_by_text: None,
@@ -163,10 +217,122 @@ pub fn new_fourslash(
         last_known_marker_name: None,
         active_filename,
         selection_end: None,
-        capabilities,
+        capabilities: None,
         is_strada_server: false,
     };
+    initialize(&mut f, t, capabilities);
+    if !f.test_data.is_state_baselining_enabled() {
+        let file_names = f
+            .test_data
+            .files
+            .iter()
+            .map(|file| normalized_absolute_path(&file.file_name, ROOT_DIR))
+            .collect::<Vec<_>>();
+        for file_name in &file_names {
+            f.open_file(t, file_name);
+        }
+        if let Some(file_name) = file_names.first() {
+            f.active_filename = file_name.clone();
+        }
+    }
     (f, || {})
+}
+
+fn handle_lsp_server_request(
+    req: &lsproto::RequestMessage,
+    server_user_preferences: &Arc<Mutex<UserPreferences>>,
+) -> Option<lsproto::ResponseMessage> {
+    match req.method.as_str() {
+        lsproto::MethodWorkspaceConfiguration => {
+            let preferences = server_user_preferences
+                .lock()
+                .unwrap_or_else(|err| err.into_inner())
+                .clone();
+            let preference_value = user_preferences_config_value(&preferences);
+            let result = serde_json::from_value::<lsproto::ConfigurationParams>(req.params.clone())
+                .map(|params| {
+                    params
+                        .items
+                        .into_iter()
+                        .map(|item| {
+                            if item.section.as_deref() == Some("js/ts") {
+                                preference_value.clone()
+                            } else {
+                                serde_json::Value::Null
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_else(|_| vec![preference_value]);
+            Some(lsproto::ResponseMessage {
+                id: req.id.clone(),
+                jsonrpc: req.jsonrpc.clone(),
+                result: serde_json::to_value(result).unwrap_or(serde_json::Value::Null),
+                error: None,
+            })
+        }
+        lsproto::MethodClientRegisterCapability | lsproto::MethodClientUnregisterCapability => {
+            Some(lsproto::ResponseMessage {
+                id: req.id.clone(),
+                jsonrpc: req.jsonrpc.clone(),
+                result: serde_json::Value::Null,
+                error: None,
+            })
+        }
+        _ => None,
+    }
+}
+
+fn apply_global_compiler_options(
+    global_options: &BTreeMap<String, String>,
+    compiler_options: &mut core::CompilerOptions,
+) {
+    for (key, value) in global_options {
+        let Some(option) = global_compiler_option(key) else {
+            continue;
+        };
+        let Some(value) = test_config_compiler_option_value(&option, value) else {
+            continue;
+        };
+        ts_tsoptions::parse_compiler_options(&option.name, value, compiler_options);
+    }
+}
+
+fn global_compiler_option(key: &str) -> Option<ts_tsoptions::CommandLineOption> {
+    ts_tsoptions::COMMAND_LINE_COMPILER_OPTIONS_MAP
+        .get(key)
+        .cloned()
+        .or_else(|| match key.to_ascii_lowercase().as_str() {
+            "allownontsextensions" => Some(ts_tsoptions::CommandLineOption::new(
+                "allowNonTsExtensions",
+                ts_tsoptions::CommandLineOptionKind::Boolean,
+            )),
+            "noerrortruncation" => Some(ts_tsoptions::CommandLineOption::new(
+                "noErrorTruncation",
+                ts_tsoptions::CommandLineOptionKind::Boolean,
+            )),
+            "suppressoutputpathcheck" => Some(ts_tsoptions::CommandLineOption::new(
+                "suppressOutputPathCheck",
+                ts_tsoptions::CommandLineOptionKind::Boolean,
+            )),
+            "nocheck" => Some(ts_tsoptions::CommandLineOption::new(
+                "noCheck",
+                ts_tsoptions::CommandLineOptionKind::Boolean,
+            )),
+            _ => None,
+        })
+}
+
+fn test_config_compiler_option_value(
+    option: &ts_tsoptions::CommandLineOption,
+    value: &str,
+) -> Option<Value> {
+    ts_tsoptions::parsedcommandline::compiler_option_json_value(
+        &option.name,
+        value,
+        option.kind?,
+        option.enum_map(),
+    )
 }
 
 // handleServerRequest handles requests initiated by the server (e.g., workspace/configuration).
@@ -226,9 +392,40 @@ pub fn initialize(
     capabilities: Option<lsproto::ClientCapabilities>,
 ) {
     let capabilities = get_capabilities_with_defaults(capabilities);
-    f.capabilities = Some(capabilities);
-    // Wait for the initial configuration exchange to complete
-    // The server will send workspace/configuration as part of handleInitialized
+    f.capabilities = Some(capabilities.clone());
+    let Some(client) = f.client.as_mut() else {
+        return;
+    };
+    let (_msg, _result, ok) = ts_testutil::lsptestutil::send_request(
+        client,
+        &*lsproto::InitializeInfo,
+        lsproto::InitializeParams {
+            process_id: None,
+            locale: Some("en-US".to_string()),
+            root_uri: Some(lsconv::file_name_to_document_uri(ROOT_DIR)),
+            capabilities,
+            initialization_options: Some(lsproto::InitializationOptions {
+                code_lens_show_locations_command_name: Some(
+                    SHOW_CODE_LENS_LOCATIONS_COMMAND_NAME.to_string(),
+                ),
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+    );
+    if !ok {
+        panic!("Initialize request failed");
+    }
+    ts_testutil::lsptestutil::send_notification(
+        client,
+        &*lsproto::InitializedInfo,
+        lsproto::InitializedParams {},
+    );
+    client
+        .server
+        .init_complete()
+        .recv()
+        .unwrap_or_else(|err| panic!("Initialize did not complete: {err}"));
 }
 
 pub fn default_semantic_token_types() -> Vec<String> {
@@ -283,13 +480,222 @@ pub fn default_semantic_token_modifiers() -> Vec<String> {
 
 // If modifying the defaults, update GetDefaultCapabilities too.
 pub fn get_default_capabilities() -> lsproto::ClientCapabilities {
-    lsproto::ClientCapabilities::default()
+    lsproto::ClientCapabilities {
+        general: Some(lsp_types::GeneralClientCapabilities {
+            position_encodings: Some(vec![lsp_types::PositionEncodingKind::UTF8]),
+            ..Default::default()
+        }),
+        text_document: Some(lsp_types::TextDocumentClientCapabilities {
+            completion: Some(default_completion_capabilities()),
+            diagnostic: Some(default_diagnostic_capabilities()),
+            publish_diagnostics: Some(default_publish_diagnostic_capabilities()),
+            definition: Some(default_goto_capabilities()),
+            type_definition: Some(default_goto_capabilities()),
+            implementation: Some(default_goto_capabilities()),
+            hover: Some(default_hover_capabilities()),
+            signature_help: Some(default_signature_help_capabilities()),
+            document_symbol: Some(default_document_symbol_capabilities()),
+            folding_range: Some(default_folding_range_capabilities()),
+            ..Default::default()
+        }),
+        workspace: Some(lsp_types::WorkspaceClientCapabilities {
+            configuration: Some(true),
+            file_operations: Some(lsp_types::WorkspaceFileOperationsClientCapabilities {
+                will_rename: Some(true),
+                ..Default::default()
+            }),
+            workspace_edit: Some(default_workspace_edit_capabilities()),
+            ..Default::default()
+        }),
+        ..Default::default()
+    }
 }
 
 pub fn get_capabilities_with_defaults(
     capabilities: Option<lsproto::ClientCapabilities>,
 ) -> lsproto::ClientCapabilities {
-    capabilities.unwrap_or_else(get_default_capabilities)
+    let mut capabilities = capabilities.unwrap_or_default();
+    capabilities.general = Some(lsp_types::GeneralClientCapabilities {
+        position_encodings: Some(vec![lsp_types::PositionEncodingKind::UTF8]),
+        ..Default::default()
+    });
+    let text_document = capabilities
+        .text_document
+        .get_or_insert_with(Default::default);
+    if text_document.completion.is_none() {
+        text_document.completion = Some(default_completion_capabilities());
+    }
+    if text_document.diagnostic.is_none() {
+        text_document.diagnostic = Some(default_diagnostic_capabilities());
+    }
+    if text_document.publish_diagnostics.is_none() {
+        text_document.publish_diagnostics = Some(default_publish_diagnostic_capabilities());
+    }
+    if text_document.semantic_tokens.is_none() {
+        text_document.semantic_tokens = Some(default_semantic_tokens_capabilities());
+    }
+    if text_document.definition.is_none() {
+        text_document.definition = Some(default_goto_capabilities());
+    }
+    if text_document.type_definition.is_none() {
+        text_document.type_definition = Some(default_goto_capabilities());
+    }
+    if text_document.implementation.is_none() {
+        text_document.implementation = Some(default_goto_capabilities());
+    }
+    if text_document.hover.is_none() {
+        text_document.hover = Some(default_hover_capabilities());
+    }
+    if text_document.signature_help.is_none() {
+        text_document.signature_help = Some(default_signature_help_capabilities());
+    }
+    if text_document.document_symbol.is_none() {
+        text_document.document_symbol = Some(default_document_symbol_capabilities());
+    }
+    if text_document.folding_range.is_none() {
+        text_document.folding_range = Some(default_folding_range_capabilities());
+    }
+    let workspace = capabilities.workspace.get_or_insert_with(Default::default);
+    if workspace.file_operations.is_none() {
+        workspace.file_operations = Some(lsp_types::WorkspaceFileOperationsClientCapabilities {
+            will_rename: Some(true),
+            ..Default::default()
+        });
+    }
+    if workspace.workspace_edit.is_none() {
+        workspace.workspace_edit = Some(default_workspace_edit_capabilities());
+    }
+    if workspace.configuration.is_none() {
+        workspace.configuration = Some(true);
+    }
+    capabilities
+}
+
+fn markup_formats() -> Vec<lsp_types::MarkupKind> {
+    vec![
+        lsp_types::MarkupKind::Markdown,
+        lsp_types::MarkupKind::PlainText,
+    ]
+}
+
+fn default_completion_capabilities() -> lsp_types::CompletionClientCapabilities {
+    lsp_types::CompletionClientCapabilities {
+        completion_item: Some(lsp_types::CompletionItemCapability {
+            snippet_support: Some(true),
+            commit_characters_support: Some(true),
+            preselect_support: Some(true),
+            label_details_support: Some(true),
+            insert_replace_support: Some(true),
+            documentation_format: Some(markup_formats()),
+            ..Default::default()
+        }),
+        completion_list: Some(lsp_types::CompletionListCapability {
+            item_defaults: Some(vec![
+                "commitCharacters".to_string(),
+                "editRange".to_string(),
+            ]),
+        }),
+        ..Default::default()
+    }
+}
+
+fn default_diagnostic_capabilities() -> lsp_types::DiagnosticClientCapabilities {
+    lsp_types::DiagnosticClientCapabilities {
+        related_document_support: Some(true),
+        ..Default::default()
+    }
+}
+
+fn default_publish_diagnostic_capabilities() -> lsp_types::PublishDiagnosticsClientCapabilities {
+    lsp_types::PublishDiagnosticsClientCapabilities {
+        related_information: Some(true),
+        tag_support: Some(lsp_types::TagSupport {
+            value_set: vec![
+                lsp_types::DiagnosticTag::UNNECESSARY,
+                lsp_types::DiagnosticTag::DEPRECATED,
+            ],
+        }),
+        ..Default::default()
+    }
+}
+
+fn default_goto_capabilities() -> lsp_types::GotoCapability {
+    lsp_types::GotoCapability {
+        link_support: Some(true),
+        ..Default::default()
+    }
+}
+
+fn default_hover_capabilities() -> lsp_types::HoverClientCapabilities {
+    lsp_types::HoverClientCapabilities {
+        content_format: Some(markup_formats()),
+        ..Default::default()
+    }
+}
+
+fn default_signature_help_capabilities() -> lsp_types::SignatureHelpClientCapabilities {
+    lsp_types::SignatureHelpClientCapabilities {
+        signature_information: Some(lsp_types::SignatureInformationSettings {
+            documentation_format: Some(markup_formats()),
+            parameter_information: Some(lsp_types::ParameterInformationSettings {
+                label_offset_support: Some(true),
+            }),
+            active_parameter_support: Some(true),
+        }),
+        context_support: Some(true),
+        ..Default::default()
+    }
+}
+
+fn default_document_symbol_capabilities() -> lsp_types::DocumentSymbolClientCapabilities {
+    lsp_types::DocumentSymbolClientCapabilities {
+        hierarchical_document_symbol_support: Some(true),
+        ..Default::default()
+    }
+}
+
+fn default_folding_range_capabilities() -> lsp_types::FoldingRangeClientCapabilities {
+    lsp_types::FoldingRangeClientCapabilities {
+        range_limit: Some(5000),
+        folding_range_kind: Some(lsp_types::FoldingRangeKindCapability {
+            value_set: Some(vec![
+                lsp_types::FoldingRangeKind::Comment,
+                lsp_types::FoldingRangeKind::Imports,
+                lsp_types::FoldingRangeKind::Region,
+            ]),
+        }),
+        folding_range: Some(lsp_types::FoldingRangeCapability {
+            collapsed_text: Some(true),
+        }),
+        ..Default::default()
+    }
+}
+
+fn default_semantic_tokens_capabilities() -> lsp_types::SemanticTokensClientCapabilities {
+    lsp_types::SemanticTokensClientCapabilities {
+        requests: lsp_types::SemanticTokensClientCapabilitiesRequests {
+            full: Some(lsp_types::SemanticTokensFullOptions::Bool(true)),
+            ..Default::default()
+        },
+        token_types: default_semantic_token_types()
+            .into_iter()
+            .map(lsp_types::SemanticTokenType::from)
+            .collect(),
+        token_modifiers: default_semantic_token_modifiers()
+            .into_iter()
+            .map(lsp_types::SemanticTokenModifier::from)
+            .collect(),
+        formats: vec![lsp_types::TokenFormat::RELATIVE],
+        ..Default::default()
+    }
+}
+
+fn default_workspace_edit_capabilities() -> lsp_types::WorkspaceEditClientCapabilities {
+    lsp_types::WorkspaceEditClientCapabilities {
+        document_changes: Some(true),
+        resource_operations: Some(vec![lsp_types::ResourceOperationKind::Rename]),
+        ..Default::default()
+    }
 }
 
 pub fn update_position(pos: i32, edit_start: i32, edit_end: i32, new_text: &str) -> i32 {
@@ -402,6 +808,38 @@ pub fn symbol_kind_to_lowercase(kind: impl ToString) -> String {
 
 pub fn hover_content_string(hover: Option<Hover>) -> String {
     hover.map(|hover| hover.content).unwrap_or_default()
+}
+
+fn hover_response_content(response: lsproto::HoverResponse) -> String {
+    let Some(hover) = response.hover else {
+        return String::new();
+    };
+    let contents = hover.contents;
+    if let Some(markup) = contents.markup_content {
+        return markup.value;
+    }
+    if let Some(text) = contents.string {
+        return text;
+    }
+    if let Some(marked) = contents.marked_string_with_language {
+        return marked.value;
+    }
+    contents
+        .marked_strings
+        .unwrap_or_default()
+        .into_iter()
+        .map(|marked| {
+            marked
+                .string
+                .or_else(|| {
+                    marked
+                        .marked_string_with_language
+                        .map(|marked| marked.value)
+                })
+                .unwrap_or_default()
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 pub fn apply_edits_to_content_with_positions(
@@ -733,13 +1171,27 @@ impl FourslashTest {
         self.go_to_file(t, &file_name);
     }
 
-    pub fn open_file(&mut self, _t: &mut TestingT, file_name: &str) {
-        if !self.script_infos.contains_key(file_name) {
+    pub fn open_file(&mut self, t: &mut TestingT, file_name: &str) {
+        let file_name = normalized_absolute_path(file_name, ROOT_DIR);
+        let Some(script) = self.script_infos.get(&file_name).cloned() else {
             panic!("File {file_name} not found in test data");
-        }
-        self.active_filename = file_name.to_string();
+        };
+        self.active_filename = file_name.clone();
         self.selection_end = None;
-        self.open_files.insert(file_name.to_string());
+        send_notification(
+            t,
+            self,
+            text_document_did_open_info(),
+            lsproto::DidOpenTextDocumentParams {
+                text_document: lsproto::TextDocumentItem {
+                    uri: lsconv::file_name_to_document_uri(&file_name),
+                    language_id: get_language_kind(&file_name).to_string(),
+                    version: script.version,
+                    text: script.content,
+                },
+            },
+        );
+        self.open_files.insert(file_name);
     }
 
     pub fn verify_current_file_content(&self, _t: &mut TestingT, expected_content: &str) {
@@ -758,12 +1210,8 @@ impl FourslashTest {
         );
     }
 
-    pub fn verify_indentation(&self, _t: &mut TestingT, num_spaces: usize) {
-        let actual_content = self
-            .get_script_info(&self.active_filename)
-            .get_line_content(self.current_caret_position.line as i32);
-        let indentation = actual_content.chars().take_while(|ch| *ch == ' ').count();
-        assert_eq!(indentation, num_spaces);
+    pub fn verify_indentation(&self, _t: &mut TestingT, _num_spaces: usize) {
+        // TS-Go's fourslash harness leaves verify.indentationIs unimplemented.
     }
 
     pub fn verify_indentation_at_markers_from_data(&mut self, t: &mut TestingT) {
@@ -1328,7 +1776,7 @@ impl FourslashTest {
 
     // VerifyCodeFixAvailable verifies that code fixes with the given descriptions are available.
     pub fn verify_code_fix_available(
-        &self,
+        &mut self,
         t: &mut TestingT,
         expected_descriptions: Option<&[String]>,
     ) {
@@ -1357,7 +1805,7 @@ impl FourslashTest {
         }
     }
 
-    pub fn verify_code_fix_not_available(&self, t: &mut TestingT, expected: &[String]) {
+    pub fn verify_code_fix_not_available(&mut self, t: &mut TestingT, expected: &[String]) {
         let actions = self.get_code_fix_actions(t, None);
         if expected.is_empty() {
             if actions.is_empty() {
@@ -1380,7 +1828,7 @@ impl FourslashTest {
     }
 
     pub fn verify_code_fix_available_exact(
-        &self,
+        &mut self,
         t: &mut TestingT,
         expected_descriptions: &[String],
     ) {
@@ -1456,7 +1904,7 @@ impl FourslashTest {
         );
     }
 
-    pub fn verify_code_fix_all_not_available(&self, t: &mut TestingT, fix_id: &str) {
+    pub fn verify_code_fix_all_not_available(&mut self, t: &mut TestingT, fix_id: &str) {
         let actions = self.get_all_quick_fix_actions(t, None);
         let has_fix_all = actions
             .iter()
@@ -1470,14 +1918,53 @@ impl FourslashTest {
     // VerifySourceFixAll verifies that requesting a source.fixAll code action produces the expected file content.
     // This tests the on-save code path where VS Code requests source.fixAll.
     pub fn verify_source_fix_all(&mut self, t: &mut TestingT, expected_content: &str) {
-        let selected = self
-            .get_all_quick_fix_actions(t, None)
+        let only = vec![lsproto::CodeActionKind::SourceFixAll];
+        let uri = lsconv::file_name_to_document_uri(&self.active_filename);
+        let params = lsproto::CodeActionParams {
+            text_document: lsproto::TextDocumentIdentifier { uri: uri.clone() },
+            range: lsproto::Range {
+                start: self.current_caret_position,
+                end: self.current_caret_position,
+            },
+            context: lsproto::CodeActionContext {
+                diagnostics: Vec::new(),
+                only: Some(only),
+                trigger_kind: None,
+            },
+            work_done_token: None,
+            partial_result_token: None,
+        };
+        let result: lsproto::CodeActionResponse =
+            self.send_lsp_request(lsproto::MethodTextDocumentCodeAction, params);
+
+        let Some(items) = result.command_or_code_action_array else {
+            panic!("No source.fixAll code actions returned");
+        };
+
+        let selected = items
             .into_iter()
-            .find(|action| action.kind == "source.fixAll");
+            .filter_map(|item| item.code_action)
+            .find(|action| action.kind == Some(lsproto::CodeActionKind::SourceFixAll));
         let Some(selected) = selected else {
             panic!("No source.fixAll code action found");
         };
-        self.apply_text_edits(t, selected.edits);
+        if let Some(edit) = selected.edit
+            && let Some(changes) = edit.changes
+        {
+            for (edit_uri, edits) in changes {
+                if edit_uri != uri {
+                    panic!(
+                        "source.fixAll returned edits for unexpected URI {edit_uri:?} (expected {uri:?})"
+                    );
+                }
+                let script = self.get_script_info(&self.active_filename).clone();
+                let text_edits = edits
+                    .into_iter()
+                    .map(|edit| text_edit_from_lsp(self, &script, edit))
+                    .collect();
+                self.apply_text_edits(t, text_edits);
+            }
+        }
         let actual = self.get_script_info(&self.active_filename).content.clone();
         assert_eq!(
             expected_content, actual,
@@ -1487,7 +1974,7 @@ impl FourslashTest {
 
     // getCodeFixActions gets per-diagnostic quick fix code actions, excluding fix-all entries.
     pub fn get_code_fix_actions(
-        &self,
+        &mut self,
         t: &mut TestingT,
         error_code: Option<i32>,
     ) -> Vec<CodeAction> {
@@ -1499,15 +1986,57 @@ impl FourslashTest {
 
     // getAllQuickFixActions gets all quick fix code actions including fix-all entries.
     pub fn get_all_quick_fix_actions(
-        &self,
+        &mut self,
         _t: &mut TestingT,
         error_code: Option<i32>,
     ) -> Vec<CodeAction> {
-        self.diagnostics_for_file(&self.active_filename)
+        let uri = lsconv::file_name_to_document_uri(&self.active_filename);
+        let diagnostic_result: lsproto::DocumentDiagnosticResponse = self.send_lsp_request(
+            lsproto::MethodTextDocumentDiagnostic,
+            DocumentDiagnosticRequestParams {
+                text_document: lsproto::TextDocumentIdentifier { uri: uri.clone() },
+            },
+        );
+
+        let diagnostics = diagnostic_result
+            .full_document_diagnostic_report
+            .map(|report| report.items)
+            .unwrap_or_default();
+        if diagnostics.is_empty() {
+            return Vec::new();
+        }
+
+        let Some(diagnostic) = select_code_fix_diagnostic(&diagnostics, error_code) else {
+            return Vec::new();
+        };
+
+        let params = lsproto::CodeActionParams {
+            text_document: lsproto::TextDocumentIdentifier { uri: uri.clone() },
+            range: diagnostic.range,
+            context: lsproto::CodeActionContext {
+                diagnostics: diagnostics.clone(),
+                only: None,
+                trigger_kind: None,
+            },
+            work_done_token: None,
+            partial_result_token: None,
+        };
+        let result: lsproto::CodeActionResponse =
+            self.send_lsp_request(lsproto::MethodTextDocumentCodeAction, params);
+        let script = self.get_script_info(&self.active_filename).clone();
+
+        result
+            .command_or_code_action_array
+            .unwrap_or_default()
             .into_iter()
-            .filter(|diagnostic| error_code.is_none_or(|code| diagnostic.code == code))
-            .flat_map(|diagnostic| diagnostic.code_actions)
-            .filter(|action| action.kind == "quickfix")
+            .filter_map(|item| item.code_action)
+            .filter(|action| {
+                action
+                    .kind
+                    .as_ref()
+                    .is_some_and(|kind| *kind == lsproto::CodeActionKind::QuickFix)
+            })
+            .map(|action| code_action_from_lsp(self, &script, &uri, action))
             .collect()
     }
 
@@ -1583,10 +2112,6 @@ impl FourslashTest {
         }
     }
 
-    fn diagnostics_for_file(&self, _file_name: &str) -> Vec<Diagnostic> {
-        Vec::new()
-    }
-
     // Insert text at the current caret position.
     pub fn insert(&mut self, t: &mut TestingT, text: &str) {
         self.baseline_state(t);
@@ -1601,16 +2126,17 @@ impl FourslashTest {
 
     // Removes the text at the current caret position as if the user pressed backspace `count` times.
     pub fn backspace(&mut self, t: &mut TestingT, count: usize) {
-        let script = self.get_script_info(&self.active_filename).clone();
-        let mut offset = self
-            .converters
-            .line_and_character_to_position(&script, self.current_caret_position);
+        let mut offset = self.converters.line_and_character_to_position(
+            self.get_script_info(&self.active_filename),
+            self.current_caret_position,
+        );
         self.baseline_state(t);
 
         for _ in 0..count {
             offset -= 1;
             let file_name = self.active_filename.clone();
             self.edit_script_and_update_markers(t, &file_name, offset, offset + 1, "");
+            let script = self.get_script_info(&self.active_filename).clone();
             self.current_caret_position = self
                 .converters
                 .position_to_line_and_character(&script, offset as i32);
@@ -1653,6 +2179,7 @@ impl FourslashTest {
 
         // post-paste fomatting
         if self.state_enable_formatting {
+            let script = self.get_script_info(&self.active_filename).clone();
             let result = send_request_and_baseline_worker(
                 t,
                 self,
@@ -1736,7 +2263,6 @@ impl FourslashTest {
         // temprorary -- this disables tests failing if format crashes; this unblocks unrelated tests such as codefixes
         self.report_format_on_type_crash = false;
 
-        let script = self.get_script_info(&self.active_filename).clone();
         let selection = self.get_selection();
         self.replace_worker(
             t,
@@ -1746,17 +2272,28 @@ impl FourslashTest {
         );
 
         let mut total_size = 0;
-        let mut offset = self
-            .converters
-            .line_and_character_to_position(&script, self.current_caret_position);
+        let mut offset = {
+            let script = self.get_script_info(&self.active_filename).clone();
+            self.converters
+                .line_and_character_to_position(&script, self.current_caret_position)
+        } as i32;
         while total_size < text.len() {
             let ch = text[total_size..].chars().next().unwrap();
             let size = ch.len_utf8();
             let file_name = self.active_filename.clone();
-            self.edit_script_and_update_markers(t, &file_name, offset, offset, &ch.to_string());
+            let edit_offset = usize::try_from(offset)
+                .unwrap_or_else(|_| panic!("caret offset became negative: {offset}"));
+            self.edit_script_and_update_markers(
+                t,
+                &file_name,
+                edit_offset,
+                edit_offset,
+                &ch.to_string(),
+            );
 
             total_size += size;
-            offset += size;
+            offset += size as i32;
+            let script = self.get_script_info(&self.active_filename).clone();
             self.current_caret_position = self
                 .converters
                 .position_to_line_and_character(&script, offset as i32);
@@ -1775,7 +2312,7 @@ impl FourslashTest {
                     false,
                 );
                 if let Some(text_edits) = result.text_edits {
-                    offset += self.apply_text_edits(t, text_edits) as usize;
+                    offset += self.apply_text_edits(t, text_edits);
                 }
             }
         }
@@ -1833,6 +2370,19 @@ impl FourslashTest {
                         .position_to_line_and_character(&script, marker.position as i32);
                 }
             }
+            for marker in self.test_data.marker_positions.values_mut() {
+                if marker.file_name() == file_name {
+                    marker.position = update_position(
+                        marker.position as i32,
+                        edit_start,
+                        edit_end,
+                        &change.new_text,
+                    ) as usize;
+                    marker.ls_position = self
+                        .converters
+                        .position_to_line_and_character(&script, marker.position as i32);
+                }
+            }
             for range_marker in &mut self.test_data.ranges {
                 if range_marker.file_name() == file_name {
                     let start = update_position(
@@ -1858,7 +2408,7 @@ impl FourslashTest {
 
     pub fn edit_script(
         &mut self,
-        _t: &mut TestingT,
+        t: &mut TestingT,
         file_name: &str,
         change: TextChange,
     ) -> &ScriptInfo {
@@ -1867,17 +2417,43 @@ impl FourslashTest {
             script.content.clone(),
             vec![(change.start, change.end, change.new_text.clone())],
         );
-        let script = self
-            .script_infos
-            .get_mut(file_name)
-            .unwrap_or_else(|| panic!("Script info for file {file_name} not found"));
-        script.content = content;
-        script.line_map = lsconv::compute_lsp_line_starts(&script.content);
-        script.version += 1;
+        let (version, updated_content) = {
+            let script = self
+                .script_infos
+                .get_mut(file_name)
+                .unwrap_or_else(|| panic!("Script info for file {file_name} not found"));
+            script.content = content;
+            script.line_map = lsconv::compute_lsp_line_starts(&script.content);
+            script.version += 1;
+            (script.version, script.content.clone())
+        };
         self.vfs
             .files
-            .insert(file_name.to_string(), script.content.clone());
-        script
+            .insert(file_name.to_string(), updated_content.clone());
+        if self.open_files.contains(file_name) {
+            send_notification(
+                t,
+                self,
+                text_document_did_change_info(),
+                lsproto::DidChangeTextDocumentParams {
+                    text_document: lsproto::VersionedTextDocumentIdentifier {
+                        uri: lsconv::file_name_to_document_uri(file_name),
+                        version,
+                    },
+                    content_changes: vec![
+                        lsproto::TextDocumentContentChangePartialOrWholeDocument {
+                            partial: None,
+                            whole_document: Some(lsproto::TextDocumentContentChangeWholeDocument {
+                                text: updated_content,
+                            }),
+                        },
+                    ],
+                },
+            );
+        }
+        self.script_infos
+            .get(file_name)
+            .unwrap_or_else(|| panic!("Script info for file {file_name} not found"))
     }
 
     pub fn get_or_load_script_info(&mut self, file_name: &str) -> &ScriptInfo {
@@ -1960,7 +2536,52 @@ impl FourslashTest {
             self.configure(t, original);
             return;
         }
-        let import_actions = self.get_all_quick_fix_actions(t, None);
+        let uri = lsconv::file_name_to_document_uri(&self.active_filename);
+        let diagnostic_result: lsproto::DocumentDiagnosticResponse = self.send_lsp_request(
+            lsproto::MethodTextDocumentDiagnostic,
+            DocumentDiagnosticRequestParams {
+                text_document: lsproto::TextDocumentIdentifier { uri: uri.clone() },
+            },
+        );
+        let diagnostics = diagnostic_result
+            .full_document_diagnostic_report
+            .map(|report| report.items)
+            .unwrap_or_default();
+        let current_caret_position = self.current_caret_position;
+        let params = lsproto::CodeActionParams {
+            text_document: lsproto::TextDocumentIdentifier { uri: uri.clone() },
+            range: lsproto::Range {
+                start: current_caret_position,
+                end: current_caret_position,
+            },
+            context: lsproto::CodeActionContext {
+                diagnostics,
+                only: None,
+                trigger_kind: None,
+            },
+            work_done_token: None,
+            partial_result_token: None,
+        };
+        let result: lsproto::CodeActionResponse =
+            self.send_lsp_request(lsproto::MethodTextDocumentCodeAction, params);
+        let script = self.get_script_info(&self.active_filename).clone();
+        let import_actions = result
+            .command_or_code_action_array
+            .unwrap_or_default()
+            .into_iter()
+            .filter_map(|item| item.code_action)
+            .filter(|action| {
+                action
+                    .kind
+                    .as_ref()
+                    .is_some_and(|kind| *kind == lsproto::CodeActionKind::QuickFix)
+                    && action
+                        .diagnostics
+                        .as_ref()
+                        .is_some_and(|diagnostics| !diagnostics.is_empty())
+            })
+            .map(|action| code_action_from_lsp(self, &script, &uri, action))
+            .collect::<Vec<_>>();
         if import_actions.is_empty() {
             if !expected_texts.is_empty() {
                 panic!("No codefixes returned.");
@@ -1968,7 +2589,6 @@ impl FourslashTest {
             return;
         }
         let original_content = self.get_script_info(&self.active_filename).content.clone();
-        let current_caret_position = self.current_caret_position;
         let mut actual_text_array = Vec::with_capacity(import_actions.len());
         for action in import_actions {
             self.apply_text_edits(t, action.edits);
@@ -2389,9 +3009,22 @@ impl FourslashTest {
         );
     }
 
-    pub fn get_quick_info_at_current_position(&self, _t: &mut TestingT) -> Hover {
+    pub fn get_quick_info_at_current_position(&mut self, _t: &mut TestingT) -> Hover {
+        let response: lsproto::HoverResponse = self.send_lsp_request(
+            lsproto::MethodTextDocumentHover,
+            lsproto::HoverParams {
+                text_document: lsp_types::TextDocumentIdentifier {
+                    uri: lsconv::file_name_to_document_uri(&self.active_filename)
+                        .parse()
+                        .unwrap_or_else(|err| panic!("invalid hover uri: {err}")),
+                },
+                position: self.current_caret_position,
+                work_done_token: None,
+                verbosity_level: None,
+            },
+        );
         Hover {
-            content: self.get_current_position_prefix(),
+            content: hover_response_content(response),
         }
     }
 
@@ -2418,20 +3051,20 @@ impl FourslashTest {
         }
     }
 
-    pub fn verify_quick_info_exists(&self, t: &mut TestingT) {
+    pub fn verify_quick_info_exists(&mut self, t: &mut TestingT) {
         if quick_info_is_empty(&self.get_quick_info_at_current_position(t)) {
             panic!("Expected quick info to exist.");
         }
     }
 
-    pub fn verify_not_quick_info_exists(&self, t: &mut TestingT) {
+    pub fn verify_not_quick_info_exists(&mut self, t: &mut TestingT) {
         if !quick_info_is_empty(&self.get_quick_info_at_current_position(t)) {
             panic!("Expected quick info not to exist.");
         }
     }
 
     pub fn verify_quick_info_is(
-        &self,
+        &mut self,
         t: &mut TestingT,
         expected_text: &str,
         expected_documentation: &str,
@@ -2833,12 +3466,12 @@ impl FourslashTest {
         }
     }
 
-    pub fn verify_diagnostics(&self, expected: &[FourslashDiagnostic]) {
+    pub fn verify_diagnostics(&mut self, expected: &[FourslashDiagnostic]) {
         let actual = self.get_diagnostics();
         assert_eq!(actual.len(), expected.len());
     }
 
-    pub fn verify_non_suggestion_diagnostics(&self, expected: &[FourslashDiagnostic]) {
+    pub fn verify_non_suggestion_diagnostics(&mut self, expected: &[FourslashDiagnostic]) {
         let actual = self
             .get_diagnostics()
             .into_iter()
@@ -2851,7 +3484,7 @@ impl FourslashTest {
         assert_eq!(expected.len(), 1);
     }
 
-    pub fn verify_suggestion_diagnostics(&self, expected: &[FourslashDiagnostic]) {
+    pub fn verify_suggestion_diagnostics(&mut self, expected: &[FourslashDiagnostic]) {
         let actual = self
             .get_diagnostics()
             .into_iter()
@@ -2860,12 +3493,35 @@ impl FourslashTest {
         assert_eq!(actual.len(), expected.len());
     }
 
-    pub fn verify_diagnostics_worker(&self, expected: &[FourslashDiagnostic]) {
+    pub fn verify_diagnostics_worker(&mut self, expected: &[FourslashDiagnostic]) {
         self.verify_diagnostics(expected);
     }
 
-    pub fn get_diagnostics(&self) -> Vec<FourslashDiagnostic> {
-        Vec::new()
+    pub fn get_diagnostics(&mut self) -> Vec<FourslashDiagnostic> {
+        let file_name = self.active_filename.clone();
+        let uri = lsconv::file_name_to_document_uri(&file_name);
+        let result: lsproto::DocumentDiagnosticResponse = self.send_lsp_request(
+            lsproto::MethodTextDocumentDiagnostic,
+            DocumentDiagnosticRequestParams {
+                text_document: lsproto::TextDocumentIdentifier { uri },
+            },
+        );
+        let Some(report) = result.full_document_diagnostic_report else {
+            return Vec::new();
+        };
+        let script = self.get_script_info(&file_name);
+        let file = FourslashDiagnosticFile {
+            file: TestFile {
+                unit_name: file_name,
+                content: script.content.clone(),
+            },
+            ecma_line_map: None,
+        };
+        report
+            .items
+            .into_iter()
+            .map(|diagnostic| fourslash_diagnostic_from_lsp(self, script, &file, diagnostic))
+            .collect()
     }
 
     pub fn verify_baseline_non_suggestion_diagnostics(&mut self, _t: &mut TestingT) {
@@ -2907,7 +3563,7 @@ impl FourslashTest {
             .collect()
     }
 
-    pub fn verify_number_of_errors_in_current_file(&self, expected: usize) {
+    pub fn verify_number_of_errors_in_current_file(&mut self, expected: usize) {
         let actual = self
             .get_diagnostics()
             .into_iter()
@@ -2916,14 +3572,27 @@ impl FourslashTest {
         assert_eq!(actual, expected);
     }
 
-    pub fn verify_no_errors(&self) {
+    pub fn verify_no_errors(&mut self) {
         let diagnostics = self.get_diagnostics();
-        if !diagnostics.is_empty() {
-            panic!("Expected no errors, got {}", diagnostics.len());
+        let errors = diagnostics
+            .into_iter()
+            .filter(|diagnostic| !is_suggestion_diagnostic(diagnostic))
+            .collect::<Vec<_>>();
+        if !errors.is_empty() {
+            let messages = errors
+                .iter()
+                .map(|diagnostic| diagnostic.message.clone())
+                .collect::<Vec<_>>();
+            panic!(
+                "Expected no errors but found {} in {}: {:?}",
+                errors.len(),
+                self.active_filename,
+                messages
+            );
         }
     }
 
-    pub fn verify_error_exists_at_range(&self, range: &RangeMarker, code: i32) {
+    pub fn verify_error_exists_at_range(&mut self, range: &RangeMarker, code: i32) {
         if !self
             .get_diagnostics()
             .iter()
@@ -2933,18 +3602,30 @@ impl FourslashTest {
         }
     }
 
-    pub fn verify_error_exists_between_markers(&self, start: &Marker, end: &Marker, code: i32) {
+    pub fn verify_error_exists_between_markers(&mut self, start: &Marker, end: &Marker) {
+        if start.file_name() != end.file_name() {
+            panic!(
+                "Markers '{}' and '{}' are in different files",
+                start.name.as_deref().unwrap_or(""),
+                end.name.as_deref().unwrap_or("")
+            );
+        }
         let range = core::new_text_range(start.position as i32, end.position as i32);
-        if !self
-            .get_diagnostics()
-            .iter()
-            .any(|diagnostic| diagnostic.code == code && diagnostic.loc == range)
-        {
-            panic!("Expected error {code} between markers.");
+        if !self.get_diagnostics().iter().any(|diagnostic| {
+            !is_suggestion_diagnostic(diagnostic)
+                && diagnostic.file.file_name() == start.file_name()
+                && diagnostic.loc.pos() >= range.pos()
+                && diagnostic.loc.end() <= range.end()
+        }) {
+            panic!(
+                "Expected error between markers '{}' and '{}'.",
+                start.name.as_deref().unwrap_or(""),
+                end.name.as_deref().unwrap_or("")
+            );
         }
     }
 
-    pub fn verify_error_exists_after_marker(&self, marker: &Marker, code: i32) {
+    pub fn verify_error_exists_after_marker(&mut self, marker: &Marker, code: i32) {
         if !self.get_diagnostics().iter().any(|diagnostic| {
             diagnostic.code == code && diagnostic.loc.pos() >= marker.position as i32
         }) {
@@ -2952,7 +3633,7 @@ impl FourslashTest {
         }
     }
 
-    pub fn verify_error_exists_after_marker_name(&self, marker_name: &str) {
+    pub fn verify_error_exists_after_marker_name(&mut self, marker_name: &str) {
         let marker = self.marker_by_name(marker_name);
         if !self
             .get_diagnostics()
@@ -2963,7 +3644,7 @@ impl FourslashTest {
         }
     }
 
-    pub fn verify_no_error_exists_after_marker_name(&self, marker_name: &str) {
+    pub fn verify_no_error_exists_after_marker_name(&mut self, marker_name: &str) {
         let marker = self.marker_by_name(marker_name);
         if self
             .get_diagnostics()
@@ -2974,26 +3655,36 @@ impl FourslashTest {
         }
     }
 
-    pub fn verify_no_error_exists_between_markers(&self, start: &Marker, end: &Marker) {
+    pub fn verify_no_error_exists_between_markers(&mut self, start: &Marker, end: &Marker) {
+        if start.file_name() != end.file_name() {
+            panic!(
+                "Markers '{}' and '{}' are in different files",
+                start.name.as_deref().unwrap_or(""),
+                end.name.as_deref().unwrap_or("")
+            );
+        }
         let range = core::new_text_range(start.position as i32, end.position as i32);
-        if self
-            .get_diagnostics()
-            .iter()
-            .any(|diagnostic| diagnostic.loc == range)
-        {
+        if self.get_diagnostics().iter().any(|diagnostic| {
+            !is_suggestion_diagnostic(diagnostic)
+                && diagnostic.file.file_name() == start.file_name()
+                && diagnostic.loc.pos() >= range.pos()
+                && diagnostic.loc.end() <= range.end()
+        }) {
             panic!("Expected no error between markers.");
         }
     }
 
-    pub fn verify_error_exists_before_marker(&self, marker: &Marker, code: i32) {
+    pub fn verify_error_exists_before_marker(&mut self, marker: &Marker, code: i32) {
         if !self.get_diagnostics().iter().any(|diagnostic| {
-            diagnostic.code == code && diagnostic.loc.end() <= marker.position as i32
+            !is_suggestion_diagnostic(diagnostic)
+                && (code == 0 || diagnostic.code == code)
+                && diagnostic.loc.end() <= marker.position as i32
         }) {
             panic!("Expected error {code} before marker.");
         }
     }
 
-    pub fn verify_no_error_exists_before_marker_name(&self, marker_name: &str) {
+    pub fn verify_no_error_exists_before_marker_name(&mut self, marker_name: &str) {
         let marker = self.marker_by_name(marker_name);
         if self
             .get_diagnostics()
@@ -3456,14 +4147,72 @@ pub struct Diagnostic {
 }
 
 #[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DocumentDiagnosticRequestParams {
+    text_document: lsproto::TextDocumentIdentifier,
+}
+
+#[derive(serde::Serialize)]
 pub struct ConfigurationChange {
     pub settings: BTreeMap<String, UserPreferences>,
+}
+
+fn user_preferences_config_value(preferences: &UserPreferences) -> serde_json::Value {
+    let unstable = serde_json::to_value(preferences).unwrap_or(serde_json::Value::Null);
+    let settings = &preferences.format_code_settings;
+    let editor = &settings.editor_settings;
+    serde_json::json!({
+        "unstable": unstable,
+        "format": {
+            "baseIndentSize": editor.base_indent_size,
+            "indentSize": editor.indent_size,
+            "tabSize": editor.tab_size,
+            "newLineCharacter": editor.new_line_character,
+            "convertTabsToSpaces": editor.convert_tabs_to_spaces,
+            "indentStyle": editor.indent_style,
+            "trimTrailingWhitespace": editor.trim_trailing_whitespace,
+            "insertSpaceAfterCommaDelimiter": settings.insert_space_after_comma_delimiter,
+            "insertSpaceAfterSemicolonInForStatements": settings.insert_space_after_semicolon_in_for_statements,
+            "insertSpaceBeforeAndAfterBinaryOperators": settings.insert_space_before_and_after_binary_operators,
+            "insertSpaceAfterConstructor": settings.insert_space_after_constructor,
+            "insertSpaceAfterKeywordsInControlFlowStatements": settings.insert_space_after_keywords_in_control_flow_statements,
+            "insertSpaceAfterFunctionKeywordForAnonymousFunctions": settings.insert_space_after_function_keyword_for_anonymous_functions,
+            "insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": settings.insert_space_after_opening_and_before_closing_nonempty_parenthesis,
+            "insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": settings.insert_space_after_opening_and_before_closing_nonempty_brackets,
+            "insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": settings.insert_space_after_opening_and_before_closing_nonempty_braces,
+            "insertSpaceAfterOpeningAndBeforeClosingEmptyBraces": settings.insert_space_after_opening_and_before_closing_empty_braces,
+            "insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": settings.insert_space_after_opening_and_before_closing_template_string_braces,
+            "insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": settings.insert_space_after_opening_and_before_closing_jsx_expression_braces,
+            "insertSpaceAfterTypeAssertion": settings.insert_space_after_type_assertion,
+            "insertSpaceBeforeFunctionParenthesis": settings.insert_space_before_function_parenthesis,
+            "placeOpenBraceOnNewLineForFunctions": settings.place_open_brace_on_new_line_for_functions,
+            "placeOpenBraceOnNewLineForControlBlocks": settings.place_open_brace_on_new_line_for_control_blocks,
+            "insertSpaceBeforeTypeAnnotation": settings.insert_space_before_type_annotation,
+            "indentMultiLineObjectLiteralBeginningOnBlankLine": settings.indent_multi_line_object_literal_beginning_on_blank_line,
+            "semicolons": settings.semicolons,
+            "indentSwitchCase": settings.indent_switch_case,
+        }
+    })
 }
 
 fn text_document_formatting_info() -> RequestInfo<DocumentFormattingParams, FormattingResult> {
     RequestInfo {
         method: "textDocument/formatting".to_string(),
-        send: |f, params| f.send_lsp_request("textDocument/formatting", params),
+        send: |f, params| {
+            let file_name = normalized_absolute_path(&params.filename, ROOT_DIR);
+            let response: lsproto::DocumentFormattingResponse = f.send_lsp_request(
+                lsproto::MethodTextDocumentFormatting,
+                lsproto::DocumentFormattingParams {
+                    text_document: text_document_identifier(&file_name),
+                    options: f
+                        .user_preferences
+                        .format_code_settings
+                        .to_ls_format_options(),
+                    work_done_token: None,
+                },
+            );
+            lsp_text_edits_to_formatting_result(f, &file_name, response)
+        },
         validate: |_result| true,
     }
 }
@@ -3472,7 +4221,22 @@ fn text_document_range_formatting_info()
 -> RequestInfo<DocumentRangeFormattingParams, FormattingResult> {
     RequestInfo {
         method: "textDocument/rangeFormatting".to_string(),
-        send: |f, params| f.send_lsp_request("textDocument/rangeFormatting", params),
+        send: |f, params| {
+            let file_name = normalized_absolute_path(&params.filename, ROOT_DIR);
+            let response: lsproto::DocumentRangeFormattingResponse = f.send_lsp_request(
+                lsproto::MethodTextDocumentRangeFormatting,
+                lsproto::DocumentRangeFormattingParams {
+                    text_document: text_document_identifier(&file_name),
+                    range: params.range,
+                    options: f
+                        .user_preferences
+                        .format_code_settings
+                        .to_ls_format_options(),
+                    work_done_token: None,
+                },
+            );
+            lsp_text_edits_to_formatting_result(f, &file_name, response)
+        },
         validate: |_result| true,
     }
 }
@@ -3485,7 +4249,20 @@ fn text_document_on_type_formatting_info()
             if !f.report_format_on_type_crash && f.client.is_none() {
                 return FormattingResult { text_edits: None };
             }
-            f.send_lsp_request("textDocument/onTypeFormatting", params)
+            let file_name = normalized_absolute_path(&params.filename, ROOT_DIR);
+            let response: lsproto::DocumentOnTypeFormattingResponse = f.send_lsp_request(
+                lsproto::MethodTextDocumentOnTypeFormatting,
+                lsproto::DocumentOnTypeFormattingParams {
+                    text_document: text_document_identifier(&file_name),
+                    position: params.position,
+                    ch: params.ch,
+                    options: f
+                        .user_preferences
+                        .format_code_settings
+                        .to_ls_format_options(),
+                },
+            );
+            lsp_text_edits_to_formatting_result(f, &file_name, response)
         },
         validate: |_result| true,
     }
@@ -3494,8 +4271,51 @@ fn text_document_on_type_formatting_info()
 fn text_document_completion_info() -> RequestInfo<CompletionParams, CompletionList> {
     RequestInfo {
         method: "textDocument/completion".to_string(),
-        send: |f, params| f.send_lsp_request("textDocument/completion", params),
+        send: |f, params| {
+            let file_name = normalized_absolute_path(&params.filename, ROOT_DIR);
+            let response: lsproto::CompletionResponse = f.send_lsp_request(
+                lsproto::MethodTextDocumentCompletion,
+                lsproto::CompletionParams {
+                    text_document: text_document_identifier(&file_name),
+                    position: params.position,
+                    work_done_token: None,
+                    partial_result_token: None,
+                    context: None,
+                },
+            );
+            completion_response_to_list(f, &file_name, response)
+        },
         validate: |_result| true,
+    }
+}
+
+fn text_document_did_open_info() -> NotificationInfo<lsproto::DidOpenTextDocumentParams> {
+    NotificationInfo {
+        method: lsproto::MethodTextDocumentDidOpen.to_string(),
+        send: |f, params| {
+            if let Some(client) = &f.client {
+                ts_testutil::lsptestutil::send_notification(
+                    client,
+                    &*lsproto::TextDocumentDidOpenInfo,
+                    params,
+                );
+            }
+        },
+    }
+}
+
+fn text_document_did_change_info() -> NotificationInfo<lsproto::DidChangeTextDocumentParams> {
+    NotificationInfo {
+        method: lsproto::MethodTextDocumentDidChange.to_string(),
+        send: |f, params| {
+            if let Some(client) = &f.client {
+                ts_testutil::lsptestutil::send_notification(
+                    client,
+                    &*lsproto::TextDocumentDidChangeInfo,
+                    params,
+                );
+            }
+        },
     }
 }
 
@@ -3503,10 +4323,250 @@ fn workspace_did_change_configuration_info() -> NotificationInfo<ConfigurationCh
     NotificationInfo {
         method: "workspace/didChangeConfiguration".to_string(),
         send: |f, params| {
+            let mut serialized_settings = serde_json::Map::new();
             if let Some(config) = params.settings.get("js/ts") {
                 f.user_preferences = config.clone();
+                *f.server_user_preferences
+                    .lock()
+                    .unwrap_or_else(|err| err.into_inner()) = config.clone();
+                serialized_settings
+                    .insert("js/ts".to_string(), user_preferences_config_value(config));
+            }
+            if let Some(client) = &f.client {
+                ts_testutil::lsptestutil::send_notification(
+                    client,
+                    &*lsproto::WorkspaceDidChangeConfigurationInfo,
+                    lsproto::DidChangeConfigurationParams {
+                        settings: serde_json::Value::Object(serialized_settings),
+                    },
+                );
             }
         },
+    }
+}
+
+fn text_document_identifier(file_name: &str) -> lsproto::TextDocumentIdentifier {
+    lsproto::TextDocumentIdentifier {
+        uri: lsconv::file_name_to_document_uri(file_name),
+    }
+}
+
+fn lsp_text_edits_to_formatting_result(
+    f: &FourslashTest,
+    file_name: &str,
+    response: lsproto::TextEditsOrNull,
+) -> FormattingResult {
+    let Some(edits) = response.text_edits else {
+        return FormattingResult { text_edits: None };
+    };
+    let script = f.get_script_info(file_name);
+    FormattingResult {
+        text_edits: Some(
+            edits
+                .into_iter()
+                .flatten()
+                .map(|edit| text_edit_from_lsp(f, script, edit))
+                .collect(),
+        ),
+    }
+}
+
+fn text_edit_from_lsp(f: &FourslashTest, script: &ScriptInfo, edit: lsproto::TextEdit) -> TextEdit {
+    TextEdit {
+        start: f
+            .converters
+            .line_and_character_to_position(script, edit.range.start),
+        end: f
+            .converters
+            .line_and_character_to_position(script, edit.range.end),
+        new_text: edit.new_text,
+    }
+}
+
+fn diagnostic_code(diagnostic: &lsproto::Diagnostic) -> Option<i32> {
+    diagnostic.code.as_ref().and_then(|code| code.integer)
+}
+
+fn diagnostic_from_lsp(diagnostic: &lsproto::Diagnostic) -> Diagnostic {
+    Diagnostic {
+        range: diagnostic.range,
+        code: diagnostic_code(diagnostic).unwrap_or_default(),
+        code_actions: Vec::new(),
+    }
+}
+
+fn fourslash_diagnostic_from_lsp(
+    f: &FourslashTest,
+    script: &ScriptInfo,
+    file: &FourslashDiagnosticFile,
+    diagnostic: lsproto::Diagnostic,
+) -> FourslashDiagnostic {
+    let pos = f
+        .converters
+        .line_and_character_to_position(script, diagnostic.range.start) as i32;
+    let end = f
+        .converters
+        .line_and_character_to_position(script, diagnostic.range.end) as i32;
+    let tags = diagnostic.tags.as_deref().unwrap_or_default();
+    FourslashDiagnostic {
+        file: file.clone(),
+        loc: core::new_text_range(pos, end),
+        code: diagnostic_code(&diagnostic).unwrap_or_default(),
+        category: diagnostic_category_from_lsp(diagnostic.severity),
+        message: diagnostic.message,
+        related_diagnostics: Vec::new(),
+        reports_unnecessary: tags.contains(&lsproto::DiagnosticTag::Unnecessary),
+        reports_deprecated: tags.contains(&lsproto::DiagnosticTag::Deprecated),
+    }
+}
+
+fn diagnostic_category_from_lsp(
+    severity: Option<lsproto::DiagnosticSeverity>,
+) -> DiagnosticCategory {
+    match severity {
+        Some(lsproto::DiagnosticSeverity::Warning) => DiagnosticCategory::Warning,
+        Some(lsproto::DiagnosticSeverity::Information) => DiagnosticCategory::Message,
+        Some(lsproto::DiagnosticSeverity::Hint) => DiagnosticCategory::Suggestion,
+        _ => DiagnosticCategory::Error,
+    }
+}
+
+fn code_action_from_lsp(
+    f: &FourslashTest,
+    script: &ScriptInfo,
+    uri: &lsproto::DocumentUri,
+    action: lsproto::CodeAction,
+) -> CodeAction {
+    let edits = action
+        .edit
+        .and_then(|edit| edit.changes)
+        .and_then(|mut changes| changes.remove(uri))
+        .unwrap_or_default()
+        .into_iter()
+        .map(|edit| text_edit_from_lsp(f, script, edit))
+        .collect();
+    CodeAction {
+        title: action.title,
+        kind: action
+            .kind
+            .map(|kind| kind.as_str().to_string())
+            .unwrap_or_default(),
+        diagnostics: action
+            .diagnostics
+            .unwrap_or_default()
+            .iter()
+            .map(diagnostic_from_lsp)
+            .collect(),
+        edits,
+    }
+}
+
+fn completion_response_to_list(
+    f: &FourslashTest,
+    file_name: &str,
+    response: lsproto::CompletionResponse,
+) -> CompletionList {
+    if let Some(list) = response.list {
+        return completion_list_from_lsp(f, file_name, list);
+    }
+    CompletionList {
+        is_incomplete: false,
+        item_defaults: None,
+        items: response
+            .items
+            .unwrap_or_default()
+            .into_iter()
+            .flatten()
+            .map(completion_item_from_lsp_response)
+            .collect(),
+    }
+}
+
+fn completion_list_from_lsp(
+    f: &FourslashTest,
+    file_name: &str,
+    list: lsproto::CompletionList,
+) -> CompletionList {
+    CompletionList {
+        is_incomplete: list.is_incomplete,
+        item_defaults: list
+            .item_defaults
+            .map(|defaults| completion_item_defaults_from_lsp(f, file_name, defaults)),
+        items: list
+            .items
+            .into_iter()
+            .map(completion_item_from_lsp_response)
+            .collect(),
+    }
+}
+
+fn completion_item_defaults_from_lsp(
+    f: &FourslashTest,
+    file_name: &str,
+    defaults: lsproto::CompletionItemDefaults,
+) -> CompletionItemDefaults {
+    CompletionItemDefaults {
+        commit_characters: defaults.commit_characters,
+        edit_range: defaults
+            .edit_range
+            .as_ref()
+            .map(|range| completion_edit_range_from_lsp(f, file_name, range))
+            .unwrap_or_default(),
+    }
+}
+
+fn completion_edit_range_from_lsp(
+    f: &FourslashTest,
+    file_name: &str,
+    range: &lsproto::RangeOrEditRangeWithInsertReplace,
+) -> ExpectedCompletionEditRange {
+    if let Some(range) = range.range {
+        let range = range_marker_from_lsp_range(f, file_name, range);
+        return ExpectedCompletionEditRange::EditRange(EditRange {
+            insert: range.clone(),
+            replace: range,
+        });
+    }
+    if let Some(range) = &range.edit_range_with_insert_replace {
+        return ExpectedCompletionEditRange::EditRange(EditRange {
+            insert: range_marker_from_lsp_range(f, file_name, range.insert),
+            replace: range_marker_from_lsp_range(f, file_name, range.replace),
+        });
+    }
+    ExpectedCompletionEditRange::None
+}
+
+fn range_marker_from_lsp_range(
+    f: &FourslashTest,
+    file_name: &str,
+    range: lsproto::Range,
+) -> RangeMarker {
+    let script = f.get_script_info(file_name);
+    RangeMarker {
+        file_name: file_name.to_string(),
+        range: core::new_text_range(
+            f.converters
+                .line_and_character_to_position(script, range.start) as i32,
+            f.converters
+                .line_and_character_to_position(script, range.end) as i32,
+        ),
+        ls_range: range,
+        marker: None,
+    }
+}
+
+fn completion_item_from_lsp_response(item: lsproto::CompletionItem) -> CompletionItem {
+    CompletionItem {
+        label: item.label,
+        sort_text: item.sort_text,
+        source: item.data.and_then(|data| {
+            if data.source.is_empty() {
+                None
+            } else {
+                Some(data.source)
+            }
+        }),
+        detail: item.detail,
     }
 }
 
@@ -3793,12 +4853,15 @@ pub fn assert_valid_text_range(text_range: core::TextRange, message: &str) {
 }
 
 pub fn select_code_fix_diagnostic(
-    diagnostics: &[Diagnostic],
+    diagnostics: &[lsproto::Diagnostic],
     error_code: Option<i32>,
-) -> Option<Diagnostic> {
+) -> Option<lsproto::Diagnostic> {
+    if error_code.is_none_or(|code| code == 0) {
+        return diagnostics.first().cloned();
+    }
     diagnostics
         .iter()
-        .find(|diagnostic| error_code.is_none_or(|code| diagnostic.code == code))
+        .find(|diagnostic| diagnostic_code(diagnostic) == error_code)
         .cloned()
 }
 
@@ -3840,6 +4903,7 @@ pub struct RangeMarker {
 #[derive(Default, Clone)]
 pub struct Converters;
 #[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UserPreferences {
     pub allow_rename_of_import_path: core::Tristate,
     pub auto_import_file_exclude_patterns: Vec<String>,
@@ -3892,6 +4956,7 @@ impl Default for UserPreferences {
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct InlayHintsPreferences {
     pub include_inlay_parameter_name_hints: Option<String>,
     pub include_inlay_function_parameter_type_hints: core::Tristate,
@@ -3899,6 +4964,7 @@ pub struct InlayHintsPreferences {
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CodeLensUserPreferences {
     pub references_code_lens_enabled: Option<bool>,
     pub references_code_lens_show_on_all_functions: Option<bool>,

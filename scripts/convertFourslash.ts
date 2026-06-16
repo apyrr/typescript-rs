@@ -13,7 +13,7 @@ import * as url from "url";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 const vendorRoot = path.join(repoRoot, "vendor", "typescript-go");
-const typescriptRoot = path.join(repoRoot, "vendor", "typescript");
+const typescriptRoot = path.join(vendorRoot, "_submodules", "TypeScript");
 const stradaFourslashPath = path.join(typescriptRoot, "tests", "cases", "fourslash");
 
 let inputFileSet: Set<string>;
@@ -26,6 +26,7 @@ const unparsedFiles: { file: string; error: string; }[] = [];
 let unparsedReportPath = path.join(outputDir, "unparsedTests.txt");
 const generatedFiles: string[] = [];
 const generatedFileBaseNameCounts = new Map<string, number>();
+let updateExistingOutput = false;
 
 // Code fix IDs that have been implemented in the Go port.
 // Tests for code fixes not in this set will be skipped during conversion.
@@ -100,6 +101,7 @@ function getManualTests(): Set<string> {
 export async function main() {
     const args = process.argv.slice(2);
     let inputFilesPath: string | undefined;
+    let outputDirWasExplicit = false;
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
         if (arg === "--output") {
@@ -109,6 +111,7 @@ export async function main() {
             }
             outputDir = path.resolve(outputArg);
             unparsedReportPath = path.join(outputDir, "unparsedTests.txt");
+            outputDirWasExplicit = true;
         }
         else {
             inputFilesPath = arg;
@@ -126,18 +129,33 @@ export async function main() {
         throw new Error(`Missing TypeScript fourslash source directory: ${stradaFourslashPath}.`);
     }
 
-    fs.rmSync(outputDir, { recursive: true, force: true });
+    updateExistingOutput = inputFileSet !== undefined && !outputDirWasExplicit;
+    if (!updateExistingOutput) {
+        fs.rmSync(outputDir, { recursive: true, force: true });
+    }
     fs.mkdirSync(outputDir, { recursive: true });
     generatedFiles.length = 0;
     generatedFileBaseNameCounts.clear();
 
     parseTypeScriptFiles(getManualTests(), stradaFourslashPath);
-    fs.writeFileSync(path.join(outputDir, "mod.rs"), moduleLines(generatedFiles).join("\n") + "\n", "utf-8");
-
     unparsedFiles.sort((a, b) => a.file.localeCompare(b.file, "en-US"));
-    fs.writeFileSync(unparsedReportPath, unparsedFiles.map(({ file, error }) => `${file} parse error: ${JSON.stringify(error)}`).join("\n"), "utf-8");
+    if (updateExistingOutput) {
+        if (unparsedFiles.length > 0) {
+            const errors = unparsedFiles.map(({ file, error }) => `${file} parse error: ${JSON.stringify(error)}`).join("\n");
+            throw new Error(`Failed to parse ${unparsedFiles.length} selected files:\n${errors}`);
+        }
+    }
+    else {
+        fs.writeFileSync(path.join(outputDir, "mod.rs"), moduleLines(generatedFiles).join("\n") + "\n", "utf-8");
+        fs.writeFileSync(unparsedReportPath, unparsedFiles.map(({ file, error }) => `${file} parse error: ${JSON.stringify(error)}`).join("\n"), "utf-8");
+    }
     formatGeneratedRust();
-    console.log(`Failed to parse ${unparsedFiles.length} files. See ${unparsedReportPath} for details.`);
+    if (updateExistingOutput) {
+        console.log(`Regenerated ${generatedFiles.length} selected files.`);
+    }
+    else {
+        console.log(`Failed to parse ${unparsedFiles.length} files. See ${unparsedReportPath} for details.`);
+    }
 }
 
 function hasTSExtension(file: string): boolean {
@@ -174,6 +192,9 @@ function parseTypeScriptFiles(manualTests: Set<string>, folder: string): void {
             catch (e) {
                 const message = e instanceof Error ? e.message : String(e);
                 if (e instanceof SkipTest) {
+                    if (updateExistingOutput) {
+                        removeGeneratedRustFileForSource(file);
+                    }
                     console.error(`Skipping file ${file}: ${message}`);
                     return;
                 }
@@ -199,7 +220,7 @@ function parseFileContent(filename: string, content: string): GoTest | NoTest {
     const sourceFile = ts.createSourceFile("temp.ts", content, ts.ScriptTarget.Latest, true /*setParentNodes*/);
     const statements = sourceFile.statements;
     const goTest: GoTest = {
-        name: filename.replace(".tsx", "").replace(".ts", "").replace(".", ""),
+        name: testNameFromFileName(filename),
         content: getTestInput(content),
         commands: [],
     };
@@ -292,6 +313,36 @@ function getBadStatementText(statement: ts.Statement): string {
     return statement.getText();
 }
 
+function attachTrailingComments(commands: Cmd[], node: ts.Node): Cmd[] {
+    const comments = trailingComments(node);
+    if (comments.length === 0 || commands.length === 0) {
+        return commands;
+    }
+    return commands.map((cmd, index) =>
+        index === commands.length - 1 ? withComments(cmd, comments) : cmd
+    );
+}
+
+function addTrailingComments<T extends CmdData>(cmd: T, node: ts.Node): Cmd {
+    return withComments(cmd, trailingComments(node));
+}
+
+function withComments<T extends CmdData | Cmd>(cmd: T, comments: string[]): T & { comments?: string[] } {
+    if (comments.length === 0) {
+        return cmd;
+    }
+    return {
+        ...cmd,
+        comments: [...("comments" in cmd && cmd.comments ? cmd.comments : []), ...comments],
+    };
+}
+
+function trailingComments(node: ts.Node): string[] {
+    const sourceFile = node.getSourceFile();
+    const ranges = ts.getTrailingCommentRanges(sourceFile.text, node.getEnd(sourceFile)) ?? [];
+    return ranges.map(range => sourceFile.text.slice(range.pos, range.end).trimEnd());
+}
+
 interface VerifyAssertion {
     name: string;
     negated: boolean;
@@ -336,6 +387,10 @@ interface ParseEnv {
 }
 
 function parseFourslashStatement(statement: ts.Statement, env: ParseEnv = {}): Cmd[] {
+    return attachTrailingComments(parseFourslashStatementWorker(statement, env), statement);
+}
+
+function parseFourslashStatementWorker(statement: ts.Statement, env: ParseEnv = {}): Cmd[] {
     if (ts.isVariableStatement(statement)) {
         // variable declarations (for ranges and markers), e.g. `const range = test.ranges()[0];`
         return [];
@@ -2310,19 +2365,19 @@ function parseRangeAfterCodeFixArgs(args: readonly ts.Expression[]): [VerifyRang
     }
 
     let errorCode = 0;
-    if (errorCodeArg !== undefined && !isUndefinedExpression(errorCodeArg)) {
+    if (errorCodeArg !== undefined) {
         const parsedErrorCode = getNumericLiteral(errorCodeArg);
         if (!parsedErrorCode) {
-            throw new Error(`Expected numeric literal errorCode in verify.rangeAfterCodeFix, got ${errorCodeArg.getText()}`);
+            throw new SkipTest(`Expected numeric literal errorCode in verify.rangeAfterCodeFix, got ${errorCodeArg.getText()}`);
         }
         errorCode = parseInt(parsedErrorCode.text);
     }
 
     let index = 0;
-    if (indexArg !== undefined && !isUndefinedExpression(indexArg)) {
+    if (indexArg !== undefined) {
         const parsedIndex = getNumericLiteral(indexArg);
         if (!parsedIndex) {
-            throw new Error(`Expected numeric literal index in verify.rangeAfterCodeFix, got ${indexArg.getText()}`);
+            throw new SkipTest(`Expected numeric literal index in verify.rangeAfterCodeFix, got ${indexArg.getText()}`);
         }
         index = parseInt(parsedIndex.text);
     }
@@ -2954,12 +3009,12 @@ function parseQuickInfoArgs(funcName: string, args: readonly ts.Expression[], en
                 else {
                     throw new Error(`Expected string literal or array literal for quickInfos property, got ${prop.initializer.getText()}`);
                 }
-                cmds.push({
+                cmds.push(addTrailingComments({
                     kind: "quickInfoAt",
                     marker,
                     text,
                     docs,
-                });
+                }, prop));
             }
             return cmds;
         }
@@ -4378,7 +4433,7 @@ interface VerifySemanticClassificationsCmd {
     tokens: Array<{ type: string; text: string; }>;
 }
 
-type Cmd =
+type CmdData =
     | VerifyCompletionsCmd
     | VerifyApplyCodeActionFromCompletionCmd
     | VerifyBaselineFindAllReferencesCmd
@@ -4429,6 +4484,10 @@ type Cmd =
     | VerifyCodeFixAllCmd
     | VerifyCodeFixAllAvailableCmd;
 
+type Cmd = CmdData & {
+    comments?: string[];
+};
+
 interface GoTest {
     name: string;
     content: string;
@@ -4437,15 +4496,17 @@ interface GoTest {
 
 function generateRustTest(test: GoTest, isServer: boolean): string {
     const testName = "test_" + toSnakeCase(test.name);
+    const upstreamTestName = "Test" + capitalizeIdentifier(test.name);
     const content = rustRawStringFromGoRaw(test.content);
     const commands = test.commands.map(cmd => generateRustCmd(cmd)).join("\n");
     validateGeneratedRustCommands(test.name, commands);
+    const fBinding = isServer || test.commands.some(usesMutableFourslashHarness) ? "mut f" : "f";
     const template = `#![allow(non_snake_case)]
 #![allow(unused_imports)]
 
 use crate::generated_prelude::*;
 use ts_core as core;
-use ts_ls::lsutil;
+use ts_ls as lsutil;
 use ts_lsproto as lsproto;
 use ts_modulespecifiers as modulespecifiers;
 
@@ -4456,13 +4517,25 @@ pub fn ${testName}() {
 }
 
 fn run_${testName}(t: &mut TestingT) {
-    skip_if_failing(t);
+    if should_skip_if_failing(${rustStringLiteral(upstreamTestName)}) {
+        return;
+    }
     let content = ${content};
-    let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
+    let (${fBinding}, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     ${isServer ? `f.mark_test_as_strada_server();\n    ` : ""}${commands}
     done();
 }`;
     return template;
+}
+
+function usesMutableFourslashHarness(cmd: Cmd): boolean {
+    switch (cmd.kind) {
+        case "verifyNavigateTo":
+        case "verifyNavigateToEachRange":
+            return false;
+        default:
+            return true;
+    }
 }
 
 function validateGeneratedRustCommands(testName: string, commands: string): void {
@@ -4486,6 +4559,34 @@ function validateGeneratedRustCommands(testName: string, commands: string): void
 }
 
 function generateRustCmd(cmd: Cmd): string {
+    const statement = generateRustCmdWorker(cmd);
+    if (!cmd.comments || cmd.comments.length === 0) {
+        return statement;
+    }
+    return `${statement}\n${cmd.comments.flatMap(rustCommentLines).join("\n")}`;
+}
+
+function rustCommentLines(comment: string): string[] {
+    const trimmed = comment.trim();
+    if (trimmed.startsWith("//")) {
+        return comment.split(/\r?\n/).map(line => line.trimEnd());
+    }
+
+    let content = trimmed;
+    if (content.startsWith("/*")) {
+        content = content.slice(2);
+    }
+    if (content.endsWith("*/")) {
+        content = content.slice(0, -2);
+    }
+
+    return content
+        .split(/\r?\n/)
+        .map(line => line.replace(/^\s*\*\s?/, "").trimEnd())
+        .map(line => line.length === 0 ? "//" : `// ${line}`);
+}
+
+function generateRustCmdWorker(cmd: Cmd): string {
     switch (cmd.kind) {
         case "goTo":
             return generateRustGoToCommand(cmd);
@@ -4604,7 +4705,7 @@ function generateRustCmd(cmd: Cmd): string {
         case "verifyNoErrorExistsAfterMarker":
             return `f.verify_no_error_exists_after_marker_name(${rustStringLiteral(cmd.markerName)});`;
         case "verifyErrorExistsBetweenMarkers":
-            return `f.verify_error_exists_between_markers(&f.marker_by_name(${rustStringLiteral(cmd.startMarker)}), &f.marker_by_name(${rustStringLiteral(cmd.endMarker)}), 0);`;
+            return `f.verify_error_exists_between_markers(&f.marker_by_name(${rustStringLiteral(cmd.startMarker)}), &f.marker_by_name(${rustStringLiteral(cmd.endMarker)}));`;
         case "verifyNoErrorExistsBetweenMarkers":
             return `f.verify_no_error_exists_between_markers(&f.marker_by_name(${rustStringLiteral(cmd.startMarker)}), &f.marker_by_name(${rustStringLiteral(cmd.endMarker)}));`;
         case "verifyGetEditsForFileRename":
@@ -5498,7 +5599,7 @@ function rustRawStringFromGoRaw(value: string): string {
     if (!value.startsWith("`") || !value.endsWith("`")) {
         throw new Error(`Expected Go raw string literal, got ${value.slice(0, 20)}`);
     }
-    return rustRawString(value.slice(1, -1));
+    return rustRawString(value.slice(1, -1).split('` + "`" + `').join("`"));
 }
 
 function rustRawString(value: string): string {
@@ -5518,6 +5619,10 @@ function toSnakeCase(value: string): string {
         .toLowerCase();
 }
 
+function capitalizeIdentifier(value: string): string {
+    return value.length === 0 ? value : value[0]!.toUpperCase() + value.slice(1);
+}
+
 function moduleLines(fileNames: string[]): string[] {
     const seen = new Map<string, number>();
     return fileNames.map(fileName => {
@@ -5529,15 +5634,49 @@ function moduleLines(fileNames: string[]): string[] {
     });
 }
 
+function testNameFromFileName(fileName: string): string {
+    return fileName.replace(".tsx", "").replace(".ts", "").replace(".", "");
+}
+
+function generatedRustFileNameForTestName(testName: string): string {
+    return `${toSnakeCase(testName)}_test.rs`;
+}
+
 function generatedRustFileName(testName: string): string {
-    const baseName = `${toSnakeCase(testName)}_test`;
+    const baseName = generatedRustFileNameForTestName(testName).replace(/\.rs$/, "");
     const count = generatedFileBaseNameCounts.get(baseName) ?? 0;
     generatedFileBaseNameCounts.set(baseName, count + 1);
     return count === 0 ? `${baseName}.rs` : `${baseName}_${count + 1}.rs`;
 }
 
+function removeGeneratedRustFileForSource(sourceFileName: string): void {
+    const fileName = generatedRustFileNameForTestName(testNameFromFileName(sourceFileName));
+    const filePath = path.join(outputDir, fileName);
+    if (fs.existsSync(filePath)) {
+        fs.rmSync(filePath);
+    }
+
+    const modPath = path.join(outputDir, "mod.rs");
+    if (!fs.existsSync(modPath)) {
+        return;
+    }
+    const lines = fs.readFileSync(modPath, "utf-8").split(/\r?\n/);
+    const filtered: string[] = [];
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i] === `#[path = "${fileName}"]`) {
+            if (lines[i + 1]?.startsWith("pub mod ")) {
+                i++;
+            }
+            continue;
+        }
+        filtered.push(lines[i]!);
+    }
+    fs.writeFileSync(modPath, filtered.join("\n").replace(/\n*$/, "\n"), "utf-8");
+}
+
 function formatGeneratedRust() {
-    const files = [...generatedFiles.map(file => path.join(outputDir, file)), path.join(outputDir, "mod.rs")];
+    const files = [...generatedFiles.map(file => path.join(outputDir, file)), path.join(outputDir, "mod.rs")]
+        .filter(file => fs.existsSync(file));
     for (let i = 0; i < files.length; i += 200) {
         const result = Bun.spawnSync(["rustfmt", ...files.slice(i, i + 200)], {
             stdout: "pipe",

@@ -63,6 +63,7 @@ pub fn run_lsp(args: &[String]) -> i32 {
         default_library_path,
         typings_location,
         parse_cache: None,
+        compiler_options_for_inferred_projects: None,
         npm_install: Some(npm_install),
         progress_delay: Duration::from_millis(250),
         set_parent_process_id: new_parent_process_watchdog(watchdog_ctx.clone(), stop.clone())

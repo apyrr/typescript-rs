@@ -752,17 +752,24 @@ impl<'a, 'state> Checker<'a, 'state> {
         enclosing_declaration: Option<ast::Node>,
         flags: nodebuilder::Flags,
         internal_flags: nodebuilder::InternalFlags,
-    ) -> Option<ast::Node> {
+    ) -> (Option<ast::Node>, HashMap<ast::Node, ast::SymbolIdentity>) {
         let enclosing_declaration = enclosing_declaration.map(|node| node);
         let mut node_builder = crate::nodebuilder::new_node_builder_ex(self, emit_context, None);
-        node_builder.signature_to_signature_declaration(
+        let node = node_builder.signature_to_signature_declaration(
             signature,
             kind,
             enclosing_declaration,
             flags,
             internal_flags,
             None,
-        )
+        );
+        let id_to_symbol = node_builder
+            .id_to_symbol_identities()
+            .into_iter()
+            .map(|(node, symbol)| (node, to_ast_symbol(symbol)))
+            .collect();
+        drop(node_builder);
+        (node, id_to_symbol)
     }
 
     pub fn index_info_to_index_signature_declaration_for_ls_public(

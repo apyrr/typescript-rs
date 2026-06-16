@@ -132,6 +132,56 @@ pub fn new_tracker<'a>(
 }
 
 impl<'a> Tracker<'a> {
+    fn import_new_node(&mut self, source_file: &'a ast::SourceFile, node: ast::Node) -> ast::Node {
+        if node.store_id() == self.node_factory.store().store_id()
+            || node.store_id() == source_file.store().store_id()
+        {
+            return node;
+        }
+
+        let emit_store = self.emit_context.factory.node_factory.store();
+        if node.store_id() == emit_store.store_id() {
+            return self
+                .node_factory
+                .deep_clone_node_from_store_preserve_location(emit_store, node);
+        }
+
+        if let Some(source_file) = self.emit_context.source_file_handle_for_node(node) {
+            return self
+                .node_factory
+                .deep_clone_node_from_store_preserve_location(source_file.store(), node);
+        }
+
+        panic!(
+            "change tracker cannot import generated node from AST store {:?}",
+            node.store_id()
+        );
+    }
+
+    fn import_new_nodes(
+        &mut self,
+        source_file: &'a ast::SourceFile,
+        nodes: Vec<ast::Node>,
+    ) -> Vec<ast::Node> {
+        nodes
+            .into_iter()
+            .map(|node| self.import_new_node(source_file, node))
+            .collect()
+    }
+
+    fn store_for_inserted_node(
+        &self,
+        source_file: &'a ast::SourceFile,
+        node: ast::Node,
+    ) -> &ast::AstStore {
+        if node.store_id() == self.node_factory.store().store_id() {
+            self.node_factory.store()
+        } else {
+            debug_assert_eq!(node.store_id(), source_file.store().store_id());
+            source_file.store()
+        }
+    }
+
     // GetChanges returns the accumulated text edits.
     // Note: after calling this, the Tracker object must be discarded!
     pub fn get_changes(&mut self) -> HashMap<String, Vec<lsproto::TextEdit>> {
@@ -202,6 +252,7 @@ impl<'a> Tracker<'a> {
         new_node: ast::Node,
         options: NodeOptions,
     ) {
+        let new_node = self.import_new_node(source_file, new_node);
         self.changes.add(
             checker::SourceFileIdentity::from_source_file(source_file),
             TrackerEdit {
@@ -247,6 +298,7 @@ impl<'a> Tracker<'a> {
             self.replace_range(source_file, lsp_range, new_nodes[0], options);
             return;
         }
+        let new_nodes = self.import_new_nodes(source_file, new_nodes);
         self.changes.add(
             checker::SourceFileIdentity::from_source_file(source_file),
             TrackerEdit {
@@ -325,6 +377,7 @@ impl<'a> Tracker<'a> {
         after: ast::Node,
         new_node: ast::Node,
     ) {
+        let new_node = self.import_new_node(source_file, new_node);
         let end_position = self.end_pos_for_insert_node_after(source_file, after, new_node);
         let options = self.get_insert_node_after_options(source_file, after);
         self.insert_node_at(source_file, end_position, new_node, options);
@@ -336,6 +389,7 @@ impl<'a> Tracker<'a> {
         after: ast::Node,
         new_nodes: Vec<ast::Node>,
     ) {
+        let new_nodes = self.import_new_nodes(source_file, new_nodes);
         let end_position = self.end_pos_for_insert_node_after(source_file, after, new_nodes[0]);
         let options = self.get_insert_node_after_options(source_file, after);
         self.insert_nodes_at(source_file, end_position, new_nodes, options);
@@ -349,6 +403,7 @@ impl<'a> Tracker<'a> {
         blank_line_between: bool,
         leading_trivia_option: LeadingTriviaOption,
     ) {
+        let new_node = self.import_new_node(source_file, new_node);
         let pos =
             self.get_adjusted_start_position(source_file, before, leading_trivia_option, false);
         let options = self.get_options_for_insert_node_before(
@@ -625,7 +680,8 @@ impl<'a> Tracker<'a> {
         after: ast::Node,
         new_node: ast::Node,
     ) -> core::TextPos {
-        if need_semicolon_between(source_file.store(), after, new_node)
+        let inserted_store = self.store_for_inserted_node(source_file, new_node);
+        if need_semicolon_between(source_file.store(), after, inserted_store, new_node)
             && source_file.text().as_bytes()[source_file.store().loc(after).end() as usize - 1]
                 != b';'
         {
@@ -1112,6 +1168,7 @@ impl<'a> Tracker<'a> {
         blank_line_between: bool,
     ) -> NodeOptions {
         let store = source_file.store();
+        let inserted_store = self.store_for_inserted_node(source_file, inserted);
         if ast::is_statement(store, before) || ast::is_class_or_type_element(store, &before) {
             if blank_line_between {
                 return NodeOptions {
@@ -1130,7 +1187,7 @@ impl<'a> Tracker<'a> {
                 ..Default::default()
             };
         } else if store.kind(before) == ast::Kind::Parameter {
-            if store.kind(inserted) == ast::Kind::Parameter {
+            if inserted_store.kind(inserted) == ast::Kind::Parameter {
                 return NodeOptions {
                     suffix: ", ".to_string(),
                     ..Default::default()
@@ -1218,19 +1275,23 @@ impl<'a> Tracker<'a> {
             .copied()
             .collect::<Vec<_>>()
         {
-            let open_brace = astnav::find_child_of_kind(
+            let store = state.source_file.store();
+            let members = get_members_or_properties(store, state.node);
+            let open_brace = find_child_token_or_scanned(
                 state.node,
                 ast::Kind::OpenBraceToken,
                 state.source_file,
+                members.as_ref().map(|members| members.pos()),
             );
             if open_brace.is_none() {
                 continue;
             }
 
-            let close_brace = astnav::find_child_of_kind(
+            let close_brace = find_child_token_or_scanned(
                 state.node,
                 ast::Kind::CloseBraceToken,
                 state.source_file,
+                Some(store.loc(state.node).end()),
             );
             if close_brace.is_none() {
                 continue;
@@ -1238,37 +1299,47 @@ impl<'a> Tracker<'a> {
 
             let open_brace = open_brace.unwrap();
             let close_brace = close_brace.unwrap();
-            let store = state.source_file.store();
-            let members = get_members_or_properties(store, state.node);
             let is_empty = members.is_none() || members.unwrap().is_empty();
             let is_single_line = positions_are_on_same_line(
-                store.loc(open_brace).end(),
-                store.loc(close_brace).end(),
+                open_brace.loc.end(),
+                close_brace.loc.end(),
                 state.source_file,
             );
 
-            if is_empty
-                && is_single_line
-                && store.loc(open_brace).end() != store.loc(close_brace).end() - 1
-            {
+            if is_empty && is_single_line && open_brace.loc.end() != close_brace.loc.end() - 1 {
                 self.delete_range(
                     state.source_file,
-                    core::new_text_range(
-                        store.loc(open_brace).end(),
-                        store.loc(close_brace).end() - 1,
-                    ),
+                    core::new_text_range(open_brace.loc.end(), close_brace.loc.end() - 1),
                 );
             }
 
             if is_single_line {
                 let pos = self.converters.position_to_line_and_character(
                     state.source_file,
-                    core::TextPos(store.loc(close_brace).end() - 1),
+                    core::TextPos(close_brace.loc.end() - 1),
                 );
                 self.insert_text(state.source_file, pos, &self.new_line.clone());
             }
         }
     }
+}
+
+fn find_child_token_or_scanned(
+    node: ast::Node,
+    kind: ast::Kind,
+    source_file: &ast::SourceFile,
+    position: Option<i32>,
+) -> Option<astnav::TokenInfo> {
+    let store = source_file.store();
+    astnav::find_child_of_kind(node, kind, source_file)
+        .map(|token| astnav::TokenInfo::from_node(store, token))
+        .or_else(|| {
+            let token = astnav::find_preceding_token_info(source_file, position?)?;
+            (token.kind == kind
+                && token.loc.pos() >= store.loc(node).pos()
+                && token.loc.end() <= store.loc(node).end())
+            .then_some(token)
+        })
 }
 
 pub fn get_members_or_properties(
@@ -1296,14 +1367,16 @@ pub(crate) fn is_separator(
     node: ast::Node,
     candidate: Option<ast::Node>,
 ) -> bool {
-    candidate.is_some_and(|candidate| {
-        store.parent(node).is_some()
-            && (store.kind(candidate) == ast::Kind::CommaToken
-                || store.kind(candidate) == ast::Kind::SemicolonToken
-                    && store.parent(node).is_some_and(|parent| {
-                        store.kind(parent) == ast::Kind::ObjectLiteralExpression
-                    }))
-    })
+    candidate.is_some_and(|candidate| is_separator_kind(store, node, store.kind(candidate)))
+}
+
+fn is_separator_kind(store: &ast::AstStore, node: ast::Node, candidate: ast::Kind) -> bool {
+    store.parent(node).is_some()
+        && (candidate == ast::Kind::CommaToken
+            || candidate == ast::Kind::SemicolonToken
+                && store
+                    .parent(node)
+                    .is_some_and(|parent| store.kind(parent) == ast::Kind::ObjectLiteralExpression))
 }
 
 pub fn find_indentation_column(

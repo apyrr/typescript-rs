@@ -701,8 +701,11 @@ fn is_rooted_disk_path(path: &str) -> bool {
 }
 
 fn normalize_path(path: &str) -> String {
+    let normalized_slashes = path.replace('\\', "/");
+    let path = normalized_slashes.as_str();
     let mut result = Vec::new();
     let rooted = path.starts_with('/');
+    let network_root = path.starts_with("//") && !path.starts_with("///");
     for part in path.split('/') {
         match part {
             "" | "." => {}
@@ -713,7 +716,9 @@ fn normalize_path(path: &str) -> String {
         }
     }
     let joined = result.join("/");
-    if rooted {
+    if network_root {
+        format!("//{joined}")
+    } else if rooted {
         format!("/{joined}")
     } else if joined.is_empty() {
         ".".to_owned()

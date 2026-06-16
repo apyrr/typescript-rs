@@ -103,6 +103,16 @@ pub(crate) fn new_node_factory_with_state(state: EmitContextStateRef) -> NodeFac
             })),
             on_clone: Some(Arc::new(move |store, updated, original| {
                 set_original_in_state(&on_clone_state, &updated, &original);
+                let source_emit_node = {
+                    let state = on_clone_state.borrow();
+                    try_emit_node_in_state(&state, &original, Clone::clone)
+                };
+                if let Some(source_emit_node) = source_emit_node {
+                    let state = on_clone_state.borrow();
+                    with_emit_node_in_state_mut(&state, &updated, |target| {
+                        target.copy_from(&source_emit_node);
+                    });
+                }
                 if ast::is_identifier(store, updated) || ast::is_private_identifier(store, updated)
                 {
                     let auto_generate = on_clone_state

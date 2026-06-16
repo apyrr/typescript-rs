@@ -79,6 +79,7 @@ fn test_semantic_tokens_crlf() {
         default_library_path: bundled::lib_path(),
         typings_location: String::new(),
         parse_cache: None,
+        compiler_options_for_inferred_projects: None,
         npm_install: None,
         progress_delay: Duration::default(),
         set_parent_process_id: None,

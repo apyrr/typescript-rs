@@ -1358,6 +1358,7 @@ dependencies = [
  "lsp-types",
  "serde",
  "serde_json",
+ "ts-bundled",
  "ts-collections",
  "ts-compiler",
  "ts-core",
@@ -1369,7 +1370,9 @@ dependencies = [
  "ts-project",
  "ts-testrunner",
  "ts-testutil",
+ "ts-tsoptions",
  "ts-tspath",
+ "ts-vfs",
 ]
 
 [[package]]
@@ -1500,6 +1503,7 @@ dependencies = [
  "ts-outputpaths",
  "ts-packagejson",
  "ts-semver",
+ "ts-stringutil",
  "ts-tspath",
  "ts-vfs",
 ]

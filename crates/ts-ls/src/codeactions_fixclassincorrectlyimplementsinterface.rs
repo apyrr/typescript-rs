@@ -313,9 +313,12 @@ pub fn insert_interface_member_node<'a>(
 
 pub fn get_class(source_file: &ast::SourceFile, span: core::TextRange) -> Option<ast::Node> {
     let token = astnav::get_token_at_position(source_file, span.pos());
-    token
-        .as_ref()
-        .and_then(|token| ast::get_containing_class(source_file.store(), *token))
+    let token = token?;
+    let store = source_file.store();
+    if ast::is_class_like(store, token) {
+        return Some(token);
+    }
+    ast::get_containing_class(store, token)
 }
 
 pub fn get_constructor<'a>(

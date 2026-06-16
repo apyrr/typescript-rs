@@ -138,9 +138,7 @@ pub fn read_file_or_no_content(file_name: impl AsRef<Path>) -> String {
 
 fn submodule_accepted_file_names() -> &'static HashSet<String> {
     static SET: OnceLock<HashSet<String>> = OnceLock::new();
-    SET.get_or_init(|| {
-        read_file_name_set(ts_repo::test_data_path().join("submoduleAccepted.txt"))
-    })
+    SET.get_or_init(|| read_file_name_set(ts_repo::test_data_path().join("submoduleAccepted.txt")))
 }
 
 fn submodule_triaged_file_names() -> &'static HashSet<String> {

@@ -65,6 +65,8 @@ mod findallreferences;
 )]
 mod folding;
 mod format;
+#[cfg(test)]
+mod format_test;
 mod host;
 #[expect(dead_code, reason = "ported hover service is ahead of current callers")]
 mod hover;

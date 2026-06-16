@@ -64,6 +64,7 @@ fn test_replay() {
         default_library_path,
         typings_location,
         parse_cache: None,
+        compiler_options_for_inferred_projects: None,
         npm_install: Some(|cwd, args| {
             Command::new("npm")
                 .args(args)

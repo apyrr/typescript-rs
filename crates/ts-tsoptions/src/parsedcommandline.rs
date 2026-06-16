@@ -793,7 +793,7 @@ fn compiler_options_paths_json_value(value: &Value) -> Value {
     Value::Object(paths)
 }
 
-pub(crate) fn compiler_option_json_value(
+pub fn compiler_option_json_value(
     name: &str,
     value: &str,
     kind: CommandLineOptionKind,

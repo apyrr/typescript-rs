@@ -188,15 +188,12 @@ pub fn find_immediately_preceding_token_of_kind(
     end: i32,
     expected_token_kind: ast::Kind,
     source_file: &ast::SourceFile,
-) -> Option<ast::Node> {
-    let preceding_token = astnav::find_preceding_token(source_file, end);
-    if preceding_token.as_ref().is_none_or(|token| {
-        let store = source_file.store();
-        store.kind(*token) != expected_token_kind || store.loc(*token).end() != end
-    }) {
+) -> Option<astnav::TokenInfo> {
+    let preceding_token = astnav::find_preceding_token_info(source_file, end)?;
+    if preceding_token.kind != expected_token_kind || preceding_token.loc.end() != end {
         return None;
     }
-    preceding_token
+    Some(preceding_token)
 }
 
 /**

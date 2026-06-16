@@ -1,7 +1,9 @@
 use std::cmp;
+use std::collections::BTreeMap;
 use std::fmt;
 
 use ts_ast as ast;
+use ts_astnav as astnav;
 use ts_checker as checker;
 use ts_collections as collections;
 use ts_compiler as compiler;
@@ -10,6 +12,7 @@ use ts_diagnostics as diagnostics;
 use ts_locale as locale;
 use ts_lsproto as lsproto;
 use ts_modulespecifiers as modulespecifiers;
+use ts_scanner as scanner;
 use ts_tspath as tspath;
 
 use crate::autoimport::{Export, ExportSyntax, ModuleId, View};
@@ -156,11 +159,17 @@ impl Fix {
                     &named_imports,
                     namespace_like_import.as_ref(),
                     compiler_options,
+                    preferences.clone(),
+                );
+                insert_import_texts(
+                    &mut tracker,
+                    file,
+                    import_text,
+                    &auto_import_fix.module_specifier,
+                    auto_import_fix.use_require,
+                    true, /*blankLineBetween*/
                     preferences,
-                )
-                .join(&tracker.new_line);
-                let new_line = tracker.new_line.clone();
-                insert_text_at_pos(&mut tracker, file, 0, &(import_text + &new_line));
+                );
                 diagnostics::localize(
                     locale,
                     Some(&*diagnostics::Add_import_from_0),
@@ -392,11 +401,25 @@ pub fn add_to_existing_import<'a>(
             }
 
             if !named_imports.is_empty() {
-                let new_specifiers = named_imports
+                let named_bindings = store.named_bindings(*import_clause_or_binding_pattern);
+                let import_decl = store
+                    .parent(*import_clause_or_binding_pattern)
+                    .unwrap_or(*import_clause_or_binding_pattern);
+                let sorting = lsutil::get_named_import_specifier_sorting_with_detection(
+                    store,
+                    &import_decl,
+                    Some(file),
+                    preferences.clone(),
+                );
+                let compare_preferences = lsutil::UserPreferences {
+                    organize_imports_type_order: sorting.type_order,
+                    ..lsutil::UserPreferences::default()
+                };
+                let string_comparer = sorting.string_comparer;
+                let mut new_specifiers = named_imports
                     .iter()
                     .map(|named_import| {
-                        let mut text = String::new();
-                        if (!store
+                        let is_type_only = (!store
                             .is_type_only(*import_clause_or_binding_pattern)
                             .unwrap_or(false)
                             || promote_from_type_only)
@@ -405,30 +428,80 @@ pub fn add_to_existing_import<'a>(
                                     .add_as_type_only
                                     .unwrap_or(lsproto::AddAsTypeOnly::Allowed),
                                 preferences.clone(),
-                            )
-                        {
-                            text.push_str("type ");
+                            );
+                        NewImportSpecifierForInsert {
+                            name: named_import.name.clone(),
+                            property_name: named_import.property_name.clone(),
+                            is_type_only,
                         }
-                        if !named_import.property_name.is_empty() {
-                            text.push_str(&named_import.property_name);
-                            text.push_str(" as ");
-                        }
-                        text.push_str(&named_import.name);
-                        text
                     })
                     .collect::<Vec<_>>();
+                new_specifiers.sort_by(|a, b| {
+                    compare_new_import_specifiers_for_insert(
+                        a,
+                        b,
+                        compare_preferences.clone(),
+                        string_comparer.as_ref(),
+                    )
+                    .cmp(&0)
+                });
 
-                if let Some(last_specifier) = existing_specifiers.last() {
-                    insert_text_at_pos(
+                if !existing_specifiers.is_empty() && sorting.is_sorted != core::Tristate::False {
+                    // The sorting preference computed earlier may or may not have validated that these particular
+                    // import specifiers are sorted. If they aren't, `getImportSpecifierInsertionIndex` will return
+                    // nonsense. So if there are existing specifiers, even if we know the sorting preference, we
+                    // need to ensure that the existing specifiers are sorted according to the preference in order
+                    // to do a sorted insertion.
+
+                    // If we're promoting the clause from type-only, we need to transform the existing imports
+                    // before attempting to insert the new named imports (for comparison purposes only)
+                    let named_bindings = named_bindings.expect("expected named imports");
+                    let mut specifiers_by_index = BTreeMap::new();
+                    for spec in new_specifiers {
+                        let insertion_index = get_import_specifier_insertion_index_for_binding(
+                            store,
+                            &existing_specifiers,
+                            &spec,
+                            compare_preferences.clone(),
+                            string_comparer.as_ref(),
+                            promote_from_type_only,
+                        );
+                        specifiers_by_index
+                            .entry(insertion_index)
+                            .or_insert_with(Vec::new)
+                            .push(import_specifier_text_for_insert(&spec));
+                    }
+                    for (insertion_index, specifiers) in specifiers_by_index {
+                        insert_import_specifiers_at_index(
+                            tracker,
+                            file,
+                            &existing_specifiers,
+                            named_bindings,
+                            insertion_index,
+                            &specifiers,
+                        );
+                    }
+                } else if let Some(last_specifier) = existing_specifiers.last() {
+                    let new_specifiers = new_specifiers
+                        .iter()
+                        .map(import_specifier_text_for_insert)
+                        .collect::<Vec<_>>();
+                    insert_import_specifiers_at_index(
                         tracker,
                         file,
-                        store.loc(*last_specifier).end(),
-                        &(", ".to_string() + &new_specifiers.join(", ")),
+                        &existing_specifiers,
+                        store
+                            .parent(*last_specifier)
+                            .expect("expected named imports"),
+                        existing_specifiers.len(),
+                        &new_specifiers,
                     );
-                } else if let Some(named_bindings) =
-                    store.named_bindings(*import_clause_or_binding_pattern)
-                {
+                } else if let Some(named_bindings) = named_bindings {
                     if let Some(open_brace_pos) = find_byte_in_node(file, &named_bindings, b'{') {
+                        let new_specifiers = new_specifiers
+                            .iter()
+                            .map(import_specifier_text_for_insert)
+                            .collect::<Vec<_>>();
                         insert_text_at_pos(
                             tracker,
                             file,
@@ -437,6 +510,10 @@ pub fn add_to_existing_import<'a>(
                         );
                     }
                 } else if let Some(name) = store.name(*import_clause_or_binding_pattern) {
+                    let new_specifiers = new_specifiers
+                        .iter()
+                        .map(import_specifier_text_for_insert)
+                        .collect::<Vec<_>>();
                     insert_text_at_pos(
                         tracker,
                         file,
@@ -471,6 +548,164 @@ pub fn add_to_existing_import<'a>(
             store.kind(*import_clause_or_binding_pattern)
         ),
     }
+}
+
+struct NewImportSpecifierForInsert {
+    name: String,
+    property_name: String,
+    is_type_only: bool,
+}
+
+fn compare_new_import_specifiers_for_insert(
+    a: &NewImportSpecifierForInsert,
+    b: &NewImportSpecifierForInsert,
+    preferences: lsutil::UserPreferences,
+    string_comparer: &dyn Fn(&str, &str) -> i32,
+) -> i32 {
+    compare_import_specifier_parts(
+        a.is_type_only,
+        &a.name,
+        b.is_type_only,
+        &b.name,
+        preferences,
+        string_comparer,
+    )
+}
+
+fn get_import_specifier_insertion_index_for_binding(
+    store: &ast::AstStore,
+    sorted_imports: &[ast::Node],
+    new_import: &NewImportSpecifierForInsert,
+    preferences: lsutil::UserPreferences,
+    string_comparer: &dyn Fn(&str, &str) -> i32,
+    promote_from_type_only: bool,
+) -> usize {
+    let (index, found) = core::binary_search_unique_func(sorted_imports, |_mid, value| {
+        let existing_is_type_only =
+            promote_from_type_only || store.is_type_only(*value).unwrap_or(false);
+        let existing_name = store.text(store.name(*value).unwrap());
+        match compare_import_specifier_parts(
+            existing_is_type_only,
+            &existing_name,
+            new_import.is_type_only,
+            &new_import.name,
+            preferences.clone(),
+            string_comparer,
+        ) {
+            x if x < 0 => std::cmp::Ordering::Less,
+            x if x > 0 => std::cmp::Ordering::Greater,
+            _ => std::cmp::Ordering::Equal,
+        }
+    });
+    if found { index } else { index }
+}
+
+fn compare_import_specifier_parts(
+    left_is_type_only: bool,
+    left_name: &str,
+    right_is_type_only: bool,
+    right_name: &str,
+    preferences: lsutil::UserPreferences,
+    string_comparer: &dyn Fn(&str, &str) -> i32,
+) -> i32 {
+    match preferences.organize_imports_type_order {
+        lsutil::OrganizeImportsTypeOrder::First => {
+            let cmp = core::compare_booleans(right_is_type_only, left_is_type_only);
+            if cmp != 0 {
+                return cmp;
+            }
+            string_comparer(left_name, right_name)
+        }
+        lsutil::OrganizeImportsTypeOrder::Inline => string_comparer(left_name, right_name),
+        lsutil::OrganizeImportsTypeOrder::Last | lsutil::OrganizeImportsTypeOrder::Auto => {
+            let cmp = core::compare_booleans(left_is_type_only, right_is_type_only);
+            if cmp != 0 {
+                return cmp;
+            }
+            string_comparer(left_name, right_name)
+        }
+    }
+}
+
+fn import_specifier_text_for_insert(specifier: &NewImportSpecifierForInsert) -> String {
+    let mut text = String::new();
+    if specifier.is_type_only {
+        text.push_str("type ");
+    }
+    if !specifier.property_name.is_empty() {
+        text.push_str(&specifier.property_name);
+        text.push_str(" as ");
+    }
+    text.push_str(&specifier.name);
+    text
+}
+
+fn insert_import_specifiers_at_index<'a>(
+    tracker: &mut change::Tracker<'a>,
+    file: &'a ast::SourceFile,
+    existing_specifiers: &[ast::Node],
+    _named_imports: ast::Node,
+    index: usize,
+    specifiers: &[String],
+) {
+    if specifiers.is_empty() {
+        return;
+    }
+
+    let text = specifiers.join(", ");
+    let store = file.store();
+    if index < existing_specifiers.len() {
+        let target = existing_specifiers[index];
+        let options = scanner::SkipTriviaOptions {
+            stop_after_line_break: false,
+            stop_at_comments: true,
+        };
+        let start_pos = scanner::skip_trivia_ex(
+            file.text(),
+            store.loc(target).pos() as usize,
+            Some(&options),
+        ) as i32;
+        let suffix = if index > 0 {
+            let previous = existing_specifiers[index - 1];
+            separator_suffix_after_specifier(file, previous, start_pos)
+                .unwrap_or_else(|| ", ".to_string())
+        } else {
+            ", ".to_string()
+        };
+        insert_text_at_pos(tracker, file, start_pos, &(text + &suffix));
+    } else if let Some(last_specifier) = existing_specifiers.last() {
+        insert_text_at_pos(
+            tracker,
+            file,
+            store.loc(*last_specifier).end(),
+            &(", ".to_string() + &text),
+        );
+    }
+}
+
+fn separator_suffix_after_specifier(
+    file: &ast::SourceFile,
+    specifier: ast::Node,
+    next_start: i32,
+) -> Option<String> {
+    let store = file.store();
+    let token = astnav::get_token_at_position_info(file, store.loc(specifier).end())?;
+    if !is_separator_token_kind(store, specifier, token.kind) {
+        return None;
+    }
+    Some(
+        scanner::token_to_string(token.kind)
+            + &file.text()[token.loc.end() as usize..next_start as usize],
+    )
+}
+
+fn is_separator_token_kind(store: &ast::AstStore, node: ast::Node, candidate: ast::Kind) -> bool {
+    store.parent(node).is_some()
+        && (candidate == ast::Kind::CommaToken
+            || candidate == ast::Kind::SemicolonToken
+                && store
+                    .parent(node)
+                    .is_some_and(|parent| store.kind(parent) == ast::Kind::ObjectLiteralExpression))
 }
 
 pub fn add_element_to_binding_pattern<'a>(
@@ -514,6 +749,161 @@ fn insert_text_at_pos<'a>(
 ) {
     let position = tracker.converters.position_to_line_and_character(file, pos);
     tracker.insert_text(file, position, text);
+}
+
+pub(crate) fn insert_import_texts<'a>(
+    tracker: &mut change::Tracker<'a>,
+    file: &'a ast::SourceFile,
+    mut imports: Vec<String>,
+    module_specifier: &str,
+    use_require: bool,
+    blank_line_between: bool,
+    preferences: lsutil::UserPreferences,
+) {
+    let store = file.store();
+    let existing_import_statements = existing_import_or_require_statements(file, use_require);
+    imports.sort();
+    let import_text = imports.join(&tracker.new_line);
+
+    if existing_import_statements.is_empty() {
+        let suffix = if blank_line_between {
+            tracker.new_line.clone() + &tracker.new_line
+        } else {
+            tracker.new_line.clone()
+        };
+        let pos = tracker.get_insertion_position_at_source_file_top(file);
+        insert_text_at_pos(tracker, file, pos, &(import_text + &suffix));
+        return;
+    }
+
+    let (comparer, is_sorted) = lsutil::get_organize_imports_string_comparer_with_detection(
+        store,
+        &existing_import_statements,
+        preferences,
+    );
+    if is_sorted {
+        let insertion_index = existing_import_statements
+            .iter()
+            .position(|existing| {
+                let existing_module = lsutil::get_external_module_name(
+                    store,
+                    lsutil::get_module_specifier_expression(store, existing).as_ref(),
+                );
+                compare_module_specifier_names(&existing_module, module_specifier, &*comparer) > 0
+            })
+            .unwrap_or(existing_import_statements.len());
+        if insertion_index == 0 {
+            let first_import = existing_import_statements[0];
+            let first_statement = store
+                .statements(file.as_node())
+                .and_then(|statements| statements.first());
+            let leading_trivia_option = if Some(first_import) == first_statement {
+                change::LEADING_TRIVIA_OPTION_EXCLUDE
+            } else {
+                change::LEADING_TRIVIA_OPTION_NONE
+            };
+            let pos = tracker.get_adjusted_start_position(
+                file,
+                first_import,
+                leading_trivia_option,
+                false,
+            );
+            insert_text_at_pos(
+                tracker,
+                file,
+                pos,
+                &(import_text + &tracker.new_line.clone()),
+            );
+            return;
+        }
+
+        let previous_import = existing_import_statements[insertion_index - 1];
+        let pos = tracker.get_adjusted_end_position(
+            file,
+            previous_import,
+            change::TRAILING_TRIVIA_OPTION_NONE,
+        );
+        insert_text_at_pos(
+            tracker,
+            file,
+            pos,
+            &(import_text + &tracker.new_line.clone()),
+        );
+        return;
+    }
+
+    let previous_import = *existing_import_statements
+        .last()
+        .expect("existing import statements should be non-empty");
+    let pos = tracker.get_adjusted_end_position(
+        file,
+        previous_import,
+        change::TRAILING_TRIVIA_OPTION_NONE,
+    );
+    insert_text_at_pos(
+        tracker,
+        file,
+        pos,
+        &(import_text + &tracker.new_line.clone()),
+    );
+}
+
+fn existing_import_or_require_statements(
+    file: &ast::SourceFile,
+    use_require: bool,
+) -> Vec<ast::Statement> {
+    let store = file.store();
+    let Some(statements) = store.statements(file.as_node()) else {
+        return Vec::new();
+    };
+    statements
+        .iter()
+        .filter(|statement| {
+            if use_require {
+                is_require_variable_statement(store, *statement)
+            } else {
+                ast::is_any_import_syntax(store, *statement)
+            }
+        })
+        .collect()
+}
+
+fn compare_module_specifier_names(
+    left: &str,
+    right: &str,
+    comparer: &dyn Fn(&str, &str) -> i32,
+) -> i32 {
+    let cmp = core::compare_booleans(left.is_empty(), right.is_empty());
+    if cmp != 0 {
+        return cmp;
+    }
+    let cmp = core::compare_booleans(
+        tspath::is_external_module_name_relative(left),
+        tspath::is_external_module_name_relative(right),
+    );
+    if cmp != 0 {
+        return cmp;
+    }
+    comparer(left, right)
+}
+
+pub(crate) fn has_existing_imports_or_requires(file: &ast::SourceFile, use_require: bool) -> bool {
+    !existing_import_or_require_statements(file, use_require).is_empty()
+}
+
+fn is_require_variable_statement(store: &ast::AstStore, statement: ast::Node) -> bool {
+    if store.kind(statement) != ast::Kind::VariableStatement {
+        return false;
+    }
+    let Some(declaration_list) = store.declaration_list(statement) else {
+        return false;
+    };
+    let Some(declarations) = store.declarations(declaration_list) else {
+        return false;
+    };
+    declarations
+        .iter()
+        .any(|declaration| ast::is_variable_declaration_initialized_to_require(store, declaration))
 }
 
 fn find_byte_in_node(file: &ast::SourceFile, node: &ast::Node, byte: u8) -> Option<i32> {

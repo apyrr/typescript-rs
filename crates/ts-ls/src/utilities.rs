@@ -161,12 +161,7 @@ pub(crate) fn is_in_comment(
     position: i32,
     token_at_position: &ast::Node,
 ) -> Option<ast::CommentRange> {
-    crate::format::get_range_of_enclosing_comment(
-        file,
-        position,
-        astnav::find_preceding_token(file, position).as_ref(),
-        Some(token_at_position),
-    )
+    crate::format::is_in_comment(file, position, Some(token_at_position))
 }
 
 pub(crate) fn position_belongs_to_node(

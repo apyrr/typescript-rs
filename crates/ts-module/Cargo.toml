@@ -13,5 +13,6 @@ ts-diagnostics = { path = "../ts-diagnostics" }
 ts-outputpaths = { path = "../ts-outputpaths" }
 ts-packagejson = { path = "../ts-packagejson" }
 ts-semver = { path = "../ts-semver" }
+ts-stringutil = { path = "../ts-stringutil" }
 ts-tspath = { path = "../ts-tspath" }
 ts-vfs = { path = "../ts-vfs" }

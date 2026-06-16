@@ -26,7 +26,8 @@ pub(crate) use fix::{
     get_add_to_existing_import_fix, make_new_import_text_from_bindings,
 };
 pub(crate) use import_adder::{
-    ImportAdder, new_import_adder, try_get_auto_importable_reference_from_type_node,
+    ImportAdder, get_name_for_exported_symbol, new_import_adder,
+    try_get_auto_importable_reference_from_type_node,
     try_get_auto_importable_reference_from_type_node_from_identifiers,
     type_node_to_auto_importable_type_node,
 };

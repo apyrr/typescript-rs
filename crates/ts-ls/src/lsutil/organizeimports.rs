@@ -468,6 +468,38 @@ pub fn detect_named_import_organization_by_sort_worker(
     comparers_to_test: &[fn(&str, &str) -> i32],
     types_to_test: &[OrganizeImportsTypeOrder],
 ) -> Option<NamedImportSortResult> {
+    let comparer_refs = comparers_to_test
+        .iter()
+        .map(|comparer| comparer as &dyn Fn(&str, &str) -> i32)
+        .collect::<Vec<_>>();
+    let result = detect_named_import_organization_by_sort_worker_for_comparers(
+        store,
+        original_groups,
+        &comparer_refs,
+        types_to_test,
+    )?;
+    Some(NamedImportSortResult {
+        named_import_comparer: result
+            .named_import_comparer_index
+            .map(|index| comparers_to_test[index]),
+        type_order: result.type_order,
+        is_sorted: result.is_sorted,
+    })
+}
+
+#[derive(Default)]
+struct NamedImportSortSelection {
+    named_import_comparer_index: Option<usize>,
+    type_order: OrganizeImportsTypeOrder,
+    is_sorted: bool,
+}
+
+fn detect_named_import_organization_by_sort_worker_for_comparers(
+    store: &ast::AstStore,
+    original_groups: &[ast::Statement],
+    comparers_to_test: &[&dyn Fn(&str, &str) -> i32],
+    types_to_test: &[OrganizeImportsTypeOrder],
+) -> Option<NamedImportSortSelection> {
     let mut both_named_imports = false;
     let mut import_decls_with_named = Vec::new();
 
@@ -525,13 +557,14 @@ pub fn detect_named_import_organization_by_sort_worker(
                     .collect()
             })
             .collect();
-        let sort_state = detect_case_sensitivity_by_sort(names_list, comparers_to_test);
+        let sort_state =
+            detect_case_sensitivity_by_sort_for_comparers(names_list, comparers_to_test);
         let mut type_order = OrganizeImportsTypeOrder::Last;
         if types_to_test.len() == 1 {
             type_order = types_to_test[0];
         }
-        return Some(NamedImportSortResult {
-            named_import_comparer: sort_state.comparer,
+        return Some(NamedImportSortSelection {
+            named_import_comparer_index: sort_state.comparer_index,
             type_order,
             is_sorted: sort_state.is_sorted,
         });
@@ -543,12 +576,12 @@ pub fn detect_named_import_organization_by_sort_worker(
         (OrganizeImportsTypeOrder::Inline, i32::MAX),
     ]);
     let mut best_comparer = std::collections::HashMap::from([
-        (OrganizeImportsTypeOrder::First, comparers_to_test[0]),
-        (OrganizeImportsTypeOrder::Last, comparers_to_test[0]),
-        (OrganizeImportsTypeOrder::Inline, comparers_to_test[0]),
+        (OrganizeImportsTypeOrder::First, 0usize),
+        (OrganizeImportsTypeOrder::Last, 0usize),
+        (OrganizeImportsTypeOrder::Inline, 0usize),
     ]);
 
-    for cur_comparer in comparers_to_test {
+    for (cur_comparer_index, cur_comparer) in comparers_to_test.iter().enumerate() {
         let mut curr_diff = std::collections::HashMap::from([
             (OrganizeImportsTypeOrder::First, 0),
             (OrganizeImportsTypeOrder::Last, 0),
@@ -562,7 +595,13 @@ pub fn detect_named_import_organization_by_sort_worker(
                     ..UserPreferences::default()
                 };
                 let diff = measure_sortedness(import_decl, |n1, n2| {
-                    compare_import_or_export_specifiers(store, n1, n2, cur_comparer, prefs.clone())
+                    compare_import_or_export_specifiers(
+                        store,
+                        n1,
+                        n2,
+                        |a, b| cur_comparer(a, b),
+                        prefs.clone(),
+                    )
                 });
                 *curr_diff.get_mut(type_order).unwrap() += diff;
             }
@@ -571,7 +610,7 @@ pub fn detect_named_import_organization_by_sort_worker(
         for type_order in types_to_test {
             if curr_diff[type_order] < best_diff[type_order] {
                 best_diff.insert(*type_order, curr_diff[type_order]);
-                best_comparer.insert(*type_order, *cur_comparer);
+                best_comparer.insert(*type_order, cur_comparer_index);
             }
         }
     }
@@ -585,16 +624,16 @@ pub fn detect_named_import_organization_by_sort_worker(
             }
         }
         if is_best {
-            return Some(NamedImportSortResult {
-                named_import_comparer: Some(best_comparer[best_type_order]),
+            return Some(NamedImportSortSelection {
+                named_import_comparer_index: Some(best_comparer[best_type_order]),
                 type_order: *best_type_order,
                 is_sorted: best_diff[best_type_order] == 0,
             });
         }
     }
 
-    Some(NamedImportSortResult {
-        named_import_comparer: Some(best_comparer[&OrganizeImportsTypeOrder::Last]),
+    Some(NamedImportSortSelection {
+        named_import_comparer_index: Some(best_comparer[&OrganizeImportsTypeOrder::Last]),
         type_order: OrganizeImportsTypeOrder::Last,
         is_sorted: best_diff[&OrganizeImportsTypeOrder::Last] == 0,
     })
@@ -633,10 +672,31 @@ pub fn detect_case_sensitivity_by_sort(
     original_groups: Vec<Vec<String>>,
     comparers_to_test: &[fn(&str, &str) -> i32],
 ) -> CaseSensitivityDetectionResult {
-    let mut best_comparer = None;
+    let comparer_refs = comparers_to_test
+        .iter()
+        .map(|comparer| comparer as &dyn Fn(&str, &str) -> i32)
+        .collect::<Vec<_>>();
+    let result = detect_case_sensitivity_by_sort_for_comparers(original_groups, &comparer_refs);
+    CaseSensitivityDetectionResult {
+        comparer: result.comparer_index.map(|index| comparers_to_test[index]),
+        is_sorted: result.is_sorted,
+    }
+}
+
+#[derive(Default)]
+struct CaseSensitivityDetectionSelection {
+    comparer_index: Option<usize>,
+    is_sorted: bool,
+}
+
+fn detect_case_sensitivity_by_sort_for_comparers(
+    original_groups: Vec<Vec<String>>,
+    comparers_to_test: &[&dyn Fn(&str, &str) -> i32],
+) -> CaseSensitivityDetectionSelection {
+    let mut best_comparer_index = None;
     let mut best_diff = i32::MAX;
 
-    for cur_comparer in comparers_to_test {
+    for (cur_comparer_index, cur_comparer) in comparers_to_test.iter().enumerate() {
         let mut diff_of_current_comparer = 0;
         for list_to_sort in &original_groups {
             if list_to_sort.len() <= 1 {
@@ -646,16 +706,16 @@ pub fn detect_case_sensitivity_by_sort(
         }
         if diff_of_current_comparer < best_diff {
             best_diff = diff_of_current_comparer;
-            best_comparer = Some(*cur_comparer);
+            best_comparer_index = Some(cur_comparer_index);
         }
     }
 
-    if best_comparer.is_none() && !comparers_to_test.is_empty() {
-        best_comparer = Some(comparers_to_test[0]);
+    if best_comparer_index.is_none() && !comparers_to_test.is_empty() {
+        best_comparer_index = Some(0);
     }
 
-    CaseSensitivityDetectionResult {
-        comparer: best_comparer,
+    CaseSensitivityDetectionSelection {
+        comparer_index: best_comparer_index,
         is_sorted: best_diff == 0,
     }
 }
@@ -673,6 +733,82 @@ pub fn measure_sortedness<T>(arr: &[T], comparer: impl Fn(&T, &T) -> i32) -> i32
     i
 }
 
+pub struct NamedImportSpecifierSorting {
+    pub string_comparer: Box<dyn Fn(&str, &str) -> i32>,
+    pub type_order: OrganizeImportsTypeOrder,
+    pub is_sorted: core::Tristate,
+}
+
+pub fn get_named_import_specifier_sorting_with_detection(
+    store: &ast::AstStore,
+    import_decl: &ast::Node,
+    source_file: Option<&ast::SourceFile>,
+    preferences: UserPreferences,
+) -> NamedImportSpecifierSorting {
+    let (mut comparers_to_test, type_orders_to_test) = get_detection_lists(preferences.clone());
+    let mut comparer_index = Some(0usize);
+    let mut type_order = preferences.organize_imports_type_order;
+    let mut is_sorted = core::Tristate::Unknown;
+
+    let import_stmt = if store.kind(*import_decl) == ast::Kind::ImportDeclaration {
+        Some(import_decl)
+    } else {
+        None
+    };
+
+    if (preferences.organize_imports_ignore_case.is_unknown()
+        || preferences.organize_imports_type_order == OrganizeImportsTypeOrder::Auto)
+        && import_stmt.is_some()
+    {
+        let detect_from_decl = {
+            let comparer_refs = comparers_to_test
+                .iter()
+                .map(|comparer| comparer.as_ref() as &dyn Fn(&str, &str) -> i32)
+                .collect::<Vec<_>>();
+            detect_named_import_organization_by_sort_worker_for_comparers(
+                store,
+                &[*import_stmt.unwrap()],
+                &comparer_refs,
+                &type_orders_to_test,
+            )
+        };
+        let detect_from_file = if detect_from_decl.is_none() {
+            source_file.and_then(|source_file| {
+                let statements: Vec<_> = source_file.statements_view().iter().collect();
+                let all_imports = filter_import_declarations(store, &statements);
+                let comparer_refs = comparers_to_test
+                    .iter()
+                    .map(|comparer| comparer.as_ref() as &dyn Fn(&str, &str) -> i32)
+                    .collect::<Vec<_>>();
+                detect_named_import_organization_by_sort_worker_for_comparers(
+                    store,
+                    &all_imports,
+                    &comparer_refs,
+                    &type_orders_to_test,
+                )
+            })
+        } else {
+            None
+        };
+
+        if let Some(detection) = detect_from_decl.or(detect_from_file) {
+            is_sorted = core::bool_to_tristate(detection.is_sorted);
+            comparer_index = detection.named_import_comparer_index;
+            type_order = detection.type_order;
+        }
+    }
+
+    let string_comparer = comparer_index
+        .map(|index| comparers_to_test.remove(index))
+        .unwrap_or_else(|| Box::new(get_organize_imports_ordinal_string_comparer(false)));
+
+    NamedImportSpecifierSorting {
+        string_comparer,
+        type_order,
+        is_sorted,
+    }
+}
+
 // GetNamedImportSpecifierComparerWithDetection returns a specifier comparer based on detecting the existing sort order within a single import statement
 pub fn get_named_import_specifier_comparer_with_detection<'a>(
     store: &'a ast::AstStore,
@@ -683,79 +819,27 @@ pub fn get_named_import_specifier_comparer_with_detection<'a>(
     Box<dyn Fn(&ast::Node, &ast::Node) -> i32 + 'a>,
     core::Tristate,
 ) {
-    let (comparers_to_test, type_orders_to_test) = get_detection_lists(preferences.clone());
-
-    let import_stmt = if store.kind(*import_decl) == ast::Kind::ImportDeclaration {
-        Some(import_decl)
-    } else {
-        None
+    let sorting = get_named_import_specifier_sorting_with_detection(
+        store,
+        import_decl,
+        source_file,
+        preferences,
+    );
+    let is_sorted = sorting.is_sorted;
+    let string_comparer = sorting.string_comparer;
+    let preferences = UserPreferences {
+        organize_imports_type_order: sorting.type_order,
+        ..UserPreferences::default()
     };
-
-    let mut specifier_comparer: Box<dyn Fn(&ast::Node, &ast::Node) -> i32> =
-        Box::new(get_named_import_specifier_comparer(
+    let specifier_comparer = Box::new(move |s1: &ast::Node, s2: &ast::Node| {
+        compare_import_or_export_specifiers(
             store,
+            s1,
+            s2,
+            |a, b| string_comparer(a, b),
             preferences.clone(),
-            Some(case_sensitive_organize_imports_comparer()[0]),
-        ));
-    let mut is_sorted = core::Tristate::Unknown;
-
-    if (preferences.organize_imports_ignore_case.is_unknown()
-        || preferences.organize_imports_type_order == OrganizeImportsTypeOrder::Auto)
-        && import_stmt.is_some()
-    {
-        let comparer_slice: Vec<fn(&str, &str) -> i32> = comparers_to_test
-            .iter()
-            .map(|f| {
-                let f_ref: &dyn Fn(&str, &str) -> i32 = f.as_ref();
-                if f_ref("a", "a") == 0 {
-                    case_sensitive_organize_imports_comparer()[0]
-                } else {
-                    case_sensitive_organize_imports_comparer()[0]
-                }
-            })
-            .collect();
-        let detect_from_decl = detect_named_import_organization_by_sort_worker(
-            store,
-            &[*import_stmt.unwrap()],
-            &comparer_slice,
-            &type_orders_to_test,
-        );
-        if let Some(detect_from_decl) = detect_from_decl {
-            is_sorted = core::bool_to_tristate(detect_from_decl.is_sorted);
-            if let Some(named_import_comparer) = detect_from_decl.named_import_comparer {
-                specifier_comparer = Box::new(get_named_import_specifier_comparer(
-                    store,
-                    UserPreferences {
-                        organize_imports_type_order: detect_from_decl.type_order,
-                        ..UserPreferences::default()
-                    },
-                    Some(named_import_comparer),
-                ));
-            }
-        } else if let Some(source_file) = source_file {
-            let statements: Vec<_> = source_file.statements_view().iter().collect();
-            let all_imports = filter_import_declarations(store, &statements);
-            let detect_from_file = detect_named_import_organization_by_sort_worker(
-                store,
-                &all_imports,
-                &comparer_slice,
-                &type_orders_to_test,
-            );
-            if let Some(detect_from_file) = detect_from_file {
-                is_sorted = core::bool_to_tristate(detect_from_file.is_sorted);
-                if let Some(named_import_comparer) = detect_from_file.named_import_comparer {
-                    specifier_comparer = Box::new(get_named_import_specifier_comparer(
-                        store,
-                        UserPreferences {
-                            organize_imports_type_order: detect_from_file.type_order,
-                            ..UserPreferences::default()
-                        },
-                        Some(named_import_comparer),
-                    ));
-                }
-            }
-        }
-    }
+        )
+    });
 
     (specifier_comparer, is_sorted)
 }

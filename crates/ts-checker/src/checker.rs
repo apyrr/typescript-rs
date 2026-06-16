@@ -15201,8 +15201,9 @@ impl<'a, 'state> Checker<'a, 'state> {
             return;
         }
 
+        if let Some(module_specifier) =
+            get_module_specifier_from_node(declaration_store, declaration)
         {
-            let module_specifier = get_module_specifier_from_node(declaration_store, declaration);
             if self.get_emit_syntax_for_module_specifier_expression(module_specifier)
                 == core::ModuleKind::CommonJS
             {
@@ -34167,7 +34168,7 @@ impl<'a, 'state> Checker<'a, 'state> {
             {
                 let parent = self.node_parent(node).unwrap();
                 let parent = parent;
-                get_module_specifier_from_node(self.store_for_node(parent), parent)
+                get_module_specifier_from_node(self.store_for_node(parent), parent)?
             },
             false, /*ignoreErrors*/
         );
@@ -35334,10 +35335,7 @@ impl<'a, 'state> Checker<'a, 'state> {
         match store.kind(node) {
             ast::Kind::ImportClause => {
                 let parent = self.store_for_node(node).parent(node).unwrap();
-                Some(get_module_specifier_from_node(
-                    self.store_for_node(node),
-                    parent,
-                ))
+                get_module_specifier_from_node(self.store_for_node(node), parent)
             }
             ast::Kind::ImportEqualsDeclaration => {
                 let store = self.store_for_node(node);
@@ -35353,24 +35351,24 @@ impl<'a, 'state> Checker<'a, 'state> {
             ast::Kind::NamespaceImport => {
                 let store = self.store_for_node(node);
                 let parent = store.parent(store.parent(node).unwrap()).unwrap();
-                Some(get_module_specifier_from_node(store, parent))
+                get_module_specifier_from_node(store, parent)
             }
             ast::Kind::ImportSpecifier => {
                 let store = self.store_for_node(node);
                 let parent = store
                     .parent(store.parent(store.parent(node).unwrap()).unwrap())
                     .unwrap();
-                Some(get_module_specifier_from_node(store, parent))
+                get_module_specifier_from_node(store, parent)
             }
             ast::Kind::NamespaceExport => {
                 let store = self.store_for_node(node);
                 let parent = store.parent(node).unwrap();
-                Some(get_module_specifier_from_node(store, parent))
+                get_module_specifier_from_node(store, parent)
             }
             ast::Kind::ExportSpecifier => {
                 let store = self.store_for_node(node);
                 let parent = store.parent(store.parent(node).unwrap()).unwrap();
-                Some(get_module_specifier_from_node(store, parent))
+                get_module_specifier_from_node(store, parent)
             }
             _ => panic!("Unhandled case in getModuleSpecifierForImportOrExport"),
         }
@@ -58033,12 +58031,12 @@ fn get_excluded_symbol_flags(flags: ast::SymbolFlags) -> ast::SymbolFlags {
     result
 }
 
-fn get_module_specifier_from_node<'a>(store: &'a ast::AstStore, node: ast::Node) -> ast::Node {
+fn get_module_specifier_from_node(store: &ast::AstStore, node: ast::Node) -> Option<ast::Node> {
     match store.kind(node) {
         ast::Kind::ImportDeclaration | ast::Kind::JSImportDeclaration => {
-            store.module_specifier(node).unwrap()
+            store.module_specifier(node)
         }
-        ast::Kind::ExportDeclaration => store.module_specifier(node).unwrap(),
+        ast::Kind::ExportDeclaration => store.module_specifier(node),
         _ => panic!("Unhandled case in getModuleSpecifierFromNode"),
     }
 }

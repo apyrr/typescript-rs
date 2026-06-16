@@ -55,7 +55,8 @@ pub fn get_indentation(
     }
 
     let store = source_file.store();
-    let preceding_token = astnav::find_preceding_token_ex(source_file, position, None);
+    let preceding_token_info = astnav::find_preceding_token_ex_info(source_file, position, None);
+    let preceding_token = preceding_token_info.and_then(|info| info.node);
 
     let enclosing_comment_range =
         get_range_of_enclosing_comment(source_file, position, preceding_token.as_ref());
@@ -72,6 +73,11 @@ pub fn get_indentation(
     }
 
     let Some(preceding_token) = preceding_token else {
+        if preceding_token_info.is_some_and(|info| {
+            info.kind == ast::Kind::CloseBraceToken && info.loc.end() <= position
+        }) {
+            return get_block_indent(source_file, position, options);
+        }
         return options.base_indent_size;
     };
 

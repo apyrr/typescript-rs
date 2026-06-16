@@ -185,6 +185,20 @@ struct AssignPositionsTraversal<'state, 'factory, 'source> {
     import_state: ast::AstImportState,
 }
 
+fn concrete_range(range: core::TextRange, fallback: core::TextRange) -> core::TextRange {
+    let pos = if ast::position_is_synthesized(range.pos()) {
+        fallback.pos()
+    } else {
+        range.pos()
+    };
+    let end = if ast::position_is_synthesized(range.end()) {
+        fallback.end()
+    } else {
+        range.end()
+    };
+    core::TextRange::new(pos, end)
+}
+
 impl AssignPositionsTraversal<'_, '_, '_> {
     fn store_for(&self, node: ast::Node) -> &ast::AstStore {
         if node.store_id() == self.factory.store().store_id() {
@@ -208,9 +222,18 @@ impl AssignPositionsTraversal<'_, '_, '_> {
                 .deep_clone_node_from_store(self.source, visited);
         }
         self.factory.adopt_emit_synthetic_children(new_node);
-        let loc = core::TextRange::new(
-            self.state.get_pos(TriviaPositionKey::of_node(node)),
-            self.state.get_end(TriviaPositionKey::of_node(node)),
+        let source_loc = self.store_for(*node).loc(*node);
+        let fallback = concrete_range(source_loc, core::TextRange::new(0, 0));
+        let loc = concrete_range(
+            core::TextRange::new(
+                self.state
+                    .try_pos(TriviaPositionKey::of_node(node))
+                    .unwrap_or_else(|| fallback.pos()),
+                self.state
+                    .try_end(TriviaPositionKey::of_node(node))
+                    .unwrap_or_else(|| fallback.end()),
+            ),
+            fallback,
         );
         self.factory.place_emit_synthetic_node(new_node, loc);
         new_node
@@ -230,14 +253,31 @@ impl AssignPositionsTraversal<'_, '_, '_> {
             visited_nodes,
             nodes.has_trailing_comma(),
         );
-        let range = self.factory.emit_node_list_range(visited);
-        let loc = core::TextRange::new(
-            self.state
-                .get_pos(TriviaPositionKey::of_source_node_list(source_nodes)),
-            self.state
-                .get_end(TriviaPositionKey::of_source_node_list(source_nodes)),
-        );
         let cloned_nodes = self.factory.emit_node_list_nodes(visited);
+        let child_fallback = cloned_nodes
+            .first()
+            .zip(cloned_nodes.last())
+            .map(|(first, last)| {
+                core::TextRange::new(
+                    self.factory.loc(*first).pos(),
+                    self.factory.loc(*last).end(),
+                )
+            })
+            .unwrap_or_else(|| core::TextRange::new(0, 0));
+        let list_key = TriviaPositionKey::of_source_node_list(source_nodes);
+        let fallback = if cloned_nodes.is_empty() {
+            concrete_range(nodes.loc(), child_fallback)
+        } else {
+            child_fallback
+        };
+        let loc = match (
+            self.state.try_pos(list_key.clone()),
+            self.state.try_end(list_key),
+        ) {
+            (Some(pos), Some(end)) => concrete_range(core::TextRange::new(pos, end), fallback),
+            _ => fallback,
+        };
+        let range = concrete_range(self.factory.emit_node_list_range(visited), loc);
         self.factory.new_node_list(loc, range, cloned_nodes)
     }
 
@@ -257,7 +297,7 @@ impl AssignPositionsTraversal<'_, '_, '_> {
                     .unwrap_or_else(|| nodes.loc().end());
                 core::TextRange::new(pos, end)
             }
-            _ => nodes.loc(),
+            _ => concrete_range(nodes.loc(), core::TextRange::new(0, 0)),
         }
     }
 
@@ -495,6 +535,32 @@ impl<'source> ast::AstVisitEachChildRuntime<'source> for AssignPositionsTraversa
     fn visit_embedded_statement(&mut self, node: Option<ast::Node>) -> Option<ast::Node> {
         let visited = self.visit_node(node);
         self.lift_to_block_or_empty(visited)
+    }
+
+    fn visit_nodes_input(
+        &mut self,
+        nodes: Option<ast::SourceNodeListInput>,
+    ) -> Option<ast::NodeList> {
+        nodes.map(|nodes| self.assign_positions_to_node_array(nodes))
+    }
+
+    fn visit_modifiers_input(
+        &mut self,
+        modifiers: Option<ast::SourceModifierListInput>,
+    ) -> Option<ast::ModifierList> {
+        let modifiers = modifiers?;
+        let mut visited = Vec::with_capacity(modifiers.nodes().len());
+        for node in modifiers.iter() {
+            if let Some(visited_node) = self.visit_node(Some(node)) {
+                visited.push(visited_node);
+            }
+        }
+        Some(self.factory.new_modifier_list(
+            self.modifier_list_loc(&modifiers),
+            modifiers.range(),
+            visited,
+            modifiers.modifier_flags(),
+        ))
     }
 }
 

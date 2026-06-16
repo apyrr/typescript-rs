@@ -526,7 +526,7 @@ impl<'a, 'state> Checker<'a, 'state> {
         &mut self,
         symbol: ast::SymbolIdentity,
     ) -> Vec<ast::SymbolIdentity> {
-        let exports = self.collect_exports_of_module_identity(to_checker_symbol(symbol));
+        let exports = self.collect_exports_of_module_identities(to_checker_symbol(symbol));
         to_ast_symbols(self.symbol_identities_to_array(&exports))
     }
 
@@ -536,7 +536,7 @@ impl<'a, 'state> Checker<'a, 'state> {
         mut cb: impl FnMut(SymbolIdentity, String),
     ) {
         for (key, &exported_symbol) in self
-            .collect_exports_of_module_identity(module_symbol)
+            .collect_exports_of_module_identities(module_symbol)
             .iter()
         {
             if !is_reserved_member_name(&key) {
@@ -797,7 +797,12 @@ impl<'a, 'state> Checker<'a, 'state> {
         let export_equals = export_equals?;
         let t = self.get_type_of_symbol_identity_at_location(export_equals, None);
         if self.should_treat_properties_of_external_module_as_exports(t) {
-            return self.get_property_of_type(t, member_name).map(to_ast_symbol);
+            if let Some(property) = self.get_property_of_type(t, member_name) {
+                return Some(to_ast_symbol(property));
+            }
+            if let Some(export) = self.lookup_symbol_identity_export(export_equals, member_name) {
+                return Some(to_ast_symbol(export));
+            }
         }
         None
     }
@@ -1358,7 +1363,7 @@ impl<'a, 'state> Checker<'a, 'state> {
         &mut self,
         module_symbol: SymbolIdentity,
     ) -> Vec<SymbolIdentity> {
-        let exports = self.collect_exports_of_module_identity(module_symbol);
+        let exports = self.collect_exports_of_module_identities(module_symbol);
         self.symbol_identities_to_array(&exports)
     }
 
@@ -1420,7 +1425,11 @@ impl<'a, 'state> Checker<'a, 'state> {
         check_mode: CheckMode,
         argument_count: usize,
     ) -> (Option<SignatureHandle>, Vec<SignatureHandle>) {
-        let parsed_node = printer::new_emit_context().parse_node(&node);
+        let mut emit_context = printer::new_emit_context();
+        if let Some(source_file) = self.try_source_file_for_node(node) {
+            emit_context.set_source_file(Some(source_file));
+        }
+        let parsed_node = emit_context.parse_node(&node);
         self.set_apparent_argument_count(argument_count as isize);
         let mut candidates_out_array = Vec::new();
         let mut res = None;

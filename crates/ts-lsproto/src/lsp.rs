@@ -2773,6 +2773,52 @@ pub static TextDocumentCompletionInfo: LazyLock<RequestInfo<CompletionParams, Co
         method: MethodTextDocumentCompletion.to_string(),
     });
 
+pub static TextDocumentDiagnosticInfo: LazyLock<
+    RequestInfo<DocumentDiagnosticParams, DocumentDiagnosticResponse>,
+> = LazyLock::new(|| RequestInfo {
+    _params: PhantomData,
+    _resp: PhantomData,
+    method: MethodTextDocumentDiagnostic.to_string(),
+});
+
+pub static TextDocumentCodeActionInfo: LazyLock<RequestInfo<CodeActionParams, CodeActionResponse>> =
+    LazyLock::new(|| RequestInfo {
+        _params: PhantomData,
+        _resp: PhantomData,
+        method: MethodTextDocumentCodeAction.to_string(),
+    });
+
+pub static TextDocumentHoverInfo: LazyLock<RequestInfo<HoverParams, HoverResponse>> =
+    LazyLock::new(|| RequestInfo {
+        _params: PhantomData,
+        _resp: PhantomData,
+        method: MethodTextDocumentHover.to_string(),
+    });
+
+pub static TextDocumentFormattingInfo: LazyLock<
+    RequestInfo<DocumentFormattingParams, DocumentFormattingResponse>,
+> = LazyLock::new(|| RequestInfo {
+    _params: PhantomData,
+    _resp: PhantomData,
+    method: MethodTextDocumentFormatting.to_string(),
+});
+
+pub static TextDocumentRangeFormattingInfo: LazyLock<
+    RequestInfo<DocumentRangeFormattingParams, DocumentRangeFormattingResponse>,
+> = LazyLock::new(|| RequestInfo {
+    _params: PhantomData,
+    _resp: PhantomData,
+    method: MethodTextDocumentRangeFormatting.to_string(),
+});
+
+pub static TextDocumentOnTypeFormattingInfo: LazyLock<
+    RequestInfo<DocumentOnTypeFormattingParams, DocumentOnTypeFormattingResponse>,
+> = LazyLock::new(|| RequestInfo {
+    _params: PhantomData,
+    _resp: PhantomData,
+    method: MethodTextDocumentOnTypeFormatting.to_string(),
+});
+
 pub static TextDocumentDocumentSymbolInfo: LazyLock<
     RequestInfo<DocumentSymbolParams, DocumentSymbolResponse>,
 > = LazyLock::new(|| RequestInfo {
@@ -8034,6 +8080,30 @@ impl HasTextDocumentPosition for CompletionParams {
     }
 }
 
+impl HasTextDocumentUri for DocumentDiagnosticParams {
+    fn text_document_uri(&self) -> DocumentUri {
+        self.text_document.uri.to_string()
+    }
+}
+
+impl HasTextDocumentUri for CodeActionParams {
+    fn text_document_uri(&self) -> DocumentUri {
+        self.text_document.uri.clone()
+    }
+}
+
+impl HasTextDocumentUri for HoverParams {
+    fn text_document_uri(&self) -> DocumentUri {
+        self.text_document.uri.to_string()
+    }
+}
+
+impl HasTextDocumentPosition for HoverParams {
+    fn text_document_position(&self) -> Position {
+        self.position
+    }
+}
+
 impl HasTextDocumentUri for SignatureHelpParams {
     fn text_document_uri(&self) -> DocumentUri {
         self.text_document.uri.clone()
@@ -8043,6 +8113,18 @@ impl HasTextDocumentUri for SignatureHelpParams {
 impl HasTextDocumentPosition for SignatureHelpParams {
     fn text_document_position(&self) -> Position {
         self.position
+    }
+}
+
+impl HasTextDocumentUri for DocumentFormattingParams {
+    fn text_document_uri(&self) -> DocumentUri {
+        self.text_document.uri.clone()
+    }
+}
+
+impl HasTextDocumentUri for DocumentRangeFormattingParams {
+    fn text_document_uri(&self) -> DocumentUri {
+        self.text_document.uri.clone()
     }
 }
 
@@ -8391,7 +8473,11 @@ impl ClientCapabilitiesExt for ClientCapabilities {
                 .as_ref()
                 .map(resolve_workspace_client_capabilities)
                 .unwrap_or_default(),
-            text_document: ResolvedTextDocumentClientCapabilities::default(),
+            text_document: self
+                .text_document
+                .as_ref()
+                .map(resolve_text_document_client_capabilities)
+                .unwrap_or_default(),
             window: self
                 .window
                 .as_ref()
@@ -8409,6 +8495,231 @@ impl ClientCapabilitiesExt for ClientCapabilities {
             vs_supports_diagnostic_requests: false,
         }
     }
+}
+
+fn resolve_text_document_client_capabilities(
+    v: &lsp_types_full::TextDocumentClientCapabilities,
+) -> ResolvedTextDocumentClientCapabilities {
+    ResolvedTextDocumentClientCapabilities {
+        completion: v
+            .completion
+            .as_ref()
+            .map(resolve_completion_client_capabilities)
+            .unwrap_or_default(),
+        definition: v
+            .definition
+            .as_ref()
+            .map(resolve_goto_client_capabilities)
+            .unwrap_or_default(),
+        type_definition: v
+            .type_definition
+            .as_ref()
+            .map(resolve_goto_client_capabilities)
+            .unwrap_or_default(),
+        implementation: v
+            .implementation
+            .as_ref()
+            .map(resolve_goto_client_capabilities)
+            .unwrap_or_default(),
+        document_symbol: v
+            .document_symbol
+            .as_ref()
+            .map(resolve_document_symbol_client_capabilities)
+            .unwrap_or_default(),
+        hover: v
+            .hover
+            .as_ref()
+            .map(resolve_hover_client_capabilities)
+            .unwrap_or_default(),
+        signature_help: v
+            .signature_help
+            .as_ref()
+            .map(resolve_signature_help_client_capabilities)
+            .unwrap_or_default(),
+        folding_range: v
+            .folding_range
+            .as_ref()
+            .map(resolve_folding_range_client_capabilities)
+            .unwrap_or_default(),
+        semantic_tokens: v
+            .semantic_tokens
+            .as_ref()
+            .map(resolve_semantic_tokens_client_capabilities)
+            .unwrap_or_default(),
+        diagnostic: v
+            .diagnostic
+            .as_ref()
+            .map(resolve_diagnostic_client_capabilities)
+            .unwrap_or_default(),
+        publish_diagnostics: v
+            .publish_diagnostics
+            .as_ref()
+            .map(resolve_publish_diagnostics_client_capabilities)
+            .unwrap_or_default(),
+    }
+}
+
+fn resolve_goto_client_capabilities(
+    v: &lsp_types_full::GotoCapability,
+) -> ResolvedGotoClientCapabilities {
+    ResolvedGotoClientCapabilities {
+        link_support: v.link_support.unwrap_or_default(),
+    }
+}
+
+fn resolve_document_symbol_client_capabilities(
+    v: &lsp_types_full::DocumentSymbolClientCapabilities,
+) -> ResolvedDocumentSymbolClientCapabilities {
+    ResolvedDocumentSymbolClientCapabilities {
+        hierarchical_document_symbol_support: v
+            .hierarchical_document_symbol_support
+            .unwrap_or_default(),
+    }
+}
+
+fn resolve_completion_client_capabilities(
+    v: &lsp_types_full::CompletionClientCapabilities,
+) -> ResolvedCompletionClientCapabilities {
+    ResolvedCompletionClientCapabilities {
+        completion_item: v
+            .completion_item
+            .as_ref()
+            .map(resolve_completion_item_client_capabilities)
+            .unwrap_or_default(),
+        completion_list: v
+            .completion_list
+            .as_ref()
+            .map(resolve_completion_list_client_capabilities)
+            .unwrap_or_default(),
+    }
+}
+
+fn resolve_completion_item_client_capabilities(
+    v: &lsp_types_full::CompletionItemCapability,
+) -> ResolvedCompletionItemClientCapabilities {
+    ResolvedCompletionItemClientCapabilities {
+        label_details_support: v.label_details_support.unwrap_or_default(),
+        snippet_support: v.snippet_support.unwrap_or_default(),
+        commit_characters_support: v.commit_characters_support.unwrap_or_default(),
+        insert_replace_support: v.insert_replace_support.unwrap_or_default(),
+        documentation_format: v.documentation_format.clone().unwrap_or_default(),
+    }
+}
+
+fn resolve_completion_list_client_capabilities(
+    v: &lsp_types_full::CompletionListCapability,
+) -> ResolvedCompletionListClientCapabilities {
+    ResolvedCompletionListClientCapabilities {
+        item_defaults: v.item_defaults.clone().unwrap_or_default(),
+    }
+}
+
+fn resolve_hover_client_capabilities(
+    v: &lsp_types_full::HoverClientCapabilities,
+) -> ResolvedHoverClientCapabilities {
+    ResolvedHoverClientCapabilities {
+        content_format: v.content_format.clone().unwrap_or_default(),
+        verbosity_level: false,
+    }
+}
+
+fn resolve_signature_help_client_capabilities(
+    v: &lsp_types_full::SignatureHelpClientCapabilities,
+) -> ResolvedSignatureHelpClientCapabilities {
+    ResolvedSignatureHelpClientCapabilities {
+        signature_information: v
+            .signature_information
+            .as_ref()
+            .map(resolve_signature_information_client_capabilities)
+            .unwrap_or_default(),
+    }
+}
+
+fn resolve_signature_information_client_capabilities(
+    v: &lsp_types_full::SignatureInformationSettings,
+) -> ResolvedSignatureInformationClientCapabilities {
+    let active_parameter_support = v.active_parameter_support.unwrap_or_default();
+    ResolvedSignatureInformationClientCapabilities {
+        documentation_format: v.documentation_format.clone().unwrap_or_default(),
+        active_parameter_support,
+        no_active_parameter_support: !active_parameter_support,
+    }
+}
+
+fn resolve_folding_range_client_capabilities(
+    v: &lsp_types_full::FoldingRangeClientCapabilities,
+) -> ResolvedFoldingRangeClientCapabilities {
+    ResolvedFoldingRangeClientCapabilities {
+        line_folding_only: v.line_folding_only.unwrap_or_default(),
+        folding_range: v
+            .folding_range
+            .as_ref()
+            .map(resolve_folding_range_client_capabilities_inner)
+            .unwrap_or_default(),
+    }
+}
+
+fn resolve_folding_range_client_capabilities_inner(
+    v: &lsp_types_full::FoldingRangeCapability,
+) -> ResolvedFoldingRangeClientCapabilitiesInner {
+    ResolvedFoldingRangeClientCapabilitiesInner {
+        collapsed_text: v.collapsed_text.unwrap_or_default(),
+    }
+}
+
+fn resolve_semantic_tokens_client_capabilities(
+    v: &lsp_types_full::SemanticTokensClientCapabilities,
+) -> ResolvedSemanticTokensClientCapabilities {
+    ResolvedSemanticTokensClientCapabilities {
+        token_types: v
+            .token_types
+            .iter()
+            .map(|token_type| token_type.as_str().to_string())
+            .collect(),
+        token_modifiers: v
+            .token_modifiers
+            .iter()
+            .map(|token_modifier| token_modifier.as_str().to_string())
+            .collect(),
+    }
+}
+
+fn resolve_diagnostic_client_capabilities(
+    v: &lsp_types_full::DiagnosticClientCapabilities,
+) -> ResolvedDiagnosticClientCapabilities {
+    ResolvedDiagnosticClientCapabilities {
+        related_information: v.related_document_support.unwrap_or_default(),
+        tag_support: ResolvedTagSupport::default(),
+    }
+}
+
+fn resolve_publish_diagnostics_client_capabilities(
+    v: &lsp_types_full::PublishDiagnosticsClientCapabilities,
+) -> ResolvedDiagnosticClientCapabilities {
+    ResolvedDiagnosticClientCapabilities {
+        related_information: v.related_information.unwrap_or_default(),
+        tag_support: v
+            .tag_support
+            .as_ref()
+            .map(|tag_support| ResolvedTagSupport {
+                value_set: tag_support
+                    .value_set
+                    .iter()
+                    .filter_map(resolve_diagnostic_tag)
+                    .collect(),
+            })
+            .unwrap_or_default(),
+    }
+}
+
+fn resolve_diagnostic_tag(tag: &lsp_types_full::DiagnosticTag) -> Option<DiagnosticTag> {
+    if tag == &lsp_types_full::DiagnosticTag::UNNECESSARY {
+        return Some(DiagnosticTag::Unnecessary);
+    }
+    if tag == &lsp_types_full::DiagnosticTag::DEPRECATED {
+        return Some(DiagnosticTag::Deprecated);
+    }
+    None
 }
 
 fn resolve_workspace_client_capabilities(

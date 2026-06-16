@@ -160,24 +160,87 @@ pub fn is_in_comment(
     position: i32,
     token_at_position: Option<&ast::Node>,
 ) -> Option<ast::CommentRange> {
-    let preceding_token = astnav::find_preceding_token(file, position);
-    get_range_of_enclosing_comment(file, position, preceding_token.as_ref(), token_at_position)
+    let preceding_token =
+        astnav::find_preceding_token_info(file, position).map(CommentTokenInfo::from_token_info);
+    let token_at_position = get_token_at_position_info_for_comment(file, position, preceding_token)
+        .or_else(|| {
+            token_at_position.map(|token| CommentTokenInfo::from_node(file.store(), *token))
+        });
+    get_range_of_enclosing_comment_worker(file, position, preceding_token, token_at_position)
 }
 
-// Unlike the TS implementation, this function *will not* compute default values for
-// `precedingToken` and `tokenAtPosition`.
-// It is the caller's responsibility to call `astnav.GetTokenAtPosition` to compute a default `tokenAtPosition`,
-// or `astnav.FindPrecedingToken` to compute a default `precedingToken`.
-pub fn get_range_of_enclosing_comment(
+#[derive(Clone, Copy)]
+struct CommentTokenInfo {
+    node: Option<ast::Node>,
+    kind: ast::Kind,
+    loc: core::TextRange,
+}
+
+impl CommentTokenInfo {
+    fn from_node(store: &ast::AstStore, node: ast::Node) -> Self {
+        Self {
+            node: Some(node),
+            kind: store.kind(node),
+            loc: store.loc(node),
+        }
+    }
+
+    fn from_token_info(token: astnav::TokenInfo) -> Self {
+        Self {
+            node: token.node,
+            kind: token.kind,
+            loc: token.loc,
+        }
+    }
+}
+
+fn get_token_at_position_info_for_comment(
     file: &ast::SourceFile,
     position: i32,
-    preceding_token: Option<&ast::Node>,
-    token_at_position: Option<&ast::Node>,
+    preceding_token: Option<CommentTokenInfo>,
+) -> Option<CommentTokenInfo> {
+    let left = preceding_token.map_or(0, |token| token.loc.end().max(0) as usize);
+    let scanner = scanner::get_scanner_for_source_file(file, left);
+    let kind = scanner.token();
+    if ast::is_token_kind(kind) {
+        let loc = core::new_text_range(scanner.token_full_start(), scanner.token_end());
+        if loc.pos() <= position && position < loc.end() {
+            return Some(CommentTokenInfo {
+                node: None,
+                kind,
+                loc,
+            });
+        }
+    }
+    astnav::get_token_at_position_info(file, position).map(CommentTokenInfo::from_token_info)
+}
+
+fn get_token_start_for_comment(file: &ast::SourceFile, token: CommentTokenInfo) -> i32 {
+    token.node.map_or_else(
+        || scanner::skip_trivia(file.text(), token.loc.pos().max(0) as usize) as i32,
+        |node| astnav::get_start_of_node(node, file),
+    )
+}
+
+fn get_leading_comment_ranges_of_token(
+    file: &ast::SourceFile,
+    token: CommentTokenInfo,
+) -> Vec<ast::CommentRange> {
+    if token.kind == ast::Kind::JsxText {
+        return Vec::new();
+    }
+    scanner::get_leading_comment_ranges(file.text(), token.loc.pos())
+}
+
+fn get_range_of_enclosing_comment_worker(
+    file: &ast::SourceFile,
+    position: i32,
+    preceding_token: Option<CommentTokenInfo>,
+    token_at_position: Option<CommentTokenInfo>,
 ) -> Option<ast::CommentRange> {
     let token_at_position = token_at_position?;
-    let store = file.store();
-    let token_start = astnav::get_start_of_node(*token_at_position, file);
-    if token_start <= position && position < store.loc(*token_at_position).end() {
+    let token_start = get_token_start_for_comment(file, token_at_position);
+    if token_start <= position && position < token_at_position.loc.end() {
         return None;
     }
 
@@ -187,13 +250,10 @@ pub fn get_range_of_enclosing_comment(
     if let Some(preceding_token) = preceding_token {
         comment_ranges.extend(scanner::get_trailing_comment_ranges(
             file.text(),
-            store.loc(*preceding_token).end(),
+            preceding_token.loc.end(),
         ));
     }
-    comment_ranges.extend(format::get_leading_comment_ranges_of_node(
-        token_at_position,
-        file,
-    ));
+    comment_ranges.extend(get_leading_comment_ranges_of_token(file, token_at_position));
     for comment_range in comment_ranges {
         // The end marker of a single-line comment does not include the newline character.
         // In the following case where the cursor is at `^`, we are inside a comment:

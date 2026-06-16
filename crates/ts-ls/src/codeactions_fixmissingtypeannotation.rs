@@ -498,6 +498,20 @@ pub fn deep_clone_for_change_factory(
     }
 }
 
+fn import_generated_name_for_change_tracker(
+    change_tracker: &mut change::Tracker,
+    name: ast::Node,
+) -> ast::Node {
+    let source = change_tracker.emit_context.factory.node_factory.store();
+    let cloned = change_tracker
+        .node_factory
+        .deep_clone_node_from_store(source, name);
+    change_tracker
+        .emit_context
+        .copy_auto_generate_info(&name, &cloned);
+    cloned
+}
+
 impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
     pub fn add_inline_assertion(&mut self, span: core::TextRange) -> String {
         let node_with_diag = astnav::get_token_at_position(self.source_file, span.pos());
@@ -699,19 +713,25 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
             return String::new();
         }
 
-        let temp_name = self
-            .change_tracker
-            .as_mut()
-            .unwrap()
-            .emit_context
-            .factory
-            .new_unique_name_ex(
-                &get_identifier_name_for_node(self.source_file.store(), target_node),
-                printer::AutoGenerateOptions {
-                    flags: printer::GENERATED_IDENTIFIER_FLAGS_OPTIMISTIC,
-                    ..Default::default()
-                },
-            );
+        let temp_name = {
+            let temp_name = self
+                .change_tracker
+                .as_mut()
+                .unwrap()
+                .emit_context
+                .factory
+                .new_unique_name_ex(
+                    &get_identifier_name_for_node(self.source_file.store(), target_node),
+                    printer::AutoGenerateOptions {
+                        flags: printer::GENERATED_IDENTIFIER_FLAGS_OPTIMISTIC,
+                        ..Default::default()
+                    },
+                );
+            import_generated_name_for_change_tracker(
+                self.change_tracker.as_mut().unwrap(),
+                temp_name,
+            )
+        };
 
         let mut replacement_target = target_node;
         let mut initialization_node = target_node;
@@ -942,14 +962,15 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
             return String::new();
         };
 
-        let default_identifier = self
-            .change_tracker
-            .as_mut()
-            .unwrap()
+        let change_tracker = self.change_tracker.as_mut().unwrap();
+        let default_identifier = change_tracker
             .emit_context
             .factory
             .new_unique_name("_default");
-        let factory = &mut self.change_tracker.as_mut().unwrap().node_factory;
+        let default_identifier =
+            import_generated_name_for_change_tracker(change_tracker, default_identifier);
+        let factory = &mut change_tracker.node_factory;
+        // Deep clone the expression so synthesized nodes don't reference original source positions
         let cloned_expression =
             deep_clone_for_change_factory(factory, self.source_file, expression);
         let var_decl = factory.new_variable_declaration(
@@ -1022,19 +1043,25 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
             .name(*class_decl)
             .map(|name| format!("{}Base", self.source_file.store().text(name)))
             .unwrap_or_else(|| "Anonymous".to_string());
-        let base_class_name = self
-            .change_tracker
-            .as_mut()
-            .unwrap()
-            .emit_context
-            .factory
-            .new_unique_name_ex(
-                &base_name,
-                printer::AutoGenerateOptions {
-                    flags: printer::GENERATED_IDENTIFIER_FLAGS_OPTIMISTIC,
-                    ..Default::default()
-                },
-            );
+        let base_class_name = {
+            let base_class_name = self
+                .change_tracker
+                .as_mut()
+                .unwrap()
+                .emit_context
+                .factory
+                .new_unique_name_ex(
+                    &base_name,
+                    printer::AutoGenerateOptions {
+                        flags: printer::GENERATED_IDENTIFIER_FLAGS_OPTIMISTIC,
+                        ..Default::default()
+                    },
+                );
+            import_generated_name_for_change_tracker(
+                self.change_tracker.as_mut().unwrap(),
+                base_class_name,
+            )
+        };
 
         let factory = &mut self.change_tracker.as_mut().unwrap().node_factory;
         let cloned_expression =
@@ -1103,19 +1130,25 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
         let mut new_nodes = Vec::new();
         let base_expr_node;
         if !ast::is_identifier(self.source_file.store(), initializer) {
-            let temp_name = self
-                .change_tracker
-                .as_mut()
-                .unwrap()
-                .emit_context
-                .factory
-                .new_unique_name_ex(
-                    "dest",
-                    printer::AutoGenerateOptions {
-                        flags: printer::GENERATED_IDENTIFIER_FLAGS_OPTIMISTIC,
-                        ..Default::default()
-                    },
-                );
+            let temp_name = {
+                let temp_name = self
+                    .change_tracker
+                    .as_mut()
+                    .unwrap()
+                    .emit_context
+                    .factory
+                    .new_unique_name_ex(
+                        "dest",
+                        printer::AutoGenerateOptions {
+                            flags: printer::GENERATED_IDENTIFIER_FLAGS_OPTIMISTIC,
+                            ..Default::default()
+                        },
+                    );
+                import_generated_name_for_change_tracker(
+                    self.change_tracker.as_mut().unwrap(),
+                    temp_name,
+                )
+            };
             let factory = &mut self.change_tracker.as_mut().unwrap().node_factory;
             let cloned_initializer =
                 deep_clone_for_change_factory(factory, self.source_file, initializer);
@@ -1163,6 +1196,10 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
                 .collect();
             if !remaining_decls.is_empty() {
                 let factory = &mut self.change_tracker.as_mut().unwrap().node_factory;
+                let remaining_decls = remaining_decls
+                    .into_iter()
+                    .map(|decl| deep_clone_for_change_factory(factory, self.source_file, decl))
+                    .collect::<Vec<_>>();
                 let declarations = synthetic_node_list(factory, remaining_decls);
                 let var_decl_list = factory.new_variable_declaration_list(
                     declarations,
@@ -1229,16 +1266,22 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
                     else {
                         continue;
                     };
-                    let identifier_for_computed_property = self
-                        .change_tracker
-                        .as_mut()
-                        .unwrap()
-                        .emit_context
-                        .factory
-                        .new_generated_name_for_node(
-                            self.source_file.store(),
-                            &computed_expression,
-                        );
+                    let identifier_for_computed_property = {
+                        let identifier_for_computed_property = self
+                            .change_tracker
+                            .as_mut()
+                            .unwrap()
+                            .emit_context
+                            .factory
+                            .new_generated_name_for_node(
+                                self.source_file.store(),
+                                &computed_expression,
+                            );
+                        import_generated_name_for_change_tracker(
+                            self.change_tracker.as_mut().unwrap(),
+                            identifier_for_computed_property,
+                        )
+                    };
                     let factory = &mut self.change_tracker.as_mut().unwrap().node_factory;
                     let cloned_computed_expression = deep_clone_for_change_factory(
                         factory,
@@ -1352,19 +1395,25 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
                 })
                 .map(|property_name| self.source_file.store().text(property_name))
                 .unwrap_or_else(|| "temp".to_string());
-            let temp_name = self
-                .change_tracker
-                .as_mut()
-                .unwrap()
-                .emit_context
-                .factory
-                .new_unique_name_ex(
-                    &temp_base_name,
-                    printer::AutoGenerateOptions {
-                        flags: printer::GENERATED_IDENTIFIER_FLAGS_OPTIMISTIC,
-                        ..Default::default()
-                    },
-                );
+            let temp_name = {
+                let temp_name = self
+                    .change_tracker
+                    .as_mut()
+                    .unwrap()
+                    .emit_context
+                    .factory
+                    .new_unique_name_ex(
+                        &temp_base_name,
+                        printer::AutoGenerateOptions {
+                            flags: printer::GENERATED_IDENTIFIER_FLAGS_OPTIMISTIC,
+                            ..Default::default()
+                        },
+                    );
+                import_generated_name_for_change_tracker(
+                    self.change_tracker.as_mut().unwrap(),
+                    temp_name,
+                )
+            };
             let factory = &mut self.change_tracker.as_mut().unwrap().node_factory;
             let temp_var_decl =
                 factory.new_variable_declaration(temp_name, None, None, Some(variable_initializer));
@@ -1521,15 +1570,14 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
         nodebuilder::FLAGS_NONE
     }
 
+    // createTypeOfFromEntityNameExpression creates a `typeof X` type query node.
     pub(crate) fn create_type_of_from_entity_name_expression(
         &mut self,
         node: ast::Node,
     ) -> ast::Node {
-        self.change_tracker
-            .as_mut()
-            .unwrap()
-            .node_factory
-            .new_type_query_node(node, None)
+        let factory = &mut self.change_tracker.as_mut().unwrap().node_factory;
+        let node = deep_clone_for_change_factory(factory, self.source_file, node);
+        factory.new_type_query_node(node, None)
     }
 
     pub fn type_from_array_spread_elements(
@@ -1644,7 +1692,12 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
                 if ast::is_entity_name_expression(self.source_file.store(), prop_expression) {
                     intersection_types
                         .push(self.create_type_of_from_entity_name_expression(prop_expression));
-                    new_spreads.push(prop);
+                    let factory = &mut self.change_tracker.as_mut().unwrap().node_factory;
+                    new_spreads.push(deep_clone_for_change_factory(
+                        factory,
+                        self.source_file,
+                        prop,
+                    ));
                 } else {
                     self.make_spread_variable(
                         name,
@@ -1703,19 +1756,25 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
         new_spreads: &mut Vec<ast::Node>,
     ) {
         let temp_base_name = format!("{}_Part{}", name, new_spreads.len() + 1);
-        let temp_name = self
-            .change_tracker
-            .as_mut()
-            .unwrap()
-            .emit_context
-            .factory
-            .new_unique_name_ex(
-                &temp_base_name,
-                printer::AutoGenerateOptions {
-                    flags: printer::GENERATED_IDENTIFIER_FLAGS_OPTIMISTIC,
-                    ..Default::default()
-                },
-            );
+        let temp_name = {
+            let temp_name = self
+                .change_tracker
+                .as_mut()
+                .unwrap()
+                .emit_context
+                .factory
+                .new_unique_name_ex(
+                    &temp_base_name,
+                    printer::AutoGenerateOptions {
+                        flags: printer::GENERATED_IDENTIFIER_FLAGS_OPTIMISTIC,
+                        ..Default::default()
+                    },
+                );
+            import_generated_name_for_change_tracker(
+                self.change_tracker.as_mut().unwrap(),
+                temp_name,
+            )
+        };
 
         let factory = &mut self.change_tracker.as_mut().unwrap().node_factory;
         let initializer = if !is_in_const_context {
@@ -1762,7 +1821,13 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
         if !current_variable_properties.is_empty() {
             let expression = {
                 let factory = &mut self.change_tracker.as_mut().unwrap().node_factory;
-                make_node_of_kind(factory, std::mem::take(current_variable_properties))
+                let properties = std::mem::take(current_variable_properties)
+                    .into_iter()
+                    .map(|property| {
+                        deep_clone_for_change_factory(factory, self.source_file, property)
+                    })
+                    .collect();
+                make_node_of_kind(factory, properties)
             };
             self.make_spread_variable(
                 name,
@@ -1889,36 +1954,31 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
                 .store()
                 .type_arguments(type_node);
             if !type_args.is_empty() && node_type_args.is_some_and(|args| !args.is_empty()) {
-                let source_file = self.source_file;
-                let cutoff =
-                    end_of_required_type_parameters(self.checker_mut(), source_file.store(), ty);
-                let node_type_args = self
-                    .change_tracker
-                    .as_ref()
-                    .unwrap()
-                    .emit_context
-                    .factory
-                    .node_factory
-                    .store()
-                    .type_arguments(type_node)
-                    .unwrap();
-                if cutoff < node_type_args.len() {
-                    let args_to_clone: Vec<_> = node_type_args.iter().take(cutoff).collect();
+                let cutoff = end_of_required_type_parameters(self.checker_mut(), ty);
+                let trim = {
+                    let source = self
+                        .change_tracker
+                        .as_ref()
+                        .unwrap()
+                        .emit_context
+                        .factory
+                        .node_factory
+                        .store();
+                    let node_type_args = source.type_arguments(type_node).unwrap();
+                    if cutoff < node_type_args.len() {
+                        Some((
+                            node_type_args.iter().take(cutoff).collect::<Vec<_>>(),
+                            source.type_name(type_node)?,
+                        ))
+                    } else {
+                        None
+                    }
+                };
+                if let Some((args_to_keep, type_name)) = trim {
                     let change_tracker = self.change_tracker.as_mut().unwrap();
-                    let source = change_tracker.emit_context.factory.node_factory.store();
-                    let factory = &mut change_tracker.node_factory;
-                    let cloned_args: Vec<_> = args_to_clone
-                        .into_iter()
-                        .map(|arg| factory.deep_clone_node_from_store(source, arg))
-                        .collect();
-                    let trimmed_args = synthetic_node_list(factory, cloned_args);
-                    let type_name = source.type_name(type_node)?;
-                    let type_name = factory.deep_clone_node_from_store(source, type_name);
-                    type_node = factory.update_type_reference_node(
-                        type_node,
-                        type_name,
-                        Some(trimmed_args),
-                    );
+                    let factory = &mut change_tracker.emit_context.factory.node_factory;
+                    let trimmed_args = synthetic_node_list(factory, args_to_keep);
+                    type_node = factory.new_type_reference_node(type_name, Some(trimmed_args));
                 }
             }
         }
@@ -1963,7 +2023,6 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
 
 pub fn end_of_required_type_parameters<'a>(
     checker: &mut checker::Checker<'a, '_>,
-    store: &ast::AstStore,
     ty: checker::TypeHandle,
 ) -> usize {
     let type_args = checker.get_type_arguments_public(ty);
@@ -1981,7 +2040,7 @@ pub fn end_of_required_type_parameters<'a>(
         let local_idx = cutoff as isize - outer_count as isize;
         if local_idx < 0
             || local_idx as usize >= local_type_params.len()
-            || !type_param_has_default(checker, store, local_type_params[local_idx as usize])
+            || !type_param_has_default(checker, local_type_params[local_idx as usize])
         {
             continue;
         }
@@ -2007,7 +2066,6 @@ pub fn end_of_required_type_parameters<'a>(
 
 pub fn type_param_has_default(
     checker: &mut checker::Checker<'_, '_>,
-    store: &ast::AstStore,
     tp: checker::TypeHandle,
 ) -> bool {
     let Some(sym) = checker.type_symbol_public(tp) else {
@@ -2017,6 +2075,10 @@ pub fn type_param_has_default(
         .collect_symbol_declarations_public(sym)
         .iter()
         .any(|decl| {
+            let Some(source_file) = checker.try_source_file_for_node_public(*decl) else {
+                return false;
+            };
+            let store = source_file.store();
             ast::is_type_parameter_declaration(store, *decl) && store.default_type(*decl).is_some()
         })
 }
@@ -2063,6 +2125,10 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
     }
 }
 
+// typeToStringForDiag converts a type node to a string for use in diagnostic descriptions.
+// It reuses the change tracker's EmitContext so that generated identifier names are resolved
+// consistently with the actual code edits, and passes the source file so that the printer's
+// name generator can check for conflicts with existing file-level identifiers.
 pub fn type_to_string_for_diag(
     type_node: ast::Node,
     source_file: &ast::SourceFile,
@@ -2072,15 +2138,42 @@ pub fn type_to_string_for_diag(
     change_tracker
         .emit_context
         .set_emit_flags(&type_node, saved_flags | printer::EF_SINGLE_LINE);
+    let mut emit_context = change_tracker.emit_context.fork();
+    let type_node_to_print = {
+        let tracker_factory_store_id = change_tracker.node_factory.store().store_id();
+        let emit_factory_store_id = change_tracker
+            .emit_context
+            .factory
+            .node_factory
+            .store()
+            .store_id();
+        if type_node.store_id() == tracker_factory_store_id {
+            let source_store = change_tracker.node_factory.store();
+            let cloned = emit_context
+                .factory
+                .clone_node_with_hooks(source_store, type_node);
+            emit_context.copy_emit_metadata_for_cloned_tree(source_store, type_node, cloned);
+            cloned
+        } else if type_node.store_id() == emit_factory_store_id {
+            let source_store = change_tracker.emit_context.factory.node_factory.store();
+            let cloned = emit_context
+                .factory
+                .clone_node_with_hooks(source_store, type_node);
+            emit_context.copy_emit_metadata_for_cloned_tree(source_store, type_node, cloned);
+            cloned
+        } else {
+            type_node
+        }
+    };
     let mut p = printer::new_printer(
         printer::PrinterOptions {
             new_line: core::NewLineKind::LF,
             ..Default::default()
         },
         printer::PrintHandlers::default(),
-        Some(change_tracker.emit_context.fork()),
+        Some(emit_context),
     );
-    let result = p.emit(&type_node, Some(source_file));
+    let result = p.emit(&type_node_to_print, Some(source_file));
     change_tracker
         .emit_context
         .set_emit_flags(&type_node, saved_flags);

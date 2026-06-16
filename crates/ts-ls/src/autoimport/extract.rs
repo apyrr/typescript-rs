@@ -170,9 +170,10 @@ impl SymbolExtractor<'_, '_, '_> {
                 .peek_checker()
                 .symbol_parent_public(symbol)
                 .expect("export-star symbol should have a parent module");
-            let mut all_exports = checker_usage
-                .get_checker()
-                .get_exports_of_module_public(parent_symbol);
+            let mut all_exports = {
+                let mut checker = checker_usage.get_checker();
+                checker.get_exports_of_module_public(parent_symbol)
+            };
             // allExports includes named exports from the file that will be processed separately;
             // we want to add only the ones that come from the star
             for (inner_name, named_export) in self.source_symbol_exports_snapshot(parent_symbol) {
@@ -456,10 +457,11 @@ impl SymbolExtractor<'_, '_, '_> {
                         .symbol_flags_public(target_identity)
                         .unwrap_or(ast::SYMBOL_FLAGS_NONE);
                     export.is_type_only = declarations.iter().any(|declaration| {
-                        ast::is_part_of_type_only_import_or_export_declaration(
-                            file.store(),
-                            declaration,
-                        )
+                        let checker = checker_usage.peek_checker();
+                        let store = checker
+                            .source_file_store(*declaration)
+                            .expect("alias declaration should belong to the checker program");
+                        ast::is_part_of_type_only_import_or_export_declaration(store, declaration)
                     });
                 }
                 let (script_element_kind, script_element_kind_modifiers, mut target_module_id) = {
@@ -505,10 +507,14 @@ impl SymbolExtractor<'_, '_, '_> {
             }
         } else if let Some(first_decl) = declarations.first() {
             let mut checker = checker_usage.peek_checker();
+            let store = checker
+                .try_source_file_for_node_public(*first_decl)
+                .expect("symbol declaration should belong to the checker program")
+                .store();
             export.script_element_kind =
-                lsutil::get_symbol_kind(file.store(), &mut *checker, symbol, *first_decl);
+                lsutil::get_symbol_kind(store, &mut *checker, symbol, *first_decl);
             export.script_element_kind_modifiers =
-                lsutil::get_symbol_modifiers(file.store(), &mut *checker, symbol);
+                lsutil::get_symbol_modifiers(store, &mut *checker, symbol);
         }
 
         if symbol_name == ast::INTERNAL_SYMBOL_NAME_DEFAULT
@@ -523,7 +529,6 @@ impl SymbolExtractor<'_, '_, '_> {
                 local_name
             } else {
                 get_default_like_export_name_from_symbol_identity(
-                    file.store(),
                     checker_usage,
                     symbol,
                     symbol_flags,
@@ -551,7 +556,6 @@ impl SymbolExtractor<'_, '_, '_> {
                         local_name
                     } else {
                         get_default_like_export_name_from_symbol_identity(
-                            file.store(),
                             checker_usage,
                             target_symbol,
                             target_flags,
@@ -634,7 +638,7 @@ impl SymbolExtractor<'_, '_, '_> {
                 if symbol_name != ast::INTERNAL_SYMBOL_NAME_EXPORT_EQUALS {
                     // Go breaks here.
                 } else {
-                    let checker = checker_usage.try_checker()?;
+                    let checker = checker_usage.get_checker();
                     let symbol_decl = declarations.first()?;
                     let store = checker
                         .source_file_store(*symbol_decl)
@@ -675,12 +679,11 @@ impl SymbolExtractor<'_, '_, '_> {
 
         if let Some(loc) = loc {
             let mut checker = checker_usage.try_checker()?;
-            let local = checker.source_node_non_alias_resolved_name_public(
+            if let Some(local) = checker.source_node_non_alias_resolved_name_public(
                 loc,
                 &name,
                 ast::SYMBOL_FLAGS_ALL,
-            );
-            if let Some(local) = local {
+            ) {
                 return Some(local);
             }
         }
@@ -698,53 +701,69 @@ impl SymbolExtractor<'_, '_, '_> {
 }
 
 fn get_default_like_export_name_from_symbol_identity(
-    store: &ast::AstStore,
     checker_usage: &mut CheckerUsage<'_, '_, '_, '_>,
     symbol: ast::SymbolIdentity,
     symbol_flags: ast::SymbolFlags,
     declarations: &[ast::Node],
 ) -> String {
     for &declaration in declarations {
-        if ast::is_export_assignment(store, declaration) {
-            if let Some(expression) = store.expression(declaration) {
-                let inner = ast::skip_outer_expressions(store, expression, ast::OEK_ALL);
-                if store.kind(inner) == ast::Kind::Identifier {
-                    return store.text(inner);
+        let export_name = {
+            let checker = checker_usage.peek_checker();
+            let store = checker
+                .source_file_store(declaration)
+                .expect("symbol declaration should belong to the checker program");
+            if ast::is_export_assignment(store, declaration) {
+                if let Some(expression) = store.expression(declaration) {
+                    let inner = ast::skip_outer_expressions(store, expression, ast::OEK_ALL);
+                    if store.kind(inner) == ast::Kind::Identifier {
+                        return store.text(inner);
+                    }
                 }
+                continue;
             }
-            continue;
-        }
-        if ast::is_export_specifier(store, declaration)
-            && symbol_flags == ast::SYMBOL_FLAGS_ALIAS
-            && store.property_name(declaration).is_some()
-        {
-            let property_name = store.property_name(declaration).unwrap();
-            if store.kind(property_name) == ast::Kind::Identifier {
-                return store.text(property_name);
+            if ast::is_export_specifier(store, declaration)
+                && symbol_flags == ast::SYMBOL_FLAGS_ALIAS
+                && store.property_name(declaration).is_some()
+            {
+                let property_name = store.property_name(declaration).unwrap();
+                if store.kind(property_name) == ast::Kind::Identifier {
+                    return store.text(property_name);
+                }
+                continue;
             }
-            continue;
-        }
-        if let Some(name) = ast::get_name_of_declaration(store, Some(declaration)) {
-            if store.kind(name) == ast::Kind::Identifier {
-                return store.text(name);
+            if let Some(name) = ast::get_name_of_declaration(store, Some(declaration)) {
+                if store.kind(name) == ast::Kind::Identifier {
+                    Some(store.text(name))
+                } else {
+                    None
+                }
+            } else {
+                None
             }
+        };
+        if let Some(export_name) = export_name {
+            return export_name;
         }
-        if let Some(parent) = checker_usage
-            .peek_checker()
-            .symbol_parent_public(symbol)
-            .and_then(|parent| {
-                let parent_flags = checker_usage
-                    .peek_checker()
+        let parent = {
+            let mut checker = checker_usage.peek_checker();
+            checker.symbol_parent_public(symbol)
+        };
+        if let Some(parent) = parent {
+            let parent_info = {
+                let mut checker = checker_usage.peek_checker();
+                let parent_flags = checker
                     .symbol_flags_public(parent)
                     .unwrap_or(ast::SYMBOL_FLAGS_NONE);
-                let parent_name = checker_usage.peek_checker().symbol_name_public(parent)?;
-                Some((parent_flags, parent_name))
-            })
-        {
-            let parent_is_external_module =
-                parent.0 & ast::SYMBOL_FLAGS_MODULE != 0 && parent.1.chars().next() == Some('"');
-            if !parent_is_external_module {
-                return parent.1;
+                checker
+                    .symbol_name_public(parent)
+                    .map(|parent_name| (parent_flags, parent_name))
+            };
+            if let Some((parent_flags, parent_name)) = parent_info {
+                let parent_is_external_module = parent_flags & ast::SYMBOL_FLAGS_MODULE != 0
+                    && parent_name.chars().next() == Some('"');
+                if !parent_is_external_module {
+                    return parent_name;
+                }
             }
         }
     }

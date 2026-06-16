@@ -9,6 +9,7 @@ use ts_lsproto as lsproto;
 use ts_nodebuilder as nodebuilder;
 use ts_printer as printer;
 
+use crate::autoimport::fix::insert_import_texts;
 use crate::autoimport::{
     Fix, NewImportBinding, View, add_namespace_qualifier, add_to_existing_import,
     get_add_to_existing_import_fix, make_new_import_text_from_bindings, symbol_identity_to_export,
@@ -170,11 +171,17 @@ impl<'a> ImportAdder<'a> {
         }
 
         let mut new_import_texts = Vec::new();
+        let mut first_new_import_module_specifier = None;
+        let mut first_new_import_use_require = false;
         let mut new_import_keys = self.new_imports.keys().collect::<Vec<_>>();
         new_import_keys.sort();
         for key in new_import_keys {
             let new_import = &self.new_imports[key];
             let module_specifier = &key[2..]; // From `${0 | 1}|${moduleSpecifier}` format
+            if first_new_import_module_specifier.is_none() {
+                first_new_import_module_specifier = Some(module_specifier.to_string());
+                first_new_import_use_require = new_import.use_require;
+            }
             new_import_texts.extend(make_new_import_text_from_bindings(
                 module_specifier,
                 quote_preference,
@@ -187,12 +194,17 @@ impl<'a> ImportAdder<'a> {
             ));
         }
         if !new_import_texts.is_empty() {
-            let new_line = tracker.new_line.clone();
-            let text = new_import_texts.join(&new_line) + &new_line;
-            let position = tracker
-                .converters
-                .position_to_line_and_character(importing_file, 0);
-            tracker.insert_text(importing_file, position, &text);
+            insert_import_texts(
+                &mut tracker,
+                importing_file,
+                new_import_texts,
+                first_new_import_module_specifier
+                    .as_deref()
+                    .unwrap_or_default(),
+                first_new_import_use_require,
+                true, /*blankLineBetween*/
+                self.preferences.clone(),
+            );
         }
         tracker
             .get_changes()
@@ -1278,7 +1290,7 @@ fn get_first_identifier(store: &ast::AstStore, node: ast::Node) -> ast::Node {
 // If a type checker and multiple files are available, consider using `forEachNameOfDefaultExport`
 // instead, which searches for names of re-exported defaults/namespaces in target files.
 pub fn get_name_for_exported_symbol(
-    store: &ast::AstStore,
+    _store: &ast::AstStore,
     checker: &mut checker::Checker<'_, '_>,
     symbol: ast::SymbolIdentity,
     prefer_capitalized: bool,
@@ -1289,34 +1301,16 @@ pub fn get_name_for_exported_symbol(
     if symbol_name == ast::INTERNAL_SYMBOL_NAME_EXPORT_EQUALS
         || symbol_name == ast::INTERNAL_SYMBOL_NAME_DEFAULT
     {
-        for declaration in checker.collect_symbol_declarations_public(symbol) {
-            if ast::is_export_assignment(store, declaration) {
-                if let Some(expression) = store.expression(declaration) {
-                    let inner = ast::skip_outer_expressions(store, expression, ast::OEK_ALL);
-                    if store.kind(inner) == ast::Kind::Identifier {
-                        return store.text(inner);
-                    }
-                }
-                continue;
-            }
-            if ast::is_export_specifier(store, declaration)
-                && checker
-                    .source_node_symbol_public(declaration)
-                    .and_then(|symbol| checker.symbol_flags_public(symbol))
-                    .is_some_and(|flags| flags == ast::SYMBOL_FLAGS_ALIAS)
-                && store.property_name(declaration).is_some()
-            {
-                let property_name = store.property_name(declaration).unwrap();
-                if store.kind(property_name) == ast::Kind::Identifier {
-                    return store.text(property_name);
-                }
-                continue;
-            }
-            if let Some(name) = ast::get_name_of_declaration(store, Some(declaration))
-                && store.kind(name) == ast::Kind::Identifier
-            {
-                return store.text(name);
-            }
+        if let Some(name) = checker
+            .local_symbol_for_export_default_public(symbol)
+            .map(|symbol| checker.default_like_export_name_public(symbol))
+            .filter(|name| !name.is_empty())
+        {
+            return name;
+        }
+        let name = checker.default_like_export_name_public(symbol);
+        if !name.is_empty() {
+            return name;
         }
         if let Some(parent) = checker.symbol_parent_public(symbol)
             && let Some(parent_name) = checker.symbol_name_public(parent)

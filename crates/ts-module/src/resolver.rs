@@ -5,12 +5,13 @@ use ts_collections::OrderedMap;
 use ts_core as core;
 use ts_diagnostics as diagnostics;
 use ts_packagejson as packagejson;
+use ts_stringutil as stringutil;
 use ts_tspath as tspath;
 use ts_vfs as vfs;
 
 use crate::{
     Caches, EXTENSIONS_DECLARATION, EXTENSIONS_JAVASCRIPT, EXTENSIONS_JSON, EXTENSIONS_TYPESCRIPT,
-    Extensions, NODE_RESOLUTION_FEATURES_EXPORTS,
+    Extensions, NODE_RESOLUTION_FEATURES_ALL, NODE_RESOLUTION_FEATURES_EXPORTS,
     NODE_RESOLUTION_FEATURES_EXPORTS_PATTERN_TRAILERS, NODE_RESOLUTION_FEATURES_IMPORTS,
     NODE_RESOLUTION_FEATURES_IMPORTS_PATTERN_ROOT, NODE_RESOLUTION_FEATURES_NODE_NEXT_DEFAULT,
     NODE_RESOLUTION_FEATURES_NODE16_DEFAULT, NODE_RESOLUTION_FEATURES_NONE,
@@ -2705,6 +2706,19 @@ impl<H: ResolutionHost> Resolver<H> {
             return Vec::new();
         }
 
+        let mut state = ResolutionState::default_for(self);
+        state.extensions = EXTENSIONS_TYPESCRIPT | EXTENSIONS_DECLARATION;
+        state.features = NODE_RESOLUTION_FEATURES_ALL;
+        state.compiler_options = self.compiler_options.clone();
+        if package_json.exists()
+            && let Some(contents) = package_json.get_contents()
+        {
+            let exports = contents.fields.path_fields.exports.clone();
+            if exports.is_present() {
+                return state.load_entrypoints_from_export_map(package_json, package_name, exports);
+            }
+        }
+
         let mut result = Vec::new();
         if let Some(main_resolution) = self.load_node_module_from_directory_worker(package_json) {
             result.push(self.create_resolved_entrypoint_handling_symlink(
@@ -2838,7 +2852,287 @@ impl<H: ResolutionHost> Resolver<H> {
     }
 }
 
-fn entrypoint_extensions() -> Vec<String> {
+impl<'a, H: ResolutionHost> ResolutionState<'a, H> {
+    fn load_entrypoints_from_export_map(
+        &mut self,
+        package_json: &packagejson::InfoCacheEntry,
+        package_name: &str,
+        mut exports: packagejson::ExportsOrImports,
+    ) -> Vec<ResolvedEntrypoint> {
+        let mut entrypoints = Vec::new();
+
+        match exports.json_value.type_ {
+            packagejson::JsonValueType::Array => {
+                let elements = exports.as_array().to_vec();
+                for element in elements {
+                    self.load_entrypoints_from_target_exports(
+                        &mut entrypoints,
+                        package_json,
+                        package_name,
+                        ".",
+                        None,
+                        None,
+                        packagejson::ExportsOrImports::from_json_value(element),
+                    );
+                }
+            }
+            packagejson::JsonValueType::Object => {
+                if exports.is_subpaths() {
+                    let entries = exports
+                        .as_object()
+                        .iter()
+                        .map(|(subpath, export)| (subpath.clone(), export.clone()))
+                        .collect::<Vec<_>>();
+                    for (subpath, export) in entries {
+                        self.load_entrypoints_from_target_exports(
+                            &mut entrypoints,
+                            package_json,
+                            package_name,
+                            &subpath,
+                            None,
+                            None,
+                            packagejson::ExportsOrImports::from_json_value(export),
+                        );
+                    }
+                } else {
+                    self.load_entrypoints_from_target_exports(
+                        &mut entrypoints,
+                        package_json,
+                        package_name,
+                        ".",
+                        None,
+                        None,
+                        exports,
+                    );
+                }
+            }
+            _ => {
+                self.load_entrypoints_from_target_exports(
+                    &mut entrypoints,
+                    package_json,
+                    package_name,
+                    ".",
+                    None,
+                    None,
+                    exports,
+                );
+            }
+        }
+
+        entrypoints
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn load_entrypoints_from_target_exports(
+        &mut self,
+        entrypoints: &mut Vec<ResolvedEntrypoint>,
+        package_json: &packagejson::InfoCacheEntry,
+        package_name: &str,
+        subpath: &str,
+        include_conditions: Option<HashSet<String>>,
+        exclude_conditions: Option<HashSet<String>>,
+        exports: packagejson::ExportsOrImports,
+    ) {
+        match exports.json_value.type_ {
+            packagejson::JsonValueType::String => {
+                let target = exports.json_value.as_string().to_string();
+                if !target.starts_with("./") {
+                    return;
+                }
+                if target.contains('*') {
+                    if target.matches('*').count() != 1 {
+                        return;
+                    }
+                    let pattern_path =
+                        tspath::resolve_path(&package_json.package_directory, &[&target]);
+                    let Some((leading_slice, trailing_slice)) = pattern_path.split_once('*') else {
+                        return;
+                    };
+                    let case_sensitive = self.resolver.host.fs().use_case_sensitive_file_names();
+                    let extensions = crate::extensions_array(self.extensions)
+                        .into_iter()
+                        .map(str::to_string)
+                        .collect::<Vec<_>>();
+                    let include = vec![tspath::change_full_extension(
+                        &target.replacen('*', "**/*", 1),
+                        ".*",
+                    )];
+                    let files = vfs::vfsmatch::read_directory(
+                        self.resolver.host.fs(),
+                        &self.resolver.host.get_current_directory(),
+                        &package_json.package_directory,
+                        &extensions,
+                        &[],
+                        &include,
+                        vfs::vfsmatch::UNLIMITED_DEPTH,
+                    );
+                    for file in files {
+                        let Some(matched_star) = self.get_matched_star_for_pattern_entrypoint(
+                            &file,
+                            leading_slice,
+                            trailing_slice,
+                            case_sensitive,
+                        ) else {
+                            continue;
+                        };
+                        let specifier_subpath = subpath.replacen('*', &matched_star, 1);
+                        let module_specifier =
+                            tspath::resolve_path(package_name, &[&specifier_subpath]);
+                        entrypoints.push(
+                            self.resolver.create_resolved_entrypoint_handling_symlink(
+                                &file,
+                                &module_specifier,
+                                include_conditions.clone(),
+                                exclude_conditions.clone(),
+                                if target.ends_with('*') {
+                                    Ending::ExtensionChangeable
+                                } else {
+                                    Ending::Fixed
+                                },
+                            ),
+                        );
+                    }
+                } else {
+                    let parts_after_first = tspath::get_path_components(&target, "")
+                        .into_iter()
+                        .skip(2)
+                        .collect::<Vec<_>>();
+                    if parts_after_first
+                        .iter()
+                        .any(|part| matches!(part.as_str(), ".." | "." | "node_modules"))
+                    {
+                        return;
+                    }
+                    let resolved_target =
+                        tspath::resolve_path(&package_json.package_directory, &[&target]);
+                    if let Some(result) = self.load_file_name_from_package_json_field(
+                        self.extensions,
+                        &resolved_target,
+                        &target,
+                    ) {
+                        entrypoints.push(
+                            self.resolver.create_resolved_entrypoint_handling_symlink(
+                                &result.path,
+                                &tspath::resolve_path(package_name, &[subpath]),
+                                include_conditions,
+                                exclude_conditions,
+                                if target.ends_with('*') {
+                                    Ending::ExtensionChangeable
+                                } else {
+                                    Ending::Fixed
+                                },
+                            ),
+                        );
+                    }
+                }
+            }
+            packagejson::JsonValueType::Array => {
+                let elements = exports.as_array().to_vec();
+                for element in elements {
+                    self.load_entrypoints_from_target_exports(
+                        entrypoints,
+                        package_json,
+                        package_name,
+                        subpath,
+                        include_conditions.clone(),
+                        exclude_conditions.clone(),
+                        packagejson::ExportsOrImports::from_json_value(element),
+                    );
+                }
+            }
+            packagejson::JsonValueType::Object => {
+                let mut prev_conditions: Vec<String> = Vec::new();
+                let mut current_exclude_conditions = exclude_conditions;
+                let entries = exports
+                    .as_object()
+                    .iter()
+                    .map(|(condition, export)| (condition.clone(), export.clone()))
+                    .collect::<Vec<_>>();
+                for (condition, export) in entries {
+                    if current_exclude_conditions
+                        .as_ref()
+                        .is_some_and(|conditions| conditions.contains(&condition))
+                    {
+                        continue;
+                    }
+
+                    let condition_always_matches = condition == "default"
+                        || condition == "types"
+                        || crate::is_applicable_versioned_types_key(&condition);
+                    let mut new_include_conditions = include_conditions.clone();
+                    if !condition_always_matches {
+                        let include = new_include_conditions.get_or_insert_with(HashSet::new);
+                        include.insert(condition.clone());
+                        current_exclude_conditions = current_exclude_conditions.clone();
+                        for prev_condition in &prev_conditions {
+                            current_exclude_conditions
+                                .get_or_insert_with(HashSet::new)
+                                .insert(prev_condition.clone());
+                        }
+                    }
+
+                    prev_conditions.push(condition.clone());
+                    self.load_entrypoints_from_target_exports(
+                        entrypoints,
+                        package_json,
+                        package_name,
+                        subpath,
+                        new_include_conditions,
+                        current_exclude_conditions.clone(),
+                        packagejson::ExportsOrImports::from_json_value(export),
+                    );
+                    if condition_always_matches {
+                        break;
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn get_matched_star_for_pattern_entrypoint(
+        &self,
+        file: &str,
+        leading_slice: &str,
+        trailing_slice: &str,
+        case_sensitive: bool,
+    ) -> Option<String> {
+        if stringutil::has_prefix_and_suffix_without_overlap(
+            file,
+            leading_slice,
+            trailing_slice,
+            case_sensitive,
+        ) {
+            return slice_matched_star(file, leading_slice, trailing_slice);
+        }
+
+        let js_extension = crate::try_get_js_extension_for_file(
+            file,
+            self.compiler_options.jsx == core::JsxEmit::Preserve,
+        );
+        if !js_extension.is_empty() {
+            let swapped = tspath::change_full_extension(file, &js_extension);
+            if stringutil::has_prefix_and_suffix_without_overlap(
+                &swapped,
+                leading_slice,
+                trailing_slice,
+                case_sensitive,
+            ) {
+                return slice_matched_star(&swapped, leading_slice, trailing_slice);
+            }
+        }
+
+        None
+    }
+}
+
+fn slice_matched_star(file: &str, leading_slice: &str, trailing_slice: &str) -> Option<String> {
+    let start = leading_slice.len();
+    let end = file.len().checked_sub(trailing_slice.len())?;
+    file.get(start..end).map(str::to_string)
+}
+
+pub fn entrypoint_extensions() -> Vec<String> {
     vec![
         tspath::EXTENSION_DTS.to_string(),
         tspath::EXTENSION_DMTS.to_string(),

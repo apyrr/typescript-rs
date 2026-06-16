@@ -18,7 +18,6 @@ pub use skip_if_failing::*;
 pub use statebaseline::*;
 pub use test_parser::*;
 
-#[cfg(all(test, feature = "generated-fourslash"))]
 pub mod generated_prelude {
     pub use crate::tests::util::*;
     pub use crate::{
@@ -28,7 +27,7 @@ pub mod generated_prelude {
         InlayHintsPreferences, MarkerInput, MarkerOrRangeOrName, SemanticToken,
         SignatureHelpContext, TestingT, UserPreferences, VerifyCodeFixAllOptions,
         VerifyCodeFixOptions, VerifySignatureHelpOptions, new_fourslash, range_marker_data,
-        skip_if_failing, symbol_information, workspace_symbol_case,
+        should_skip_if_failing, skip_if_failing, symbol_information, workspace_symbol_case,
         workspace_symbol_case_from_range_with_pattern, workspace_symbol_case_with_preferences,
     };
 }
@@ -37,6 +36,5 @@ pub mod tests {
     #[path = "util/util.rs"]
     pub mod util;
 
-    #[cfg(all(test, feature = "generated-fourslash"))]
     pub mod generated;
 }

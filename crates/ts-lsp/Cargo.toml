@@ -6,6 +6,7 @@ edition = "2024"
 [features]
 default = []
 pprof = ["dep:ts-pprof"]
+test-support = ["dep:ts-testutil"]
 
 [dependencies]
 lsp-server = { workspace = true }
@@ -27,6 +28,7 @@ ts-lsproto = { path = "../ts-lsproto" }
 ts-pprof = { path = "../ts-pprof", optional = true }
 ts-project = { path = "../ts-project" }
 ts-tspath = { path = "../ts-tspath" }
+ts-testutil = { path = "../ts-testutil", optional = true }
 ts-vfs = { path = "../ts-vfs" }
 url = { workspace = true }
 

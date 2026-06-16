@@ -1,3 +1,5 @@
+use std::ops::ControlFlow;
+
 use ts_ast as ast;
 use ts_checker as checker;
 use ts_collections::{FastHashMap as HashMap, FastHashMapExt};
@@ -6,6 +8,7 @@ use ts_core as core;
 use ts_diagnostics as diagnostics;
 use ts_locale as locale;
 use ts_nodebuilder as nodebuilder;
+use ts_printer as printer;
 
 use crate::autoimport;
 use crate::change;
@@ -114,6 +117,67 @@ fn optional_identifier_output_node(
         return Some(output_node(import_state, source_store, factory, node));
     }
     None
+}
+
+fn copy_emit_metadata_for_imported_tree(
+    change_tracker: &mut change::Tracker<'_>,
+    source: ast::Node,
+    target: ast::Node,
+) {
+    let flags = change_tracker.emit_context.emit_flags(&source);
+    if flags != printer::EF_NONE {
+        change_tracker.emit_context.set_emit_flags(&target, flags);
+    }
+    let leading_comments = change_tracker
+        .emit_context
+        .get_synthetic_leading_comments(&source);
+    if !leading_comments.is_empty() {
+        change_tracker
+            .emit_context
+            .set_synthetic_leading_comments(&target, leading_comments);
+    }
+    let trailing_comments = change_tracker
+        .emit_context
+        .get_synthetic_trailing_comments(&source);
+    if !trailing_comments.is_empty() {
+        change_tracker
+            .emit_context
+            .set_synthetic_trailing_comments(&target, trailing_comments);
+    }
+
+    let source_children = {
+        let source_store = change_tracker.emit_context.factory.node_factory.store();
+        let mut children = Vec::new();
+        let _ = source_store.for_each_child(source, |child| {
+            if let Some(child) = child {
+                children.push(child);
+            }
+            ControlFlow::Continue(())
+        });
+        children
+    };
+    let target_children = {
+        let target_store = change_tracker.node_factory.store();
+        let mut children = Vec::new();
+        let _ = target_store.for_each_child(target, |child| {
+            if let Some(child) = child {
+                children.push(child);
+            }
+            ControlFlow::Continue(())
+        });
+        children
+    };
+
+    for (source_child, target_child) in source_children.into_iter().zip(target_children) {
+        let same_kind = {
+            let source_store = change_tracker.emit_context.factory.node_factory.store();
+            let target_store = change_tracker.node_factory.store();
+            source_store.kind(source_child) == target_store.kind(target_child)
+        };
+        if same_kind {
+            copy_emit_metadata_for_imported_tree(change_tracker, source_child, target_child);
+        }
+    }
 }
 
 pub type PreserveOptionalFlags = i32;
@@ -451,7 +515,7 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
                         declaration_name.clone(),
                         declaration_store,
                         preserve_optional,
-                    );
+                    )?;
                     if let Some(method) = method {
                         nodes.push(method);
                     }
@@ -485,7 +549,7 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
                         declaration_name.clone(),
                         declaration_store,
                         preserve_optional,
-                    );
+                    )?;
                     if let Some(method) = method {
                         nodes.push(method);
                     }
@@ -511,7 +575,7 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
                         declaration_name.clone(),
                         declaration_store,
                         preserve_optional,
-                    );
+                    )?;
                     if let Some(method) = method {
                         nodes.push(method);
                     }
@@ -634,7 +698,7 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
         name: Option<ast::Node>,
         name_store: Option<&ast::AstStore>,
         optional: bool,
-    ) -> Option<ast::Node> {
+    ) -> Result<Option<ast::Node>, core::Error> {
         let quote_preference = lsutil::get_quote_preference(source_file, &self.preferences);
         let mut flags = nodebuilder::FLAGS_NO_TRUNCATION
             | nodebuilder::FLAGS_SUPPRESS_ANY_RETURN_TYPE
@@ -643,7 +707,7 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
             flags |= nodebuilder::FLAGS_USE_SINGLE_QUOTES_FOR_STRING_LITERAL_TYPE;
         }
 
-        let signature_declaration = self
+        let (signature_declaration, id_to_symbol) = self
             .type_checker
             .signature_to_signature_declaration_for_ls_public(
                 &mut self.change_tracker.emit_context,
@@ -654,45 +718,166 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
                 nodebuilder::INTERNAL_FLAGS_ALLOW_UNRESOLVED_NAMES,
             );
         let Some(signature_declaration) = signature_declaration else {
-            return None;
+            return Ok(None);
         };
 
         let is_js = ast::is_in_js_file(source_file.store(), *enclosing_declaration);
-        let signature_store = self
-            .change_tracker
-            .emit_context
-            .factory
-            .node_factory
-            .store();
         let mut import_state = ast::AstImportState::new();
-        let source_parameters = signature_store.source_parameters(signature_declaration);
+        let source_parameters = {
+            let signature_store = self
+                .change_tracker
+                .emit_context
+                .factory
+                .node_factory
+                .store();
+            signature_store
+                .source_parameters(signature_declaration)
+                .map(|list| (list.source_ref(), list.nodes()))
+        };
         let source_type_parameters = if is_js {
             None
         } else {
-            signature_store.source_type_parameters(signature_declaration)
+            let signature_store = self
+                .change_tracker
+                .emit_context
+                .factory
+                .node_factory
+                .store();
+            signature_store
+                .source_type_parameters(signature_declaration)
+                .map(|list| (list.source_ref(), list.nodes()))
         };
         let mut parameters: Option<ast::NodeList> = None;
         let mut type_parameters: Option<ast::NodeList> = None;
-        let type_node = if is_js {
-            None
-        } else {
-            optional_output_node(
-                &mut import_state,
-                signature_store,
-                &mut self.change_tracker.node_factory,
-                signature_store.r#type(signature_declaration),
-            )
-        };
 
-        if let Some(old_type_parameters) = source_type_parameters {
-            let mut nodes = Vec::with_capacity(old_type_parameters.len());
-            for tp in old_type_parameters.iter() {
-                if ast::is_type_parameter_declaration(signature_store, tp) {
-                    let constraint = signature_store.constraint(tp);
-                    let default_type = signature_store.default_type(tp);
+        if let Some((old_type_parameters, old_type_parameter_nodes)) = source_type_parameters {
+            let mut nodes = Vec::with_capacity(old_type_parameter_nodes.len());
+            for tp in old_type_parameter_nodes {
+                let is_type_parameter = {
+                    let signature_store = self
+                        .change_tracker
+                        .emit_context
+                        .factory
+                        .node_factory
+                        .store();
+                    ast::is_type_parameter_declaration(signature_store, tp)
+                };
+                if is_type_parameter {
+                    let (constraint, default_type) = {
+                        let signature_store = self
+                            .change_tracker
+                            .emit_context
+                            .factory
+                            .node_factory
+                            .store();
+                        (
+                            signature_store.constraint(tp),
+                            signature_store.default_type(tp),
+                        )
+                    };
+                    let constraint = self.import_type_node(constraint.as_ref(), &id_to_symbol)?;
+                    let default_type =
+                        self.import_type_node(default_type.as_ref(), &id_to_symbol)?;
+                    let node = {
+                        let signature_store = self
+                            .change_tracker
+                            .emit_context
+                            .factory
+                            .node_factory
+                            .store();
+                        let type_parameter_name = signature_store
+                            .name(tp)
+                            .map(|name| {
+                                output_node(
+                                    &mut import_state,
+                                    signature_store,
+                                    &mut self.change_tracker.node_factory,
+                                    name,
+                                )
+                            })
+                            .unwrap_or_else(|| self.change_tracker.node_factory.new_identifier(""));
+                        let modifiers = optional_output_modifiers(
+                            &mut import_state,
+                            signature_store,
+                            &mut self.change_tracker.node_factory,
+                            tp,
+                        );
+                        let expression = optional_output_node(
+                            &mut import_state,
+                            signature_store,
+                            &mut self.change_tracker.node_factory,
+                            signature_store.expression(tp),
+                        );
+                        self.change_tracker
+                            .node_factory
+                            .update_type_parameter_declaration_from_store(
+                                signature_store,
+                                tp,
+                                modifiers,
+                                type_parameter_name,
+                                constraint,
+                                expression,
+                                default_type,
+                            )
+                    };
+                    nodes.push(node);
+                } else {
+                    let node = {
+                        let signature_store = self
+                            .change_tracker
+                            .emit_context
+                            .factory
+                            .node_factory
+                            .store();
+                        output_node(
+                            &mut import_state,
+                            signature_store,
+                            &mut self.change_tracker.node_factory,
+                            tp,
+                        )
+                    };
+                    nodes.push(node);
+                }
+            }
+            type_parameters = Some({
+                let signature_store = self
+                    .change_tracker
+                    .emit_context
+                    .factory
+                    .node_factory
+                    .store();
+                output_node_list_from_source(
+                    &mut import_state,
+                    &mut self.change_tracker.node_factory,
+                    old_type_parameters.resolve(signature_store),
+                    nodes,
+                )
+            });
+        }
 
-                    let type_parameter_name = signature_store
-                        .name(tp)
+        if let Some((parameter_list, parameter_nodes)) = source_parameters {
+            let mut nodes = Vec::with_capacity(parameter_nodes.len());
+            for p in parameter_nodes {
+                let parameter_type = {
+                    let signature_store = self
+                        .change_tracker
+                        .emit_context
+                        .factory
+                        .node_factory
+                        .store();
+                    signature_store.r#type(p)
+                };
+                let parameter_type_node =
+                    self.import_type_node(parameter_type.as_ref(), &id_to_symbol)?;
+                let node = {
+                    let signature_store = self
+                        .change_tracker
+                        .emit_context
+                        .factory
+                        .node_factory
+                        .store();
+                    let parameter_name = signature_store
+                        .name(p)
                         .map(|name| {
                             output_node(
                                 &mut import_state,
@@ -706,106 +891,30 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
                         &mut import_state,
                         signature_store,
                         &mut self.change_tracker.node_factory,
-                        tp,
+                        p,
                     );
-                    let constraint = optional_output_node(
+                    let dot_dot_dot_token = optional_output_node(
                         &mut import_state,
                         signature_store,
                         &mut self.change_tracker.node_factory,
-                        constraint,
+                        signature_store.dot_dot_dot_token(p),
                     );
-                    let expression = optional_output_node(
-                        &mut import_state,
-                        signature_store,
-                        &mut self.change_tracker.node_factory,
-                        signature_store.expression(tp),
-                    );
-                    let default_type = optional_output_node(
-                        &mut import_state,
-                        signature_store,
-                        &mut self.change_tracker.node_factory,
-                        default_type,
-                    );
-                    nodes.push(
-                        self.change_tracker
-                            .node_factory
-                            .update_type_parameter_declaration_from_store(
-                                signature_store,
-                                tp,
-                                modifiers,
-                                type_parameter_name,
-                                constraint,
-                                expression,
-                                default_type,
-                            ),
-                    );
-                } else {
-                    nodes.push(output_node(
-                        &mut import_state,
-                        signature_store,
-                        &mut self.change_tracker.node_factory,
-                        tp,
-                    ));
-                }
-            }
-            type_parameters = Some(output_node_list_from_source(
-                &mut import_state,
-                &mut self.change_tracker.node_factory,
-                old_type_parameters,
-                nodes,
-            ));
-        }
-
-        if let Some(parameter_list) = source_parameters {
-            let mut nodes = Vec::with_capacity(parameter_list.len());
-            for p in parameter_list.iter() {
-                let parameter_type_node = optional_output_node(
-                    &mut import_state,
-                    signature_store,
-                    &mut self.change_tracker.node_factory,
-                    signature_store.r#type(p),
-                );
-
-                let parameter_name = signature_store
-                    .name(p)
-                    .map(|name| {
-                        output_node(
+                    let question_token = if is_js {
+                        None
+                    } else {
+                        optional_output_node(
                             &mut import_state,
                             signature_store,
                             &mut self.change_tracker.node_factory,
-                            name,
+                            signature_store.question_token(p),
                         )
-                    })
-                    .unwrap_or_else(|| self.change_tracker.node_factory.new_identifier(""));
-                let modifiers = optional_output_modifiers(
-                    &mut import_state,
-                    signature_store,
-                    &mut self.change_tracker.node_factory,
-                    p,
-                );
-                let dot_dot_dot_token = optional_output_node(
-                    &mut import_state,
-                    signature_store,
-                    &mut self.change_tracker.node_factory,
-                    signature_store.dot_dot_dot_token(p),
-                );
-                let question_token = if is_js {
-                    None
-                } else {
-                    optional_output_node(
+                    };
+                    let initializer = optional_output_node(
                         &mut import_state,
                         signature_store,
                         &mut self.change_tracker.node_factory,
-                        signature_store.question_token(p),
-                    )
-                };
-                let initializer = optional_output_node(
-                    &mut import_state,
-                    signature_store,
-                    &mut self.change_tracker.node_factory,
-                    signature_store.initializer(p),
-                );
-                nodes.push(
+                        signature_store.initializer(p),
+                    );
                     self.change_tracker
                         .node_factory
                         .update_parameter_declaration_from_store(
@@ -817,16 +926,40 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
                             question_token,
                             parameter_type_node,
                             initializer,
-                        ),
-                );
+                        )
+                };
+                nodes.push(node);
             }
-            parameters = Some(output_node_list_from_source(
-                &mut import_state,
-                &mut self.change_tracker.node_factory,
-                parameter_list,
-                nodes,
-            ));
+            parameters = Some({
+                let signature_store = self
+                    .change_tracker
+                    .emit_context
+                    .factory
+                    .node_factory
+                    .store();
+                output_node_list_from_source(
+                    &mut import_state,
+                    &mut self.change_tracker.node_factory,
+                    parameter_list.resolve(signature_store),
+                    nodes,
+                )
+            });
         }
+
+        let type_node = if is_js {
+            None
+        } else {
+            let signature_type = {
+                let signature_store = self
+                    .change_tracker
+                    .emit_context
+                    .factory
+                    .node_factory
+                    .store();
+                signature_store.r#type(signature_declaration)
+            };
+            self.import_type_node(signature_type.as_ref(), &id_to_symbol)?
+        };
 
         let mut question_token = None;
         if optional {
@@ -836,30 +969,40 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
                     .new_token(ast::Kind::QuestionToken),
             );
         }
-        let asterisk_token = optional_output_node(
-            &mut import_state,
-            signature_store,
-            &mut self.change_tracker.node_factory,
-            signature_store.asterisk_token(signature_declaration),
-        );
-        let full_signature = optional_output_node(
-            &mut import_state,
-            signature_store,
-            &mut self.change_tracker.node_factory,
-            signature_store.full_signature(signature_declaration),
-        );
-        let equals_greater_than_token = optional_output_node(
-            &mut import_state,
-            signature_store,
-            &mut self.change_tracker.node_factory,
-            signature_store.equals_greater_than_token(signature_declaration),
-        );
-        let signature_body = optional_output_node(
-            &mut import_state,
-            signature_store,
-            &mut self.change_tracker.node_factory,
-            signature_store.body(signature_declaration),
-        );
+        let (asterisk_token, full_signature, equals_greater_than_token, signature_body) = {
+            let signature_store = self
+                .change_tracker
+                .emit_context
+                .factory
+                .node_factory
+                .store();
+            (
+                optional_output_node(
+                    &mut import_state,
+                    signature_store,
+                    &mut self.change_tracker.node_factory,
+                    signature_store.asterisk_token(signature_declaration),
+                ),
+                optional_output_node(
+                    &mut import_state,
+                    signature_store,
+                    &mut self.change_tracker.node_factory,
+                    signature_store.full_signature(signature_declaration),
+                ),
+                optional_output_node(
+                    &mut import_state,
+                    signature_store,
+                    &mut self.change_tracker.node_factory,
+                    signature_store.equals_greater_than_token(signature_declaration),
+                ),
+                optional_output_node(
+                    &mut import_state,
+                    signature_store,
+                    &mut self.change_tracker.node_factory,
+                    signature_store.body(signature_declaration),
+                ),
+            )
+        };
 
         match kind {
             ast::Kind::FunctionExpression => {
@@ -877,15 +1020,17 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
                         name_store,
                     )
                 });
-                Some(self.change_tracker.node_factory.new_function_expression(
-                    modifiers.clone(),
-                    asterisk_token,
-                    name,
-                    type_parameters.clone(),
-                    parameters,
-                    type_node.clone(),
-                    full_signature,
-                    body_node,
+                Ok(Some(
+                    self.change_tracker.node_factory.new_function_expression(
+                        modifiers.clone(),
+                        asterisk_token,
+                        name,
+                        type_parameters.clone(),
+                        parameters,
+                        type_node.clone(),
+                        full_signature,
+                        body_node,
+                    ),
                 ))
             }
             ast::Kind::ArrowFunction => {
@@ -895,7 +1040,7 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
                 let parameters = parameters.clone().unwrap_or_else(|| {
                     synthetic_node_list(&mut self.change_tracker.node_factory, Vec::new())
                 });
-                Some(self.change_tracker.node_factory.new_arrow_function(
+                Ok(Some(self.change_tracker.node_factory.new_arrow_function(
                     modifiers.clone(),
                     type_parameters.clone(),
                     parameters,
@@ -903,7 +1048,7 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
                     full_signature,
                     equals_greater_than_token,
                     body_node,
-                ))
+                )))
             }
             ast::Kind::MethodDeclaration => {
                 let method_name = if name.is_none() {
@@ -921,16 +1066,18 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
                 let parameters = parameters.clone().unwrap_or_else(|| {
                     synthetic_node_list(&mut self.change_tracker.node_factory, Vec::new())
                 });
-                Some(self.change_tracker.node_factory.new_method_declaration(
-                    modifiers.clone(),
-                    asterisk_token,
-                    method_name,
-                    question_token,
-                    type_parameters.clone(),
-                    parameters,
-                    type_node.clone(),
-                    full_signature,
-                    body,
+                Ok(Some(
+                    self.change_tracker.node_factory.new_method_declaration(
+                        modifiers.clone(),
+                        asterisk_token,
+                        method_name,
+                        question_token,
+                        type_parameters.clone(),
+                        parameters,
+                        type_node.clone(),
+                        full_signature,
+                        body,
+                    ),
                 ))
             }
             ast::Kind::FunctionDeclaration => {
@@ -945,18 +1092,20 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
                         name_store,
                     )
                 });
-                Some(self.change_tracker.node_factory.new_function_declaration(
-                    modifiers.clone(),
-                    asterisk_token,
-                    name,
-                    type_parameters.clone(),
-                    parameters,
-                    type_node,
-                    full_signature,
-                    body.or(signature_body),
+                Ok(Some(
+                    self.change_tracker.node_factory.new_function_declaration(
+                        modifiers.clone(),
+                        asterisk_token,
+                        name,
+                        type_parameters.clone(),
+                        parameters,
+                        type_node,
+                        full_signature,
+                        body.or(signature_body),
+                    ),
                 ))
             }
-            _ => None,
+            _ => Ok(None),
         }
     }
 
@@ -1168,16 +1317,21 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
         let Some(type_node) = type_node else {
             return Ok(None);
         };
-        let named_id_to_symbol = id_to_symbol
-            .iter()
-            .filter_map(|(identifier, symbol)| {
-                let name = self.type_checker.symbol_name_public(*symbol)?;
-                Some((*identifier, (*symbol, name)))
-            })
-            .collect::<HashMap<_, _>>();
         let result = {
             let change_tracker = &mut *self.change_tracker;
             let source = change_tracker.emit_context.factory.node_factory.store();
+            let named_id_to_symbol = id_to_symbol
+                .iter()
+                .filter_map(|(identifier, symbol)| {
+                    let name = autoimport::get_name_for_exported_symbol(
+                        source,
+                        self.type_checker,
+                        *symbol,
+                        false,
+                    );
+                    (!name.is_empty()).then_some((*identifier, (*symbol, name)))
+                })
+                .collect::<HashMap<_, _>>();
             let factory = &mut change_tracker.node_factory;
             autoimport::try_get_auto_importable_reference_from_type_node(
                 source,
@@ -1186,6 +1340,7 @@ impl<'a, 'b, 'state> MissingMemberFixer<'a, 'b, 'state> {
                 named_id_to_symbol,
             )
         };
+        copy_emit_metadata_for_imported_tree(self.change_tracker, *type_node, result.type_node);
         let Some(import_adder) = self.import_adder.as_deref_mut() else {
             return Ok(Some(result.type_node));
         };
@@ -1421,8 +1576,8 @@ fn create_declaration_name<'a>(
     }
     if let Some(declaration) = declaration {
         let store = declaration_store.expect("declaration name should have a source arena");
-        if store.name(*declaration).is_some() {
-            return store.name(*declaration);
+        if let Some(name) = store.name(*declaration) {
+            return Some(factory.deep_clone_node_from_store(store, name));
         }
     }
     if let Some(symbol) = symbol {
@@ -1435,7 +1590,7 @@ fn create_declaration_name<'a>(
 
 fn create_property_name(
     factory: &mut ast::NodeFactory,
-    import_state: &mut ast::AstImportState,
+    _import_state: &mut ast::AstImportState,
     node: Option<&ast::Node>,
     source_store: Option<&ast::AstStore>,
     quote_preference: lsutil::QuotePreference,
@@ -1456,7 +1611,7 @@ fn create_property_name(
             let literal = factory.new_string_literal("constructor", token_flags);
             return Some(factory.new_computed_property_name(literal));
         }
-        return Some(*node);
+        return Some(factory.deep_clone_node_in_current_store(*node));
     }
 
     let node_store = source_store.expect("property name should have a source arena");
@@ -1474,5 +1629,5 @@ fn create_property_name(
         let literal = factory.new_string_literal(&node_text, token_flags);
         return Some(factory.new_computed_property_name(literal));
     }
-    Some(output_node(import_state, node_store, factory, *node))
+    Some(factory.deep_clone_node_from_store(node_store, *node))
 }

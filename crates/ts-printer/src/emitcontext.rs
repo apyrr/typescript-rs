@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::ops::ControlFlow;
 use std::sync::atomic::AtomicU32;
 use std::sync::{Arc, Mutex, MutexGuard};
 
@@ -1197,6 +1198,83 @@ impl EmitContext {
     // Gets the associated AutoGenerateInfo entry for a given name.
     pub fn get_auto_generate_info(&self, name: Option<&ast::Node>) -> Option<AutoGenerateInfo> {
         name.and_then(|name| self.state.borrow().auto_generate.get_cloned(node_key(name)))
+    }
+
+    pub fn set_auto_generate_info(&mut self, name: &ast::Node, auto_generate: AutoGenerateInfo) {
+        self.state
+            .borrow_mut()
+            .auto_generate
+            .insert(node_key(name), auto_generate);
+    }
+
+    pub fn copy_auto_generate_info(&mut self, source: &ast::Node, target: &ast::Node) {
+        if let Some(mut auto_generate) = self.get_auto_generate_info(Some(source)) {
+            if auto_generate.node == *source {
+                auto_generate.node = *target;
+            }
+            self.set_auto_generate_info(target, auto_generate);
+        }
+    }
+
+    pub fn copy_emit_metadata_for_cloned_tree(
+        &mut self,
+        source_store: &ast::AstStore,
+        source: ast::Node,
+        target: ast::Node,
+    ) {
+        let flags = self.emit_flags(&source);
+        if flags != EF_NONE {
+            self.set_emit_flags(&target, flags);
+        }
+
+        let leading_comments = self.get_synthetic_leading_comments(&source);
+        if !leading_comments.is_empty() {
+            self.set_synthetic_leading_comments(&target, leading_comments);
+        }
+
+        let trailing_comments = self.get_synthetic_trailing_comments(&source);
+        if !trailing_comments.is_empty() {
+            self.set_synthetic_trailing_comments(&target, trailing_comments);
+        }
+
+        if matches!(
+            source_store.kind(source),
+            ast::Kind::Identifier | ast::Kind::PrivateIdentifier
+        ) {
+            self.copy_auto_generate_info(&source, &target);
+        }
+
+        let source_children = {
+            let mut children = Vec::new();
+            let _ = source_store.for_each_child(source, |child| {
+                if let Some(child) = child {
+                    children.push(child);
+                }
+                ControlFlow::Continue(())
+            });
+            children
+        };
+        let target_children = {
+            let target_store = self.factory.node_factory.store();
+            let mut children = Vec::new();
+            let _ = target_store.for_each_child(target, |child| {
+                if let Some(child) = child {
+                    children.push(child);
+                }
+                ControlFlow::Continue(())
+            });
+            children
+        };
+
+        for (source_child, target_child) in source_children.into_iter().zip(target_children) {
+            let same_kind = {
+                let target_store = self.factory.node_factory.store();
+                source_store.kind(source_child) == target_store.kind(target_child)
+            };
+            if same_kind {
+                self.copy_emit_metadata_for_cloned_tree(source_store, source_child, target_child);
+            }
+        }
     }
 
     // Walks the associated AutoGenerateInfo entries of a name to find the root Node from which the name should be generated.

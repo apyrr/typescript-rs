@@ -650,6 +650,9 @@ impl Snapshot {
                 .resource_request
                 .auto_imports
                 .path(self.use_case_sensitive_file_names());
+            open_files
+                .entry(prepare_auto_imports.clone())
+                .or_insert_with(|| change.resource_request.auto_imports.file_name());
         }
         let mut old_auto_imports = self.auto_imports.clone();
         if old_auto_imports.is_none() {

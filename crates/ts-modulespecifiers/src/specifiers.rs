@@ -1233,8 +1233,7 @@ fn try_directory_with_package_json(
     if let Some(content) = package_json_content
         && content.fields.path_fields.types_versions.type_ == packagejson::JsonValueType::Object
     {
-        version_paths =
-            content.get_version_paths(None::<fn(&ts_diagnostics::Message, &[String])>);
+        version_paths = content.get_version_paths(None::<fn(&ts_diagnostics::Message, &[String])>);
     }
     if let Some(paths) = version_paths.get_paths() {
         let sub_module_name = &path_obj.file_name[package_root_path.len() + 1..];
@@ -2081,10 +2080,8 @@ impl ModuleSpecifierGenerationHost for NoHost {
 }
 
 fn get_js_extension_for_file(file_name: &str, options: &core::CompilerOptions) -> String {
-    let result = ts_module::try_get_js_extension_for_file(
-        file_name,
-        options.jsx == core::JsxEmit::Preserve,
-    );
+    let result =
+        ts_module::try_get_js_extension_for_file(file_name, options.jsx == core::JsxEmit::Preserve);
     if result.is_empty() {
         panic!(
             "Extension {} is unsupported:: FileName:: {}",

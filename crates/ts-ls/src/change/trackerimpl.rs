@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::ControlFlow};
 
 use ts_ast as ast;
 use ts_astnav as astnav;
@@ -17,6 +17,24 @@ use super::{
     TRAILING_TRIVIA_OPTION_EXCLUDE, TRAILING_TRIVIA_OPTION_EXCLUDE_WHITESPACE,
     TRAILING_TRIVIA_OPTION_INCLUDE, Tracker, TrackerEdit, TrackerEditKind, TrailingTriviaOption,
 };
+
+fn unset_originals_for_tree(emit_context: &mut printer::EmitContext, node: ast::Node) {
+    emit_context.unset_original(&node);
+    let children = {
+        let store = emit_context.factory.node_factory.store();
+        let mut children = Vec::new();
+        let _ = store.for_each_child(node, |child| {
+            if let Some(child) = child {
+                children.push(child);
+            }
+            ControlFlow::Continue(())
+        });
+        children
+    };
+    for child in children {
+        unset_originals_for_tree(emit_context, child);
+    }
+}
 
 impl<'a> Tracker<'a> {
     pub fn get_text_changes_from_changes(&mut self) -> HashMap<String, Vec<lsproto::TextEdit>> {
@@ -142,7 +160,8 @@ impl<'a> Tracker<'a> {
         pos: i32,
         options: NodeOptions,
     ) -> String {
-        let (text, source_file_like) = self.get_nonformatted_text(node_in, target_source_file);
+        let (text, source_file_like, source_file_like_node) =
+            self.get_nonformatted_text(node_in, target_source_file);
         // !!! if (validate) validate(node, text);
         let format_options =
             get_format_code_settings_for_writing(self.format_settings.clone(), target_source_file);
@@ -164,9 +183,9 @@ impl<'a> Tracker<'a> {
         } else if format_options.editor_settings.indent_size != 0
             && format::should_indent_child_node(
                 format_options.clone(),
-                &node_in,
+                &source_file_like_node,
                 None,
-                source_file,
+                &source_file_like,
                 false,
             )
         {
@@ -191,13 +210,27 @@ impl<'a> Tracker<'a> {
         &mut self,
         node: ast::Node,
         source_file: &'a ast::SourceFile,
-    ) -> (String, ast::SourceFile) {
+    ) -> (String, ast::SourceFile, ast::Node) {
         let mut writer = printer::new_change_tracker_writer(
             self.new_line.clone(),
             self.format_settings.editor_settings.indent_size,
         );
         let shared_writer = printer::share_text_writer(Box::new(writer.clone()));
-        printer::new_printer(
+        let mut emit_context = self.emit_context.fork();
+        let tracker_factory_store_id = self.node_factory.store().store_id();
+        let (node_to_print, printed_from_emit_factory) =
+            if node.store_id() == tracker_factory_store_id {
+                let source_store = self.node_factory.store();
+                let cloned = emit_context
+                    .factory
+                    .clone_node_with_hooks(source_store, node);
+                emit_context.copy_emit_metadata_for_cloned_tree(source_store, node, cloned);
+                unset_originals_for_tree(&mut emit_context, cloned);
+                (cloned, true)
+            } else {
+                (node, false)
+            };
+        let mut printer = printer::new_printer(
             printer::PrinterOptions {
                 new_line: core::get_new_line_kind(&self.new_line),
                 never_ascii_escape: true,
@@ -206,26 +239,32 @@ impl<'a> Tracker<'a> {
                 ..Default::default()
             },
             writer.get_print_handlers(),
-            Some(self.emit_context.fork()),
-        )
-        .write_node(Some(&node), Some(source_file), shared_writer, None);
+            Some(emit_context),
+        );
+        printer.write_node(Some(&node_to_print), Some(source_file), shared_writer, None);
+        let emit_context = printer.into_emit_context();
 
         let mut text = printer::EmitTextWriter::string(&mut writer);
         if text.ends_with(&self.new_line) {
             text.truncate(text.len() - self.new_line.len());
         }
-
-        let node_out =
-            writer.assign_positions_to_node(source_file.store(), &node, &mut self.node_factory);
-        let node_loc = self.node_factory.loc(node_out);
-        let eof_token = self.node_factory.new_token(ast::Kind::EndOfFile);
-        let node_list = self
-            .node_factory
-            .new_node_list(node_loc, node_loc, vec![node_out]);
+        let position_source = if printed_from_emit_factory {
+            emit_context.factory.node_factory.store()
+        } else {
+            source_file.store()
+        };
+        let mut source_file_like_factory = ast::NodeFactory::default();
+        let node_out = writer.assign_positions_to_node(
+            position_source,
+            &node_to_print,
+            &mut source_file_like_factory,
+        );
+        let node_loc = source_file_like_factory.loc(node_out);
+        let eof_token = source_file_like_factory.new_token(ast::Kind::EndOfFile);
+        let node_list = source_file_like_factory.new_node_list(node_loc, node_loc, vec![node_out]);
         let eof_loc = core::new_text_range(node_loc.end(), node_loc.end());
-        self.node_factory
-            .place_change_tracker_node(eof_token, eof_loc);
-        let source_file_like_node = self.node_factory.new_source_file(
+        source_file_like_factory.place_change_tracker_node(eof_token, eof_loc);
+        let source_file_like_node = source_file_like_factory.new_source_file(
             ast::SourceFileParseOptions {
                 file_name: source_file.file_name().to_string(),
                 path: source_file.path().to_owned(),
@@ -235,14 +274,12 @@ impl<'a> Tracker<'a> {
             node_list,
             Some(eof_token),
         );
-        self.node_factory
-            .place_change_tracker_node(source_file_like_node, node_loc);
-        let node_factory = std::mem::take(&mut self.node_factory);
-        let source_file_like = node_factory.finish_parsed_source_file(
+        source_file_like_factory.place_change_tracker_node(source_file_like_node, node_loc);
+        let source_file_like = source_file_like_factory.finish_parsed_source_file(
             source_file_like_node,
             ast::ParsedSourceFileMetadata::default(),
         );
-        (text, source_file_like)
+        (text, source_file_like, node_out)
     }
 
     // method on the changeTracker because use of converters
@@ -599,13 +636,18 @@ pub fn has_comments_before_line_break(text: &str, start: i32) -> bool {
     false
 }
 
-pub(crate) fn need_semicolon_between(store: &ast::AstStore, a: ast::Node, b: ast::Node) -> bool {
-    (ast::is_property_signature_declaration(store, a) || ast::is_property_declaration(store, a))
-        && ast::is_class_or_type_element(store, &b)
-        && store
+pub(crate) fn need_semicolon_between(
+    a_store: &ast::AstStore,
+    a: ast::Node,
+    b_store: &ast::AstStore,
+    b: ast::Node,
+) -> bool {
+    (ast::is_property_signature_declaration(a_store, a) || ast::is_property_declaration(a_store, a))
+        && ast::is_class_or_type_element(b_store, &b)
+        && b_store
             .name(b)
-            .is_some_and(|name| store.kind(name) == ast::Kind::ComputedPropertyName)
-        || ast::is_statement_but_not_declaration(store, a)
-            && ast::is_statement_but_not_declaration(store, b)
+            .is_some_and(|name| b_store.kind(name) == ast::Kind::ComputedPropertyName)
+        || ast::is_statement_but_not_declaration(a_store, a)
+            && ast::is_statement_but_not_declaration(b_store, b)
     // TODO: only if b would start with a `(` or `[`
 }

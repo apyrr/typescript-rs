@@ -81,29 +81,35 @@ fn completion_symbol_value_declaration(
 }
 
 pub fn is_static_property(
-    store: &ast::AstStore,
     type_checker: &mut checker::Checker<'_, '_>,
     symbol: ast::SymbolIdentity,
 ) -> bool {
     completion_symbol_value_declaration(type_checker, symbol).is_some_and(|value_declaration| {
-        node_modifier_flags(store, value_declaration) & ast::MODIFIER_FLAGS_STATIC
+        let Some(declaration_store) = type_checker.source_file_store(value_declaration) else {
+            return false;
+        };
+        node_modifier_flags(declaration_store, value_declaration) & ast::MODIFIER_FLAGS_STATIC
             != ast::MODIFIER_FLAGS_NONE
-            && node_parent(store, value_declaration)
+            && node_parent(declaration_store, value_declaration)
                 .as_ref()
-                .is_some_and(|parent| ast::is_class_like(store, *parent))
+                .is_some_and(|parent| ast::is_class_like(declaration_store, *parent))
     })
 }
 
 fn completion_symbol_name_for_display(
-    store: &ast::AstStore,
+    _store: &ast::AstStore,
     type_checker: &mut checker::Checker<'_, '_>,
     symbol: CompletionSymbol,
 ) -> String {
     if let Some(value_declaration) = completion_symbol_value_declaration(type_checker, symbol)
-        && ast::is_private_identifier_class_element_declaration(store, value_declaration)
-        && let Some(name) = node_name(store, value_declaration)
+        && let Some(declaration_store) = type_checker.source_file_store(value_declaration)
+        && ast::is_private_identifier_class_element_declaration(
+            declaration_store,
+            value_declaration,
+        )
+        && let Some(name) = node_name(declaration_store, value_declaration)
     {
-        return node_text(store, name);
+        return node_text(declaration_store, name);
     }
     let name = completion_symbol_name(type_checker, symbol);
     name
@@ -616,7 +622,23 @@ impl LanguageService<'_> {
         // The decision to provide completion depends on the contextToken, which is determined through the previousToken.
         // Note: 'previousToken' (and thus 'contextToken') can be undefined if we are the beginning of the file
         let is_js_only_location = ast::is_source_file_js(file);
-        let (mut context_token, previous_token) = get_relevant_tokens(position, file);
+        let (fallback_context_token, fallback_previous_token) = get_relevant_tokens(position, file);
+        let (scanned_context_token, scanned_previous_token) =
+            get_relevant_token_infos(position, file);
+        let use_scanned_context = scanned_context_token.is_some_and(|token| {
+            token.node.is_none() && is_scanned_completion_context_token(token.kind)
+        });
+        let context_token_info = if use_scanned_context {
+            scanned_context_token
+        } else {
+            fallback_context_token.map(|token| astnav::TokenInfo::from_node(store, token))
+        };
+        let mut context_token = context_token_info.and_then(|token| token.node);
+        let previous_token = if use_scanned_context {
+            scanned_previous_token.and_then(|token| token.node)
+        } else {
+            fallback_previous_token
+        };
 
         // Find the node where completion is requested on.
         // Also determine whether we are trying to complete with members of that node
@@ -638,72 +660,76 @@ impl LanguageService<'_> {
         // !!! flags := CompletionInfoFlagsNone
         let mut default_commit_characters = Vec::new();
 
-        if let Some(context_token_value) = context_token {
-            let import_statement_completion_info =
-                self.get_import_statement_completion_info(&context_token_value, file);
-            if import_statement_completion_info.keyword_completion != ast::Kind::Unknown {
-                if import_statement_completion_info.is_keyword_only_completion {
-                    return Ok(Some(CompletionData::Keyword(CompletionDataKeyword {
-                        keyword_completions: vec![lsproto::CompletionItem {
-                            label: scanner::token_to_string(
-                                import_statement_completion_info.keyword_completion,
-                            ),
-                            kind: Some(lsproto::CompletionItemKind::KEYWORD),
-                            sort_text: Some(SORT_TEXT_GLOBALS_OR_KEYWORDS.to_string()),
-                            ..Default::default()
-                        }],
-                        is_new_identifier_location: import_statement_completion_info
-                            .is_new_identifier_location,
-                    })));
+        if let Some(context_token_info_value) = context_token_info {
+            if let Some(context_token_value) = context_token_info_value.node {
+                let import_statement_completion_info =
+                    self.get_import_statement_completion_info(&context_token_value, file);
+                if import_statement_completion_info.keyword_completion != ast::Kind::Unknown {
+                    if import_statement_completion_info.is_keyword_only_completion {
+                        return Ok(Some(CompletionData::Keyword(CompletionDataKeyword {
+                            keyword_completions: vec![lsproto::CompletionItem {
+                                label: scanner::token_to_string(
+                                    import_statement_completion_info.keyword_completion,
+                                ),
+                                kind: Some(lsproto::CompletionItemKind::KEYWORD),
+                                sort_text: Some(SORT_TEXT_GLOBALS_OR_KEYWORDS.to_string()),
+                                ..Default::default()
+                            }],
+                            is_new_identifier_location: import_statement_completion_info
+                                .is_new_identifier_location,
+                        })));
+                    }
+                    keyword_filters = keyword_filters_from_syntax_kind(
+                        import_statement_completion_info.keyword_completion,
+                    );
                 }
-                keyword_filters = keyword_filters_from_syntax_kind(
-                    import_statement_completion_info.keyword_completion,
-                );
-            }
-            if import_statement_completion_info.replacement_span.is_some()
-                && preferences
-                    .include_completions_for_import_statements
-                    .is_true()
-            {
-                // !!! flags |= CompletionInfoFlags.IsImportStatementCompletion;
-                is_new_identifier_location =
-                    import_statement_completion_info.is_new_identifier_location;
-                import_statement_completion = Some(import_statement_completion_info);
-            }
-            // Bail out if this is a known invalid completion location.
-            if is_completion_list_blocker(
-                &context_token_value,
-                previous_token.as_ref(),
-                &location,
-                file,
-                position,
-                type_checker,
-            ) {
-                if keyword_filters != KEYWORD_COMPLETION_FILTERS_NONE {
-                    let (is_new_identifier_location, _) =
-                        compute_commit_characters_and_is_new_identifier(
-                            Some(&context_token_value),
-                            file,
-                            position,
-                        );
-                    return Ok(Some(CompletionData::Keyword(keyword_completion_data(
-                        keyword_filters,
-                        is_js_only_location,
-                        is_new_identifier_location,
-                    ))));
+                if import_statement_completion_info.replacement_span.is_some()
+                    && preferences
+                        .include_completions_for_import_statements
+                        .is_true()
+                {
+                    // !!! flags |= CompletionInfoFlags.IsImportStatementCompletion;
+                    is_new_identifier_location =
+                        import_statement_completion_info.is_new_identifier_location;
+                    import_statement_completion = Some(import_statement_completion_info);
                 }
-                return Ok(None);
+                // Bail out if this is a known invalid completion location.
+                if is_completion_list_blocker(
+                    &context_token_value,
+                    previous_token.as_ref(),
+                    &location,
+                    file,
+                    position,
+                    type_checker,
+                ) {
+                    if keyword_filters != KEYWORD_COMPLETION_FILTERS_NONE {
+                        let (is_new_identifier_location, _) =
+                            compute_commit_characters_and_is_new_identifier(
+                                Some(&context_token_value),
+                                file,
+                                position,
+                            );
+                        return Ok(Some(CompletionData::Keyword(keyword_completion_data(
+                            keyword_filters,
+                            is_js_only_location,
+                            is_new_identifier_location,
+                        ))));
+                    }
+                    return Ok(None);
+                }
             }
 
-            let Some(mut parent) = node_parent(store, context_token_value) else {
+            let Some(mut parent) = context_token_info_value.parent.or_else(|| {
+                context_token.and_then(|context_token| node_parent(store, context_token))
+            }) else {
                 return Ok(None);
             };
-            if store.kind(context_token_value) == ast::Kind::DotToken
-                || store.kind(context_token_value) == ast::Kind::QuestionDotToken
+            let context_token_kind = context_token_info_value.kind;
+            if context_token_kind == ast::Kind::DotToken
+                || context_token_kind == ast::Kind::QuestionDotToken
             {
-                is_right_of_dot = store.kind(context_token_value) == ast::Kind::DotToken;
-                is_right_of_question_dot =
-                    store.kind(context_token_value) == ast::Kind::QuestionDotToken;
+                is_right_of_dot = context_token_kind == ast::Kind::DotToken;
+                is_right_of_question_dot = context_token_kind == ast::Kind::QuestionDotToken;
                 match store.kind(parent) {
                     ast::Kind::PropertyAccessExpression => {
                         property_access_to_convert = Some(parent);
@@ -714,7 +740,7 @@ impl LanguageService<'_> {
                             || ((ast::is_call_expression(store, node.unwrap())
                                 || ast::is_function_like(store, node))
                                 && store.loc(node.unwrap()).end()
-                                    == store.loc(context_token_value).pos()
+                                    == context_token_info_value.loc.pos()
                                 && lsutil::get_last_child(node.unwrap(), file).is_none_or(
                                     |last_child| {
                                         store.kind(last_child) != ast::Kind::CloseParenToken
@@ -758,107 +784,123 @@ impl LanguageService<'_> {
                     }
                 }
             } else {
-                // <UI.Test /* completion position */ />
-                // If the tagname is a property access expression, we will then walk up to the top most of property access expression.
-                // Then, try to get a JSX container and its associated attributes type.
-                if store.kind(parent) == ast::Kind::PropertyAccessExpression {
-                    context_token = Some(parent);
-                    let Some(next_parent) = node_parent(store, parent) else {
-                        return Ok(None);
-                    };
-                    parent = next_parent;
+                if context_token.is_none()
+                    && !is_scanned_type_context_token(
+                        store,
+                        context_token_kind,
+                        Some(parent),
+                        location,
+                    )
+                {
+                    return Ok(None);
                 }
 
-                // Fix location
-                if parent == location {
-                    match current_token.map(|token| store.kind(token)) {
-                        Some(ast::Kind::GreaterThanToken) => {
-                            if store.kind(parent) == ast::Kind::JsxElement
-                                || store.kind(parent) == ast::Kind::JsxOpeningElement
-                            {
-                                location = current_token.unwrap();
+                if context_token.is_some() {
+                    // <UI.Test /* completion position */ />
+                    // If the tagname is a property access expression, we will then walk up to the top most of property access expression.
+                    // Then, try to get a JSX container and its associated attributes type.
+                    if store.kind(parent) == ast::Kind::PropertyAccessExpression {
+                        context_token = Some(parent);
+                        let Some(next_parent) = node_parent(store, parent) else {
+                            return Ok(None);
+                        };
+                        parent = next_parent;
+                    }
+
+                    // Fix location
+                    if parent == location {
+                        match current_token.map(|token| store.kind(token)) {
+                            Some(ast::Kind::GreaterThanToken) => {
+                                if store.kind(parent) == ast::Kind::JsxElement
+                                    || store.kind(parent) == ast::Kind::JsxOpeningElement
+                                {
+                                    location = current_token.unwrap();
+                                }
+                            }
+                            Some(ast::Kind::LessThanSlashToken) => {
+                                if store.kind(parent) == ast::Kind::JsxSelfClosingElement {
+                                    location = current_token.unwrap();
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+
+                    let Some(context_token_value) = context_token else {
+                        return Ok(None);
+                    };
+                    match store.kind(parent) {
+                        ast::Kind::JsxClosingElement => {
+                            if store.kind(context_token_value) == ast::Kind::LessThanSlashToken {
+                                is_starting_close_tag = true;
+                                location = context_token_value;
                             }
                         }
-                        Some(ast::Kind::LessThanSlashToken) => {
-                            if store.kind(parent) == ast::Kind::JsxSelfClosingElement {
-                                location = current_token.unwrap();
+                        ast::Kind::BinaryExpression => {
+                            if binary_expression_may_be_open_tag(store, parent) {
+                                is_jsx_identifier_expected = true;
+                            }
+                        }
+                        ast::Kind::JsxSelfClosingElement
+                        | ast::Kind::JsxElement
+                        | ast::Kind::JsxOpeningElement => {
+                            is_jsx_identifier_expected = true;
+                            if store.kind(context_token_value) == ast::Kind::LessThanToken {
+                                is_right_of_open_tag = true;
+                                location = context_token_value;
+                            }
+                        }
+                        ast::Kind::JsxExpression | ast::Kind::JsxSpreadAttribute => {
+                            // First case is for `<div foo={true} [||] />` or `<div foo={true} [||] ></div>`,
+                            // `parent` will be `{true}` and `previousToken` will be `}`.
+                            // Second case is for `<div foo={true} t[||] ></div>`.
+                            // Second case must not match for `<div foo={undefine[||]}></div>`.
+                            if previous_token.is_some_and(|previous_token| {
+                                store.kind(previous_token) == ast::Kind::CloseBraceToken
+                                    || store.kind(previous_token) == ast::Kind::Identifier
+                                        && node_parent(store, &previous_token).is_some_and(
+                                            |parent| store.kind(parent) == ast::Kind::JsxAttribute,
+                                        )
+                            }) {
+                                is_jsx_identifier_expected = true;
+                            }
+                        }
+                        ast::Kind::JsxAttribute => {
+                            // For `<div className="x" [||] ></div>`, `parent` will be JsxAttribute and `previousToken` will be its initializer.
+                            if previous_token.is_some_and(|previous_token| {
+                                node_initializer(store, parent)
+                                    .is_some_and(|initializer| initializer == previous_token)
+                                    && store.loc(previous_token).end() < position
+                            }) {
+                                is_jsx_identifier_expected = true;
+                            } else if let Some(previous_token) = previous_token {
+                                match store.kind(previous_token) {
+                                    ast::Kind::EqualsToken => {
+                                        jsx_initializer.is_initializer = true;
+                                    }
+                                    ast::Kind::Identifier => {
+                                        is_jsx_identifier_expected = true;
+                                        // For `<div x=[|f/**/|]`, `parent` will be `x` and `previousToken.parent` will be `f` (which is its own JsxAttribute).
+                                        // Note for `<div someBool f>` we don't want to treat this as a jsx inializer, instead it's the attribute name.
+                                        if node_parent(store, &previous_token)
+                                            .is_none_or(|previous_parent| parent != previous_parent)
+                                            && node_initializer(store, parent).is_none()
+                                            && astnav::find_child_of_kind(
+                                                parent,
+                                                ast::Kind::EqualsToken,
+                                                file,
+                                            )
+                                            .is_some()
+                                        {
+                                            jsx_initializer.initializer = Some(previous_token);
+                                        }
+                                    }
+                                    _ => {}
+                                }
                             }
                         }
                         _ => {}
                     }
-                }
-
-                match store.kind(parent) {
-                    ast::Kind::JsxClosingElement => {
-                        if store.kind(context_token.unwrap()) == ast::Kind::LessThanSlashToken {
-                            is_starting_close_tag = true;
-                            location = context_token.unwrap();
-                        }
-                    }
-                    ast::Kind::BinaryExpression => {
-                        if binary_expression_may_be_open_tag(store, parent) {
-                            is_jsx_identifier_expected = true;
-                        }
-                    }
-                    ast::Kind::JsxSelfClosingElement
-                    | ast::Kind::JsxElement
-                    | ast::Kind::JsxOpeningElement => {
-                        is_jsx_identifier_expected = true;
-                        if store.kind(context_token.unwrap()) == ast::Kind::LessThanToken {
-                            is_right_of_open_tag = true;
-                            location = context_token.unwrap();
-                        }
-                    }
-                    ast::Kind::JsxExpression | ast::Kind::JsxSpreadAttribute => {
-                        // First case is for `<div foo={true} [||] />` or `<div foo={true} [||] ></div>`,
-                        // `parent` will be `{true}` and `previousToken` will be `}`.
-                        // Second case is for `<div foo={true} t[||] ></div>`.
-                        // Second case must not match for `<div foo={undefine[||]}></div>`.
-                        if previous_token.is_some_and(|previous_token| {
-                            store.kind(previous_token) == ast::Kind::CloseBraceToken
-                                || store.kind(previous_token) == ast::Kind::Identifier
-                                    && node_parent(store, &previous_token).is_some_and(|parent| {
-                                        store.kind(parent) == ast::Kind::JsxAttribute
-                                    })
-                        }) {
-                            is_jsx_identifier_expected = true;
-                        }
-                    }
-                    ast::Kind::JsxAttribute => {
-                        // For `<div className="x" [||] ></div>`, `parent` will be JsxAttribute and `previousToken` will be its initializer.
-                        if previous_token.is_some_and(|previous_token| {
-                            node_initializer(store, parent)
-                                .is_some_and(|initializer| initializer == previous_token)
-                                && store.loc(previous_token).end() < position
-                        }) {
-                            is_jsx_identifier_expected = true;
-                        } else if let Some(previous_token) = previous_token {
-                            match store.kind(previous_token) {
-                                ast::Kind::EqualsToken => {
-                                    jsx_initializer.is_initializer = true;
-                                }
-                                ast::Kind::Identifier => {
-                                    is_jsx_identifier_expected = true;
-                                    // For `<div x=[|f/**/|]`, `parent` will be `x` and `previousToken.parent` will be `f` (which is its own JsxAttribute).
-                                    // Note for `<div someBool f>` we don't want to treat this as a jsx inializer, instead it's the attribute name.
-                                    if node_parent(store, &previous_token)
-                                        .is_none_or(|previous_parent| parent != previous_parent)
-                                        && node_initializer(store, parent).is_none()
-                                        && astnav::find_child_of_kind(
-                                            parent,
-                                            ast::Kind::EqualsToken,
-                                            file,
-                                        )
-                                        .is_some()
-                                    {
-                                        jsx_initializer.initializer = Some(previous_token);
-                                    }
-                                }
-                                _ => {}
-                            }
-                        }
-                    }
-                    _ => {}
                 }
             }
         }
@@ -872,15 +914,20 @@ impl LanguageService<'_> {
         let mut symbol_to_origin_info_map = HashMap::new();
         let mut symbol_to_sort_text_map = HashMap::new();
         let mut seen_property_symbols = collections::Set::new();
-        let is_type_only_location =
-            import_statement_completion.as_ref().is_some_and(|_| {
-                node_parent(store, location).is_some_and(|parent| {
-                    ast::is_type_only_import_or_export_declaration(store, &parent)
-                })
-            }) || !is_context_token_value_location(store, context_token.as_ref())
-                && (is_possibly_type_argument_position(context_token.as_ref(), file, type_checker)
-                    || ast::is_part_of_type_node(store, location)
-                    || is_context_token_type_location(store, context_token.as_ref()));
+        let is_type_only_location = import_statement_completion.as_ref().is_some_and(|_| {
+            node_parent(store, location).is_some_and(|parent| {
+                ast::is_type_only_import_or_export_declaration(store, &parent)
+            })
+        }) || !is_context_token_value_location(
+            store,
+            context_token.as_ref(),
+        ) && (is_possibly_type_argument_position(
+            context_token.as_ref(),
+            file,
+            type_checker,
+        ) || ast::is_part_of_type_node(store, location)
+            || is_context_token_type_location(store, context_token.as_ref())
+            || is_context_token_info_type_location(store, context_token_info.as_ref(), location));
 
         let add_symbol_origin_info =
             |symbols: &Vec<CompletionSymbol>,
@@ -917,118 +964,110 @@ impl LanguageService<'_> {
             |symbol_to_sort_text_map: &mut HashMap<CompletionSymbol, SortText>,
              symbol: CompletionSymbol,
              type_checker: &mut checker::Checker<'a, '_>| {
-                if is_static_property(store, type_checker, symbol) {
+                if is_static_property(type_checker, symbol) {
                     symbol_to_sort_text_map
                         .insert(symbol, SORT_TEXT_LOCAL_DECLARATION_PRIORITY.to_string());
                 }
             };
-        let add_property_symbol =
-            |symbols: &mut Vec<CompletionSymbol>,
-             symbol_to_origin_info_map: &mut HashMap<usize, SymbolOriginInfo>,
-             symbol_to_sort_text_map: &mut HashMap<CompletionSymbol, SortText>,
-             seen_property_symbols: &mut collections::Set<CompletionSymbol>,
-             type_checker: &mut checker::Checker<'a, '_>,
-             symbol: CompletionSymbol,
-             insert_await: bool,
-             insert_question_dot: bool| {
-                // For a computed property with an accessible name like `Symbol.iterator`,
-                // we'll add a completion for the *name* `Symbol` instead of for the property.
-                // If this is e.g. [Symbol.iterator], add a completion for `Symbol`.
-                let computed_property_name = completion_symbol_declarations(type_checker, symbol)
-                    .iter()
-                    .find_map(|decl| {
-                        let name = ast::get_name_of_declaration(store, Some(*decl));
-                        if name.as_ref().is_some_and(|name| {
-                            store.kind(*name) == ast::Kind::ComputedPropertyName
-                        }) {
-                            name
-                        } else {
-                            None
-                        }
-                    });
-
-                if let Some(computed_property_name) = computed_property_name {
-                    let computed_expression = node_expression(store, computed_property_name);
-                    let left_most_name = computed_expression
-                        .as_ref()
-                        .and_then(|name| get_left_most_name(store, name)); // The completion is for `Symbol`, not `iterator`.
-                    let mut name_symbol = None;
-                    if let Some(left_most_name) = left_most_name {
-                        name_symbol = type_checker.get_symbol_at_location_public(left_most_name);
-                    }
-                    // If this is nested like for `namespace N { export const sym = Symbol(); }`, we'll add the completion for `N`.
-                    let mut first_accessible_symbol = None;
-                    if let Some(name_symbol) = name_symbol {
-                        let enclosing_declaration = context_token.unwrap_or(location);
-                        first_accessible_symbol = get_first_symbol_in_chain(
-                            name_symbol,
-                            &enclosing_declaration,
-                            type_checker,
-                        );
-                    }
-                    let mut first_accessible_symbol_id: Option<CompletionSymbol> = None;
-                    if let Some(first_accessible_symbol) = first_accessible_symbol.as_ref() {
-                        first_accessible_symbol_id = Some(*first_accessible_symbol);
-                    }
-                    if let Some(first_accessible_symbol) = first_accessible_symbol_id
-                        && seen_property_symbols.add_if_absent(first_accessible_symbol)
-                    {
-                        symbols.push(first_accessible_symbol);
-                        symbol_to_sort_text_map.insert(
-                            first_accessible_symbol,
-                            SORT_TEXT_GLOBALS_OR_KEYWORDS.to_string(),
-                        );
-                        let module_symbol =
-                            type_checker.symbol_parent_public(first_accessible_symbol);
-                        let member_in_exports = if let Some(module_symbol) = module_symbol.as_ref()
-                        {
-                            type_checker
-                                .symbol_export_symbol_public(*module_symbol)
-                                .or_else(|| type_checker.get_export_symbol_public(*module_symbol))
-                        } else {
-                            None
-                        };
-                        if module_symbol.is_none()
-                            || module_symbol.as_ref().is_none_or(|module_symbol| {
-                                !is_external_module_symbol_identity(
-                                    store,
-                                    type_checker,
-                                    *module_symbol,
-                                )
-                            })
-                            || member_in_exports.is_none_or(|member_in_exports| {
-                                first_accessible_symbol != member_in_exports
-                            })
-                        {
-                            symbol_to_origin_info_map.insert(
-                                symbols.len() - 1,
-                                SymbolOriginInfo {
-                                    kind: get_nullable_symbol_origin_info_kind(
-                                        SYMBOL_ORIGIN_INFO_KIND_SYMBOL_MEMBER,
-                                        insert_question_dot,
-                                    ),
-                                    data: None,
-                                    ..Default::default()
-                                },
-                            );
-                        } else {
-                            // !!! auto-import symbol
-                        }
-                    } else if first_accessible_symbol_id.is_none_or(|first_accessible_symbol| {
-                        !seen_property_symbols.has(&first_accessible_symbol)
+        let add_property_symbol = |symbols: &mut Vec<CompletionSymbol>,
+                                   symbol_to_origin_info_map: &mut HashMap<
+            usize,
+            SymbolOriginInfo,
+        >,
+                                   symbol_to_sort_text_map: &mut HashMap<
+            CompletionSymbol,
+            SortText,
+        >,
+                                   seen_property_symbols: &mut collections::Set<
+            CompletionSymbol,
+        >,
+                                   type_checker: &mut checker::Checker<'a, '_>,
+                                   symbol: CompletionSymbol,
+                                   insert_await: bool,
+                                   insert_question_dot: bool| {
+            // For a computed property with an accessible name like `Symbol.iterator`,
+            // we'll add a completion for the *name* `Symbol` instead of for the property.
+            // If this is e.g. [Symbol.iterator], add a completion for `Symbol`.
+            let computed_property_name = completion_symbol_declarations(type_checker, symbol)
+                .iter()
+                .find_map(|decl| {
+                    let declaration_store = type_checker.source_file_store(*decl)?;
+                    let name = ast::get_name_of_declaration(declaration_store, Some(*decl));
+                    if name.as_ref().is_some_and(|name| {
+                        declaration_store.kind(*name) == ast::Kind::ComputedPropertyName
                     }) {
-                        symbols.push(symbol);
-                        add_symbol_origin_info(
-                            symbols,
-                            symbol_to_origin_info_map,
-                            seen_property_symbols,
-                            symbol,
-                            insert_question_dot,
-                            insert_await,
-                        );
-                        add_symbol_sort_info(symbol_to_sort_text_map, symbol, type_checker);
+                        name.map(|name| (declaration_store, name))
+                    } else {
+                        None
                     }
-                } else {
+                });
+
+            if let Some((computed_property_store, computed_property_name)) = computed_property_name
+            {
+                let computed_expression =
+                    node_expression(computed_property_store, computed_property_name);
+                let left_most_name = computed_expression
+                    .as_ref()
+                    .and_then(|name| get_left_most_name(computed_property_store, name)); // The completion is for `Symbol`, not `iterator`.
+                let mut name_symbol = None;
+                if let Some(left_most_name) = left_most_name {
+                    name_symbol = type_checker.get_symbol_at_location_public(left_most_name);
+                }
+                // If this is nested like for `namespace N { export const sym = Symbol(); }`, we'll add the completion for `N`.
+                let mut first_accessible_symbol = None;
+                if let Some(name_symbol) = name_symbol {
+                    let enclosing_declaration = context_token.unwrap_or(location);
+                    first_accessible_symbol = get_first_symbol_in_chain(
+                        name_symbol,
+                        &enclosing_declaration,
+                        type_checker,
+                    );
+                }
+                let mut first_accessible_symbol_id: Option<CompletionSymbol> = None;
+                if let Some(first_accessible_symbol) = first_accessible_symbol.as_ref() {
+                    first_accessible_symbol_id = Some(*first_accessible_symbol);
+                }
+                if let Some(first_accessible_symbol) = first_accessible_symbol_id
+                    && seen_property_symbols.add_if_absent(first_accessible_symbol)
+                {
+                    symbols.push(first_accessible_symbol);
+                    symbol_to_sort_text_map.insert(
+                        first_accessible_symbol,
+                        SORT_TEXT_GLOBALS_OR_KEYWORDS.to_string(),
+                    );
+                    let module_symbol = type_checker.symbol_parent_public(first_accessible_symbol);
+                    let member_in_exports = if let Some(module_symbol) = module_symbol.as_ref() {
+                        type_checker
+                            .symbol_export_symbol_public(*module_symbol)
+                            .or_else(|| type_checker.get_export_symbol_public(*module_symbol))
+                    } else {
+                        None
+                    };
+                    if module_symbol.is_none()
+                        || module_symbol.as_ref().is_none_or(|module_symbol| {
+                            !is_external_module_symbol_identity(store, type_checker, *module_symbol)
+                        })
+                        || member_in_exports.is_none_or(|member_in_exports| {
+                            first_accessible_symbol != member_in_exports
+                        })
+                    {
+                        symbol_to_origin_info_map.insert(
+                            symbols.len() - 1,
+                            SymbolOriginInfo {
+                                kind: get_nullable_symbol_origin_info_kind(
+                                    SYMBOL_ORIGIN_INFO_KIND_SYMBOL_MEMBER,
+                                    insert_question_dot,
+                                ),
+                                data: None,
+                                ..Default::default()
+                            },
+                        );
+                    } else {
+                        // !!! auto-import symbol
+                    }
+                } else if first_accessible_symbol_id.is_none_or(|first_accessible_symbol| {
+                    !seen_property_symbols.has(&first_accessible_symbol)
+                }) {
                     symbols.push(symbol);
                     add_symbol_origin_info(
                         symbols,
@@ -1040,7 +1079,19 @@ impl LanguageService<'_> {
                     );
                     add_symbol_sort_info(symbol_to_sort_text_map, symbol, type_checker);
                 }
-            };
+            } else {
+                symbols.push(symbol);
+                add_symbol_origin_info(
+                    symbols,
+                    symbol_to_origin_info_map,
+                    seen_property_symbols,
+                    symbol,
+                    insert_question_dot,
+                    insert_await,
+                );
+                add_symbol_sort_info(symbol_to_sort_text_map, symbol, type_checker);
+            }
+        };
 
         let add_type_properties =
             |symbols: &mut Vec<CompletionSymbol>,
@@ -2033,8 +2084,19 @@ impl LanguageService<'_> {
                     position
                 };
 
+                let scanned_context_parent = context_token_info.and_then(|token| {
+                    if token.node.is_none()
+                        && is_scanned_type_context_token(store, token.kind, token.parent, location)
+                    {
+                        token.parent
+                    } else {
+                        None
+                    }
+                });
+                let scope_context_token =
+                    context_token.as_ref().copied().or(scanned_context_parent);
                 let mut scope_node =
-                    get_scope_node(context_token.as_ref(), adjusted_position, file);
+                    get_scope_node(scope_context_token.as_ref(), adjusted_position, file);
                 if scope_node.is_none() {
                     scope_node = Some(file.as_node());
                 }
@@ -4138,7 +4200,7 @@ pub(crate) fn should_include_symbol<'a>(
 }
 
 pub fn get_completion_entry_display_name_for_symbol(
-    store: &ast::AstStore,
+    _store: &ast::AstStore,
     type_checker: &mut checker::Checker<'_, '_>,
     symbol: CompletionSymbol,
     origin: Option<&SymbolOriginInfo>,
@@ -4175,7 +4237,14 @@ pub fn get_completion_entry_display_name_for_symbol(
     if scanner::is_identifier_text(&name, variant)
         || completion_symbol_value_declaration(type_checker, symbol).is_some_and(
             |value_declaration| {
-                ast::is_private_identifier_class_element_declaration(store, value_declaration)
+                type_checker
+                    .source_file_store(value_declaration)
+                    .is_some_and(|declaration_store| {
+                        ast::is_private_identifier_class_element_declaration(
+                            declaration_store,
+                            value_declaration,
+                        )
+                    })
             },
         )
     {
@@ -4282,6 +4351,64 @@ pub fn get_relevant_tokens(
         return (context_token, Some(previous_token));
     }
     (previous_token, previous_token)
+}
+
+fn get_relevant_token_infos(
+    position: i32,
+    file: &ast::SourceFile,
+) -> (Option<astnav::TokenInfo>, Option<astnav::TokenInfo>) {
+    let store = file.store();
+    let previous_token = astnav::find_preceding_token_info(file, position);
+    if previous_token.is_some_and(|previous_token| {
+        position <= previous_token.loc.end()
+            && (previous_token
+                .node
+                .is_some_and(|node| ast::is_member_name(store, node))
+                || ast::is_keyword_kind(previous_token.kind))
+    }) {
+        let previous_token = previous_token.unwrap();
+        let context_token = astnav::find_preceding_token_info(file, previous_token.loc.pos());
+        return (context_token, Some(previous_token));
+    }
+    (previous_token, previous_token)
+}
+
+fn is_scanned_completion_context_token(kind: ast::Kind) -> bool {
+    matches!(
+        kind,
+        ast::Kind::DotToken
+            | ast::Kind::QuestionDotToken
+            | ast::Kind::AsKeyword
+            | ast::Kind::SatisfiesKeyword
+    )
+}
+
+fn is_scanned_type_context_token(
+    store: &ast::AstStore,
+    kind: ast::Kind,
+    parent: Option<ast::Node>,
+    location: ast::Node,
+) -> bool {
+    match kind {
+        ast::Kind::AsKeyword => {
+            is_scanned_context_token_parent(store, parent, location, ast::Kind::AsExpression)
+        }
+        ast::Kind::SatisfiesKeyword => {
+            is_scanned_context_token_parent(store, parent, location, ast::Kind::SatisfiesExpression)
+        }
+        _ => false,
+    }
+}
+
+fn is_scanned_context_token_parent(
+    store: &ast::AstStore,
+    parent: Option<ast::Node>,
+    location: ast::Node,
+    expected_kind: ast::Kind,
+) -> bool {
+    parent.is_some_and(|parent| store.kind(parent) == expected_kind)
+        || store.kind(location) == expected_kind
+        || node_parent(store, &location).is_some_and(|parent| store.kind(parent) == expected_kind)
 }
 
 // "." | '"' | "'" | "`" | "/" | "@" | "<" | "#" | " "
@@ -4415,6 +4542,22 @@ pub fn is_context_token_type_location(
         }
     }
     false
+}
+
+fn is_context_token_info_type_location(
+    store: &ast::AstStore,
+    context_token: Option<&astnav::TokenInfo>,
+    location: ast::Node,
+) -> bool {
+    context_token.is_some_and(|context_token| {
+        context_token.node.is_none()
+            && is_scanned_type_context_token(
+                store,
+                context_token.kind,
+                context_token.parent,
+                location,
+            )
+    })
 }
 
 pub fn get_nullable_symbol_origin_info_kind(
@@ -7295,11 +7438,17 @@ pub(crate) fn filter_class_members_list<'a>(
         .filter(|property_symbol| {
             let name = completion_symbol_name(type_checker, *property_symbol);
             let declarations = completion_symbol_declarations(type_checker, *property_symbol);
-            let declaration_modifier_flags = declarations
-                .first()
-                .map_or(ast::MODIFIER_FLAGS_NONE, |declaration| {
-                    ast::get_combined_modifier_flags(store, *declaration)
-                });
+            let declaration_modifier_flags =
+                declarations
+                    .first()
+                    .map_or(ast::MODIFIER_FLAGS_NONE, |declaration| {
+                        type_checker.source_file_store(*declaration).map_or(
+                            ast::MODIFIER_FLAGS_NONE,
+                            |declaration_store| {
+                                ast::get_combined_modifier_flags(declaration_store, *declaration)
+                            },
+                        )
+                    });
             let value_declaration =
                 completion_symbol_value_declaration(type_checker, *property_symbol);
             !existing_member_names.has(&name)
@@ -7307,7 +7456,14 @@ pub(crate) fn filter_class_members_list<'a>(
                 && declaration_modifier_flags & ast::ModifierFlags::Private
                     == ast::ModifierFlags::None
                 && !value_declaration.is_some_and(|value_declaration| {
-                    ast::is_private_identifier_class_element_declaration(store, value_declaration)
+                    type_checker
+                        .source_file_store(value_declaration)
+                        .is_some_and(|declaration_store| {
+                            ast::is_private_identifier_class_element_declaration(
+                                declaration_store,
+                                value_declaration,
+                            )
+                        })
                 })
         })
         .collect()
@@ -7699,6 +7855,7 @@ impl LanguageService<'_> {
             checker,
             Some(symbol),
             *location,
+            None,
             doc_format.clone(),
             &mut vc,
         );

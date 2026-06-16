@@ -381,6 +381,34 @@ fn test_spec_matcher() {
 }
 
 #[test]
+fn test_exclude_spec_matcher_directory_pattern_matches_contents() {
+    let matcher = new_spec_matcher(
+        &["/**/node_modules/aws-sdk".to_owned()],
+        "",
+        Usage::Exclude,
+        true,
+    )
+    .unwrap();
+    assert!(matcher.match_string("/project/node_modules/aws-sdk/clients/s3.d.ts"));
+}
+
+#[test]
+fn test_exclude_spec_matcher_network_path_with_backslashes_matches_contents() {
+    let matcher = new_spec_matcher(
+        &["\\\\tsclient\\home\\src\\solution\\project\\node_modules\\aws-sdk".to_owned()],
+        "",
+        Usage::Exclude,
+        true,
+    )
+    .unwrap();
+    assert!(
+        matcher.match_string(
+            "//tsclient/home/src/solution/project/node_modules/aws-sdk/clients/s3.d.ts"
+        )
+    );
+}
+
+#[test]
 fn test_read_directory_public_wrapper() {
     let host = case_insensitive_host();
     let got = read_directory(
@@ -393,6 +421,40 @@ fn test_read_directory_public_wrapper() {
         UNLIMITED_DEPTH,
     );
     assert_eq!(got, vec!["/dev/a.ts"]);
+}
+
+#[test]
+fn test_read_directory_preserves_network_root() {
+    let host = from_map(
+        BTreeMap::from([
+            (
+                "//tsclient/home/src/solution/project/node_modules/aws-sdk/index.d.ts".to_owned(),
+                String::new(),
+            ),
+            (
+                "//tsclient/home/src/solution/project/node_modules/aws-sdk/clients/s3.d.ts"
+                    .to_owned(),
+                String::new(),
+            ),
+        ]),
+        true,
+    );
+    let got = read_directory(
+        &host,
+        "/",
+        "//tsclient/home/src/solution/project/node_modules/aws-sdk",
+        &[".d.ts".to_owned()],
+        &["node_modules".to_owned()],
+        &["**/*".to_owned()],
+        UNLIMITED_DEPTH,
+    );
+    assert_eq!(
+        got,
+        vec![
+            "//tsclient/home/src/solution/project/node_modules/aws-sdk/index.d.ts",
+            "//tsclient/home/src/solution/project/node_modules/aws-sdk/clients/s3.d.ts",
+        ]
+    );
 }
 
 #[test]

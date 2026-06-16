@@ -7,8 +7,8 @@ use ts_modulespecifiers::CheckerShape;
 use ts_scanner as scanner;
 
 use crate::LanguageService;
-use crate::hover::get_meaning_from_location;
 use crate::lsconv;
+use crate::utilities::get_meaning_from_location;
 
 // tokenTypes defines the order of token types for encoding
 pub const TOKEN_TYPES: &[lsproto::SemanticTokenType] = &[
@@ -121,8 +121,9 @@ fn source_file_for_node<'a>(
         .get_parsed_source_files_refs()
         .into_iter()
         .find(|file| {
-            ast::get_source_file_of_node(file.store(), Some(*node))
-                .is_some_and(|source_file| source_file == file.as_node())
+            file.as_node().store_id() == node.store_id()
+                && ast::get_source_file_of_node(file.store(), Some(*node))
+                    .is_some_and(|source_file| source_file == file.as_node())
         })
 }
 
@@ -233,7 +234,14 @@ impl LanguageService<'_> {
         file: &'a ast::SourceFile,
         program: &'a compiler::Program,
     ) -> Vec<SemanticToken> {
-        self.collect_semantic_tokens_in_range(ctx, checker, file, program, file.pos(), file.end())
+        self.collect_semantic_tokens_in_range(
+            ctx,
+            checker,
+            file,
+            program,
+            0,
+            file.text().len() as i32,
+        )
     }
 
     pub(crate) fn collect_semantic_tokens_in_range<'a>(
@@ -297,9 +305,12 @@ impl LanguageService<'_> {
                 }
 
                 if let Some(symbol) = symbol {
-                    let initial_token_type = {
-                        classify_symbol(store, checker, symbol, get_meaning_from_location(node))
-                    };
+                    let initial_token_type = classify_symbol(
+                        store,
+                        checker,
+                        symbol,
+                        get_meaning_from_location(store, node),
+                    );
                     if let Some(mut token_type) = initial_token_type {
                         let mut token_modifier = TokenModifier::default();
 

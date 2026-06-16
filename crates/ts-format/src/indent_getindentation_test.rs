@@ -37,3 +37,24 @@ fn test_get_indentation_for_named_imports_position() {
 
     assert_eq!(indent, 4, "Expected indentation 4, got {indent}");
 }
+
+#[test]
+fn test_get_indentation_after_function_declaration_at_top_level() {
+    let text = "function foo() {\n    return { x: 1, y: 1 };\n}\nexport default foo();";
+
+    let source_file = parser::parse_source_file(
+        ast::SourceFileParseOptions {
+            file_name: "/test.ts".to_owned(),
+            path: "/test.ts".to_owned(),
+            external_module_indicator_options: Default::default(),
+        },
+        text.to_owned(),
+        core::ScriptKind::TS,
+    );
+
+    let options = crate::lsutil::get_default_format_code_settings();
+    let position = text.find("export").unwrap() as i32;
+    let indent = get_indentation(position, &source_file, options, true);
+
+    assert_eq!(indent, 0, "Expected indentation 0, got {indent}");
+}
