@@ -1,6 +1,6 @@
 # typescript-rs
 
-A Rust slop-port of TypeScript-Go. Made with GPT-5.5, work in progress.
+A Rust port of TypeScript-Go. Made with GPT-5.5, work in progress.
 
 ## Run
 
