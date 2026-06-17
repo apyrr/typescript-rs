@@ -25,12 +25,10 @@ export class ReadonlyArray<T> {}
     f.go_to_file(t, "/b.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { ReadonlyArray } from "./a";
+        &vec![r#"import { ReadonlyArray } from "./a";
 
 new ReadonlyArray<string>();"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

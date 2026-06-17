@@ -31,26 +31,22 @@ new SomePig/**/"#;
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import {
+        &vec![r#"import {
     SomePig,
     type SomeInterface,
 } from "./exports.js";
 new SomePig"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import {
+        &vec![r#"import {
     SomePig,
     type SomeInterface,
 } from "./exports.js";
 new SomePig"#
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             organize_imports_type_order: lsutil::OrganizeImportsTypeOrder::Last,
             ..Default::default()
@@ -58,14 +54,12 @@ new SomePig"#
     );
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import {
+        &vec![r#"import {
     type SomeInterface,
     SomePig,
 } from "./exports.js";
 new SomePig"#
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             organize_imports_type_order: lsutil::OrganizeImportsTypeOrder::Inline,
             ..Default::default()
@@ -73,14 +67,12 @@ new SomePig"#
     );
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import {
+        &vec![r#"import {
     type SomeInterface,
     SomePig,
 } from "./exports.js";
 new SomePig"#
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             organize_imports_type_order: lsutil::OrganizeImportsTypeOrder::First,
             ..Default::default()

@@ -32,12 +32,10 @@ console.log(A, D/**/);";
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r"import { A, D, type B, type C } from './foo';
+        &vec![r"import { A, D, type B, type C } from './foo';
 const b: B | C;
 console.log(A, D);"
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             organize_imports_type_order: lsutil::OrganizeImportsTypeOrder::Last,
             ..Default::default()
@@ -45,12 +43,10 @@ console.log(A, D);"
     );
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r"import { A, type B, type C, D } from './foo';
+        &vec![r"import { A, type B, type C, D } from './foo';
 const b: B | C;
 console.log(A, D);"
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             organize_imports_type_order: lsutil::OrganizeImportsTypeOrder::Inline,
             ..Default::default()
@@ -58,12 +54,10 @@ console.log(A, D);"
     );
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r"import { A, type B, type C, D } from './foo';
+        &vec![r"import { A, type B, type C, D } from './foo';
 const b: B | C;
 console.log(A, D);"
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             organize_imports_type_order: lsutil::OrganizeImportsTypeOrder::First,
             ..Default::default()

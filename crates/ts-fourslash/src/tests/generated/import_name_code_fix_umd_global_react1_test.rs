@@ -40,13 +40,11 @@ export class MyMap extends Component { }
     f.go_to_file(t, "/a.tsx");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import * as React from "react";
+        &vec![r#"import * as React from "react";
 import { Component } from "react";
 export class MyMap extends Component { }
 <MyMap></MyMap>;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

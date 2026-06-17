@@ -63,12 +63,10 @@ Pkg2/*internal*/
     f.go_to_marker(t, "external");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { Pkg2 } from "pkg-2/utils";
+        &vec![r#"import { Pkg2 } from "pkg-2/utils";
 
 Pkg2"#
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             import_module_specifier_preference:
                 modulespecifiers::ImportModuleSpecifierPreference::ProjectRelative,
@@ -78,12 +76,10 @@ Pkg2"#
     f.go_to_marker(t, "internal");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { Pkg2 } from "../../utils";
+        &vec![r#"import { Pkg2 } from "../../utils";
 
 Pkg2"#
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             import_module_specifier_preference:
                 modulespecifiers::ImportModuleSpecifierPreference::ProjectRelative,

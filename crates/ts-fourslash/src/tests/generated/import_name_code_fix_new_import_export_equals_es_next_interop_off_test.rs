@@ -29,12 +29,10 @@ foo"#;
     f.go_to_file(t, "/index.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import foo from "foo";
+        &vec![r#"import foo from "foo";
 
 foo"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

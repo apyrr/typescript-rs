@@ -30,12 +30,10 @@ function Component() {}
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import React from "react";
+        &vec![r#"import React from "react";
 function Component() {}
 (<Component />)"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

@@ -32,12 +32,10 @@ declare global {
     f.go_to_file(t, "/a.tsx");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { factory } from "./factory";
+        &vec![r#"import { factory } from "./factory";
 
 <div/>"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

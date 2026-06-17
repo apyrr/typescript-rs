@@ -29,12 +29,10 @@ Component/**/
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { Component } from "react";
+        &vec![r#"import { Component } from "react";
 
 Component"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

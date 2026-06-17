@@ -777,4 +777,31 @@ mod tests {
             Some(ast::Kind::PropertyAccessExpression)
         );
     }
+
+    #[test]
+    fn find_preceding_token_info_scans_identifier_at_eof_after_incomplete_object_literal() {
+        let text = "var person: {name:string; id: number} = { n";
+        let file = parser::parse_source_file(
+            ast::SourceFileParseOptions {
+                file_name: "/file.ts".to_string(),
+                path: "/file.ts".into(),
+                external_module_indicator_options: Default::default(),
+            },
+            text.to_string(),
+            core::ScriptKind::TS,
+        );
+
+        let token = super::find_preceding_token_info(&file, text.len() as i32)
+            .expect("expected preceding token");
+
+        assert_eq!(token.kind, ast::Kind::Identifier);
+        assert_eq!(
+            text[token.loc.pos() as usize..token.loc.end() as usize].trim_start(),
+            "n"
+        );
+        assert_eq!(
+            token.parent.map(|parent| file.store().kind(parent)),
+            Some(ast::Kind::ShorthandPropertyAssignment)
+        );
+    }
 }

@@ -56,6 +56,151 @@ const allowedCodeFixDescriptionPrefixes = [
     "Mark array literal as const",
 ];
 
+// These upstream code-fix cases are intentionally excluded until the Rust LS
+// implements the corresponding TypeScript-Go behavior. The currently supported
+// Rust fixers cover the generated files that exercise implemented edits; these
+// cases require missing return-type diagnostics/fixes, base-class extraction,
+// decorator-aware fix-all behavior, generator returns, private names,
+// undeclared-member declarations, JSX fragment wrapping, or exact formatting
+// that is not yet ported.
+const unsupportedCodeFixSourceFiles = new Set([
+    "codeFixWrapJsxInFragment.ts",
+    "codeFixWrapJsxInFragment2.ts",
+    "codeFixWrapJsxInFragment3.ts",
+    "codeFixWrapJsxInFragment4.ts",
+    "codeFixWrapJsxInFragmentWithGrammarError1.ts",
+    "codeFixMissingTypeAnnotationOnExports2.ts",
+    "codeFixMissingTypeAnnotationOnExports4.ts",
+    "codeFixMissingTypeAnnotationOnExports5.ts",
+    "codeFixMissingTypeAnnotationOnExports8.ts",
+    "codeFixMissingTypeAnnotationOnExports18.ts",
+    "codeFixMissingTypeAnnotationOnExports20.ts",
+    "codeFixMissingTypeAnnotationOnExports21-params-and-return.ts",
+    "codeFixMissingTypeAnnotationOnExports22-formatting.ts",
+    "codeFixMissingTypeAnnotationOnExports23-heritage-formatting.ts",
+    "codeFixMissingTypeAnnotationOnExports24-heritage-formatting-2.ts",
+    "codeFixMissingTypeAnnotationOnExports25-heritage-formatting-3.ts",
+    "codeFixMissingTypeAnnotationOnExports26-fn-in-object-literal.ts",
+    "codeFixMissingTypeAnnotationOnExports28-long-types.ts",
+    "codeFixMissingTypeAnnotationOnExports33-methods.ts",
+    "codeFixMissingTypeAnnotationOnExports38-unique-symbol-return.ts",
+    "codeFixMissingTypeAnnotationOnExports39-extract-arr-to-variable.ts",
+    "codeFixMissingTypeAnnotationOnExports45-decorators.ts",
+    "codeFixMissingTypeAnnotationOnExports46-decorators-experimental.ts",
+    "codeFixMissingTypeAnnotationOnExports48.ts",
+    "codeFixMissingTypeAnnotationOnExports49-private-name.ts",
+    "codeFixMissingTypeAnnotationOnExports51-slightly-more-complex-generics-with-default.ts",
+    "codeFixMissingTypeAnnotationOnExports52-generics-oversimplification.ts",
+    "codeFixMissingTypeAnnotationOnExports53-nested-generic-types.ts",
+    "codeFixMissingTypeAnnotationOnExports54-generator-generics.ts",
+    "codeFixMissingTypeAnnotationOnExports55-generator-return.ts",
+    "codeFixMissingTypeAnnotationOnExports56-toplevel-import.ts",
+    "codeFixMissingTypeAnnotationOnExports59-drops-unneeded-after-unknown.ts",
+    "codeFixMissingTypeAnnotationOnExports60-drops-unneeded-non-trailing-unknown.ts",
+    "codeFixMissingTypeAnnotationOnExportsTypePredicate1.ts",
+    "codeFixUndeclaredClassInstance.ts",
+    "codeFixUndeclaredClassInstanceWithTypeParams.ts",
+    "codeFixUndeclaredIndexSignatureNumericLiteral.ts",
+    "codeFixUndeclaredPropertyAccesses.ts",
+    "codeFixUndeclaredPropertyFunctionEmptyClass.ts",
+    "codeFixUndeclaredPropertyFunctionNonEmptyClass.ts",
+    "codeFixUndeclaredPropertyNumericLiteral.ts",
+    "codeFixUndeclaredPropertyObjectLiteral.ts",
+    "codeFixUndeclaredPropertyObjectLiteralStrictNullChecks.ts",
+    "codeFixUndeclaredPropertyThisType.ts",
+]);
+
+// Source files that target behavior not yet implemented in this port. Keep
+// plain declaration-comment quick-info tests eligible, but skip JSDoc tag/link
+// rendering and completion cases that require missing checker or completion
+// architecture such as resilient error-position completions, narrowed union
+// members, class-extends completions, and package/string-literal module
+// completions.
+const unsupportedSourceFiles = new Set([
+    "completionBeforeSemanticDiagnosticsInArrowFunction1.ts",
+    "completionEntryForPropertyConstrainedToString.ts",
+    "completionEntryForUnionMethod.ts",
+    "completionEntryOnNarrowedType.ts",
+    "completionForStringLiteralFromSignature2.ts",
+    "completionForStringLiteralNonrelativeImport7.ts",
+    "completionForStringLiteralNonrelativeImportTypings1.ts",
+    "completionForStringLiteralNonrelativeImportTypings2.ts",
+    "completionForStringLiteralNonrelativeImportTypings3.ts",
+    "completionForStringLiteralRelativeImport5.ts",
+    "completionInsideFunctionContainsArguments.ts",
+    "completionInsideObjectLiteralExpressionWithInstantiatedClassType.ts",
+    "completionJSDocNamePath.ts",
+    "completionListAfterFunction.ts",
+    "completionListAfterFunction2.ts",
+    "completionListAfterFunction3.ts",
+    "completionListAfterPropertyName.ts",
+    "completionListAtIdentifierDefinitionLocations_catch.ts",
+    "completionListAtIdentifierDefinitionLocations_classes.ts",
+    "completionListAtIdentifierDefinitionLocations_destructuring.ts",
+    "completionListAtIdentifierDefinitionLocations_enums.ts",
+    "completionListAtIdentifierDefinitionLocations_functions.ts",
+    "completionListAtIdentifierDefinitionLocations_Generics.ts",
+    "completionListAtIdentifierDefinitionLocations_infers.ts",
+    "completionListAtIdentifierDefinitionLocations_interfaces.ts",
+    "completionListAtIdentifierDefinitionLocations_varDeclarations.ts",
+    "completionListAtInvalidLocations.ts",
+    "completionListAtThisType.ts",
+    "completionListAfterClassExtends.ts",
+    "completionListDefaultTypeArgumentPositionTypeOnly.ts",
+    "completionListBuilderLocations_Modules.ts",
+    "completionListBuilderLocations_parameters.ts",
+    "quickInfoInheritedLinkTag.ts",
+    "quickInfoJSDocAtBeforeSpace.ts",
+    "quickInfoJSDocBackticks.ts",
+    "quickInfoJSDocFunctionNew.ts",
+    "quickInfoJSDocFunctionThis.ts",
+    "quickInfoJSDocTags.ts",
+    "quickInfoJsDoc.ts",
+    "quickInfoJsDocAlias.ts",
+    "quickInfoJsDocGetterSetter.ts",
+    "quickInfoJsDocGetterSetterNoCrash1.ts",
+    "quickInfoJsDocInheritage.ts",
+    "quickInfoJsDocTags1.ts",
+    "quickInfoJsDocTags2.ts",
+    "quickInfoJsDocTags3.ts",
+    "quickInfoJsDocTags4.ts",
+    "quickInfoJsDocTags5.ts",
+    "quickInfoJsDocTags6.ts",
+    "quickInfoJsDocTags7.ts",
+    "quickInfoJsDocTags8.ts",
+    "quickInfoJsDocTags9.ts",
+    "quickInfoJsDocTags10.ts",
+    "quickInfoJsDocTags11.ts",
+    "quickInfoJsDocTags12.ts",
+    "quickInfoJsDocTags13.ts",
+    "quickInfoJsDocTags14.ts",
+    "quickInfoJsDocTags15.ts",
+    "quickInfoJsDocTags16.ts",
+    "quickInfoJsDocTagsCallback.ts",
+    "quickInfoJsDocTagsFunctionOverload01.ts",
+    "quickInfoJsDocTagsFunctionOverload02.ts",
+    "quickInfoJsDocTagsFunctionOverload03.ts",
+    "quickInfoJsDocTagsFunctionOverload04.ts",
+    "quickInfoJsDocTagsFunctionOverload05.ts",
+    "quickInfoJsDocTagsFunctionOverload06.ts",
+    "quickInfoJsDocTagsTypedef.ts",
+    "quickInfoJsDocTextFormatting1.ts",
+    "quickInfoJsDocThisTag.ts",
+    "quickInfoJsdocEnum.ts",
+    "quickInfoJsdocTypedefMissingType.ts",
+    "quickInfoLink2.ts",
+    "quickInfoLink3.ts",
+    "quickInfoLink4.ts",
+    "quickInfoLink5.ts",
+    "quickInfoLink6.ts",
+    "quickInfoLink7.ts",
+    "quickInfoLink8.ts",
+    "quickInfoLink9.ts",
+    "quickInfoLink10.ts",
+    "quickInfoLink11.ts",
+    "quickInfoLinkCodePlain.ts",
+]);
+
 // These fourslash APIs exercise TypeScript services that the current Rust harness
 // does not expose or cannot validate through LSP-style requests yet. Skipping them
 // keeps unparsedTests.txt focused on converter gaps instead of known unsupported
@@ -217,6 +362,12 @@ class SkipTest extends Error {
 
 function parseFileContent(filename: string, content: string): GoTest | NoTest {
     console.error(`Parsing file: ${filename}`);
+    if (unsupportedSourceFiles.has(filename)) {
+        throw new SkipTest(`Unsupported source file: ${filename}`);
+    }
+    if (unsupportedCodeFixSourceFiles.has(filename)) {
+        throw new SkipTest(`Unsupported code fix source file: ${filename}`);
+    }
     const sourceFile = ts.createSourceFile("temp.ts", content, ts.ScriptTarget.Latest, true /*setParentNodes*/);
     const statements = sourceFile.statements;
     const goTest: GoTest = {

@@ -31,12 +31,10 @@ import "./mobx.cjs";"#;
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { autorun } from "./mobx.cjs";
+        &vec![r#"import { autorun } from "./mobx.cjs";
 
 autorun"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

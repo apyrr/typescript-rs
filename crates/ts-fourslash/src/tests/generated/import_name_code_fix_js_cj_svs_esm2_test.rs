@@ -31,12 +31,10 @@ const fs = require('fs');";
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"const { Dep } = require("./types/dep");
+        &vec![r#"const { Dep } = require("./types/dep");
 
 Dep"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

@@ -1506,9 +1506,11 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
                 {
                     flags |= nodebuilder::FLAGS_ALLOW_UNIQUE_ES_SYMBOL_TYPE;
                 }
+                let change_tracker = self.change_tracker.as_mut().unwrap();
                 return self
-                    .checker_mut()
+                    .checker
                     .type_predicate_to_type_predicate_node_for_ls_public(
+                        &mut change_tracker.emit_context,
                         type_predicate,
                         Some(enclosing_decl),
                         flags,

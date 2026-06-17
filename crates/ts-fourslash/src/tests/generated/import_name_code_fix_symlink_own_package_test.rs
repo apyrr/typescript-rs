@@ -31,12 +31,10 @@ export const a: number;"#;
     f.go_to_file(t, "/packages/b/b0.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { x } from "./b1";
+        &vec![r#"import { x } from "./b1";
 
 x;"#
-            .to_string(),
-        ],
+        .to_string()],
         None,
     );
     done();

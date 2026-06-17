@@ -27,12 +27,10 @@ export const foo = 0;"#;
     f.go_to_file(t, "/src/d0/d1/d2/file.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { foo } from "d0/a";
+        &vec![r#"import { foo } from "d0/a";
 
 foo;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

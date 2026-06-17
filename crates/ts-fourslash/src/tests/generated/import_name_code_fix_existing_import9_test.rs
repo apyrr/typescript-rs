@@ -27,13 +27,11 @@ export var v1 = 5;"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r"{
+        &vec![r"{
     f1,
     v1
 }"
-            .to_string(),
-        ],
+        .to_string()],
         None,
     );
     done();

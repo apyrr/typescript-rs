@@ -31,16 +31,14 @@ export type T3 = 0;"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import {
+        &vec![r#"import {
   T2,
   T1,
   T3,
 } from "./types";
 
 const x: T3"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

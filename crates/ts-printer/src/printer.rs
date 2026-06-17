@@ -5553,13 +5553,15 @@ impl Printer {
         type_parameters: Vec<ast::Node>,
         writer: &mut dyn EmitTextWriter,
     ) {
-        self.emit_list_range(
+        self.emit_list_range_with(
             original,
             &type_parameters,
             core::new_text_range(-1, -1),
             type_parameters.is_empty(),
             ListFormat::TYPE_PARAMETERS,
+            false,
             writer,
+            |printer, child, writer| printer.emit_type_parameter_declaration_node(child, writer),
         );
     }
 
@@ -5577,8 +5579,23 @@ impl Printer {
             ListFormat::TYPE_ARGUMENTS,
             false,
             writer,
-            |printer, child, writer| printer.emit_type_node_outside_extends(child, writer),
+            |printer, child, writer| printer.emit_type_parameter_declaration_node(child, writer),
         );
+    }
+
+    fn emit_type_parameter_declaration_node(
+        &mut self,
+        node: &ast::Node,
+        writer: &mut dyn EmitTextWriter,
+    ) {
+        // QuickInfo uses TypeFormatFlagsWriteTypeArgumentsOfSignature to instruct the NodeBuilder to
+        // store type arguments (i.e. type nodes) instead of type parameter declarations in the type
+        // parameter list.
+        if ast::is_type_parameter_declaration(self.store_for_node(node), *node) {
+            self.emit_type_parameter(node, node, writer);
+        } else {
+            self.emit_type_node_outside_extends(node, writer);
+        }
     }
 
     fn emit_qualified_name(
@@ -7261,13 +7278,17 @@ impl Printer {
                 .factory
                 .node_factory
                 .emit_node_list_nodes(type_arguments);
-            self.emit_list_range(
+            self.emit_list_range_with(
                 node,
                 &type_arguments,
                 core::new_text_range(-1, -1),
                 type_arguments.is_empty(),
                 ListFormat::TYPE_PARAMETERS,
+                false,
                 writer,
+                |printer, child, writer| {
+                    printer.emit_type_parameter_declaration_node(child, writer)
+                },
             );
         }
     }

@@ -29,8 +29,7 @@ export var v1 = 5;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { f1 } from "./module";
+        &vec![r#"import { f1 } from "./module";
 
 /**
  * This is a comment intended to be attached to this interface
@@ -38,8 +37,7 @@ export var v1 = 5;";
 export interface SomeInterface {
 }
 f1();"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

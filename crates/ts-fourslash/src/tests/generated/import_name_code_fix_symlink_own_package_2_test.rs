@@ -28,12 +28,10 @@ export const x = 0;"#;
     f.go_to_file(t, "/packages/a/test.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { x } from "./utils";
+        &vec![r#"import { x } from "./utils";
 
 x;"#
-            .to_string(),
-        ],
+        .to_string()],
         None,
     );
     done();

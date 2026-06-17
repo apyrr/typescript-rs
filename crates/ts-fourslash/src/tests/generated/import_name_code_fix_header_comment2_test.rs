@@ -35,8 +35,7 @@ foo;"#;
     f.go_to_file(t, "/c.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"/*--------------------
+        &vec![r#"/*--------------------
  *  Copyright Header
  *--------------------*/
 
@@ -46,8 +45,7 @@ import { foo } from "./a";
 // non-header comment
 import { bar } from "./b";
 foo;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

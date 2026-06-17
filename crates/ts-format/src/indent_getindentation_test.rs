@@ -28,13 +28,6 @@ fn test_get_indentation_for_named_imports_position() {
     let line_start = get_line_start_position_for_position(14, &source_file); // 14 is somewhere in "    type"
 
     let indent = get_indentation(line_start, &source_file, options, true);
-    eprintln!(
-        "lineStart={}, text[lineStart:]={:?}",
-        line_start,
-        &text[line_start as usize..line_start as usize + 10]
-    );
-    eprintln!("GetIndentation at lineStart {} = {}", line_start, indent);
-
     assert_eq!(indent, 4, "Expected indentation 4, got {indent}");
 }
 
@@ -57,4 +50,25 @@ fn test_get_indentation_after_function_declaration_at_top_level() {
     let indent = get_indentation(position, &source_file, options, true);
 
     assert_eq!(indent, 0, "Expected indentation 0, got {indent}");
+}
+
+#[test]
+fn test_get_indentation_after_class_constructor_member() {
+    let text = "class C {\n   constructor() { }\n}";
+
+    let source_file = parser::parse_source_file(
+        ast::SourceFileParseOptions {
+            file_name: "/test.ts".to_owned(),
+            path: "/test.ts".to_owned(),
+            external_module_indicator_options: Default::default(),
+        },
+        text.to_owned(),
+        core::ScriptKind::TS,
+    );
+
+    let options = crate::lsutil::get_default_format_code_settings();
+    let position = text.find("\n}").unwrap() as i32;
+    let indent = get_indentation(position, &source_file, options, false);
+
+    assert_eq!(indent, 4, "Expected indentation 4, got {indent}");
 }

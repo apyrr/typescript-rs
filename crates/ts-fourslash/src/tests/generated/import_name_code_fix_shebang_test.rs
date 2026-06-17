@@ -27,14 +27,12 @@ foo/**/|]";
     f.go_to_file(t, "/b.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"#!/usr/bin/env node
+        &vec![r#"#!/usr/bin/env node
 
 import { foo } from "./a";
 
 foo"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

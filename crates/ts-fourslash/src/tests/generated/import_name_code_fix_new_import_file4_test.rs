@@ -27,12 +27,10 @@ export namespace A {
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { A } from "./module";
+        &vec![r#"import { A } from "./module";
 
 let t: A.B.I;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

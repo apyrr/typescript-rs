@@ -34,12 +34,10 @@ foo;
     f.go_to_file(t, "/x/y.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { foo } from "@root/a";
+        &vec![r#"import { foo } from "@root/a";
 
 foo;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

@@ -39,28 +39,24 @@ type _ = ComponentProps/*2*/;"#;
     f.go_to_marker(t, "1");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import type { ComponentType } from "react";
+        &vec![r#"import type { ComponentType } from "react";
 import { useEffect, useState } from "react";
 
 export function Component({ prop } : { prop: ComponentType }) {
     const codeIsUnimportant = useState(1);
     useEffect(() => {}, []);
 }"#
-            .to_string(),
-        ],
+        .to_string()],
         None,
     );
     f.go_to_marker(t, "2");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { useState } from "react";
+        &vec![r#"import { useState } from "react";
 import type { ComponentProps, ComponentType } from "react";
 
 type _ = ComponentProps;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

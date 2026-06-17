@@ -40,34 +40,28 @@ const x: OtherOtherType/*d*/"#;
     f.go_to_marker(t, "a");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import type SomeType from "./exports1.js";
+        &vec![r#"import type SomeType from "./exports1.js";
 import { someValue } from "./exports1.js";
 someValue"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.go_to_marker(t, "b");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import type SomeType from "./exports1.js";
+        &vec![r#"import type SomeType from "./exports1.js";
 import { someValue } from "./exports1.js";
 const b: SomeType = someValue;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.go_to_marker(t, "c");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import type { OtherType } from "./exports1.js";
+        &vec![r#"import type { OtherType } from "./exports1.js";
 import type SomeType from "./exports1.js";
 const x: OtherType"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.go_to_marker(t, "d");

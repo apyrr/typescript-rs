@@ -39,12 +39,10 @@ let x: /*e*/ns.A;"#;
     f.go_to_marker(t, "b");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import type { A } from "./a";
+        &vec![r#"import type { A } from "./a";
 
 let x: A;"#
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             prefer_type_only_auto_imports: core::TSTrue,
             ..Default::default()
@@ -53,12 +51,10 @@ let x: A;"#
     f.go_to_marker(t, "c");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { A, type B } from "./a";
+        &vec![r#"import { A, type B } from "./a";
 new A();
 let x: B;"#
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             prefer_type_only_auto_imports: core::TSTrue,
             ..Default::default()
@@ -79,12 +75,10 @@ let x: B;"#
     f.go_to_marker(t, "e");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import type ns from "./ns";
+        &vec![r#"import type ns from "./ns";
 
 let x: ns.A;"#
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             prefer_type_only_auto_imports: core::TSTrue,
             ..Default::default()

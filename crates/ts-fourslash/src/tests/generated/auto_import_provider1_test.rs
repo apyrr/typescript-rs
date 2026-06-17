@@ -37,12 +37,10 @@ PatternValidator/**/"#;
     }
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { PatternValidator } from "@angular/forms";
+        &vec![r#"import { PatternValidator } from "@angular/forms";
 
 PatternValidator"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

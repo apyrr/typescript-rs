@@ -159,12 +159,10 @@ b;"#
     f.go_to_marker(t, "2");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { A, a, B, b, type Y, type Z } from "./exports1";
+        &vec![r#"import { A, a, B, b, type Y, type Z } from "./exports1";
 import { d, E } from "./exports2";
 d"#
-            .to_string(),
-        ],
+        .to_string()],
         Some(UserPreferences {
             organize_imports_type_order: lsutil::OrganizeImportsTypeOrder::Last,
             ..Default::default()
@@ -173,12 +171,10 @@ d"#
     f.go_to_marker(t, "2a");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { A, a, B, b, type Y, type Z } from "./exports1";
+        &vec![r#"import { A, a, B, b, type Y, type Z } from "./exports1";
 import { E, d } from "./exports2";
 d"#
-            .to_string(),
-        ],
+        .to_string()],
         Some(UserPreferences {
             organize_imports_type_order: lsutil::OrganizeImportsTypeOrder::Last,
             ..Default::default()
@@ -187,12 +183,10 @@ d"#
     f.go_to_marker(t, "2b");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { A, a, B, b, type Y, type Z } from "./exports1";
+        &vec![r#"import { A, a, B, b, type Y, type Z } from "./exports1";
 import { d, E } from "./exports2";
 d"#
-            .to_string(),
-        ],
+        .to_string()],
         Some(UserPreferences {
             organize_imports_type_order: lsutil::OrganizeImportsTypeOrder::Last,
             ..Default::default()
@@ -201,12 +195,10 @@ d"#
     f.go_to_marker(t, "2c");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { A, a, B, b, type Y, type Z } from "./exports1";
+        &vec![r#"import { A, a, B, b, type Y, type Z } from "./exports1";
 import { E, d } from "./exports2";
 d"#
-            .to_string(),
-        ],
+        .to_string()],
         Some(UserPreferences {
             organize_imports_type_order: lsutil::OrganizeImportsTypeOrder::Last,
             ..Default::default()

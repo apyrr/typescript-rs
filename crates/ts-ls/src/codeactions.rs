@@ -12,6 +12,7 @@ use crate::LanguageService;
 use crate::codeactions_fixclassincorrectlyimplementsinterface::FIX_CLASS_INCORRECTLY_IMPLEMENTS_INTERFACE_PROVIDER;
 use crate::codeactions_fixmissingtypeannotation::ISOLATED_DECLARATIONS_FIX_PROVIDER;
 use crate::codeactions_importfixes::IMPORT_FIX_PROVIDER;
+use crate::codeactions_spelling::SPELLING_PROVIDER;
 use crate::diagnostics::get_all_diagnostics;
 use crate::lsconv;
 
@@ -77,6 +78,7 @@ pub struct CombinedCodeActions {
 
 // codeFixProviders is the list of all registered code fix providers
 pub static CODE_FIX_PROVIDERS: &[&CodeFixProvider] = &[
+    &SPELLING_PROVIDER,
     &IMPORT_FIX_PROVIDER,
     &ISOLATED_DECLARATIONS_FIX_PROVIDER,
     &FIX_CLASS_INCORRECTLY_IMPLEMENTS_INTERFACE_PROVIDER,

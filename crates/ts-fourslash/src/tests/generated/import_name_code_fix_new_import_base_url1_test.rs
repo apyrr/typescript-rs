@@ -31,22 +31,18 @@ export function f1() { };
     f.go_to_file(t, "/a/b/y.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { f1 } from "./x";
+        &vec![r#"import { f1 } from "./x";
 
 f1();"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { f1 } from "b/x";
+        &vec![r#"import { f1 } from "b/x";
 
 f1();"#
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             import_module_specifier_preference:
                 modulespecifiers::ImportModuleSpecifierPreference::NonRelative,

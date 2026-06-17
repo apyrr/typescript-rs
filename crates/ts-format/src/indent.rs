@@ -73,10 +73,27 @@ pub fn get_indentation(
     }
 
     let Some(preceding_token) = preceding_token else {
-        if preceding_token_info.is_some_and(|info| {
-            info.kind == ast::Kind::CloseBraceToken && info.loc.end() <= position
-        }) {
-            return get_block_indent(source_file, position, options);
+        if let Some(info) = preceding_token_info {
+            if info.kind == ast::Kind::OpenBraceToken && info.loc.end() <= position {
+                if let Some(indentation) = info.parent.and_then(|parent| {
+                    get_indentation_after_scanned_open_brace(source_file, parent, options.clone())
+                }) {
+                    return indentation;
+                }
+            }
+            if info.kind == ast::Kind::CloseBraceToken && info.loc.end() <= position {
+                if let Some(indentation) = info.parent.and_then(|parent| {
+                    get_indentation_after_member_close_brace(
+                        source_file,
+                        parent,
+                        info.loc,
+                        options.clone(),
+                    )
+                }) {
+                    return indentation;
+                }
+                return get_block_indent(source_file, position, options);
+            }
         }
         return options.base_indent_size;
     };
@@ -94,9 +111,8 @@ pub fn get_indentation(
     // indentation is first non-whitespace character in a previous line
     // for block indentation, we should look for a line which contains something that's not
     // whitespace.
-    let Some(current_token) = astnav::get_token_at_position(source_file, position) else {
-        return options.base_indent_size;
-    };
+    let current_token =
+        astnav::get_token_at_position(source_file, position).unwrap_or(preceding_token);
     // For object literals, we want indentation to work just like with blocks.
     // If the `{` starts in any position (even in the middle of a line), then
     // the following indentation should treat `{` as the start of that line (including leading whitespace).
@@ -293,6 +309,78 @@ pub fn get_block_indent(
 
     let line_start = get_line_start_position_for_position(current, source_file);
     find_first_non_whitespace_column(line_start, current, source_file, options)
+}
+
+fn get_indentation_after_scanned_open_brace(
+    source_file: &ast::SourceFile,
+    parent: ast::Node,
+    options: crate::lsutil::FormatCodeSettings,
+) -> Option<i32> {
+    let parent_start = astnav::get_start_of_node(parent, source_file);
+    let line_start = get_line_start_position_for_position(parent_start, source_file);
+    let parent_indentation =
+        find_first_non_whitespace_column(line_start, parent_start, source_file, options.clone())
+            .max(0);
+
+    let indentation_delta =
+        if should_indent_child_node(options.clone(), &parent, None, source_file, false) {
+            options.indent_size
+        } else {
+            0
+        };
+    Some(parent_indentation + indentation_delta)
+}
+
+fn get_indentation_after_member_close_brace(
+    source_file: &ast::SourceFile,
+    parent: ast::Node,
+    close_brace_loc: core::TextRange,
+    options: crate::lsutil::FormatCodeSettings,
+) -> Option<i32> {
+    let store = source_file.store();
+    let parent = if store.kind(parent) == ast::Kind::Block {
+        store.parent(parent).unwrap_or(parent)
+    } else {
+        parent
+    };
+    let (container, child) = if ast::is_class_or_type_element(store, &parent) {
+        (store.parent(parent)?, Some(parent))
+    } else if is_member_container_kind(store.kind(parent))
+        && store.loc(parent).end() > close_brace_loc.end()
+    {
+        (parent, None)
+    } else {
+        return None;
+    };
+
+    let container_start = astnav::get_start_of_node(container, source_file);
+    let line_start = get_line_start_position_for_position(container_start, source_file);
+    let container_indentation =
+        find_first_non_whitespace_column(line_start, container_start, source_file, options.clone())
+            .max(0);
+
+    let indentation_delta = if should_indent_child_node(
+        options.clone(),
+        &container,
+        child.as_ref(),
+        source_file,
+        false,
+    ) {
+        options.indent_size
+    } else {
+        0
+    };
+    Some(container_indentation + indentation_delta)
+}
+
+fn is_member_container_kind(kind: ast::Kind) -> bool {
+    matches!(
+        kind,
+        ast::Kind::ClassDeclaration
+            | ast::Kind::ClassExpression
+            | ast::Kind::InterfaceDeclaration
+            | ast::Kind::TypeLiteral
+    )
 }
 
 pub fn get_actual_indentation_for_list_item_before_comma(

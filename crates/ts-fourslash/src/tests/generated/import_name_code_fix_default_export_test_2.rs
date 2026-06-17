@@ -29,12 +29,10 @@ export default C;
     f.go_to_file(t, "/b.js");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import C from "./a";
+        &vec![r#"import C from "./a";
 
 C;"#
-            .to_string(),
-        ],
+        .to_string()],
         None,
     );
     done();

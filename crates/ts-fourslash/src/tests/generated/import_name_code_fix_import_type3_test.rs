@@ -29,11 +29,9 @@ function takeSomeClass(c: SomeClass/**/)"#;
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { type SomeClass } from "./exports.js";
+        &vec![r#"import { type SomeClass } from "./exports.js";
 function takeSomeClass(c: SomeClass)"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

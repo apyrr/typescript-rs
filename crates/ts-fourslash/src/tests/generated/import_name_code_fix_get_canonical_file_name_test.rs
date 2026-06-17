@@ -25,12 +25,10 @@ foo;";
     f.go_to_file(t, "/howNow/a.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { foo } from "brownCow";
+        &vec![r#"import { foo } from "brownCow";
 
 foo;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

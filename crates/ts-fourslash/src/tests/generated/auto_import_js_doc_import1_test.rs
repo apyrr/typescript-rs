@@ -42,8 +42,7 @@ export function f(a, b, c, d) { }"#;
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"/**
+        &vec![r#"/**
  * @import { A, D, C, B } from "./foo"
  */
 
@@ -54,8 +53,7 @@ export function f(a, b, c, d) { }"#;
  * @param { D } d
  */
 export function f(a, b, c, d) { }"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

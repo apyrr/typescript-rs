@@ -13,6 +13,7 @@ use ts_locale as locale;
 use ts_lsproto as lsproto;
 use ts_modulespecifiers as modulespecifiers;
 use ts_scanner as scanner;
+use ts_stringutil as stringutil;
 use ts_tspath as tspath;
 
 use crate::autoimport::{Export, ExportSyntax, ModuleId, View};
@@ -766,13 +767,24 @@ pub(crate) fn insert_import_texts<'a>(
     let import_text = imports.join(&tracker.new_line);
 
     if existing_import_statements.is_empty() {
-        let suffix = if blank_line_between {
-            tracker.new_line.clone() + &tracker.new_line
-        } else {
-            tracker.new_line.clone()
-        };
         let pos = tracker.get_insertion_position_at_source_file_top(file);
-        insert_text_at_pos(tracker, file, pos, &(import_text + &suffix));
+        let mut text = String::new();
+        if pos != 0 {
+            text.push_str(&tracker.new_line);
+        }
+        text.push_str(&import_text);
+        let needs_suffix = file
+            .text()
+            .as_bytes()
+            .get(pos as usize)
+            .is_none_or(|ch| !stringutil::is_line_break(*ch as char));
+        if needs_suffix {
+            text.push_str(&tracker.new_line);
+        }
+        if blank_line_between {
+            text.push_str(&tracker.new_line);
+        }
+        insert_text_at_pos(tracker, file, pos, &text);
         return;
     }
 

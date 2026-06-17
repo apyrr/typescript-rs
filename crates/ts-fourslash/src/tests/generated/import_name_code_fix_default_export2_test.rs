@@ -26,12 +26,10 @@ export default Base;
     f.go_to_file(t, "/test.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import Base from "./lib";
+        &vec![r#"import Base from "./lib";
 
 class Derived extends Base { }"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

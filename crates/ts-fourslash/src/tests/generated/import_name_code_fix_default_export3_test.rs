@@ -25,12 +25,10 @@ export default 0;
     f.go_to_file(t, "/b.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import fooBar from "./foo-bar";
+        &vec![r#"import fooBar from "./foo-bar";
 
 fooBar"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

@@ -26,12 +26,10 @@ export namespace XXX {
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { XXX } from "./module";
+        &vec![r#"import { XXX } from "./module";
 
 let t: XXX.I;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

@@ -29,12 +29,10 @@ import fs from 'fs';";
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { Dep } from "./types/dep";
+        &vec![r#"import { Dep } from "./types/dep";
 
 Dep"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

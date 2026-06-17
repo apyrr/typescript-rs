@@ -28,11 +28,9 @@ $/**/"#;
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { $ } from "qwik";
+        &vec![r#"import { $ } from "qwik";
 $"#
-            .to_string(),
-        ],
+        .to_string()],
         None,
     );
     done();

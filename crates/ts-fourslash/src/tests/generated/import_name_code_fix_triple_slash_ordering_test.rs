@@ -59,76 +59,66 @@ const y = x + 1;"#;
     f.go_to_file(t, "/b.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"// some comment
+        &vec![r#"// some comment
 
 /// <reference lib="es2017.string" />
 
 import { x } from "./a";
 
 const y = x + 1;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.go_to_file(t, "/c.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"// some comment
+        &vec![r#"// some comment
 
 /// <reference path="jquery-1.8.3.js" />
 
 import { x } from "./a";
 
 const y = x + 1;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.go_to_file(t, "/d.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"// some comment
+        &vec![r#"// some comment
 
 /// <reference types="node" />
 
 import { x } from "./a";
 
 const y = x + 1;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.go_to_file(t, "/f.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"// some comment
+        &vec![r#"// some comment
 
 /// <amd-module name="NamedModule" />
 
 import { x } from "./a";
 
 const y = x + 1;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.go_to_file(t, "/g.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"// some comment
+        &vec![r#"// some comment
 
 /// <amd-dependency path="legacy/moduleA" name="moduleA" />
 
 import { x } from "./a";
 
 const y = x + 1;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

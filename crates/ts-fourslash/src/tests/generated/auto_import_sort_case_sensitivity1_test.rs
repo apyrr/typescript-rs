@@ -40,41 +40,33 @@ d/*1*/"#;
     f.go_to_marker(t, "0");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { a, A, B, C } from "./exports1";
+        &vec![r#"import { a, A, B, C } from "./exports1";
 a"#
-            .to_string(),
-        ],
+        .to_string()],
         None,
     );
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { a, A, B, C } from "./exports1";
+        &vec![r#"import { a, A, B, C } from "./exports1";
 a"#
-            .to_string(),
-        ],
+        .to_string()],
         None,
     );
     f.go_to_marker(t, "1");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { A, a, B, b } from "./exports1";
+        &vec![r#"import { A, a, B, b } from "./exports1";
 import { d, E } from "./exports2";
 d"#
-            .to_string(),
-        ],
+        .to_string()],
         None,
     );
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { A, a, B, b } from "./exports1";
+        &vec![r#"import { A, a, B, b } from "./exports1";
 import { E, d } from "./exports2";
 d"#
-            .to_string(),
-        ],
+        .to_string()],
         None,
     );
     done();

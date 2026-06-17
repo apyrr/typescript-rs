@@ -27,14 +27,12 @@ var x = 5;/*dummy*/"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"/// <reference path="./tripleSlashReference.ts" />
+        &vec![r#"/// <reference path="./tripleSlashReference.ts" />
 
 import { f1 } from "./Module";
 
 f1();"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

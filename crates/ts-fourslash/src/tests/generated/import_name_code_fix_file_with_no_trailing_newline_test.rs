@@ -28,12 +28,10 @@ import { bar } from "./b";"#;
     f.go_to_file(t, "/c.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"foo;
+        &vec![r#"foo;
 import { foo } from "./a";
 import { bar } from "./b";"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

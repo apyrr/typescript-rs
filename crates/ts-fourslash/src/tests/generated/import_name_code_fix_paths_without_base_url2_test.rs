@@ -34,12 +34,10 @@ Logger/**/"#;
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { Logger } from "../common/logging";
+        &vec![r#"import { Logger } from "../common/logging";
 
 Logger"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

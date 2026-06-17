@@ -41,6 +41,7 @@ mod codeactions_importfixes;
     reason = "ported missing-member fixer is ahead of current callers"
 )]
 mod codeactions_missingmemberfixer;
+mod codeactions_spelling;
 mod codelens;
 #[expect(
     dead_code,

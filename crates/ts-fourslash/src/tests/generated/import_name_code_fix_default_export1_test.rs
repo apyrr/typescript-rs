@@ -26,11 +26,9 @@ foo/**/Bar|]"#;
     f.go_to_file(t, "/b.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import fooBar, * as fb from "./foo-bar";
+        &vec![r#"import fooBar, * as fb from "./foo-bar";
 fooBar"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

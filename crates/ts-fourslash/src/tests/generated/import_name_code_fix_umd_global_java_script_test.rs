@@ -30,13 +30,11 @@ export as namespace bar1; ";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import * as bar1 from "./foo";
+        &vec![r#"import * as bar1 from "./foo";
 
 export function test() { };
 bar1.bar;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

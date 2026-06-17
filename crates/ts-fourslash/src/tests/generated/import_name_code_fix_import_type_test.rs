@@ -29,11 +29,9 @@ const x = 0;";
     f.go_to_file(t, "/b.js");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"/** @type {import("./a").T} */
+        &vec![r#"/** @type {import("./a").T} */
 const x = 0;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

@@ -90,7 +90,7 @@ impl LanguageService<'_> {
 
         program.with_type_checker_for_file_using(compiler::CheckerAccess::context(ctx), file, |checker| {
             let range_node = get_node_for_quick_info(store, node);
-            let symbol = get_symbol_at_location_for_quick_info(checker, node);
+            let symbol = get_symbol_at_location_for_quick_info(checker, node, Some(store));
             let mut max_trunc_len = self.user_preferences().maximum_hover_length;
             if max_trunc_len <= 0 {
                 max_trunc_len = 500;
@@ -186,14 +186,16 @@ impl LanguageService<'_> {
 
     pub(crate) fn get_documentation_from_declaration<'a>(
         &self,
-        _checker: &mut checker::Checker<'a, '_>,
+        checker: &mut checker::Checker<'a, '_>,
         _symbol: Option<ast::SymbolIdentity>,
-        _declaration: Option<ast::Node>,
+        declaration: Option<ast::Node>,
         _location: ast::Node,
         _content_format: lsproto::MarkupKind,
         _comment_only: bool,
     ) -> String {
-        String::new()
+        declaration
+            .and_then(|declaration| get_declaration_documentation(checker, declaration))
+            .unwrap_or_default()
     }
 
     pub(crate) fn write_comments<'a>(
@@ -222,6 +224,55 @@ pub(crate) fn get_comment_text(_comments: &[ast::Node]) -> String {
     String::new()
 }
 
+fn get_declaration_documentation<'a>(
+    checker: &mut checker::Checker<'a, '_>,
+    declaration: ast::Node,
+) -> Option<String> {
+    let source_file = checker.try_source_file_for_node_public(declaration)?;
+    let source_text = source_file.text();
+    let ranges = scanner::get_leading_comment_ranges(
+        source_text,
+        source_file.store().loc(declaration).pos(),
+    );
+    ranges
+        .iter()
+        .rev()
+        .find_map(|range| get_documentation_comment_text(source_text, range))
+}
+
+fn get_documentation_comment_text(source_text: &str, range: &ast::CommentRange) -> Option<String> {
+    if range.kind() != ast::Kind::MultiLineCommentTrivia {
+        return None;
+    }
+
+    let raw = source_text.get(range.pos() as usize..range.end() as usize)?;
+    if !raw.starts_with("/**") || raw.starts_with("/***") || !raw.ends_with("*/") {
+        return None;
+    }
+
+    let body = &raw[3..raw.len() - 2];
+    let mut lines: Vec<String> = body
+        .lines()
+        .map(|line| {
+            let line = line.trim_start_matches([' ', '\t']);
+            let line = line
+                .strip_prefix('*')
+                .map(|line| line.strip_prefix([' ', '\t']).unwrap_or(line))
+                .unwrap_or(line);
+            line.trim_end_matches([' ', '\t']).to_string()
+        })
+        .collect();
+
+    while lines.first().is_some_and(|line| line.is_empty()) {
+        lines.remove(0);
+    }
+    while lines.last().is_some_and(|line| line.is_empty()) {
+        lines.pop();
+    }
+
+    (!lines.is_empty()).then(|| lines.join("\n"))
+}
+
 pub(crate) fn format_quick_info(quick_info: &str) -> String {
     let mut output = String::with_capacity(32);
     write_code(&mut output, "typescript", quick_info);
@@ -239,6 +290,7 @@ pub(crate) fn get_quick_info_and_declaration_at_location<'a>(
     vc: &mut checker::VerbosityContext,
     store: Option<&ast::AstStore>,
 ) -> (String, Option<ast::Node>) {
+    let container = get_container_node(store, node);
     if let Some(symbol) = symbol {
         if let Some((mut quick_info, declaration)) =
             symbol_quick_info(checker, symbol, node, vc, store)
@@ -258,7 +310,7 @@ pub(crate) fn get_quick_info_and_declaration_at_location<'a>(
     (
         checker.type_to_string_ex_public(
             t,
-            None,
+            container,
             TYPE_FORMAT_FLAGS | checker::TYPE_FORMAT_FLAGS_MULTILINE_OBJECT_LITERALS,
             Some(vc),
         ),
@@ -274,6 +326,7 @@ fn symbol_quick_info<'a>(
     store: Option<&ast::AstStore>,
 ) -> Option<(String, Option<ast::Node>)> {
     let mut flags = symbol_flags_for_location(checker, symbol, node, store)?;
+    let container = get_container_node(store, node);
     let value_declaration = checker.symbol_value_declaration_public(symbol);
     if flags.intersects(ast::SYMBOL_FLAGS_PROPERTY)
         && value_declaration.is_some_and(|declaration| {
@@ -319,7 +372,7 @@ fn symbol_quick_info<'a>(
             let symbol_name = checker
                 .symbol_identity_to_string_ex_public(
                     symbol,
-                    get_container_node(node),
+                    container,
                     ast::SYMBOL_FLAGS_NONE,
                     SYMBOL_FORMAT_FLAGS,
                 )
@@ -339,7 +392,7 @@ fn symbol_quick_info<'a>(
             .unwrap_or_else(|| checker.get_error_type());
         quick_info.push_str(&checker.type_to_string_ex_public(
             symbol_type,
-            get_container_node(node),
+            container,
             TYPE_FORMAT_FLAGS | checker::TYPE_FORMAT_FLAGS_MULTILINE_OBJECT_LITERALS,
             Some(vc),
         ));
@@ -369,14 +422,14 @@ fn symbol_quick_info<'a>(
                 &signatures,
                 "constructor ",
                 symbol,
-                get_container_node(node),
+                container,
                 vc,
             );
             return Some((quick_info, declaration));
         }
     }
 
-    let quick_info = symbol_to_string_ex(checker, symbol, get_container_node(node));
+    let quick_info = symbol_to_string_ex(checker, symbol, container);
     (!quick_info.is_empty()).then_some((quick_info, None))
 }
 
@@ -521,7 +574,24 @@ pub(crate) fn get_node_for_quick_info(store: &ast::AstStore, node: ast::Node) ->
 pub(crate) fn get_symbol_at_location_for_quick_info<'a>(
     checker: &mut checker::Checker<'a, '_>,
     node: ast::Node,
+    store: Option<&ast::AstStore>,
 ) -> Option<ast::SymbolIdentity> {
+    if let Some(store) = store
+        && let Some(object_element) =
+            crate::utilities::get_containing_object_literal_element(store, node)
+        && let Some(parent) = store.parent(object_element)
+        && let Some(contextual_type) =
+            checker.get_contextual_type_public(parent, checker::CONTEXT_FLAGS_NONE)
+    {
+        let properties = checker.get_property_symbols_from_contextual_type(
+            object_element,
+            contextual_type,
+            false,
+        );
+        if properties.len() == 1 {
+            return properties.first().copied();
+        }
+    }
     checker.get_symbol_at_location_public(node)
 }
 
@@ -657,8 +727,11 @@ pub(crate) fn write_entity_name_parts(output: &mut String, store: &ast::AstStore
     output.push_str(&get_entity_name_string(store, node));
 }
 
-pub(crate) fn get_container_node(_node: ast::Node) -> Option<ast::Node> {
-    None
+pub(crate) fn get_container_node(
+    store: Option<&ast::AstStore>,
+    node: ast::Node,
+) -> Option<ast::Node> {
+    store.and_then(|store| crate::utilities::get_container_node(store, node))
 }
 
 pub(crate) fn get_containing_object_literal_element(_node: ast::Node) -> Option<ast::Node> {

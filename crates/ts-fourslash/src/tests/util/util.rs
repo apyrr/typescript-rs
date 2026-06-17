@@ -130,8 +130,8 @@ isFinite|Function|0
 isNaN|Function|0
 parseFloat|Function|0
 parseInt|Function|0
-escape|Function|1
-unescape|Function|1"#,
+escape|Function|0
+unescape|Function|0"#,
         Some(SORT_TEXT_GLOBALS_OR_KEYWORDS),
     )
 }

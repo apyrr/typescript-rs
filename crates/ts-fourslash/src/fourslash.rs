@@ -2589,11 +2589,17 @@ impl FourslashTest {
             return;
         }
         let original_content = self.get_script_info(&self.active_filename).content.clone();
+        let should_read_range = !filtered_ranges.is_empty();
         let mut actual_text_array = Vec::with_capacity(import_actions.len());
         for action in import_actions {
             self.apply_text_edits(t, action.edits);
-            let text = if let Some(range_marker) = filtered_ranges.first() {
-                self.get_range_text(range_marker)
+            let text = if should_read_range {
+                let ranges = self.get_ranges_in_file(&file_name);
+                self.get_range_text(
+                    ranges
+                        .first()
+                        .expect("expected selected range to remain after applying import fix"),
+                )
             } else {
                 self.get_script_info(&self.active_filename).content.clone()
             };
@@ -4576,13 +4582,19 @@ fn any_file_name<Params>(_params: &Params) -> Option<String> {
 
 fn sort_completion_list(mut result: CompletionList) -> CompletionList {
     result.items.sort_by(|a, b| {
-        a.sort_text
-            .as_deref()
-            .unwrap_or(&a.label)
-            .cmp(b.sort_text.as_deref().unwrap_or(&b.label))
-            .then_with(|| a.label.cmp(&b.label))
+        compare_strings_case_insensitive_then_sensitive(
+            a.sort_text.as_deref().unwrap_or(&a.label),
+            b.sort_text.as_deref().unwrap_or(&b.label),
+        )
+        .then_with(|| compare_strings_case_insensitive_then_sensitive(&a.label, &b.label))
     });
     result
+}
+
+fn compare_strings_case_insensitive_then_sensitive(a: &str, b: &str) -> std::cmp::Ordering {
+    a.to_ascii_lowercase()
+        .cmp(&b.to_ascii_lowercase())
+        .then_with(|| a.cmp(b))
 }
 
 pub fn is_empty_expected_list(expected: Option<&CompletionsExpectedList>) -> bool {

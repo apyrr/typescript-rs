@@ -47,37 +47,31 @@ foo"#;
     f.go_to_file(t, "/a.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import bar = require("bar");
+        &vec![r#"import bar = require("bar");
 import foo = require("foo");
 
 foo"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.go_to_file(t, "/b.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import foo from "foo";
+        &vec![r#"import foo from "foo";
 
 foo"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.go_to_file(t, "/c.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import es from "es";
+        &vec![r#"import es from "es";
 import bar = require("bar");
 import foo = require("foo");
 
 foo"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

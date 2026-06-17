@@ -32,14 +32,12 @@ export {};";
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r"import fs from 'fs';
+        &vec![r"import fs from 'fs';
 import { Dep } from './types/dep';
 const path = require('path');
 
 Dep"
-            .to_string(),
-        ],
+        .to_string()],
         None,
     );
     done();

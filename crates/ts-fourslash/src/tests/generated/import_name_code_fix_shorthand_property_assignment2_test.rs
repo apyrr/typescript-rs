@@ -26,12 +26,10 @@ const b = { /**/a };";
     f.go_to_file(t, "/b.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import a from "./a";
+        &vec![r#"import a from "./a";
 
 const b = { a };"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

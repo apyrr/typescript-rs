@@ -29,11 +29,9 @@ import a from './a';
     f.go_to_file(t, "/test.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r"import b from './b';
+        &vec![r"import b from './b';
 b"
-            .to_string(),
-        ],
+        .to_string()],
         None,
     );
     done();

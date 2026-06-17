@@ -48,12 +48,10 @@ shared/*external2external*/"#;
     f.go_to_marker(t, "internal2external");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { shared } from "shared/constants";
+        &vec![r#"import { shared } from "shared/constants";
 
 shared"#
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             import_module_specifier_preference:
                 modulespecifiers::ImportModuleSpecifierPreference::ProjectRelative,
@@ -63,12 +61,10 @@ shared"#
     f.go_to_marker(t, "internal2internal");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { utils } from "./utils";
+        &vec![r#"import { utils } from "./utils";
 
 utils"#
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             import_module_specifier_preference:
                 modulespecifiers::ImportModuleSpecifierPreference::ProjectRelative,
@@ -78,12 +74,10 @@ utils"#
     f.go_to_marker(t, "external2external");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { shared } from "./constants";
+        &vec![r#"import { shared } from "./constants";
 
 shared"#
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             import_module_specifier_preference:
                 modulespecifiers::ImportModuleSpecifierPreference::ProjectRelative,

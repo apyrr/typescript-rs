@@ -36,23 +36,19 @@ import { Foo } from "./Foo";
     f.go_to_file(t, "/c.tsx");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { React } from "react";
+        &vec![r#"import { React } from "react";
 import { Foo } from "./Foo";
 <Foo />;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.go_to_file(t, "/d.tsx");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { React } from "react";
+        &vec![r#"import { React } from "react";
 import { Foo } from "./Foo";
 <Foo />;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

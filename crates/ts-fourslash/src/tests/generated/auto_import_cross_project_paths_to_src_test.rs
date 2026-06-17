@@ -56,23 +56,19 @@ export const dep2 = 0;"#;
     f.go_to_marker(t, "1");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { dep1 } from "dep";
+        &vec![r#"import { dep1 } from "dep";
 
 dep1;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.go_to_marker(t, "2");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { dep2 } from "dep/src/sub/folder";
+        &vec![r#"import { dep2 } from "dep/src/sub/folder";
 
 dep2;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

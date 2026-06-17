@@ -40,31 +40,27 @@ aB;|]"#;
     f.go_to_file(t, "/b.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import {
+        &vec![r#"import {
     _aB,
     _Ab,
     Ab,
     aB,
 } from "./a";
 aB;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.go_to_file(t, "/c.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import {
+        &vec![r#"import {
     _aB,
     _Ab,
     aB,
     Ab,
 } from "./a";
 aB;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

@@ -27,7 +27,7 @@ use crate::utilities::{
     get_contextual_type_from_parent, get_possible_generic_signatures,
     get_possible_type_arguments_info, is_in_comment,
     is_in_right_side_of_internal_import_equals_declaration, is_in_string, is_type_keyword,
-    new_case_clause_tracker, position_belongs_to_node, quote,
+    new_case_clause_tracker, position_belongs_to_node, quote, skip_constraint,
 };
 
 pub const ERR_NEEDS_AUTO_IMPORTS: &str = "completion list needs auto imports";
@@ -626,7 +626,8 @@ impl LanguageService<'_> {
         let (scanned_context_token, scanned_previous_token) =
             get_relevant_token_infos(position, file);
         let use_scanned_context = scanned_context_token.is_some_and(|token| {
-            token.node.is_none() && is_scanned_completion_context_token(token.kind)
+            fallback_context_token.is_none()
+                || token.node.is_none() && is_scanned_completion_context_token(token.kind)
         });
         let context_token_info = if use_scanned_context {
             scanned_context_token
@@ -652,9 +653,8 @@ impl LanguageService<'_> {
         let mut jsx_initializer = JsxInitializer::default();
         let mut is_jsx_identifier_expected = false;
         let mut import_statement_completion = None;
-        let Some(mut location) = astnav::get_touching_property_name(file, position) else {
-            return Ok(None);
-        };
+        let mut location =
+            astnav::get_touching_property_name(file, position).unwrap_or_else(|| file.as_node());
         let mut keyword_filters = KEYWORD_COMPLETION_FILTERS_NONE;
         let mut is_new_identifier_location = false;
         // !!! flags := CompletionInfoFlagsNone
@@ -741,10 +741,8 @@ impl LanguageService<'_> {
                                 || ast::is_function_like(store, node))
                                 && store.loc(node.unwrap()).end()
                                     == context_token_info_value.loc.pos()
-                                && lsutil::get_last_child(node.unwrap(), file).is_none_or(
-                                    |last_child| {
-                                        store.kind(last_child) != ast::Kind::CloseParenToken
-                                    },
+                                && lsutil::get_last_token_info(node, file).is_none_or(
+                                    |last_token| last_token.kind != ast::Kind::CloseParenToken,
                                 ))
                         {
                             // This is likely dot from incorrectly parsed expression and user is starting to write spread
@@ -785,6 +783,7 @@ impl LanguageService<'_> {
                 }
             } else {
                 if context_token.is_none()
+                    && !is_scanned_completion_context_token(context_token_kind)
                     && !is_scanned_type_context_token(
                         store,
                         context_token_kind,
@@ -1338,7 +1337,8 @@ impl LanguageService<'_> {
                     node_value, false, /*includeGlobalThis*/
                     None,
                 );
-                let node_type = type_checker.get_type_at_location(node_value);
+                let node_type =
+                    get_type_at_location_for_member_completion(type_checker, store, node_value);
                 let mut t = type_checker.get_non_optional_type_public(node_type);
 
                 if !is_type_location {
@@ -1456,7 +1456,7 @@ impl LanguageService<'_> {
                 }) {
                     if let Some(object_like_container) = try_get_object_like_completion_container(
                         store,
-                        context_token.as_ref(),
+                        context_token_info.as_ref(),
                         position,
                         file,
                     ) {
@@ -1472,7 +1472,6 @@ impl LanguageService<'_> {
                                 &object_like_container,
                                 type_checker,
                             );
-
                             // Check completions for Object property value shorthand
                             if let Some(instantiated_type) = instantiated_type {
                                 let completions_type = type_checker.get_contextual_type_public(
@@ -2266,6 +2265,38 @@ impl LanguageService<'_> {
                     type_checker,
                 );
             }
+        } else if let Some(token) = context_token_info
+            && token.node.is_none()
+            && token.kind == ast::Kind::ColonToken
+            && let Some(parent) = token.parent
+        {
+            contextual_type_or_constraint = match store.kind(parent) {
+                ast::Kind::ConditionalExpression => get_contextual_type_for_conditional_expression(
+                    &parent,
+                    position,
+                    file,
+                    type_checker,
+                ),
+                ast::Kind::PropertyAssignment => {
+                    let by_object_property = node_parent(store, &parent).and_then(|object| {
+                        let object_type = type_checker
+                            .get_contextual_type_public(object, checker::CONTEXT_FLAGS_NONE)?;
+                        let name = node_name(store, &parent)?;
+                        let (name, ok) = ast::try_get_text_of_property_name(store, name);
+                        ok.then_some(name).and_then(|name| {
+                            type_checker
+                                .get_type_of_property_of_contextual_type_public(object_type, &name)
+                        })
+                    });
+                    by_object_property.or_else(|| {
+                        type_checker.get_contextual_type_for_object_literal_element_public(
+                            parent,
+                            checker::CONTEXT_FLAGS_NONE,
+                        )
+                    })
+                }
+                _ => None,
+            };
         }
 
         // exclude literal suggestions after <input type="text" [||] /> microsoft/TypeScript#51667) and after closing quote (microsoft/TypeScript#52675)
@@ -2275,6 +2306,8 @@ impl LanguageService<'_> {
             && !is_jsx_identifier_expected;
         let mut literals = Vec::new();
         if is_literal_expected {
+            let contextual_type_or_constraint =
+                contextual_type_or_constraint.map(|t| skip_constraint(t, type_checker));
             let types = if contextual_type_or_constraint
                 .is_some_and(|t| type_checker.is_union_type_public(t))
             {
@@ -4361,9 +4394,7 @@ fn get_relevant_token_infos(
     let previous_token = astnav::find_preceding_token_info(file, position);
     if previous_token.is_some_and(|previous_token| {
         position <= previous_token.loc.end()
-            && (previous_token
-                .node
-                .is_some_and(|node| ast::is_member_name(store, node))
+            && (is_member_name_token_info(store, &previous_token)
                 || ast::is_keyword_kind(previous_token.kind))
     }) {
         let previous_token = previous_token.unwrap();
@@ -4373,11 +4404,24 @@ fn get_relevant_token_infos(
     (previous_token, previous_token)
 }
 
+fn is_member_name_token_info(store: &ast::AstStore, token: &astnav::TokenInfo) -> bool {
+    token
+        .node
+        .is_some_and(|node| ast::is_member_name(store, node))
+        || matches!(
+            token.kind,
+            ast::Kind::Identifier | ast::Kind::PrivateIdentifier
+        )
+}
+
 fn is_scanned_completion_context_token(kind: ast::Kind) -> bool {
     matches!(
         kind,
-        ast::Kind::DotToken
+        ast::Kind::OpenBraceToken
+            | ast::Kind::CommaToken
+            | ast::Kind::DotToken
             | ast::Kind::QuestionDotToken
+            | ast::Kind::ColonToken
             | ast::Kind::AsKeyword
             | ast::Kind::SatisfiesKeyword
     )
@@ -4925,6 +4969,22 @@ pub(crate) fn keyword_for_node(store: &ast::AstStore, node: ast::Node) -> ast::K
         return scanner::identifier_to_keyword_kind(store, node);
     }
     store.kind(node)
+}
+
+fn get_type_at_location_for_member_completion<'a>(
+    type_checker: &mut checker::Checker<'a, '_>,
+    store: &ast::AstStore,
+    node: ast::Node,
+) -> checker::TypeHandle {
+    // TypeScript-Go's GetTypeAtLocation reaches checkExpression for calls. In
+    // incomplete member-completion trees, use the resolved signature directly so
+    // `foo().` exposes members of the call return type.
+    if ast::is_call_expression(store, node) || ast::is_new_expression(store, node) {
+        if let Some(signature) = type_checker.get_resolved_signature_public(node) {
+            return type_checker.get_return_type_of_signature_public(signature);
+        }
+    }
+    type_checker.get_type_at_location(node)
 }
 
 pub fn compute_commit_characters_and_is_new_identifier(
@@ -7264,14 +7324,14 @@ pub fn try_get_function_like_body_completion_container(
 
 pub fn try_get_object_like_completion_container(
     store: &ast::AstStore,
-    context_token: Option<&ast::Node>,
+    context_token: Option<&astnav::TokenInfo>,
     position: i32,
     file: &ast::SourceFile,
 ) -> Option<ast::Node> {
     let context_token = context_token?;
 
-    let parent = node_parent(store, context_token);
-    match store.kind(*context_token) {
+    let parent = context_token.parent;
+    match context_token.kind {
         // const x = { |
         // const x = { a: 0, |
         ast::Kind::OpenBraceToken | ast::Kind::CommaToken => {
@@ -7305,7 +7365,7 @@ pub fn try_get_object_like_completion_container(
             }
         }
         ast::Kind::Identifier => {
-            if node_text(store, context_token) == "async"
+            if token_info_text_matches(store, context_token, file, "async")
                 && parent
                     .as_ref()
                     .is_some_and(|parent| ast::is_shorthand_property_assignment(store, *parent))
@@ -7320,7 +7380,7 @@ pub fn try_get_object_like_completion_container(
                         .is_some_and(|parent| ast::is_object_literal_expression(store, *parent))
                     && (ast::is_spread_assignment(store, *parent)
                         || ast::is_shorthand_property_assignment(store, *parent)
-                            && get_line_of_position(file, store.loc(*context_token).end())
+                            && get_line_of_position(file, context_token.loc.end())
                                 != get_line_of_position(file, position))
                 {
                     return node_parent(store, parent);
@@ -7329,7 +7389,13 @@ pub fn try_get_object_like_completion_container(
                 while let Some(ancestor) = ancestor_node {
                     if ast::is_property_assignment(store, ancestor) {
                         if lsutil::get_last_token_info(Some(ancestor), file)
-                            .is_some_and(|token| token.matches_node(store, *context_token))
+                            .is_some_and(|token| {
+                                context_token
+                                    .node
+                                    .is_some_and(|node| token.matches_node(store, node))
+                                    || token.kind == context_token.kind
+                                        && token.loc == context_token.loc
+                            })
                             && node_parent(store, ancestor).as_ref().is_some_and(|parent| {
                                 ast::is_object_literal_expression(store, *parent)
                             })
@@ -7364,9 +7430,15 @@ pub fn try_get_object_like_completion_container(
             let mut ancestor_node = parent;
             while let Some(ancestor) = ancestor_node {
                 if ast::is_property_assignment(store, ancestor) {
-                    if store.kind(*context_token) != ast::Kind::ColonToken
+                    if context_token.kind != ast::Kind::ColonToken
                         && lsutil::get_last_token_info(Some(ancestor), file)
-                            .is_some_and(|token| token.matches_node(store, *context_token))
+                            .is_some_and(|token| {
+                                context_token
+                                    .node
+                                    .is_some_and(|node| token.matches_node(store, node))
+                                    || token.kind == context_token.kind
+                                        && token.loc == context_token.loc
+                            })
                         && node_parent(store, ancestor)
                             .as_ref()
                             .is_some_and(|parent| ast::is_object_literal_expression(store, *parent))
@@ -7381,6 +7453,22 @@ pub fn try_get_object_like_completion_container(
     }
 
     None
+}
+
+fn token_info_text_matches(
+    store: &ast::AstStore,
+    token: &astnav::TokenInfo,
+    file: &ast::SourceFile,
+    text: &str,
+) -> bool {
+    if let Some(node) = token.node {
+        return node_text(store, &node) == text;
+    }
+    let start = token.loc.pos().max(0) as usize;
+    let end = token.loc.end().max(token.loc.pos()).max(0) as usize;
+    file.text()
+        .get(start..end)
+        .is_some_and(|token_text| token_text.trim_start() == text)
 }
 
 // Filters out completion suggestions for class elements.

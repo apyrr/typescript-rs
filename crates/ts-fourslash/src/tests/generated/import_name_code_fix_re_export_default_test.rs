@@ -66,12 +66,10 @@ unnamed;"#
     f.go_to_file(t, "/user3.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import reExportUnnamed from "./reExportUnnamed";
+        &vec![r#"import reExportUnnamed from "./reExportUnnamed";
 
 reExportUnnamed;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

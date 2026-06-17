@@ -31,23 +31,19 @@ export const bar = 0;
     f.go_to_file(t, "/b.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { foo } from "./a/index";
+        &vec![r#"import { foo } from "./a/index";
 
 foo;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     f.go_to_file(t, "/c.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { bar } from "./node_modules/x/index";
+        &vec![r#"import { bar } from "./node_modules/x/index";
 
 bar;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

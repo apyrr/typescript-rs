@@ -35,11 +35,9 @@ useMemo/**/";
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { useMemo, useState } from "react";
+        &vec![r#"import { useMemo, useState } from "react";
 useMemo"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

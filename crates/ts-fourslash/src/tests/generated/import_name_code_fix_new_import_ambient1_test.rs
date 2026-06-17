@@ -37,13 +37,11 @@ declare module "yet-another-ambient-module" {
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { v1 } from "ambient-module";
+        &vec![r#"import { v1 } from "ambient-module";
 import d from "other-ambient-module";
 import * as ns from "yet-another-ambient-module";
 var x = v1 + 5;"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

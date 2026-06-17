@@ -25,12 +25,10 @@ export const foo: number;
     f.go_to_file(t, "/b.ts");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r"import { foo } from './a';
+        &vec![r"import { foo } from './a';
 
 foo;"
-                .to_string(),
-        ],
+            .to_string()],
         Some(UserPreferences {
             quote_preference: lsutil::QuotePreference::Single,
             ..Default::default()

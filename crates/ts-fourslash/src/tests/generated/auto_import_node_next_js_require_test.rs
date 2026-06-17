@@ -33,14 +33,12 @@ export default 0;";
     f.go_to_file(t, "/main.js");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"const { variants } = require("./matrix")
+        &vec![r#"const { variants } = require("./matrix")
 
 exports.dedupeLines = data => {
   variants
 }"#
-            .to_string(),
-        ],
+        .to_string()],
         None,
     );
     done();

@@ -731,17 +731,22 @@ impl<'a, 'state> Checker<'a, 'state> {
 
     pub fn type_predicate_to_type_predicate_node_for_ls_public(
         &mut self,
+        emit_context: &mut ts_printer::EmitContext,
         type_predicate: TypePredicateHandle,
         enclosing_declaration: Option<ast::Node>,
         flags: nodebuilder::Flags,
     ) -> Option<ast::Node> {
         let enclosing_declaration = enclosing_declaration.map(|node| node);
-        self.type_predicate_to_type_predicate_node(
+        let mut node_builder = crate::nodebuilder::new_node_builder_ex(self, emit_context, None);
+        let node = node_builder.type_predicate_to_type_predicate_node(
             type_predicate,
             enclosing_declaration,
             flags,
+            nodebuilder::INTERNAL_FLAGS_NONE,
             None,
-        )
+        );
+        drop(node_builder);
+        node
     }
 
     pub fn signature_to_signature_declaration_for_ls_public(

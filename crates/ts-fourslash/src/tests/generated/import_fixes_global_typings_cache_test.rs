@@ -33,12 +33,10 @@ BrowserRouter/**/"#;
     f.go_to_file(t, "/project/index.js");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"const { BrowserRouter } = require("react-router-dom");
+        &vec![r#"const { BrowserRouter } = require("react-router-dom");
 
 BrowserRouter"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

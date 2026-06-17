@@ -27,12 +27,10 @@ const a: /**/A";
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import type { A } from "./types";
+        &vec![r#"import type { A } from "./types";
 
 const a: A"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

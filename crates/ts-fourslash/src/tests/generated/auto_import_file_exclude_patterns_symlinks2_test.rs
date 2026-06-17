@@ -55,7 +55,7 @@ ServerRuntimeMetaFunction/**/"#;
             }),
             user_preferences: Some(UserPreferences {
                 auto_import_file_exclude_patterns: vec![
-                    "c:/**/@remix-run/server-runtime".to_string(),
+                    "c:/**/@remix-run/server-runtime".to_string()
                 ],
                 ..Default::default()
             }),

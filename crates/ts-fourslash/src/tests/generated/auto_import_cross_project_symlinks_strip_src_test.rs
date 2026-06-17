@@ -51,12 +51,10 @@ export const dep = 0;
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { dep } from "dep/sub/folder";
+        &vec![r#"import { dep } from "dep/sub/folder";
 
 dep"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

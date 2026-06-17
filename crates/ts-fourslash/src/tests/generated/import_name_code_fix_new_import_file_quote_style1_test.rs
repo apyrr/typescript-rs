@@ -27,13 +27,11 @@ export var v2 = 6;"#;
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { f1 } from "./module1";
+        &vec![r#"import { f1 } from "./module1";
 import { v2 } from "./module2";
 
 f1();"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

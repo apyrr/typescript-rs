@@ -37,11 +37,9 @@ readFile/**/"#;
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { readFile, writeFile } from "node:fs";
+        &vec![r#"import { readFile, writeFile } from "node:fs";
 readFile"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

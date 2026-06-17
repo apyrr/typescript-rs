@@ -29,13 +29,11 @@ export as namespace bar;";
     let (mut f, done) = new_fourslash(t, None /*capabilities*/, content.to_string());
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import bar = require("./foo");
+        &vec![r#"import bar = require("./foo");
 
 export var x = 0;
 bar();"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

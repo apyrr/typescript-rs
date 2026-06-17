@@ -33,12 +33,10 @@ import "mobx";
     f.go_to_marker(t, "");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"import { autorun } from "mobx";
+        &vec![r#"import { autorun } from "mobx";
 
 autorun"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();

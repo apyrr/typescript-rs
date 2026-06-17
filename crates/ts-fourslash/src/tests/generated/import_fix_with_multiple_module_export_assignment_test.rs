@@ -32,12 +32,10 @@ foo";
     f.go_to_file(t, "/c.js");
     f.verify_import_fix_at_position(
         t,
-        &vec![
-            r#"const { foo } = require("./b");
+        &vec![r#"const { foo } = require("./b");
 
 foo"#
-                .to_string(),
-        ],
+            .to_string()],
         None,
     );
     done();
