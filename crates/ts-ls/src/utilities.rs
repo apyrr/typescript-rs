@@ -103,10 +103,12 @@ pub(crate) fn is_module_specifier_like(store: &ast::AstStore, node: ast::Node) -
         return false;
     };
     if ast::is_require_call(store, parent, false) || ast::is_import_call(store, parent) {
-        return store
-            .arguments(parent)
-            .and_then(|arguments| arguments.first())
-            .is_some_and(|argument| argument == node);
+        return ast::require_call_argument(store, parent, false)
+            .is_some_and(|argument| argument == node)
+            || store
+                .arguments(parent)
+                .and_then(|arguments| arguments.first())
+                .is_some_and(|argument| argument == node);
     }
     matches!(
         store.kind(parent),
@@ -284,9 +286,8 @@ pub(crate) fn is_expression_of_external_module_import_equals_declaration(
     let Some(parent_parent) = store.parent(node).and_then(|parent| store.parent(parent)) else {
         return false;
     };
-    ast::is_external_module_import_equals_declaration(store, &parent_parent)
-        && ast::get_external_module_import_equals_declaration_expression(store, &parent_parent)
-            .is_some_and(|expression| expression == node)
+    ast::get_external_module_import_equals_declaration_expression(store, parent_parent)
+        .is_some_and(|expression| expression == node)
 }
 
 pub(crate) fn is_namespace_reference(store: &ast::AstStore, node: ast::Node) -> bool {
@@ -409,9 +410,8 @@ pub(crate) fn is_in_right_side_of_internal_import_equals_declaration(
     let Some(parent) = store.parent(node) else {
         return false;
     };
-    ast::is_internal_module_import_equals_declaration(store, &parent)
-        && store
-            .module_reference(parent)
+    ast::is_internal_module_import_equals_declaration(store, parent)
+        && ast::import_equals_module_reference(store, parent)
             .is_some_and(|module_reference| module_reference == node)
 }
 
@@ -586,7 +586,9 @@ pub(crate) fn is_implementation(store: &ast::AstStore, node: ast::Node) -> bool 
     if ast::is_function_like_declaration(store, Some(node)) {
         return store.body(node).is_some();
     }
-    ast::is_class_like(store, node) || ast::is_module_or_enum_declaration(store, node)
+    ast::is_class_like(store, node)
+        || ast::is_module_declaration(store, node)
+        || ast::is_enum_declaration(store, node)
 }
 
 pub(crate) fn is_implementation_expression(store: &ast::AstStore, node: ast::Node) -> bool {

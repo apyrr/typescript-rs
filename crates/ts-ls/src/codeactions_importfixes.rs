@@ -613,10 +613,8 @@ pub fn needs_jsx_namespace_fix<'a, 'state>(
     let namespace_symbol = namespace_symbol.unwrap();
     let declarations = checker.collect_symbol_declarations_public(namespace_symbol);
     if declarations.iter().any(|declaration| {
-        ast::is_type_only_import_or_export_declaration(
-            store_for_node(program, declaration),
-            declaration,
-        )
+        let store = store_for_node(program, declaration);
+        ast::is_type_only_import_or_export_declaration(store, *declaration)
     }) {
         let flags = checker
             .symbol_flags_public(namespace_symbol)

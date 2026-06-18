@@ -177,7 +177,7 @@ impl<'a, 'b, 'state> InlayHintState<'a, 'b, 'state> {
     pub(crate) fn visit_function_declaration_like_for_return_type(&mut self, decl: ast::Node) {
         let decl = &decl;
         if ast::is_arrow_function(self.store(), *decl)
-            && astnav::find_child_of_kind(*decl, ast::Kind::OpenParenToken, self.file).is_none()
+            && !astnav::has_child_of_kind(*decl, ast::Kind::OpenParenToken, self.file)
         {
             return;
         }
@@ -781,9 +781,9 @@ impl<'a, 'b, 'state> InlayHintState<'a, 'b, 'state> {
 
     pub(crate) fn get_type_annotation_position(&self, decl: ast::Node) -> i32 {
         let close_paren_token =
-            astnav::find_child_of_kind(decl, ast::Kind::CloseParenToken, self.file);
+            astnav::find_child_of_kind_info(decl, ast::Kind::CloseParenToken, self.file);
         if let Some(close_paren_token) = close_paren_token {
-            return self.store().loc(close_paren_token).end();
+            return close_paren_token.loc.end();
         }
         self.store()
             .parameters(decl)
@@ -826,7 +826,7 @@ pub(crate) fn is_signature_supporting_return_annotation(
 
 pub(crate) fn is_hintable_declaration(store: &ast::AstStore, node: ast::Node) -> bool {
     if (ast::is_part_of_parameter_declaration(store, node)
-        || ast::is_variable_declaration(store, node) && ast::is_var_const(store, &node))
+        || ast::is_variable_declaration(store, node) && ast::is_var_const(store, node))
         && store.initializer(node).is_some()
     {
         let initializer_node = store.initializer(node).unwrap();

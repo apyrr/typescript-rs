@@ -98,7 +98,8 @@ impl LanguageService<'_> {
                 resolver.search_implementation_file(node, &resolved_impl_file, &names);
             if !module_results.is_empty() {
                 if (!ast::is_part_of_type_node(file.store(), &node)
-                    && !ast::is_part_of_type_only_import_or_export_declaration(file.store(), &node))
+                    && ast::containing_type_only_import_or_export_declaration(file.store(), node)
+                        .is_none())
                     || resolver.has_concrete_source_declarations(&module_results)
                 {
                     let extra_source_files = resolver.extra_source_files();
@@ -762,15 +763,14 @@ pub(crate) fn is_default_import_name(store: &ast::AstStore, node: Option<ast::No
     {
         return false;
     }
-    ast::is_default_import(store, &store.parent(parent).unwrap())
+    ast::has_default_import(store, store.parent(parent).unwrap())
 }
 
 pub(crate) fn get_source_definition_entry_node(source_file: &ast::SourceFile) -> ast::Node {
-    let statements = source_file.statements_view();
-    if let Some(statement) = statements.first() {
-        return statement;
-    }
-    source_file.as_node()
+    source_file
+        .statements_view()
+        .first()
+        .unwrap_or_else(|| source_file.as_node())
 }
 
 pub(crate) fn get_source_definition_entry_declarations(
@@ -1083,4 +1083,41 @@ pub(crate) fn get_start_pos_from_declaration(
 ) -> core::TextPos {
     let name = ast::get_name_of_declaration(store, Some(declaration)).unwrap_or(declaration);
     astnav::get_start_of_node(name, file)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse_options(path: &str) -> ast::SourceFileParseOptions {
+        ast::SourceFileParseOptions {
+            file_name: path.to_string(),
+            path: path.to_string(),
+            ..Default::default()
+        }
+    }
+
+    fn parse_ts_source_file(path: &str, text: &str) -> ast::SourceFile {
+        parser::parse_source_file(parse_options(path), text.to_string(), core::ScriptKind::TS)
+    }
+
+    #[test]
+    fn get_source_definition_entry_node_should_use_first_statement_or_source_file() {
+        let source_file = parse_ts_source_file("/entry.ts", "const value = 1;\nvalue;");
+        let first_statement = source_file
+            .statements_view()
+            .first()
+            .expect("expected first statement");
+
+        assert_eq!(
+            get_source_definition_entry_node(&source_file),
+            first_statement
+        );
+
+        let empty_source_file = parse_ts_source_file("/empty.ts", "");
+        assert_eq!(
+            get_source_definition_entry_node(&empty_source_file),
+            empty_source_file.as_node()
+        );
+    }
 }

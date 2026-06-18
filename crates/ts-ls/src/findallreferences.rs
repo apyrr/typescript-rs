@@ -300,19 +300,12 @@ pub(crate) fn is_valid_reference_position(
                 && (is_literal_name_of_property_declaration_or_index_access(store, node)
                     || is_name_of_module_declaration(store, node)
                     || is_expression_of_external_module_import_equals_declaration(store, node)
-                    || store
-                        .parent(node)
-                        .as_ref()
-                        .is_some_and(|parent| ast::is_call_expression(store, *parent))
-                        && store.parent(node).as_ref().is_some_and(|parent| {
-                            ast::is_bindable_object_define_property_call(store, *parent)
-                        })
-                        && store.parent(node).is_some_and(|parent| {
-                            store
-                                .arguments(parent)
-                                .and_then(|arguments| arguments.iter().nth(1))
-                                .is_some_and(|argument| argument == node)
-                        })
+                    || store.parent(node).is_some_and(|parent| {
+                        ast::bindable_object_define_property_call_property_name_argument(
+                            store, parent,
+                        )
+                        .is_some_and(|property_name| property_name == node)
+                    })
                     || store
                         .parent(node)
                         .as_ref()
@@ -1013,7 +1006,7 @@ pub(crate) fn get_referenced_symbols_special(
     if store
         .parent(node)
         .as_ref()
-        .is_some_and(|parent| ast::is_import_meta(store, parent))
+        .is_some_and(|parent| ast::is_import_meta(store, *parent))
         && store
             .parent(node)
             .and_then(|parent| store.name(parent))
@@ -1335,7 +1328,7 @@ pub(crate) fn get_all_references_for_import_meta(
             let parent = store.parent(node);
             if parent
                 .as_ref()
-                .is_some_and(|parent| ast::is_import_meta(store, parent))
+                .is_some_and(|parent| ast::is_import_meta(store, *parent))
             {
                 references.push(new_node_entry(parent.unwrap()));
             }

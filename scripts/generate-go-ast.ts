@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-// Generates Rust AST compatibility files from vendor/typescript-go/_scripts/ast.json.
+// Generates Rust AST compatibility files from an AST schema JSON.
 // Keep this schema-driven; do not depend on a local copy of schema.ts.
 
 import * as fs from "node:fs";
@@ -10,20 +10,43 @@ import { pathToFileURL } from "node:url";
 type MemberInfo = any;
 type NodeType = any;
 type Type = any;
+type GeneratedFile = { relativePath: string; content: string };
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 const defaultOutputDir = path.join(repoRoot, "crates", "ts-ast", "src");
+const defaultSchemaPath = path.join(repoRoot, "vendor", "typescript-go", "_scripts", "ast.json");
 const handwrittenAstPath = path.join(defaultOutputDir, "ast.rs");
+const handwrittenAstMutationPath = path.join(defaultOutputDir, "ast_mutation.rs");
 let handwrittenAst: string | undefined;
+let usedGeneratedStoreSetters: Set<string> | undefined;
+let usedGeneratedUpdateWrappers: Set<string> | undefined;
 let goVisitRoutes: Map<string, string[]> | undefined;
 let api: any;
 let kindGuardName: (aliasName: string) => string;
+let selectedSchemaSource = "vendor/typescript-go/_scripts/ast.json";
+let selectedSchemaIsDefault = true;
 
-async function loadSchemaApi(): Promise<void> {
+async function loadSchemaApi(schemaPath: string): Promise<void> {
     const schemaModuleUrl = pathToFileURL(path.join(repoRoot, "vendor", "typescript-go", "_scripts", "schema.ts")).href;
     const schemaModule = await import(schemaModuleUrl);
-    api = withoutJSDoc(schemaModule.api);
     kindGuardName = schemaModule.kindGuardName;
+
+    const schemaApi = new schemaModule.SchemaAPI(JSON.parse(fs.readFileSync(schemaPath, "utf-8")));
+    schemaApi.validate();
+    api = withoutJSDoc(schemaApi);
+
+    selectedSchemaSource = displayPath(schemaPath);
+    selectedSchemaIsDefault = path.resolve(schemaPath) === defaultSchemaPath;
+}
+
+function displayPath(filePath: string): string {
+    const relative = path.relative(repoRoot, filePath);
+    const display = relative.startsWith("..") || path.isAbsolute(relative) ? filePath : relative;
+    return display.split(path.sep).join("/");
+}
+
+function generatedSource(defaultSource: string): string {
+    return selectedSchemaIsDefault ? defaultSource : selectedSchemaSource;
 }
 
 function isJSDocSchemaName(name: unknown): boolean {
@@ -75,7 +98,10 @@ class CodeWriter {
     private readonly lines: string[] = [];
     private indent = 0;
 
+    constructor(private readonly emitBlankLines = true) {}
+
     write(line = ""): void {
+        if (line === "" && !this.emitBlankLines) return;
         this.lines.push(line === "" ? "" : `${"    ".repeat(this.indent)}${line}`);
     }
 
@@ -422,6 +448,17 @@ const concreteMarkerBaseFields = new Set([
     "UnionOrIntersectionTypeNodeBase",
 ]);
 
+const emittedBaseProjectionMethods = new Set([
+    "body_data",
+    "declaration_data",
+    "function_like_data",
+    "has_body_base",
+    "has_declaration_base",
+    "has_flow_node_base",
+    "has_locals_container_base",
+    "locals_container_data",
+]);
+
 function isConcreteMarkerBaseField(extKey: string): boolean {
     return concreteMarkerBaseFields.has(extKey);
 }
@@ -456,7 +493,7 @@ function structFieldsFor(node: NodeType): StructField[] {
 
 function generateKind(): string {
     const w = new CodeWriter();
-    for (const line of generatedHeader("vendor/typescript-go/_scripts/ast.json")) w.write(line);
+    for (const line of generatedHeader(generatedSource("vendor/typescript-go/_scripts/ast.json"))) w.write(line);
     w.write("#![expect(non_upper_case_globals, reason = \"generated SyntaxKind marker names mirror TypeScript-Go\")]");
     w.write("");
     w.write("#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]");
@@ -529,7 +566,7 @@ function expandKindMembers(members: string[]): string[] {
 
 function generateKindAliases(): string {
     const w = new CodeWriter();
-    for (const line of generatedHeader("vendor/typescript-go/_scripts/ast.json")) w.write(line);
+    for (const line of generatedHeader(generatedSource("vendor/typescript-go/_scripts/ast.json"))) w.write(line);
     w.write("use crate::Kind;");
     w.write("");
     for (const element of api.kindElements()) {
@@ -541,7 +578,7 @@ function generateKindAliases(): string {
 
 function generateKindStringer(): string {
     const w = new CodeWriter();
-    for (const line of generatedHeader("vendor/typescript-go/internal/ast/kind_stringer_generated.go")) w.write(line);
+    for (const line of generatedHeader(generatedSource("vendor/typescript-go/internal/ast/kind_stringer_generated.go"))) w.write(line);
     w.write("use std::fmt;");
     w.write("");
     w.write("use crate::Kind;");
@@ -574,16 +611,17 @@ function generateKindStringer(): string {
 }
 
 function generateAst(): string {
-    const w = new CodeWriter();
-    for (const line of generatedHeader("vendor/typescript-go/_scripts/ast.json")) w.write(line);
-    w.write("#![expect(dead_code, unused_imports, unused_parens, unused_variables, reason = \"generated schema code intentionally contains unused variants while the port is incomplete\")]");
+    const w = new CodeWriter(false);
+
+    for (const line of generatedHeader(generatedSource("vendor/typescript-go/_scripts/ast.json"))) w.write(line);
+    w.write("#![expect(dead_code, reason = \"generated schema code intentionally contains unused variants while the port is incomplete\")]");
     w.write("");
     w.write("use std::{ops::ControlFlow, sync::atomic::{AtomicU32, Ordering}};");
     w.write("");
     w.write("use ts_collections::Idx;");
     w.write("use ts_core as core;");
     w.write("");
-    w.write("use crate::arena::{AstStore, ModifierListId, Node, NodeListId, NodePayloadId, NodePayloadTag, OptionalAstNodeId, OptionalModifierListId, OptionalNodeListId, OptionalRawNodeSliceId, RawNodeSliceId, RawStringSliceId, StoreNodeMap};");
+    w.write("use crate::arena::{AstNodeId, AstStore, ModifierListId, Node, NodeListId, NodePayloadId, NodePayloadTag, OptionalAstNodeId, OptionalModifierListId, OptionalNodeListId, OptionalRawNodeSliceId, OptionalRawStringSliceId, RawNodeSliceId, RawStringSliceId, StoreNodeMap};");
     w.write("use crate::ast::*;");
     w.write("use crate::kind_generated::Kind;");
     w.write("use crate::nodeflags::NodeFlags;");
@@ -594,26 +632,16 @@ function generateAst(): string {
     generatePayloadKindValidation(w);
     generateStoreAccessors(w);
     generateStoreFieldAccessors(w);
+    generateAstDescriptors(w);
     generateChildTraversal(w);
     generateDeepClone(w);
     generateStructAccessors(w);
     generateIsFunctions(w);
     generateKindGuards(w);
+    generateAstViews(w);
     generateFactories(w);
     generateVisitEachChild(w);
-    w.write("// --------------------------------------------------------------------------");
-    w.write("// PORT STATUS");
-    w.write("//   confidence: medium");
-    w.write("//   todos:      0");
-    w.write("//   notes:      generated directly from TypeScript-Go AST schema");
-    w.write("// --------------------------------------------------------------------------");
     return w.toString();
-}
-
-function kindMatchExpression(kinds: any[]): string {
-    const filtered = kinds.filter(kind => !isJSDocKindReference(kind.value));
-    if (filtered.length === 0) return "false";
-    return `matches!(kind, ${filtered.map(kind => rustKindConstant(kind.value)).join(" | ")})`;
 }
 
 function generatePayloadKindValidation(w: CodeWriter): void {
@@ -621,36 +649,7 @@ function generatePayloadKindValidation(w: CodeWriter): void {
     w.push();
     w.write("pub fn matches_kind(self, kind: Kind) -> bool {");
     w.push();
-    w.write("match self.tag() {");
-    w.push();
-    w.write("NodePayloadTag::SourceFile => matches!(kind, Kind::SourceFile),");
-    for (const node of api.nodes()) {
-        if (node.handWritten) continue;
-        w.write(`NodePayloadTag::${node.name} => ${kindMatchExpression(node.allKinds())},`);
-    }
-    w.pop();
-    w.write("}");
-    w.pop();
-    w.write("}");
-    w.pop();
-    w.write("}");
-    w.write("");
-    w.write("#[cfg(test)]");
-    w.write("mod generated_payload_kind_tests {");
-    w.push();
-    w.write("use super::*;");
-    w.write("");
-    w.write("#[test]");
-    w.write("fn payload_tags_accept_their_generated_kinds() {");
-    w.push();
-    w.write("let raw = ts_collections::RawIdx::from_u32(0);");
-    w.write("assert!(NodePayloadId::new(NodePayloadTag::SourceFile, raw).matches_kind(Kind::SourceFile));");
-    for (const node of api.nodes()) {
-        if (node.handWritten) continue;
-        for (const kind of node.allKinds().filter((kind: any) => !isJSDocKindReference(kind.value))) {
-            w.write(`assert!(NodePayloadId::new(NodePayloadTag::${node.name}, raw).matches_kind(${rustKindConstant(kind.value)}));`);
-        }
-    }
+    w.write("ast_node_layout_for_payload_tag(self.tag()).is_some_and(|layout| layout.kinds.contains(&kind))");
     w.pop();
     w.write("}");
     w.pop();
@@ -659,65 +658,142 @@ function generatePayloadKindValidation(w: CodeWriter): void {
 }
 
 function generateStoreAccessors(w: CodeWriter): void {
-    const factorySetters: { name: string; param: string }[] = [];
+    const emittedSetters = getUsedGeneratedStoreSetters();
+    w.write("macro_rules! generated_store_payload_accessors {");
+    w.push();
+    w.write("($as_fn:ident, $as_mut_fn:ident, $payload_field:ident, $payload_ty:ident) => {");
+    w.push();
+    w.write("pub(crate) fn $as_fn(&self, node: Node) -> &$payload_ty {");
+    w.push();
+    w.write("self.payloads().$payload_field(self.header(node).payload)");
+    w.pop();
+    w.write("}");
+    w.write("pub(crate) fn $as_mut_fn(&mut self, node: Node) -> &mut $payload_ty {");
+    w.push();
+    w.write("let payload = self.header(node).payload;");
+    w.write("assert_eq!(payload.tag(), NodePayloadTag::$payload_ty, \"payload tag mismatch\");");
+    w.write("&mut self.payloads_mut().$payload_field[Idx::from_raw(payload.raw())]");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.pop();
+    w.write("}");
     w.write("#[allow(dead_code)]");
     w.write("impl AstStore {");
     w.push();
+    emitAggregateIdHelpers(w);
     for (const node of api.nodes()) {
         if (node.handWritten) continue;
         const fnName = `as_${snakeCase(node.name)}`;
         const payloadField = snakeCase(node.name);
-        w.write("#[inline(always)]");
-        w.write(`pub(crate) fn ${fnName}(&self, node: Node) -> &${node.name} {`);
-        w.push();
-        w.write(`self.payloads().${payloadField}(self.header(node).payload)`);
-        w.pop();
-        w.write("}");
-        w.write("");
-        w.write("#[inline(always)]");
-        w.write(`pub(crate) fn ${fnName}_mut(&mut self, node: Node) -> &mut ${node.name} {`);
-        w.push();
-        w.write("let payload = self.header(node).payload;");
-        w.write(`assert_eq!(payload.tag(), NodePayloadTag::${node.name}, "payload tag mismatch");`);
-        w.write(`&mut self.payloads_mut().${payloadField}[Idx::from_raw(payload.raw())]`);
-        w.pop();
-        w.write("}");
-        w.write("");
+        emitRustfmtSkippedItem(w, `generated_store_payload_accessors!(${fnName}, ${fnName}_mut, ${payloadField}, ${node.name});`);
         for (const field of structFieldsFor(node)) {
             const setterParam = setterParamType(field.type);
             const setterValue = setterStorageExpr("value", field.type);
             if (!setterParam || !setterValue) continue;
             const setterName = `set_generated_${fnName.slice("as_".length)}_${setterFieldName(field.name)}`;
-            w.write(`pub(crate) fn ${setterName}(&mut self, node: Node, value: ${setterParam}) {`);
-            w.push();
-            for (const line of aggregateAssertLines("self", "value", field.type)) {
-                w.write(line);
-            }
-            w.write(`self.as_${payloadField}_mut(node).${field.name} = ${setterValue};`);
-            w.pop();
-            w.write("}");
-            w.write("");
-            factorySetters.push({ name: setterName, param: setterParam });
+            if (!emittedSetters.has(setterName)) continue;
+            emitRustfmtSkippedFunction(
+                w,
+                `pub(crate) fn ${setterName}(&mut self, node: Node, value: ${setterParam})`,
+                [
+                    ...aggregateAssertLines("self", "value", field.type),
+                    `self.as_${payloadField}_mut(node).${field.name} = ${setterValue};`,
+                ],
+            );
         }
     }
     w.pop();
     w.write("}");
     w.write("");
+}
 
-    w.write("#[allow(dead_code)]");
-    w.write("impl NodeFactory {");
-    w.push();
-    for (const setter of factorySetters) {
-        w.write(`pub(crate) fn ${setter.name}(&mut self, node: Node, value: ${setter.param}) {`);
-        w.push();
-        w.write(`self.store.${setter.name}(node, value);`);
-        w.pop();
-        w.write("}");
-        w.write("");
-    }
-    w.pop();
-    w.write("}");
-    w.write("");
+function emitAggregateIdHelpers(w: CodeWriter): void {
+    emitRustfmtSkippedFunction(w, "fn local_optional_node(&self, value: impl Into<Option<Node>>) -> Option<Node>", [
+        "let value = value.into();",
+        "if let Some(node) = value { self.assert_same_store(node); }",
+        "value",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn local_node_list(&self, value: impl IntoNodeList) -> NodeList", [
+        "let value = value.into_node_list();",
+        "value.assert_store(self.store_id());",
+        "value",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn optional_local_node_list(&self, value: impl IntoOptionalNodeList) -> Option<NodeList>", [
+        "let value = value.into_optional_node_list();",
+        "if let Some(list) = value { list.assert_store(self.store_id()); }",
+        "value",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn local_modifier_list(&self, value: impl IntoModifierList) -> ModifierList", [
+        "let value = value.into_modifier_list();",
+        "value.assert_store(self.store_id());",
+        "value",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn optional_local_modifier_list(&self, value: impl IntoOptionalModifierList) -> Option<ModifierList>", [
+        "let value = value.into_optional_modifier_list();",
+        "if let Some(list) = value { list.assert_store(self.store_id()); }",
+        "value",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn local_raw_node_slice(&self, value: impl IntoRawNodeSlice) -> RawNodeSlice", [
+        "let value = value.into_raw_node_slice();",
+        "value.assert_store(self.store_id());",
+        "value",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn optional_local_raw_node_slice(&self, value: impl IntoOptionalRawNodeSlice) -> Option<RawNodeSlice>", [
+        "let value = value.into_optional_raw_node_slice();",
+        "if let Some(slice) = value { slice.assert_store(self.store_id()); }",
+        "value",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn local_raw_string_slice(&self, value: impl IntoRawStringSlice) -> RawStringSlice", [
+        "let value = value.into_raw_string_slice();",
+        "value.assert_store(self.store_id());",
+        "value",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn optional_local_raw_string_slice(&self, value: impl IntoOptionalRawStringSlice) -> Option<RawStringSlice>", [
+        "let value = value.into_optional_raw_string_slice();",
+        "if let Some(slice) = value { slice.assert_store(self.store_id()); }",
+        "value",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn local_node_list_id(&self, value: impl IntoNodeList) -> NodeListId", [
+        "let value = value.into_node_list();",
+        "value.assert_store(self.store_id());",
+        "value.id()",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn optional_local_node_list_id(&self, value: impl IntoOptionalNodeList) -> OptionalNodeListId", [
+        "OptionalNodeListId::from_option(value.into_optional_node_list().map(|list| { list.assert_store(self.store_id()); list.id() }))",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn local_modifier_list_id(&self, value: impl IntoModifierList) -> ModifierListId", [
+        "let value = value.into_modifier_list();",
+        "value.assert_store(self.store_id());",
+        "value.id()",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn optional_local_modifier_list_id(&self, value: impl IntoOptionalModifierList) -> OptionalModifierListId", [
+        "OptionalModifierListId::from_option(value.into_optional_modifier_list().map(|list| { list.assert_store(self.store_id()); list.id() }))",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn local_raw_node_slice_id(&self, value: impl IntoRawNodeSlice) -> RawNodeSliceId", [
+        "let value = value.into_raw_node_slice();",
+        "value.assert_store(self.store_id());",
+        "value.id()",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn optional_local_raw_node_slice_id(&self, value: impl IntoOptionalRawNodeSlice) -> OptionalRawNodeSliceId", [
+        "OptionalRawNodeSliceId::from_option(value.into_optional_raw_node_slice().map(|slice| { slice.assert_store(self.store_id()); slice.id() }))",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn local_raw_string_slice_id(&self, value: impl IntoRawStringSlice) -> RawStringSliceId", [
+        "let value = value.into_raw_string_slice();",
+        "value.assert_store(self.store_id());",
+        "value.id()",
+    ]);
+    emitRustfmtSkippedFunction(w, "fn optional_local_raw_string_slice_id(&self, value: impl IntoOptionalRawStringSlice) -> OptionalRawStringSliceId", [
+        "OptionalRawStringSliceId::from_option(value.into_optional_raw_string_slice().map(|slice| { slice.assert_store(self.store_id()); slice.id() }))",
+    ]);
+}
+
+function getUsedGeneratedStoreSetters(): Set<string> {
+    if (usedGeneratedStoreSetters) return usedGeneratedStoreSetters;
+    const source = fs.readFileSync(handwrittenAstMutationPath, "utf-8");
+    usedGeneratedStoreSetters = new Set(source.match(/\bset_generated_[a-z0-9_]+\b/g) ?? []);
+    return usedGeneratedStoreSetters;
 }
 
 function setterFieldName(fieldName: string): string {
@@ -787,60 +863,23 @@ function isOptionalAggregateIdType(fieldType: string): boolean {
 function aggregateAssertLines(receiver: string, value: string, fieldType: string): string[] {
     const kind = aggregateIdKind(fieldType);
     if (!kind) return [];
-    const storeId = `${receiver}.store_id()`;
     switch (fieldType) {
         case "NodeListId":
-            return [
-                `let ${value} = ${value}.into_node_list();`,
-                `${value}.assert_store(${storeId});`,
-                `let ${value} = ${value}.id();`,
-            ];
+            return [`let ${value} = ${receiver}.local_node_list_id(${value});`];
         case "OptionalNodeListId":
-            return [
-                `let ${value} = ${value}.into_optional_node_list().map(|list| {`,
-                `    list.assert_store(${storeId});`,
-                "    list.id()",
-                "});",
-            ];
+            return [`let ${value} = ${receiver}.optional_local_node_list_id(${value});`];
         case "ModifierListId":
-            return [
-                `let ${value} = ${value}.into_modifier_list();`,
-                `${value}.assert_store(${storeId});`,
-                `let ${value} = ${value}.id();`,
-            ];
+            return [`let ${value} = ${receiver}.local_modifier_list_id(${value});`];
         case "OptionalModifierListId":
-            return [
-                `let ${value} = ${value}.into_optional_modifier_list().map(|list| {`,
-                `    list.assert_store(${storeId});`,
-                "    list.id()",
-                "});",
-            ];
+            return [`let ${value} = ${receiver}.optional_local_modifier_list_id(${value});`];
         case "RawNodeSliceId":
-            return [
-                `let ${value} = ${value}.into_raw_node_slice();`,
-                `${value}.assert_store(${storeId});`,
-                `let ${value} = ${value}.id();`,
-            ];
+            return [`let ${value} = ${receiver}.local_raw_node_slice_id(${value});`];
         case "OptionalRawNodeSliceId":
-            return [
-                `let ${value} = ${value}.into_optional_raw_node_slice().map(|slice| {`,
-                `    slice.assert_store(${storeId});`,
-                "    slice.id()",
-                "});",
-            ];
+            return [`let ${value} = ${receiver}.optional_local_raw_node_slice_id(${value});`];
         case "RawStringSliceId":
-            return [
-                `let ${value} = ${value}.into_raw_string_slice();`,
-                `${value}.assert_store(${storeId});`,
-                `let ${value} = ${value}.id();`,
-            ];
+            return [`let ${value} = ${receiver}.local_raw_string_slice_id(${value});`];
         case "OptionalRawStringSliceId":
-            return [
-                `let ${value} = ${value}.into_optional_raw_string_slice().map(|slice| {`,
-                `    slice.assert_store(${storeId});`,
-                "    slice.id()",
-                "});",
-            ];
+            return [`let ${value} = ${receiver}.optional_local_raw_string_slice_id(${value});`];
         default:
             return [];
     }
@@ -851,13 +890,10 @@ function setterStorageExpr(value: string, fieldType: string): string | undefined
         case "OptionalAstNodeId":
             return `self.optional_local_node_id(${value}.into())`;
         case "OptionalNodeListId":
-            return `OptionalNodeListId::from_option(${value}.into())`;
         case "OptionalModifierListId":
-            return `OptionalModifierListId::from_option(${value}.into())`;
         case "OptionalRawNodeSliceId":
-            return `OptionalRawNodeSliceId::from_option(${value}.into())`;
         case "OptionalRawStringSliceId":
-            return `OptionalRawStringSliceId::from_option(${value}.into())`;
+            return value;
         case "AstNodeId":
             return `self.local_node_id(${value})`;
         case "AtomicU32":
@@ -922,43 +958,55 @@ function fieldAccessorVisibility(fieldTypeName: string): string {
     }
 }
 
-function fieldAccessorExpr(payloadField: string, field: StructField): string {
-    const access = `self.as_${payloadField}(node).${field.name}`;
-    switch (field.type) {
+function fieldAccessorConversion(fieldTypeName: string): string | undefined {
+    switch (fieldTypeName) {
         case "AstNodeId":
-            return `Some(self.node_from_id(${access}))`;
+            return "ast_node_id";
         case "OptionalAstNodeId":
-            return `self.optional_node_from_id(${access})`;
+            return "optional_ast_node_id";
         case "Option<Node>":
-            return access;
+            return "option_copy";
         case "NodeListId":
-            return `Some(SourceNodeList::new(self, ${access}))`;
+            return "node_list_id";
         case "OptionalNodeListId":
-            return `${access}.get().map(|id| SourceNodeList::new(self, id))`;
+            return "optional_node_list_id";
         case "ModifierListId":
-            return `Some(SourceModifierList::new(self, ${access}))`;
+            return "modifier_list_id";
         case "OptionalModifierListId":
-            return `${access}.get().map(|id| SourceModifierList::new(self, id))`;
+            return "optional_modifier_list_id";
         case "RawNodeSliceId":
-            return `Some(SourceRawNodeSlice::new(self, ${access}))`;
+            return "raw_node_slice_id";
         case "OptionalRawNodeSliceId":
-            return `${access}.get().map(|id| SourceRawNodeSlice::new(self, id))`;
+            return "optional_raw_node_slice_id";
         case "RawStringSliceId":
-            return `Some(SourceRawStringSlice::new(self, ${access}))`;
+            return "raw_string_slice_id";
         case "OptionalRawStringSliceId":
-            return `${access}.get().map(|id| SourceRawStringSlice::new(self, id))`;
+            return "optional_raw_string_slice_id";
         case "String":
-            return `Some(${access}.clone())`;
+            return "clone_some";
         case "bool":
         case "i32":
         case "Kind":
         case "NodeFlags":
         case "ModifierFlags":
-            return `Some(${access})`;
+            return "copy_some";
         default:
-            if (field.type.startsWith("Option<")) return `${access}.clone()`;
-            return `Some(${access}.clone())`;
+            if (fieldTypeName.startsWith("Option<")) return "clone_option";
+            if (fieldTypeName.endsWith("Base")) return "clone_some";
+            return undefined;
     }
+}
+
+function fieldAccessorValueArm(entry: AccessorCase): string {
+    const conversion = fieldAccessorConversion(entry.field.type);
+    if (!conversion) throw new Error(`Cannot build field accessor for ${entry.field.type}`);
+    return `NodePayloadTag::${entry.nodeName} => generated_field_accessor_value!(self, node, as_${entry.payloadField}, ${entry.field.name}, ${conversion}),`;
+}
+
+function fieldAccessorSpecArm(entry: AccessorCase): string {
+    const conversion = fieldAccessorConversion(entry.field.type);
+    if (!conversion) throw new Error(`Cannot build field accessor for ${entry.field.type}`);
+    return `${entry.nodeName} => as_${entry.payloadField}.${entry.field.name} ${conversion},`;
 }
 
 function usesRawAggregateType(fieldType: string | undefined): boolean {
@@ -993,22 +1041,27 @@ function fieldIdAccessorReturnType(fieldTypeName: string): string | undefined {
     }
 }
 
-function fieldIdAccessorExpr(payloadField: string, field: StructField): string {
-    const access = `self.as_${payloadField}(node).${field.name}`;
-    switch (field.type) {
+function fieldIdAccessorConversion(fieldTypeName: string): string | undefined {
+    switch (fieldTypeName) {
         case "NodeListId":
         case "ModifierListId":
         case "RawNodeSliceId":
         case "RawStringSliceId":
-            return `Some(${access})`;
+            return "required_id";
         case "OptionalNodeListId":
         case "OptionalModifierListId":
         case "OptionalRawNodeSliceId":
         case "OptionalRawStringSliceId":
-            return `${access}.get()`;
+            return "optional_id";
         default:
-            throw new Error(`Cannot build id accessor for ${field.type}`);
+            return undefined;
     }
+}
+
+function fieldIdAccessorSpecArm(entry: AccessorCase): string {
+    const conversion = fieldIdAccessorConversion(entry.field.type);
+    if (!conversion) throw new Error(`Cannot build field id accessor for ${entry.field.type}`);
+    return `${entry.nodeName} => as_${entry.payloadField}.${entry.field.name} ${conversion},`;
 }
 
 function baseExtendsBase(base: NodeType, targetBaseName: string): boolean {
@@ -1078,8 +1131,91 @@ function baseStructUsesSource(baseName: string): boolean {
     );
 }
 
+let usedGeneratedFieldIdAccessors: Set<string> | undefined;
+
+function getUsedGeneratedFieldIdAccessors(): Set<string> {
+    if (usedGeneratedFieldIdAccessors) return usedGeneratedFieldIdAccessors;
+    usedGeneratedFieldIdAccessors = new Set();
+    for (const file of rustFilesUnder(path.join(repoRoot, "crates"))) {
+        if (file.endsWith(path.join("ts-ast", "src", "ast_generated.rs"))) continue;
+        const source = fs.readFileSync(file, "utf-8");
+        for (const match of source.matchAll(/\b[a-z0-9_]+_id\s*\(/g)) {
+            usedGeneratedFieldIdAccessors.add(match[0].slice(0, -"(".length).trim());
+        }
+    }
+    return usedGeneratedFieldIdAccessors;
+}
+
+function emitStoreFieldAccessorMacros(w: CodeWriter): void {
+    w.write("macro_rules! generated_field_accessor_value {");
+    w.push();
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, ast_node_id) => { Some(($store).node_from_id(($store).$as_fn($node).$field)) };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, optional_ast_node_id) => { ($store).optional_node_from_id(($store).$as_fn($node).$field) };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, option_copy) => { ($store).$as_fn($node).$field };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, node_list_id) => { Some(SourceNodeList::new($store, ($store).$as_fn($node).$field)) };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, optional_node_list_id) => { ($store).$as_fn($node).$field.get().map(|id| SourceNodeList::new($store, id)) };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, modifier_list_id) => { Some(SourceModifierList::new($store, ($store).$as_fn($node).$field)) };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, optional_modifier_list_id) => { ($store).$as_fn($node).$field.get().map(|id| SourceModifierList::new($store, id)) };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, raw_node_slice_id) => { Some(SourceRawNodeSlice::new($store, ($store).$as_fn($node).$field)) };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, optional_raw_node_slice_id) => { ($store).$as_fn($node).$field.get().map(|id| SourceRawNodeSlice::new($store, id)) };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, raw_string_slice_id) => { Some(SourceRawStringSlice::new($store, ($store).$as_fn($node).$field)) };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, optional_raw_string_slice_id) => { ($store).$as_fn($node).$field.get().map(|id| SourceRawStringSlice::new($store, id)) };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, copy_some) => { Some(($store).$as_fn($node).$field) };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, clone_some) => { Some(($store).$as_fn($node).$field.clone()) };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, clone_option) => { ($store).$as_fn($node).$field.clone() };");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_field_accessor {");
+    w.push();
+    w.write("($visibility:vis fn $name:ident -> $return_type:ty { $($tag:ident => $as_fn:ident.$field:ident $conversion:ident,)* }) => {");
+    w.push();
+    w.write("$visibility fn $name(&self, node: Node) -> $return_type {");
+    w.push();
+    w.write("match self.header(node).payload.tag() {");
+    w.push();
+    w.write("$(NodePayloadTag::$tag => generated_field_accessor_value!(self, node, $as_fn, $field, $conversion),)*");
+    w.write("_ => None,");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_field_id_accessor_value {");
+    w.push();
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, required_id) => { Some(($store).$as_fn($node).$field) };");
+    w.write("($store:expr, $node:expr, $as_fn:ident, $field:ident, optional_id) => { ($store).$as_fn($node).$field.get() };");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_field_id_accessor {");
+    w.push();
+    w.write("($visibility:vis fn $name:ident -> $return_type:ty { $($tag:ident => $as_fn:ident.$field:ident $conversion:ident,)* }) => {");
+    w.push();
+    w.write("$visibility fn $name(&self, node: Node) -> $return_type {");
+    w.push();
+    w.write("match self.header(node).payload.tag() {");
+    w.push();
+    w.write("$(NodePayloadTag::$tag => generated_field_id_accessor_value!(self, node, $as_fn, $field, $conversion),)*");
+    w.write("_ => None,");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.pop();
+    w.write("}");
+    w.write("");
+}
+
 function generateStoreFieldAccessors(w: CodeWriter): void {
     const reserved = new Set(["kind", "flags", "loc", "parent", "len", "is_empty", "header", "header_mut", "text"]);
+    const usedFieldIdAccessors = getUsedGeneratedFieldIdAccessors();
     const byField = new Map<string, AccessorCase[]>();
     const byBase = new Map<string, { nodeName: string; payloadField: string; baseName: string; }[]>();
     for (const node of api.nodes()) {
@@ -1102,6 +1238,7 @@ function generateStoreFieldAccessors(w: CodeWriter): void {
         }
     }
 
+    emitStoreFieldAccessorMacros(w);
     w.write("impl AstStore {");
     w.push();
     for (const [fieldName, allCases] of [...byField.entries()].sort(([a], [b]) => a.localeCompare(b))) {
@@ -1114,45 +1251,33 @@ function generateStoreFieldAccessors(w: CodeWriter): void {
         const returnType = [...returnTypes][0];
         if (!returnType) continue;
         const visibility = fieldAccessorVisibility(cases[0].field.type);
-        w.write(`${visibility} fn ${fieldName}(&self, node: Node) -> ${returnType} {`);
-        w.push();
-        if (fieldName === "question_token") {
-            w.write("let question_token = ");
+        if (fieldName === "question_token" || fieldName === "is_type_only") {
+            const matchArms = cases.map(fieldAccessorValueArm);
+            if (fieldName === "question_token") {
+                emitRustfmtSkippedFunction(w, `${visibility} fn ${fieldName}(&self, node: Node) -> ${returnType}`, [
+                    `let question_token = match self.header(node).payload.tag() { ${matchArms.join(" ")} _ => None, };`,
+                    "if question_token.is_some() { return question_token; }",
+                    "let postfix = self.postfix_token(node);",
+                    "if postfix.is_some_and(|postfix| self.kind(postfix) == Kind::QuestionToken) { return postfix; }",
+                    "None",
+                ]);
+            } else {
+                matchArms.push("NodePayloadTag::ImportClause => Some(self.as_import_clause(node).is_type_only()),");
+                matchArms.push("_ => None,");
+                emitRustfmtSkippedFunction(w, `${visibility} fn ${fieldName}(&self, node: Node) -> ${returnType}`, [
+                    `match self.header(node).payload.tag() { ${matchArms.join(" ")} }`,
+                ]);
+            }
+            continue;
         }
-        w.write("match self.header(node).payload.tag() {");
-        w.push();
-        if (fieldName === "symbol") {
-            w.write("NodePayloadTag::SourceFile => self.as_source_file(node).symbol(),");
-        }
+        const arms: string[] = [];
         if (fieldName === "statements") {
-            w.write("NodePayloadTag::SourceFile => Some(SourceNodeList::new(self, self.as_source_file(node).statements)),");
+            arms.push("SourceFile => as_source_file.statements node_list_id,");
         }
         for (const entry of cases) {
-            w.write(`NodePayloadTag::${entry.nodeName} => ${fieldAccessorExpr(entry.payloadField, entry.field)},`);
+            arms.push(fieldAccessorSpecArm(entry));
         }
-        if (fieldName === "is_type_only") {
-            w.write("NodePayloadTag::ImportClause => Some(self.as_import_clause(node).is_type_only()),");
-        }
-        w.write("_ => None,");
-        w.pop();
-        w.write(fieldName === "question_token" ? "};" : "}");
-        if (fieldName === "question_token") {
-            w.write("if question_token.is_some() {");
-            w.push();
-            w.write("return question_token;");
-            w.pop();
-            w.write("}");
-            w.write("let postfix = self.postfix_token(node);");
-            w.write("if postfix.is_some_and(|postfix| self.kind(postfix) == Kind::QuestionToken) {");
-            w.push();
-            w.write("return postfix;");
-            w.pop();
-            w.write("}");
-            w.write("None");
-        }
-        w.pop();
-        w.write("}");
-        w.write("");
+        emitRustfmtSkippedItem(w, `generated_field_accessor!(${visibility} fn ${fieldName} -> ${returnType} { ${arms.join(" ")} });`);
     }
 
     for (const [fieldName, allCases] of [...byField.entries()].sort(([a], [b]) => a.localeCompare(b))) {
@@ -1161,119 +1286,1013 @@ function generateStoreFieldAccessors(w: CodeWriter): void {
         if (returnTypes.size !== 1) continue;
         const returnType = [...returnTypes][0];
         if (!returnType) continue;
-        w.write(`pub(crate) fn ${fieldName}_id(&self, node: Node) -> ${returnType} {`);
-        w.push();
-        w.write("match self.header(node).payload.tag() {");
-        w.push();
+        const accessorName = `${fieldName}_id`;
+        if (!usedFieldIdAccessors.has(accessorName)) continue;
+        const arms: string[] = [];
         if (fieldName === "statements") {
-            w.write("NodePayloadTag::SourceFile => Some(self.as_source_file(node).statements),");
+            arms.push("SourceFile => as_source_file.statements required_id,");
         }
         for (const entry of cases) {
-            w.write(`NodePayloadTag::${entry.nodeName} => ${fieldIdAccessorExpr(entry.payloadField, entry.field)},`);
+            arms.push(fieldIdAccessorSpecArm(entry));
         }
-        w.write("_ => None,");
-        w.pop();
-        w.write("}");
-        w.pop();
-        w.write("}");
-        w.write("");
+        emitRustfmtSkippedItem(w, `generated_field_id_accessor!(pub(crate) fn ${accessorName} -> ${returnType} { ${arms.join(" ")} });`);
     }
 
     for (const [methodName, cases] of [...byBase.entries()].sort(([a], [b]) => a.localeCompare(b))) {
         const returnTypes = new Set(cases.map(entry => `Option<${entry.baseName}>`));
         if (returnTypes.size !== 1) continue;
         const returnType = [...returnTypes][0];
+        const baseName = cases[0].baseName;
+        const usesSource = baseStructUsesSource(baseName);
         const predicateName = `has_${baseFieldName(cases[0].baseName)}`;
-        w.write(`pub fn ${predicateName}(&self, node: Node) -> bool {`);
-        w.push();
-        w.write("matches!(");
-        w.push();
-        w.write("self.header(node).payload.tag(),");
-        w.write(cases.map(entry => `NodePayloadTag::${entry.nodeName}`).join(" | "));
-        w.pop();
-        w.write(")");
-        w.pop();
-        w.write("}");
-        w.write("");
-        w.write(`pub(crate) fn ${methodName}(&self, node: Node) -> ${returnType} {`);
-        w.push();
-        w.write("match self.header(node).payload.tag() {");
-        w.push();
-        for (const entry of cases) {
-            w.write(`NodePayloadTag::${entry.nodeName} => {`);
-            w.push();
-            if (baseStructUsesSource(entry.baseName)) {
-                w.write(`let data = self.as_${entry.payloadField}(node);`);
-            }
-            w.write(`Some(${baseStructExpr(entry.baseName, "data")})`);
-            w.pop();
-            w.write("}");
+        const emitPredicate = emittedBaseProjectionMethods.has(predicateName);
+        const emitData = emittedBaseProjectionMethods.has(methodName);
+        if (!emitPredicate && !emitData) continue;
+        if (emitPredicate || (emitData && !usesSource)) {
+            emitRustfmtSkippedFunction(w, `pub fn ${predicateName}(&self, node: Node) -> bool`, [
+                `matches!(self.header(node).payload.tag(), ${cases.map(entry => `NodePayloadTag::${entry.nodeName}`).join(" | ")})`,
+            ]);
         }
-        w.write("_ => None,");
-        w.pop();
-        w.write("}");
-        w.pop();
-        w.write("}");
-        w.write("");
+        if (emitData) {
+            if (!usesSource) {
+                emitRustfmtSkippedFunction(w, `pub(crate) fn ${methodName}(&self, node: Node) -> ${returnType}`, [
+                    `self.${predicateName}(node).then_some(${baseName} {})`,
+                ]);
+                continue;
+            }
+            emitRustfmtSkippedFunction(w, `pub(crate) fn ${methodName}(&self, node: Node) -> ${returnType}`, [
+                `match self.header(node).payload.tag() { ${cases.map(entry => `NodePayloadTag::${entry.nodeName} => { let data = self.as_${entry.payloadField}(node); Some(${baseStructExpr(entry.baseName, "data")}) },`).join(" ")} _ => None, }`,
+            ]);
+        }
     }
     w.pop();
     w.write("}");
     w.write("");
 }
 
-function traversalExprForField(field: StructField): string | undefined {
-    switch (field.type) {
+type AstChildDescriptor = {
+    id: string;
+    name: string;
+    kind: string;
+    visitorRole: string;
+    visitRoute: string;
+};
+
+type AstLayoutDescriptor = {
+    tag: string;
+    kinds: string[];
+    childFields: AstChildDescriptor[];
+};
+
+type AstTraversalDescriptor = {
+    tag: string;
+    childFields: Pick<AstChildDescriptor, "id" | "name" | "kind">[];
+};
+
+type VisitEachChildArgSource =
+    | "OriginalKind"
+    | "OriginalFlags"
+    | "VisitedChild"
+    | "SourceField";
+
+type VisitEachChildReconstructionArgPlan = {
+    member: MemberInfo;
+    parameter: string;
+    field: StructField | undefined;
+    source: VisitEachChildArgSource;
+    expression: string;
+    childIndex: number | undefined;
+    childDescriptor: AstChildDescriptor | undefined;
+};
+
+type VisitEachChildReconstructionPlan = {
+    node: NodeType;
+    factoryName: string;
+    args: VisitEachChildReconstructionArgPlan[];
+    needsOriginalKind: boolean;
+    needsSourceData: boolean;
+};
+
+const FNV1A_OFFSET = 0xcbf29ce484222325n;
+const FNV1A_PRIME = 0x100000001b3n;
+const U64_MASK = 0xffffffffffffffffn;
+
+function fnv1aAddByte(hash: bigint, byte: number): bigint {
+    return ((hash ^ BigInt(byte)) * FNV1A_PRIME) & U64_MASK;
+}
+
+function fnv1aAddString(hash: bigint, value: string): bigint {
+    for (let i = 0; i < value.length; i++) {
+        hash = fnv1aAddByte(hash, value.charCodeAt(i) & 0xff);
+    }
+    return fnv1aAddByte(hash, 0);
+}
+
+function fnv1aAddU64(hash: bigint, value: bigint | number): bigint {
+    let remaining = BigInt(value);
+    for (let i = 0; i < 8; i++) {
+        hash = fnv1aAddByte(hash, Number(remaining & 0xffn));
+        remaining >>= 8n;
+    }
+    return hash;
+}
+
+function fnv1aAddBool(hash: bigint, value: boolean): bigint {
+    return fnv1aAddByte(hash, value ? 1 : 0);
+}
+
+function rustU64Literal(value: bigint): string {
+    return `0x${value.toString(16).padStart(16, "0")}_u64`;
+}
+
+function astChildDescriptorFingerprint(fields: AstChildDescriptor[]): bigint {
+    let hash = FNV1A_OFFSET;
+    for (const field of fields) {
+        hash = fnv1aAddString(hash, field.name);
+        hash = fnv1aAddString(hash, field.kind);
+        hash = fnv1aAddString(hash, field.visitorRole);
+        hash = fnv1aAddString(hash, field.visitRoute);
+    }
+    return hash;
+}
+
+function astTraversalDescriptorFingerprint(fields: Pick<AstChildDescriptor, "id" | "name" | "kind">[]): bigint {
+    let hash = FNV1A_OFFSET;
+    for (const field of fields) {
+        hash = fnv1aAddString(hash, field.name);
+        hash = fnv1aAddString(hash, field.kind);
+    }
+    return hash;
+}
+
+function astReconstructionArgFingerprint(args: VisitEachChildReconstructionArgPlan[]): bigint {
+    let hash = FNV1A_OFFSET;
+    for (const arg of args) {
+        hash = fnv1aAddString(hash, arg.parameter);
+        hash = fnv1aAddString(hash, arg.source);
+        if (arg.source === "VisitedChild") {
+            const descriptor = arg.childDescriptor;
+            if (!descriptor) throw new Error(`Missing visited-child descriptor for ${arg.member.name}`);
+            hash = fnv1aAddString(hash, descriptor.name);
+            hash = fnv1aAddString(hash, descriptor.kind);
+        }
+        else if (arg.source === "SourceField") {
+            if (!arg.field) throw new Error(`Missing source field for ${arg.member.name}`);
+            hash = fnv1aAddString(hash, localFieldName(arg.field));
+        }
+    }
+    return hash;
+}
+
+function astReconstructionChildArgFingerprint(args: VisitEachChildReconstructionArgPlan[]): bigint {
+    return astTraversalDescriptorFingerprint(args
+        .filter(arg => arg.source === "VisitedChild")
+        .map(arg => {
+            const descriptor = arg.childDescriptor;
+            if (!descriptor) throw new Error(`Missing visited-child descriptor for ${arg.member.name}`);
+            return descriptor;
+        }));
+}
+
+function payloadTagOrdinals(layouts: AstLayoutDescriptor[]): Map<string, number> {
+    return new Map(layouts.map((layout, index) => [layout.tag, index]));
+}
+
+function astReconstructionPlanTableFingerprint(
+    plans: VisitEachChildReconstructionPlan[],
+    tagOrdinals: Map<string, number>,
+): bigint {
+    let hash = FNV1A_OFFSET;
+    for (const plan of plans) {
+        const ordinal = tagOrdinals.get(plan.node.name);
+        if (ordinal === undefined) throw new Error(`Missing payload tag ordinal for ${plan.node.name}`);
+        const childArgCount = plan.args.filter(arg => arg.source === "VisitedChild").length;
+        hash = fnv1aAddU64(hash, ordinal);
+        hash = fnv1aAddString(hash, plan.factoryName);
+        hash = fnv1aAddU64(hash, plan.args.length);
+        hash = fnv1aAddBool(hash, plan.needsOriginalKind);
+        hash = fnv1aAddBool(hash, plan.needsSourceData);
+        hash = fnv1aAddU64(hash, astReconstructionArgFingerprint(plan.args));
+        hash = fnv1aAddU64(hash, childArgCount);
+        hash = fnv1aAddU64(hash, astReconstructionChildArgFingerprint(plan.args));
+    }
+    return hash;
+}
+
+function astUpdateChildInputTableFingerprint(
+    entries: { tag: string; childFields: Pick<AstChildDescriptor, "id" | "name" | "kind">[] }[],
+    tagOrdinals: Map<string, number>,
+): bigint {
+    let hash = FNV1A_OFFSET;
+    for (const entry of entries) {
+        const ordinal = tagOrdinals.get(entry.tag);
+        if (ordinal === undefined) throw new Error(`Missing payload tag ordinal for ${entry.tag}`);
+        hash = fnv1aAddU64(hash, ordinal);
+        hash = fnv1aAddU64(hash, entry.childFields.length);
+        hash = fnv1aAddU64(hash, astTraversalDescriptorFingerprint(entry.childFields));
+    }
+    return hash;
+}
+
+function astLayoutTraversalShapeTableFingerprint(
+    layouts: AstLayoutDescriptor[],
+    traversalsByTag: Map<string, AstTraversalDescriptor>,
+): bigint {
+    let hash = FNV1A_OFFSET;
+    for (const [index, layout] of layouts.entries()) {
+        const traversal = traversalsByTag.get(layout.tag);
+        if (!traversal) throw new Error(`No child traversal descriptor for ${layout.tag}`);
+        hash = fnv1aAddU64(hash, index);
+        hash = fnv1aAddU64(hash, layout.childFields.length);
+        hash = fnv1aAddU64(hash, astChildDescriptorFingerprint(layout.childFields));
+        hash = fnv1aAddU64(hash, traversal.childFields.length);
+        hash = fnv1aAddU64(hash, astTraversalDescriptorFingerprint(traversal.childFields));
+    }
+    return hash;
+}
+
+function pascalCaseIdentifier(name: string): string {
+    return name
+        .replace(/^r#/, "")
+        .split("_")
+        .filter(part => part.length > 0)
+        .map(part => part[0].toUpperCase() + part.slice(1))
+        .join("");
+}
+
+function astChildFieldId(name: string): string {
+    const id = pascalCaseIdentifier(name);
+    if (!id) throw new Error(`Invalid AST child field id for ${name}`);
+    return id;
+}
+
+function astChildFieldKind(fieldTypeName: string): string | undefined {
+    switch (fieldTypeName) {
         case "AstNodeId":
-            return `if let ControlFlow::Break(()) = visitor(Some(self.node_from_id(data.${field.name}))) { return ControlFlow::Break(()); }`;
+            return "Node";
         case "OptionalAstNodeId":
-            return `if let Some(child) = self.optional_node_from_id(data.${field.name}) { if let ControlFlow::Break(()) = visitor(Some(child)) { return ControlFlow::Break(()); } }`;
         case "Option<Node>":
-            return `if let Some(child) = data.${field.name} { if let ControlFlow::Break(()) = visitor(Some(child)) { return ControlFlow::Break(()); } }`;
+            return "OptionalNode";
         case "NodeListId":
-            return `for child in self.node_list(data.${field.name}).iter() { if let ControlFlow::Break(()) = visitor(Some(child)) { return ControlFlow::Break(()); } }`;
+            return "NodeList";
         case "OptionalNodeListId":
-            return `if let Some(children) = self.optional_node_list(data.${field.name}) { for child in children.iter() { if let ControlFlow::Break(()) = visitor(Some(child)) { return ControlFlow::Break(()); } } }`;
+            return "OptionalNodeList";
         case "ModifierListId":
-            return `for child in self.modifier_list(data.${field.name}).nodes().iter() { if let ControlFlow::Break(()) = visitor(Some(child)) { return ControlFlow::Break(()); } }`;
+            return "ModifierList";
         case "OptionalModifierListId":
-            return `if let Some(children) = self.optional_modifier_list(data.${field.name}) { for child in children.nodes().iter() { if let ControlFlow::Break(()) = visitor(Some(child)) { return ControlFlow::Break(()); } } }`;
+            return "OptionalModifierList";
         case "RawNodeSliceId":
-            return `for child in self.raw_node_slice(data.${field.name}).iter() { if let ControlFlow::Break(()) = visitor(child) { return ControlFlow::Break(()); } }`;
+            return "RawNodeSlice";
         case "OptionalRawNodeSliceId":
-            return `if let Some(children) = self.optional_raw_node_slice(data.${field.name}) { for child in children.iter() { if let ControlFlow::Break(()) = visitor(child) { return ControlFlow::Break(()); } } }`;
+            return "OptionalRawNodeSlice";
         default:
             return undefined;
     }
 }
 
-function readOnlyTraversalExprForField(field: StructField): string | undefined {
-    switch (field.type) {
-        case "AstNodeId":
-            return `if let ControlFlow::Break(()) = visit_node(Some(self.node_from_id(data.${field.name}))) { return ControlFlow::Break(()); }`;
-        case "OptionalAstNodeId":
-            return `if let Some(child) = self.optional_node_from_id(data.${field.name}) { if let ControlFlow::Break(()) = visit_node(Some(child)) { return ControlFlow::Break(()); } }`;
-        case "Option<Node>":
-            return `if let Some(child) = data.${field.name} { if let ControlFlow::Break(()) = visit_node(Some(child)) { return ControlFlow::Break(()); } }`;
+function astVisitorRole(fieldTypeName: string): string | undefined {
+    switch (fieldTypeName) {
         case "NodeListId":
-            return `if let ControlFlow::Break(()) = visit_nodes(SourceNodeList::new(self, data.${field.name})) { return ControlFlow::Break(()); }`;
         case "OptionalNodeListId":
-            return `if let Some(children) = data.${field.name}.get().map(|id| SourceNodeList::new(self, id)) { if let ControlFlow::Break(()) = visit_nodes(children) { return ControlFlow::Break(()); } }`;
+            return "Nodes";
         case "ModifierListId":
-            return `if let ControlFlow::Break(()) = visit_modifiers(SourceModifierList::new(self, data.${field.name})) { return ControlFlow::Break(()); }`;
         case "OptionalModifierListId":
-            return `if let Some(children) = data.${field.name}.get().map(|id| SourceModifierList::new(self, id)) { if let ControlFlow::Break(()) = visit_modifiers(children) { return ControlFlow::Break(()); } }`;
-        case "RawNodeSliceId":
-            return `for child in self.raw_node_slice(data.${field.name}).iter() { if let ControlFlow::Break(()) = visit_node(child) { return ControlFlow::Break(()); } }`;
-        case "OptionalRawNodeSliceId":
-            return `if let Some(children) = self.optional_raw_node_slice(data.${field.name}) { for child in children.iter() { if let ControlFlow::Break(()) = visit_node(child) { return ControlFlow::Break(()); } } }`;
+            return "Modifiers";
         default:
-            return undefined;
+            return astChildFieldKind(fieldTypeName) ? "Node" : undefined;
     }
+}
+
+function astVisitRouteVariant(goRoute: string): string {
+    switch (goRoute) {
+        case "visitToken": return "VisitToken";
+        case "visitModifiers": return "VisitModifiers";
+        case "visitParameters": return "VisitParameters";
+        case "visitFunctionBody": return "VisitFunctionBody";
+        case "visitIterationBody": return "VisitIterationBody";
+        case "visitTopLevelStatements": return "VisitTopLevelStatements";
+        case "visitEmbeddedStatement": return "VisitEmbeddedStatement";
+        case "visitNodes": return "VisitNodes";
+        case "visitNode":
+        default:
+            return "VisitNode";
+    }
+}
+
+function kindConstantsForNode(node: NodeType): string[] {
+    return node.allKinds()
+        .filter((kind: any) => !isJSDocKindReference(kind.value))
+        .map((kind: any) => rustKindConstant(kind.value));
+}
+
+function childDescriptorsForNode(node: NodeType): AstChildDescriptor[] {
+    const fieldTypes = new Map(structFieldsFor(node).map(field => [field.name, field]));
+    const updateRouteByField = new Map<string, string>();
+    const routes = getGoVisitRoutes().get(node.name) ?? [];
+    updateMembers(node).forEach((member, index) => {
+        if (!member.isChild()) return;
+        const field = fieldTypes.get(fieldName(member.name));
+        if (!field || updateRouteByField.has(field.name)) return;
+        updateRouteByField.set(field.name, routes[index] ?? "visitNode");
+    });
+    const seen = new Set<string>();
+    return node.members
+        .filter((member: MemberInfo) => !member.noFactory && member.isChild())
+        .map((member: MemberInfo) => fieldTypes.get(fieldName(member.name)))
+        .filter((field: StructField | undefined): field is StructField => field !== undefined)
+        .filter(field => {
+            if (seen.has(field.name)) return false;
+            seen.add(field.name);
+            return astChildFieldKind(field.type) !== undefined;
+        })
+        .map(field => {
+            const name = field.name.replace(/^r#/, "");
+            return {
+                id: astChildFieldId(name),
+                name,
+                kind: astChildFieldKind(field.type)!,
+                visitorRole: astVisitorRole(field.type)!,
+                visitRoute: astVisitRouteVariant(updateRouteByField.get(field.name) ?? "visitNode"),
+            };
+        });
+}
+
+function astLayoutDescriptors(): AstLayoutDescriptor[] {
+    return [
+        {
+            tag: "SourceFile",
+            kinds: ["Kind::SourceFile"],
+            childFields: [
+                {
+                    id: astChildFieldId("statements"),
+                    name: "statements",
+                    kind: "NodeList",
+                    visitorRole: "Nodes",
+                    visitRoute: "VisitTopLevelStatements",
+                },
+                {
+                    id: astChildFieldId("end_of_file_token"),
+                    name: "end_of_file_token",
+                    kind: "OptionalNode",
+                    visitorRole: "Node",
+                    visitRoute: "VisitToken",
+                },
+            ],
+        },
+        ...api.nodes()
+            .filter((node: NodeType) => !node.handWritten)
+            .map((node: NodeType) => ({
+                tag: node.name,
+                kinds: kindConstantsForNode(node),
+                childFields: childDescriptorsForNode(node),
+            })),
+    ];
+}
+
+function childTraversalDescriptors(): AstTraversalDescriptor[] {
+    const sourceFile: AstTraversalDescriptor = {
+        tag: "SourceFile",
+        childFields: [
+            { id: astChildFieldId("statements"), name: "statements", kind: "NodeList" },
+            { id: astChildFieldId("end_of_file_token"), name: "end_of_file_token", kind: "OptionalNode" },
+        ],
+    };
+    const nodeDescriptors = api.nodes()
+        .filter((node: NodeType) => !node.handWritten)
+        .map((node: NodeType) => {
+            const fieldTypes = new Map(structFieldsFor(node).map(field => [field.name, field]));
+            const fields = node.members
+                .filter((member: MemberInfo) => !member.noFactory && member.isChild())
+                .map((member: MemberInfo) => fieldTypes.get(fieldName(member.name)))
+                .filter((field: StructField | undefined): field is StructField => field !== undefined);
+            const seen = new Set<string>();
+            const childFields = fields
+                .filter(field => {
+                    if (seen.has(field.name)) return false;
+                    seen.add(field.name);
+                    return isChildTraversalField(field);
+                })
+                .map(field => {
+                    const name = field.name.replace(/^r#/, "");
+                    return {
+                        id: astChildFieldId(name),
+                        name,
+                        kind: astChildFieldKind(field.type)!,
+                    };
+                });
+            return { tag: node.name, childFields };
+        });
+    return [sourceFile, ...nodeDescriptors];
+}
+
+function updateChildFieldSpecs(node: NodeType): Pick<AstChildDescriptor, "id" | "name" | "kind">[] {
+    const fieldTypes = new Map(structFieldsFor(node).map(field => [field.name, field]));
+    const seen = new Set<string>();
+    return updateMembers(node)
+        .filter((member: MemberInfo) => member.isChild())
+        .map((member: MemberInfo) => fieldTypes.get(fieldName(member.name)))
+        .filter((field: StructField | undefined): field is StructField => field !== undefined)
+        .filter(field => {
+            if (seen.has(field.name)) return false;
+            seen.add(field.name);
+            return isChildTraversalField(field);
+        })
+        .map(field => {
+            const name = localFieldName(field);
+            return {
+                id: astChildFieldId(name),
+                name,
+                kind: astChildFieldKind(field.type)!,
+            };
+        });
+}
+
+function generateAstDescriptors(w: CodeWriter): void {
+    const layouts = astLayoutDescriptors();
+    const traversalsByTag = new Map(childTraversalDescriptors().map(descriptor => [descriptor.tag, descriptor]));
+    const updateChildFieldsByTag = new Map(api.nodes()
+        .filter((node: NodeType) => !node.handWritten)
+        .map((node: NodeType) => [node.name, updateChildFieldSpecs(node)]));
+    const reconstructionPlans = api.nodes()
+        .filter((node: NodeType) => !node.handWritten && shouldEmitUpdateFactory(node))
+        .map((node: NodeType) => visitEachChildReconstructionPlan(node));
+    const tagOrdinals = payloadTagOrdinals(layouts);
+    const childFieldIds = [...new Set(layouts.flatMap(layout => layout.childFields.map(field => field.id)))].sort();
+    w.write("#[rustfmt::skip]");
+    w.write("#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]");
+    w.write(`pub enum AstChildFieldId { ${childFieldIds.join(", ")} }`);
+    w.write("");
+    w.write("#[derive(Clone, Copy, Debug, PartialEq, Eq)]");
+    w.write("pub(crate) enum AstChildFieldKind {");
+    w.push();
+    w.write("Node,");
+    w.write("OptionalNode,");
+    w.write("NodeList,");
+    w.write("OptionalNodeList,");
+    w.write("ModifierList,");
+    w.write("OptionalModifierList,");
+    w.write("RawNodeSlice,");
+    w.write("OptionalRawNodeSlice,");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[derive(Clone, Copy, Debug, PartialEq, Eq)]");
+    w.write("pub(crate) enum AstVisitorRole {");
+    w.push();
+    w.write("Node,");
+    w.write("Nodes,");
+    w.write("Modifiers,");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[derive(Clone, Copy, Debug, PartialEq, Eq)]");
+    w.write("pub(crate) enum AstVisitRoute {");
+    w.push();
+    w.write("VisitNode,");
+    w.write("VisitToken,");
+    w.write("VisitModifiers,");
+    w.write("VisitParameters,");
+    w.write("VisitFunctionBody,");
+    w.write("VisitIterationBody,");
+    w.write("VisitTopLevelStatements,");
+    w.write("VisitEmbeddedStatement,");
+    w.write("VisitNodes,");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("pub(crate) enum AstChildFieldValue<'a> {");
+    w.push();
+    w.write("Node(Option<Node>),");
+    w.write("NodeList(Option<SourceNodeList<'a>>),");
+    w.write("ModifierList(Option<SourceModifierList<'a>>),");
+    w.write("RawNodeSlice(Option<SourceRawNodeSlice<'a>>),");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[derive(Clone, Copy, Debug, PartialEq, Eq)]");
+    w.write("pub(crate) struct AstChildFieldDescriptor {");
+    w.push();
+    w.write("pub(crate) id: AstChildFieldId,");
+    w.write("pub(crate) name: &'static str,");
+    w.write("pub(crate) kind: AstChildFieldKind,");
+    w.write("pub(crate) visitor_role: AstVisitorRole,");
+    w.write("pub(crate) visit_route: AstVisitRoute,");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[derive(Clone, Copy, Debug, PartialEq, Eq)]");
+    w.write("pub(crate) struct AstNodeLayout {");
+    w.push();
+    w.write("pub(crate) tag: NodePayloadTag,");
+    w.write("pub(crate) kinds: &'static [Kind],");
+    w.write("pub(crate) child_fields: &'static [AstChildFieldDescriptor],");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_ast_child_field {");
+    w.push();
+    w.write("($id:ident, $name:literal, $kind:ident, $visitor_role:ident, $visit_route:ident) => {");
+    w.push();
+    w.write("AstChildFieldDescriptor {");
+    w.push();
+    w.write("id: AstChildFieldId::$id,");
+    w.write("name: $name,");
+    w.write("kind: AstChildFieldKind::$kind,");
+    w.write("visitor_role: AstVisitorRole::$visitor_role,");
+    w.write("visit_route: AstVisitRoute::$visit_route,");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_ast_node_layout {");
+    w.push();
+    w.write("($tag:ident, [$($kind:expr),* $(,)?], [$($field:expr),* $(,)?]) => {");
+    w.push();
+    w.write("AstNodeLayout {");
+    w.push();
+    w.write("tag: NodePayloadTag::$tag,");
+    w.write("kinds: &[$($kind),*],");
+    w.write("child_fields: &[$($field),*],");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[rustfmt::skip]");
+    w.write("pub(crate) const AST_NODE_LAYOUTS: &[AstNodeLayout] = &[");
+    w.push();
+    for (const layout of layouts) {
+        const kinds = layout.kinds.length ? layout.kinds.join(", ") : "";
+        const childFields = layout.childFields
+            .map(field => `generated_ast_child_field!(${field.id}, "${field.name}", ${field.kind}, ${field.visitorRole}, ${field.visitRoute})`)
+            .join(", ");
+        w.write(`generated_ast_node_layout!(${layout.tag}, [${kinds}], [${childFields}]),`);
+    }
+    w.pop();
+    w.write("];");
+    w.write("");
+    w.write("pub(crate) fn ast_node_layout_for_payload_tag(tag: NodePayloadTag) -> Option<&'static AstNodeLayout> {");
+    w.push();
+    w.write("AST_NODE_LAYOUTS.get(tag as usize)");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("impl AstStore {");
+    w.push();
+    w.write("pub(crate) fn node_layout(&self, node: Node) -> &'static AstNodeLayout {");
+    w.push();
+    w.write("ast_node_layout_for_payload_tag(self.header(node).payload.tag()).expect(\"generated AST layout should cover every payload tag\")");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[cfg(test)]");
+    w.write("mod generated_ast_descriptor_tests {");
+    w.push();
+    w.write("use super::*;");
+    w.write("");
+    w.write("const FNV1A_OFFSET: u64 = 0xcbf29ce484222325;");
+    w.write("const FNV1A_PRIME: u64 = 0x100000001b3;");
+    w.write("");
+    w.write("fn fnv1a_add_byte(hash: u64, byte: u8) -> u64 {");
+    w.push();
+    w.write("(hash ^ u64::from(byte)).wrapping_mul(FNV1A_PRIME)");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn fnv1a_add_str(mut hash: u64, value: &str) -> u64 {");
+    w.push();
+    w.write("for byte in value.as_bytes() {");
+    w.push();
+    w.write("hash = fnv1a_add_byte(hash, *byte);");
+    w.pop();
+    w.write("}");
+    w.write("fnv1a_add_byte(hash, 0)");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn fnv1a_add_u64(mut hash: u64, value: u64) -> u64 {");
+    w.push();
+    w.write("for byte in value.to_le_bytes() {");
+    w.push();
+    w.write("hash = fnv1a_add_byte(hash, byte);");
+    w.pop();
+    w.write("}");
+    w.write("hash");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn fnv1a_add_bool(hash: u64, value: bool) -> u64 {");
+    w.push();
+    w.write("fnv1a_add_byte(hash, u8::from(value))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn child_field_kind_name(kind: AstChildFieldKind) -> &'static str {");
+    w.push();
+    w.write("match kind {");
+    w.push();
+    w.write("AstChildFieldKind::Node => \"Node\",");
+    w.write("AstChildFieldKind::OptionalNode => \"OptionalNode\",");
+    w.write("AstChildFieldKind::NodeList => \"NodeList\",");
+    w.write("AstChildFieldKind::OptionalNodeList => \"OptionalNodeList\",");
+    w.write("AstChildFieldKind::ModifierList => \"ModifierList\",");
+    w.write("AstChildFieldKind::OptionalModifierList => \"OptionalModifierList\",");
+    w.write("AstChildFieldKind::RawNodeSlice => \"RawNodeSlice\",");
+    w.write("AstChildFieldKind::OptionalRawNodeSlice => \"OptionalRawNodeSlice\",");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn visitor_role_name(role: AstVisitorRole) -> &'static str {");
+    w.push();
+    w.write("match role {");
+    w.push();
+    w.write("AstVisitorRole::Node => \"Node\",");
+    w.write("AstVisitorRole::Nodes => \"Nodes\",");
+    w.write("AstVisitorRole::Modifiers => \"Modifiers\",");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn visit_route_name(route: AstVisitRoute) -> &'static str {");
+    w.push();
+    w.write("match route {");
+    w.push();
+    w.write("AstVisitRoute::VisitNode => \"VisitNode\",");
+    w.write("AstVisitRoute::VisitToken => \"VisitToken\",");
+    w.write("AstVisitRoute::VisitModifiers => \"VisitModifiers\",");
+    w.write("AstVisitRoute::VisitParameters => \"VisitParameters\",");
+    w.write("AstVisitRoute::VisitFunctionBody => \"VisitFunctionBody\",");
+    w.write("AstVisitRoute::VisitIterationBody => \"VisitIterationBody\",");
+    w.write("AstVisitRoute::VisitTopLevelStatements => \"VisitTopLevelStatements\",");
+    w.write("AstVisitRoute::VisitEmbeddedStatement => \"VisitEmbeddedStatement\",");
+    w.write("AstVisitRoute::VisitNodes => \"VisitNodes\",");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn child_descriptor_fingerprint(fields: &[AstChildFieldDescriptor]) -> u64 {");
+    w.push();
+    w.write("fields.iter().fold(FNV1A_OFFSET, |hash, field| {");
+    w.push();
+    w.write("let hash = fnv1a_add_str(hash, field.name);");
+    w.write("let hash = fnv1a_add_str(hash, child_field_kind_name(field.kind));");
+    w.write("let hash = fnv1a_add_str(hash, visitor_role_name(field.visitor_role));");
+    w.write("fnv1a_add_str(hash, visit_route_name(field.visit_route))");
+    w.pop();
+    w.write("})");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn child_traversal_fingerprint(fields: &[AstChildFieldDescriptor]) -> u64 {");
+    w.push();
+    w.write("fields.iter().fold(FNV1A_OFFSET, |hash, field| {");
+    w.push();
+    w.write("let hash = fnv1a_add_str(hash, field.name);");
+    w.write("fnv1a_add_str(hash, child_field_kind_name(field.kind))");
+    w.pop();
+    w.write("})");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[derive(Clone, Copy, Debug, PartialEq, Eq)]");
+    w.write("struct AstReconstructionPlanDescriptor {");
+    w.push();
+    w.write("tag: NodePayloadTag,");
+    w.write("factory: &'static str,");
+    w.write("arg_count: usize,");
+    w.write("needs_original_kind: bool,");
+    w.write("needs_source_data: bool,");
+    w.write("arg_fingerprint: u64,");
+    w.write("child_arg_count: usize,");
+    w.write("child_arg_fingerprint: u64,");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[rustfmt::skip]");
+    w.write("const GENERATED_RECONSTRUCTION_PLANS: &[AstReconstructionPlanDescriptor] = &[");
+    w.push();
+    for (const plan of reconstructionPlans) {
+        const childArgCount = plan.args.filter(arg => arg.source === "VisitedChild").length;
+        w.write(`AstReconstructionPlanDescriptor { tag: NodePayloadTag::${plan.node.name}, factory: "${plan.factoryName}", arg_count: ${plan.args.length}, needs_original_kind: ${plan.needsOriginalKind}, needs_source_data: ${plan.needsSourceData}, arg_fingerprint: ${rustU64Literal(astReconstructionArgFingerprint(plan.args))}, child_arg_count: ${childArgCount}, child_arg_fingerprint: ${rustU64Literal(astReconstructionChildArgFingerprint(plan.args))} },`);
+    }
+    w.pop();
+    w.write("];");
+    w.write("");
+    w.write("fn reconstruction_plan_table_fingerprint() -> u64 {");
+    w.push();
+    w.write("GENERATED_RECONSTRUCTION_PLANS.iter().fold(FNV1A_OFFSET, |hash, descriptor| {");
+    w.push();
+    w.write("let hash = fnv1a_add_u64(hash, descriptor.tag as u64);");
+    w.write("let hash = fnv1a_add_str(hash, descriptor.factory);");
+    w.write("let hash = fnv1a_add_u64(hash, descriptor.arg_count as u64);");
+    w.write("let hash = fnv1a_add_bool(hash, descriptor.needs_original_kind);");
+    w.write("let hash = fnv1a_add_bool(hash, descriptor.needs_source_data);");
+    w.write("let hash = fnv1a_add_u64(hash, descriptor.arg_fingerprint);");
+    w.write("let hash = fnv1a_add_u64(hash, descriptor.child_arg_count as u64);");
+    w.write("fnv1a_add_u64(hash, descriptor.child_arg_fingerprint)");
+    w.pop();
+    w.write("})");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn child_descriptor_table_fingerprint() -> u64 {");
+    w.push();
+    w.write("AST_NODE_LAYOUTS.iter().fold(FNV1A_OFFSET, |hash, layout| {");
+    w.push();
+    w.write("let hash = fnv1a_add_u64(hash, layout.tag as u64);");
+    w.write("let hash = fnv1a_add_u64(hash, layout.child_fields.len() as u64);");
+    w.write("let hash = fnv1a_add_u64(hash, child_descriptor_fingerprint(layout.child_fields));");
+    w.write("let hash = fnv1a_add_u64(hash, layout.child_fields.len() as u64);");
+    w.write("fnv1a_add_u64(hash, child_traversal_fingerprint(layout.child_fields))");
+    w.pop();
+    w.write("})");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[test]");
+    w.write("fn generated_node_layouts_should_cover_payload_tags() {");
+    w.push();
+    w.write(`assert_eq!(AST_NODE_LAYOUTS.len(), ${layouts.length});`);
+    w.write("for (index, layout) in AST_NODE_LAYOUTS.iter().enumerate() {");
+    w.push();
+    w.write("assert_eq!(layout.tag as usize, index, \"payload tag discriminant should match descriptor layout order\");");
+    w.write("let found = ast_node_layout_for_payload_tag(layout.tag).expect(\"payload tag should have a generated layout\");");
+    w.write("assert_eq!(found.tag, layout.tag);");
+    w.write("assert_eq!(found.kinds, layout.kinds);");
+    w.write("assert_eq!(found.child_fields, layout.child_fields);");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[test]");
+    w.write("fn generated_node_layout_kinds_should_match_payload_kind_validation() {");
+    w.push();
+    w.write("let raw = ts_collections::RawIdx::from_u32(0);");
+    w.write("for layout in AST_NODE_LAYOUTS {");
+    w.push();
+    w.write("let payload = NodePayloadId::new(layout.tag, raw);");
+    w.write("let mut accepted_count = 0usize;");
+    w.write("let mut kind = Kind::Unknown;");
+    w.write("while kind != Kind::Count {");
+    w.push();
+    w.write("let accepts_kind = payload.matches_kind(kind);");
+    w.write("let layout_has_kind = layout.kinds.contains(&kind);");
+    w.write("if accepts_kind {");
+    w.push();
+    w.write("accepted_count += 1;");
+    w.pop();
+    w.write("}");
+    w.write("assert_eq!(layout_has_kind, accepts_kind, \"{:?} layout kind membership should match payload validation for {:?}\", layout.tag, kind);");
+    w.write("kind = kind.next();");
+    w.pop();
+    w.write("}");
+    w.write("assert_eq!(layout.kinds.len(), accepted_count, \"{:?} accepted kind count\", layout.tag);");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[test]");
+    w.write("fn generated_reconstruction_descriptors_should_match_visit_each_child_update_plan() {");
+    w.push();
+    w.write(`assert_eq!(GENERATED_RECONSTRUCTION_PLANS.len(), ${reconstructionPlans.length});`);
+    w.write(`assert_eq!(reconstruction_plan_table_fingerprint(), ${rustU64Literal(astReconstructionPlanTableFingerprint(reconstructionPlans, tagOrdinals))});`);
+    w.write("assert!(!GENERATED_RECONSTRUCTION_PLANS.is_empty(), \"visit_each_child reconstruction descriptors should cover generated update arms\");");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[test]");
+    w.write("fn generated_reconstruction_descriptors_should_match_layout_child_fields() {");
+    w.push();
+    w.write("for descriptor in GENERATED_RECONSTRUCTION_PLANS {");
+    w.push();
+    w.write("let layout = ast_node_layout_for_payload_tag(descriptor.tag).expect(\"payload tag should have a generated layout\");");
+    w.write("assert_eq!(descriptor.child_arg_count, layout.child_fields.len(), \"{:?} reconstruction should consume every layout child field\", descriptor.tag);");
+    w.write("assert_eq!(descriptor.child_arg_fingerprint, child_traversal_fingerprint(layout.child_fields), \"{:?} reconstruction child fields should match layout order\", descriptor.tag);");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[test]");
+    w.write("fn generated_child_descriptors_should_match_update_factory_inputs() {");
+    w.push();
+    const usedWrappers = getUsedGeneratedUpdateWrappers();
+    const expectedUpdateChildFields: { tag: string; childFields: Pick<AstChildDescriptor, "id" | "name" | "kind">[] }[] = [];
+    let descriptorDrivenUpdateCount = 0;
+    for (const node of api.nodes()) {
+        if (node.handWritten) continue;
+        const updateChildFields = updateChildFieldsByTag.get(node.name) ?? [];
+        if (updateChildFields.length === 0) continue;
+        const fnName = `update_${snakeCase(node.name)}`;
+        const descriptorDrivenUpdate = updateChildFields.length > 0
+            && (usedWrappers.has(fnName) || usedWrappers.has(`${fnName}_from_store`));
+        if (descriptorDrivenUpdate) descriptorDrivenUpdateCount++;
+        expectedUpdateChildFields.push({ tag: node.name, childFields: updateChildFields });
+    }
+    w.write("let mut actual_count = 0usize;");
+    w.write("let mut actual_fingerprint = FNV1A_OFFSET;");
+    w.write("for layout in AST_NODE_LAYOUTS {");
+    w.push();
+    w.write("if layout.tag == NodePayloadTag::SourceFile || layout.child_fields.is_empty() {");
+    w.push();
+    w.write("continue;");
+    w.pop();
+    w.write("}");
+    w.write("actual_count += 1;");
+    w.write("actual_fingerprint = fnv1a_add_u64(actual_fingerprint, layout.tag as u64);");
+    w.write("actual_fingerprint = fnv1a_add_u64(actual_fingerprint, layout.child_fields.len() as u64);");
+    w.write("actual_fingerprint = fnv1a_add_u64(actual_fingerprint, child_traversal_fingerprint(layout.child_fields));");
+    w.pop();
+    w.write("}");
+    w.write(`assert_eq!(actual_count, ${expectedUpdateChildFields.length});`);
+    w.write(`assert_eq!(actual_fingerprint, ${rustU64Literal(astUpdateChildInputTableFingerprint(expectedUpdateChildFields, tagOrdinals))});`);
+    w.write(`assert!(${descriptorDrivenUpdateCount} > 0, "at least one update wrapper should exercise descriptor-driven child comparison");`);
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[test]");
+    w.write("fn generated_child_descriptors_should_match_schema_and_traversal_shape() {");
+    w.push();
+    w.write(`assert_eq!(AST_NODE_LAYOUTS.len(), ${layouts.length});`);
+    w.write(`assert_eq!(child_descriptor_table_fingerprint(), ${rustU64Literal(astLayoutTraversalShapeTableFingerprint(layouts, traversalsByTag))});`);
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+}
+
+function isChildTraversalField(field: StructField): boolean {
+    return astChildFieldKind(field.type) !== undefined;
+}
+
+function childFieldAccessorMethod(field: AstChildDescriptor): string {
+    if ((field.kind === "RawNodeSlice" || field.kind === "OptionalRawNodeSlice") && field.name === "children") {
+        return "syntax_list_children";
+    }
+    if ((field.kind === "NodeList" || field.kind === "OptionalNodeList") && field.name === "attributes") {
+        return "import_attributes_elements";
+    }
+    return field.name === "type" ? "r#type" : field.name;
+}
+
+function childFieldsForKinds(kinds: string[]): AstChildDescriptor[] {
+    const wanted = new Set(kinds);
+    const fieldsByName = new Map<string, AstChildDescriptor>();
+    for (const layout of astLayoutDescriptors()) {
+        for (const field of layout.childFields) {
+            if (!wanted.has(field.kind) || fieldsByName.has(field.name)) continue;
+            fieldsByName.set(field.name, field);
+        }
+    }
+    return [...fieldsByName.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function emitChildFieldValueIdMatch(
+    w: CodeWriter,
+    kinds: string[],
+    valueVariant: "Node" | "NodeList" | "ModifierList" | "RawNodeSlice",
+): void {
+    w.write("match field.id {");
+    w.push();
+    for (const field of childFieldsForKinds(kinds)) {
+        w.write(`AstChildFieldId::${field.id} => AstChildFieldValue::${valueVariant}(self.${childFieldAccessorMethod(field)}(node)),`);
+    }
+    w.write(`_ => AstChildFieldValue::${valueVariant}(None),`);
+    w.pop();
+    w.write("}");
+}
+
+function emitChildTraversalHelpers(w: CodeWriter): void {
+    w.write("#[rustfmt::skip]");
+    w.write("pub(crate) fn child_field_value(&self, node: Node, field: &AstChildFieldDescriptor) -> AstChildFieldValue<'_> {");
+    w.push();
+    w.write("match field.kind {");
+    w.push();
+    w.write("AstChildFieldKind::Node | AstChildFieldKind::OptionalNode => {");
+    w.push();
+    emitChildFieldValueIdMatch(w, ["Node", "OptionalNode"], "Node");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldKind::NodeList | AstChildFieldKind::OptionalNodeList => {");
+    w.push();
+    emitChildFieldValueIdMatch(w, ["NodeList", "OptionalNodeList"], "NodeList");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldKind::ModifierList | AstChildFieldKind::OptionalModifierList => {");
+    w.push();
+    emitChildFieldValueIdMatch(w, ["ModifierList", "OptionalModifierList"], "ModifierList");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldKind::RawNodeSlice | AstChildFieldKind::OptionalRawNodeSlice => {");
+    w.push();
+    emitChildFieldValueIdMatch(w, ["RawNodeSlice", "OptionalRawNodeSlice"], "RawNodeSlice");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn visit_child_field_with_lists<FNode, FNodes, FModifiers>(&self, node: Node, field: &AstChildFieldDescriptor, visit_node: &mut FNode, visit_nodes: &mut FNodes, visit_modifiers: &mut FModifiers) -> ControlFlow<()>");
+    w.write("where");
+    w.push();
+    w.write("FNode: FnMut(Option<Node>) -> ControlFlow<()>,");
+    w.write("FNodes: FnMut(SourceNodeList<'_>) -> ControlFlow<()>,");
+    w.write("FModifiers: FnMut(SourceModifierList<'_>) -> ControlFlow<()>,");
+    w.pop();
+    w.write("{");
+    w.push();
+    w.write("match self.child_field_value(node, field) {");
+    w.push();
+    w.write("AstChildFieldValue::Node(Some(child)) => visit_node(Some(child))?,");
+    w.write("AstChildFieldValue::Node(None) => {},");
+    w.write("AstChildFieldValue::NodeList(Some(nodes)) => visit_nodes(nodes)?,");
+    w.write("AstChildFieldValue::NodeList(None) => {},");
+    w.write("AstChildFieldValue::ModifierList(Some(modifiers)) => visit_modifiers(modifiers)?,");
+    w.write("AstChildFieldValue::ModifierList(None) => {},");
+    w.write("AstChildFieldValue::RawNodeSlice(Some(nodes)) => {");
+    w.push();
+    w.write("for child in nodes.iter() {");
+    w.push();
+    w.write("visit_node(child)?;");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldValue::RawNodeSlice(None) => {},");
+    w.pop();
+    w.write("}");
+    w.write("ControlFlow::Continue(())");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn for_each_child_field<F>(&self, node: Node, field: &AstChildFieldDescriptor, visitor: &mut F) -> ControlFlow<()>");
+    w.write("where");
+    w.push();
+    w.write("F: FnMut(Option<Node>) -> ControlFlow<()>,");
+    w.pop();
+    w.write("{");
+    w.push();
+    w.write("match self.child_field_value(node, field) {");
+    w.push();
+    w.write("AstChildFieldValue::Node(Some(child)) => visitor(Some(child))?,");
+    w.write("AstChildFieldValue::Node(None) => {},");
+    w.write("AstChildFieldValue::NodeList(Some(nodes)) => {");
+    w.push();
+    w.write("for child in nodes.iter() {");
+    w.push();
+    w.write("visitor(Some(child))?;");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldValue::NodeList(None) => {},");
+    w.write("AstChildFieldValue::ModifierList(Some(modifiers)) => {");
+    w.push();
+    w.write("for child in modifiers.iter() {");
+    w.push();
+    w.write("visitor(Some(child))?;");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldValue::ModifierList(None) => {},");
+    w.write("AstChildFieldValue::RawNodeSlice(Some(nodes)) => {");
+    w.push();
+    w.write("for child in nodes.iter() {");
+    w.push();
+    w.write("visitor(child)?;");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldValue::RawNodeSlice(None) => {},");
+    w.pop();
+    w.write("}");
+    w.write("ControlFlow::Continue(())");
+    w.pop();
+    w.write("}");
+    w.write("");
 }
 
 function generateChildTraversal(w: CodeWriter): void {
     w.write("impl AstStore {");
     w.push();
+    emitChildTraversalHelpers(w);
     w.write("#[inline]");
     w.write("pub fn for_each_child<F>(&self, node: Node, mut visitor: F) -> ControlFlow<()>");
     w.write("where");
@@ -1282,44 +2301,11 @@ function generateChildTraversal(w: CodeWriter): void {
     w.pop();
     w.write("{");
     w.push();
-    w.write("match self.header(node).payload.tag() {");
+    w.write("for field in self.node_layout(node).child_fields {");
     w.push();
-    w.write("NodePayloadTag::SourceFile => {");
-    w.push();
-    w.write("let data = self.as_source_file(node);");
-    w.write("for child in self.node_list(data.statements).iter() { if let ControlFlow::Break(()) = visitor(Some(child)) { return ControlFlow::Break(()); } }");
-    w.write("if let Some(child) = data.end_of_file_token { if let ControlFlow::Break(()) = visitor(Some(child)) { return ControlFlow::Break(()); } }");
-    w.write("ControlFlow::Continue(())");
-    w.pop();
-    w.write("},");
-    for (const node of api.nodes()) {
-        if (node.handWritten) continue;
-        const payloadField = snakeCase(node.name);
-        const fieldTypes = new Map(structFieldsFor(node).map(field => [field.name, field]));
-        const members = node.members
-            .filter((member: MemberInfo) => !member.noFactory && member.isChild())
-            .map((member: MemberInfo) => fieldTypes.get(fieldName(member.name)))
-            .filter((field: StructField | undefined): field is StructField => field !== undefined);
-        const seen = new Set<string>();
-        const fields = members.filter(field => {
-            if (seen.has(field.name)) return false;
-            seen.add(field.name);
-            return traversalExprForField(field) !== undefined;
-        });
-        w.write(`NodePayloadTag::${node.name} => {`);
-        w.push();
-        if (fields.length > 0) {
-            w.write(`let data = self.as_${payloadField}(node);`);
-            for (const field of fields) {
-                w.write(traversalExprForField(field)!);
-            }
-        }
-        w.write("ControlFlow::Continue(())");
-        w.pop();
-        w.write("},");
-    }
-    w.pop();
+    w.write("self.for_each_child_field(node, field, &mut visitor)?;");
     w.write("}");
+    w.write("ControlFlow::Continue(())");
     w.pop();
     w.write("}");
     w.write("");
@@ -1332,44 +2318,12 @@ function generateChildTraversal(w: CodeWriter): void {
     w.pop();
     w.write("{");
     w.push();
-    w.write("match self.header(node).payload.tag() {");
+    w.write("for field in self.node_layout(node).child_fields {");
     w.push();
-    w.write("NodePayloadTag::SourceFile => {");
-    w.push();
-    w.write("let data = self.as_source_file(node);");
-    w.write("if let ControlFlow::Break(()) = visit_nodes(SourceNodeList::new(self, data.statements)) { return ControlFlow::Break(()); }");
-    w.write("if let Some(child) = data.end_of_file_token { if let ControlFlow::Break(()) = visit_node(Some(child)) { return ControlFlow::Break(()); } }");
-    w.write("ControlFlow::Continue(())");
-    w.pop();
-    w.write("},");
-    for (const node of api.nodes()) {
-        if (node.handWritten) continue;
-        const payloadField = snakeCase(node.name);
-        const fieldTypes = new Map(structFieldsFor(node).map(field => [field.name, field]));
-        const members = node.members
-            .filter((member: MemberInfo) => !member.noFactory && member.isChild())
-            .map((member: MemberInfo) => fieldTypes.get(fieldName(member.name)))
-            .filter((field: StructField | undefined): field is StructField => field !== undefined);
-        const seen = new Set<string>();
-        const fields = members.filter(field => {
-            if (seen.has(field.name)) return false;
-            seen.add(field.name);
-            return readOnlyTraversalExprForField(field) !== undefined;
-        });
-        w.write(`NodePayloadTag::${node.name} => {`);
-        w.push();
-        if (fields.length > 0) {
-            w.write(`let data = self.as_${payloadField}(node);`);
-            for (const field of fields) {
-                w.write(readOnlyTraversalExprForField(field)!);
-            }
-        }
-        w.write("ControlFlow::Continue(())");
-        w.pop();
-        w.write("},");
-    }
+    w.write("self.visit_child_field_with_lists(node, field, &mut visit_node, &mut visit_nodes, &mut visit_modifiers)?;");
     w.pop();
     w.write("}");
+    w.write("ControlFlow::Continue(())");
     w.pop();
     w.write("}");
     w.pop();
@@ -1377,90 +2331,113 @@ function generateChildTraversal(w: CodeWriter): void {
     w.write("");
 }
 
-function cloneStoredFieldExpr(source: string, field: StructField): string {
+function cloneSourceFieldExpr(source: string, field: StructField): string {
     if (isSemanticCloneCacheField(field)) {
         return defaultExprForField(field);
     }
     switch (field.type) {
         case "AstNodeId":
-            return `self.deep_clone_local_node_id_from_store(source, source.node_from_id(${source}.${field.name}))`;
+            return `self.deep_clone_local_node_id_from_clone_source(source, synthetic_location, ${source}.${field.name})`;
         case "OptionalAstNodeId":
-            return `self.deep_clone_optional_local_node_id_from_store(source, synthetic_location, ${source}.${field.name})`;
+            return `self.deep_clone_optional_local_node_id_from_clone_source(source, synthetic_location, ${source}.${field.name})`;
         case "NodeListId":
-            return `self.deep_clone_node_list_from_store_with_location(source, ${source}.${field.name}, synthetic_location)`;
+            return `self.deep_clone_node_list_from_clone_source_with_location(source, ${source}.${field.name}, synthetic_location)`;
         case "OptionalNodeListId":
-            return `OptionalNodeListId::from_option(${source}.${field.name}.get().map(|id| self.deep_clone_node_list_from_store_with_location(source, id, synthetic_location)))`;
+            return `OptionalNodeListId::from_option(${source}.${field.name}.get().map(|id| self.deep_clone_node_list_from_clone_source_with_location(source, id, synthetic_location)))`;
         case "ModifierListId":
-            return `self.deep_clone_modifier_list_from_store_with_location(source, ${source}.${field.name}, synthetic_location)`;
+            return `self.deep_clone_modifier_list_from_clone_source_with_location(source, ${source}.${field.name}, synthetic_location)`;
         case "OptionalModifierListId":
-            return `OptionalModifierListId::from_option(${source}.${field.name}.get().map(|id| self.deep_clone_modifier_list_from_store_with_location(source, id, synthetic_location)))`;
+            return `OptionalModifierListId::from_option(${source}.${field.name}.get().map(|id| self.deep_clone_modifier_list_from_clone_source_with_location(source, id, synthetic_location)))`;
         case "RawNodeSliceId":
-            return `self.deep_clone_raw_node_slice_from_store_with_location(source, ${source}.${field.name}, synthetic_location)`;
+            return `self.deep_clone_raw_node_slice_from_clone_source_with_location(source, ${source}.${field.name}, synthetic_location)`;
         case "OptionalRawNodeSliceId":
-            return `OptionalRawNodeSliceId::from_option(${source}.${field.name}.get().map(|id| self.deep_clone_raw_node_slice_from_store_with_location(source, id, synthetic_location)))`;
+            return `OptionalRawNodeSliceId::from_option(${source}.${field.name}.get().map(|id| self.deep_clone_raw_node_slice_from_clone_source_with_location(source, id, synthetic_location)))`;
         case "RawStringSliceId":
-            return `self.deep_clone_raw_string_slice_from_store(source, ${source}.${field.name})`;
+            return `self.deep_clone_raw_string_slice_from_clone_source(source, ${source}.${field.name})`;
         case "OptionalRawStringSliceId":
-            return `OptionalRawStringSliceId::from_option(${source}.${field.name}.get().map(|id| self.deep_clone_raw_string_slice_from_store(source, id)))`;
+            return `OptionalRawStringSliceId::from_option(${source}.${field.name}.get().map(|id| self.deep_clone_raw_string_slice_from_clone_source(source, id)))`;
         case "AtomicU32":
             return `AtomicU32::new(${source}.${field.name}.load(Ordering::Relaxed))`;
         case "AtomicI32":
             return `AtomicI32::new(${source}.${field.name}.load(Ordering::Relaxed))`;
         default:
-            if (field.type.endsWith("Base")) return cloneStoredBaseExpr(field.type, `${source}.${field.name}`);
+            if (field.type.endsWith("Base")) return cloneSourceBaseExpr(field.type, `${source}.${field.name}`);
             return `${source}.${field.name}.clone()`;
     }
 }
 
-function cloneCurrentStoreFieldExpr(source: string, field: StructField): string {
-    if (isSemanticCloneCacheField(field)) {
-        return defaultExprForField(field);
+function cloneSourceFactoryChildArgExpr(field: StructField, childIndex: number): string | undefined {
+    switch (field.type) {
+        case "AstNodeId":
+            return `cloned_children.required_node(${childIndex})`;
+        case "OptionalAstNodeId":
+        case "Option<Node>":
+            return `cloned_children.optional_node(${childIndex})`;
+        case "NodeListId":
+            return `cloned_children.required_node_list(${childIndex})`;
+        case "OptionalNodeListId":
+            return `cloned_children.optional_node_list(${childIndex})`;
+        case "ModifierListId":
+            return `cloned_children.required_modifier_list(${childIndex})`;
+        case "OptionalModifierListId":
+            return `cloned_children.optional_modifier_list(${childIndex})`;
+        case "RawNodeSliceId":
+            return `cloned_children.required_raw_node_slice(${childIndex})`;
+        case "OptionalRawNodeSliceId":
+            return `cloned_children.optional_raw_node_slice(${childIndex})`;
+        default:
+            return undefined;
+    }
+}
+
+function cloneSourceFactoryArgExpr(member: MemberInfo, field: StructField | undefined, source: string, childIndex?: number): string {
+    if (member.isKindParam()) return "kind";
+    if (isNodeFlagsMember(member)) return "flags";
+    if (!field) throw new Error(`No generated field for clone factory member ${member.name}`);
+    if (isSemanticCloneCacheField(field)) return defaultExprForField(field);
+    if (childIndex !== undefined) {
+        const clonedChildArg = cloneSourceFactoryChildArgExpr(field, childIndex);
+        if (!clonedChildArg) {
+            throw new Error(`No descriptor clone argument for child field ${field.name}: ${field.type}`);
+        }
+        return clonedChildArg;
     }
     switch (field.type) {
         case "AstNodeId":
-            return `self.deep_clone_local_node_id_in_current_store(synthetic_location, self.store.node_from_id(${source}))`;
+            return `self.deep_clone_local_node_id_from_clone_source(source, synthetic_location, ${source}.${field.name})`;
         case "OptionalAstNodeId":
-            return `self.deep_clone_optional_local_node_id_in_current_store(synthetic_location, ${source})`;
+            return `self.deep_clone_optional_node_from_clone_source(source, synthetic_location, ${source}.${field.name})`;
         case "NodeListId":
-            return `self.deep_clone_node_list_in_current_store_with_location(${source}, synthetic_location)`;
+            return `self.deep_clone_node_list_handle_from_clone_source(source, synthetic_location, ${source}.${field.name})`;
         case "OptionalNodeListId":
-            return `OptionalNodeListId::from_option(${source}.get().map(|id| self.deep_clone_node_list_in_current_store_with_location(id, synthetic_location)))`;
+            return `self.deep_clone_optional_node_list_from_clone_source(source, synthetic_location, ${source}.${field.name})`;
         case "ModifierListId":
-            return `self.deep_clone_modifier_list_in_current_store_with_location(${source}, synthetic_location)`;
+            return `self.deep_clone_modifier_list_handle_from_clone_source(source, synthetic_location, ${source}.${field.name})`;
         case "OptionalModifierListId":
-            return `OptionalModifierListId::from_option(${source}.get().map(|id| self.deep_clone_modifier_list_in_current_store_with_location(id, synthetic_location)))`;
+            return `self.deep_clone_optional_modifier_list_from_clone_source(source, synthetic_location, ${source}.${field.name})`;
         case "RawNodeSliceId":
-            return `self.deep_clone_raw_node_slice_in_current_store_with_location(${source}, synthetic_location)`;
+            return `self.deep_clone_raw_node_slice_handle_from_clone_source(source, synthetic_location, ${source}.${field.name})`;
         case "OptionalRawNodeSliceId":
-            return `OptionalRawNodeSliceId::from_option(${source}.get().map(|id| self.deep_clone_raw_node_slice_in_current_store_with_location(id, synthetic_location)))`;
+            return `self.deep_clone_optional_raw_node_slice_from_clone_source(source, synthetic_location, ${source}.${field.name})`;
         case "RawStringSliceId":
-            return `self.deep_clone_raw_string_slice_in_current_store(${source})`;
+            return `self.deep_clone_raw_string_slice_handle_from_clone_source(source, ${source}.${field.name})`;
         case "OptionalRawStringSliceId":
-            return `OptionalRawStringSliceId::from_option(${source}.get().map(|id| self.deep_clone_raw_string_slice_in_current_store(id)))`;
+            return `self.deep_clone_optional_raw_string_slice_from_clone_source(source, ${source}.${field.name})`;
         case "AtomicU32":
-            return `AtomicU32::new(${source}.load(Ordering::Relaxed))`;
+            return `AtomicU32::new(${source}.${field.name}.load(Ordering::Relaxed))`;
         case "AtomicI32":
-            return `AtomicI32::new(${source}.load(Ordering::Relaxed))`;
+            return `AtomicI32::new(${source}.${field.name}.load(Ordering::Relaxed))`;
         default:
-            if (field.type.endsWith("Base")) return cloneCurrentStoreBaseExpr(field.type, source);
-            return `${source}.clone()`;
+            if (field.type.endsWith("Base")) return cloneSourceBaseExpr(field.type, `${source}.${field.name}`);
+            return `${source}.${field.name}.clone()`;
     }
 }
 
-function cloneCurrentStoreBaseExpr(baseName: string, source: string): string {
+function cloneSourceBaseExpr(baseName: string, source: string): string {
     const base = api.getBase(baseName);
     if (!base) throw new Error(`Unknown base ${baseName}`);
     const fields = structFieldsForBase(base).map(field => {
-        return `${field.name}: ${cloneCurrentStoreFieldExpr(`${source}.${field.name}`, field)}`;
-    });
-    return `${baseName} { ${fields.join(", ")} }`;
-}
-
-function cloneStoredBaseExpr(baseName: string, source: string): string {
-    const base = api.getBase(baseName);
-    if (!base) throw new Error(`Unknown base ${baseName}`);
-    const fields = structFieldsForBase(base).map(field => {
-        return `${field.name}: ${cloneStoredFieldExpr(source, field)}`;
+        return `${field.name}: ${cloneSourceFieldExpr(source, field)}`;
     });
     return `${baseName} { ${fields.join(", ")} }`;
 }
@@ -1486,7 +2463,266 @@ function isSemanticCloneCacheField(field: StructField): boolean {
     );
 }
 
+function emitGeneratedChildFieldValueHelpers(w: CodeWriter): void {
+    const maxChildFieldCount = Math.max(...astLayoutDescriptors().map(layout => layout.childFields.length));
+    w.write(`const GENERATED_CHILD_FIELD_CAPACITY: usize = ${maxChildFieldCount};`);
+    w.write("");
+    w.write("#[derive(Clone, Copy)]");
+    w.write("enum GeneratedChildFieldValue {");
+    w.push();
+    w.write("Missing,");
+    w.write("Node(Option<Node>),");
+    w.write("NodeList(Option<NodeList>),");
+    w.write("ModifierList(Option<ModifierList>),");
+    w.write("RawNodeSlice(Option<RawNodeSlice>),");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("struct GeneratedChildFieldValues {");
+    w.push();
+    w.write("fields: [GeneratedChildFieldValue; GENERATED_CHILD_FIELD_CAPACITY],");
+    w.write("len: usize,");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_update_child_values {");
+    w.push();
+    w.write("($($kind:ident $value:expr),* $(,)?) => {{");
+    w.push();
+    w.write("let mut fields = [GeneratedChildFieldValue::Missing; GENERATED_CHILD_FIELD_CAPACITY];");
+    w.write("let mut len = 0usize;");
+    w.write("$(fields[len] = GeneratedChildFieldValue::$kind($value); len += 1;)*");
+    w.write("GeneratedChildFieldValues { fields, len }");
+    w.pop();
+    w.write("}};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_update_children_differ {");
+    w.push();
+    w.write("($source:expr, $node:expr $(, $kind:ident $value:expr)* $(,)?) => {{");
+    w.push();
+    w.write("generated_update_child_values!($($kind $value),*).differs_from_source($source, $node)");
+    w.pop();
+    w.write("}};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("impl GeneratedChildFieldValues {");
+    w.push();
+    w.write("#[rustfmt::skip] fn field(&self, index: usize) -> GeneratedChildFieldValue { assert!(index < self.len, \"generated child field index should be in range\"); self.fields[index] }");
+    w.write("#[rustfmt::skip] fn optional_node(&self, index: usize) -> Option<Node> { match self.field(index) { GeneratedChildFieldValue::Node(node) => node, _ => panic!(\"generated child field should be a node\"), } }");
+    w.write("#[rustfmt::skip] fn required_node(&self, index: usize) -> Node { self.optional_node(index).expect(\"required cloned child node should be present\") }");
+    w.write("#[rustfmt::skip] fn import_optional_node<'source, T>(&self, runtime: &mut T, index: usize) -> Option<Node> where T: AstVisitEachChildRuntime<'source> + ?Sized { runtime.import_update_node(self.optional_node(index)) }");
+    w.write("#[rustfmt::skip] fn import_required_node<'source, T>(&self, runtime: &mut T, index: usize) -> Node where T: AstVisitEachChildRuntime<'source> + ?Sized { self.import_optional_node(runtime, index).expect(\"required child removed by visitor\") }");
+    w.write("#[rustfmt::skip] fn import_optional_node_from_store(&self, factory: &mut NodeFactory, source: &AstStore, index: usize) -> Option<Node> { factory.import_update_node_from_store(source, self.optional_node(index)) }");
+    w.write("#[rustfmt::skip] fn import_required_node_from_store(&self, factory: &mut NodeFactory, source: &AstStore, index: usize) -> Node { self.import_optional_node_from_store(factory, source, index).expect(\"required child missing\") }");
+    w.write("#[rustfmt::skip] fn optional_node_list(&self, index: usize) -> Option<NodeList> { match self.field(index) { GeneratedChildFieldValue::NodeList(list) => list, _ => panic!(\"generated child field should be a node list\"), } }");
+    w.write("#[rustfmt::skip] fn required_node_list(&self, index: usize) -> NodeList { self.optional_node_list(index).expect(\"required cloned node list should be present\") }");
+    w.write("#[rustfmt::skip] fn import_optional_node_list<'source, T>(&self, runtime: &mut T, index: usize) -> Option<NodeList> where T: AstVisitEachChildRuntime<'source> + ?Sized { self.optional_node_list(index).map(|list| runtime.import_update_node_list(list)) }");
+    w.write("#[rustfmt::skip] fn import_required_node_list<'source, T>(&self, runtime: &mut T, index: usize) -> NodeList where T: AstVisitEachChildRuntime<'source> + ?Sized { self.import_optional_node_list(runtime, index).expect(\"required node list removed by visitor\") }");
+    w.write("#[rustfmt::skip] fn import_optional_node_list_from_store(&self, factory: &mut NodeFactory, source: &AstStore, index: usize) -> Option<NodeList> { factory.import_optional_update_node_list_from_store(source, self.optional_node_list(index)) }");
+    w.write("#[rustfmt::skip] fn import_required_node_list_from_store(&self, factory: &mut NodeFactory, source: &AstStore, index: usize) -> NodeList { factory.import_update_node_list_from_store(source, self.required_node_list(index)) }");
+    w.write("#[rustfmt::skip] fn optional_modifier_list(&self, index: usize) -> Option<ModifierList> { match self.field(index) { GeneratedChildFieldValue::ModifierList(list) => list, _ => panic!(\"generated child field should be a modifier list\"), } }");
+    w.write("#[rustfmt::skip] fn required_modifier_list(&self, index: usize) -> ModifierList { self.optional_modifier_list(index).expect(\"required cloned modifier list should be present\") }");
+    w.write("#[rustfmt::skip] fn import_optional_modifier_list<'source, T>(&self, runtime: &mut T, index: usize) -> Option<ModifierList> where T: AstVisitEachChildRuntime<'source> + ?Sized { self.optional_modifier_list(index).map(|list| runtime.import_update_modifier_list(list)) }");
+    w.write("#[rustfmt::skip] fn import_required_modifier_list<'source, T>(&self, runtime: &mut T, index: usize) -> ModifierList where T: AstVisitEachChildRuntime<'source> + ?Sized { self.import_optional_modifier_list(runtime, index).expect(\"required modifier list removed by visitor\") }");
+    w.write("#[rustfmt::skip] fn import_optional_modifier_list_from_store(&self, factory: &mut NodeFactory, source: &AstStore, index: usize) -> Option<ModifierList> { factory.import_optional_update_modifier_list_from_store(source, self.optional_modifier_list(index)) }");
+    w.write("#[rustfmt::skip] fn import_required_modifier_list_from_store(&self, factory: &mut NodeFactory, source: &AstStore, index: usize) -> ModifierList { factory.import_update_modifier_list_from_store(source, self.required_modifier_list(index)) }");
+    w.write("#[rustfmt::skip] fn optional_raw_node_slice(&self, index: usize) -> Option<RawNodeSlice> { match self.field(index) { GeneratedChildFieldValue::RawNodeSlice(slice) => slice, _ => panic!(\"generated child field should be a raw node slice\"), } }");
+    w.write("#[rustfmt::skip] fn required_raw_node_slice(&self, index: usize) -> RawNodeSlice { self.optional_raw_node_slice(index).expect(\"required cloned raw node slice should be present\") }");
+    w.write("#[rustfmt::skip] fn import_optional_raw_node_slice<'source, T>(&self, runtime: &mut T, index: usize) -> Option<RawNodeSlice> where T: AstVisitEachChildRuntime<'source> + ?Sized { self.optional_raw_node_slice(index).map(|slice| runtime.import_update_raw_node_slice(slice)) }");
+    w.write("#[rustfmt::skip] fn import_required_raw_node_slice<'source, T>(&self, runtime: &mut T, index: usize) -> RawNodeSlice where T: AstVisitEachChildRuntime<'source> + ?Sized { self.import_optional_raw_node_slice(runtime, index).expect(\"required raw node slice removed by visitor\") }");
+    w.write("#[rustfmt::skip] fn import_optional_raw_node_slice_from_store(&self, factory: &mut NodeFactory, source: &AstStore, index: usize) -> Option<RawNodeSlice> { factory.import_optional_update_raw_node_slice_from_store(source, self.optional_raw_node_slice(index)) }");
+    w.write("#[rustfmt::skip] fn import_required_raw_node_slice_from_store(&self, factory: &mut NodeFactory, source: &AstStore, index: usize) -> RawNodeSlice { factory.import_update_raw_node_slice_from_store(source, self.required_raw_node_slice(index)) }");
+    w.write("#[rustfmt::skip] fn differs_from_source(&self, source: &AstStore, node: Node) -> bool { let fields = source.node_layout(node).child_fields; assert_eq!(fields.len(), self.len, \"generated child values should match descriptor field count\"); fields.iter().enumerate().any(|(index, field)| self.field_differs_from_source(source, node, field, index)) }");
+    w.write("#[rustfmt::skip] fn field_differs_from_source(&self, source: &AstStore, node: Node, field: &AstChildFieldDescriptor, index: usize) -> bool { match (source.child_field_value(node, field), self.field(index)) { (AstChildFieldValue::Node(original), GeneratedChildFieldValue::Node(value)) => value != original, (AstChildFieldValue::NodeList(original), GeneratedChildFieldValue::NodeList(value)) => match (value, original) { (Some(value), Some(original)) => value.store_id() != source.store_id() || value.id() != original.id(), (None, None) => false, _ => true, }, (AstChildFieldValue::ModifierList(original), GeneratedChildFieldValue::ModifierList(value)) => match (value, original) { (Some(value), Some(original)) => value.store_id() != source.store_id() || value.id() != original.id(), (None, None) => false, _ => true, }, (AstChildFieldValue::RawNodeSlice(original), GeneratedChildFieldValue::RawNodeSlice(value)) => match (value, original) { (Some(value), Some(original)) => value.store_id() != source.store_id() || value.id() != original.id(), (None, None) => false, _ => true, }, _ => panic!(\"generated child descriptor kind should match update child value\"), } }");
+    w.pop();
+    w.write("}");
+}
+
 function generateDeepClone(w: CodeWriter): void {
+    w.write("macro_rules! clone_source_data {");
+    w.push();
+    w.write("($factory:expr, $source:expr, $node:expr, $accessor:ident) => {");
+    w.push();
+    w.write("match $source {");
+    w.push();
+    w.write("DeepCloneSource::Current => ($factory).store.$accessor($node).clone(),");
+    w.write("DeepCloneSource::Store(source_store) => source_store.$accessor($node).clone(),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_clone_node {");
+    w.push();
+    w.write("($factory:expr, $source:expr, $node:expr, $synthetic_location:expr, with_source($accessor:ident, $source_data:ident), with_children($cloned_children:ident), $constructor:ident($($arg:expr),* $(,)?)) => {{");
+    w.push();
+    w.write("let $source_data = clone_source_data!($factory, $source, $node, $accessor);");
+    w.write("let $cloned_children = ($factory).deep_clone_child_fields_from_clone_source_with_location($source, $node, $synthetic_location);");
+    w.write("($factory).$constructor($($arg),*)");
+    w.pop();
+    w.write("}};");
+    w.write("($factory:expr, $source:expr, $node:expr, $synthetic_location:expr, with_source($accessor:ident, $source_data:ident), $constructor:ident($($arg:expr),* $(,)?)) => {{");
+    w.push();
+    w.write("let $source_data = clone_source_data!($factory, $source, $node, $accessor);");
+    w.write("($factory).$constructor($($arg),*)");
+    w.pop();
+    w.write("}};");
+    w.write("($factory:expr, $source:expr, $node:expr, $synthetic_location:expr, with_children($cloned_children:ident), $constructor:ident($($arg:expr),* $(,)?)) => {{");
+    w.push();
+    w.write("let $cloned_children = ($factory).deep_clone_child_fields_from_clone_source_with_location($source, $node, $synthetic_location);");
+    w.write("($factory).$constructor($($arg),*)");
+    w.pop();
+    w.write("}};");
+    w.write("($factory:expr, $source:expr, $node:expr, $synthetic_location:expr, $constructor:ident($($arg:expr),* $(,)?)) => {{");
+    w.push();
+    w.write("($factory).$constructor($($arg),*)");
+    w.pop();
+    w.write("}};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[derive(Clone, Copy)]");
+    w.write("enum DeepCloneSource<'a> {");
+    w.push();
+    w.write("Current,");
+    w.write("Store(&'a AstStore),");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("impl DeepCloneSource<'_> {");
+    w.push();
+    w.write("fn with_store<R>(self, current: &AstStore, f: impl FnOnce(&AstStore) -> R) -> R {");
+    w.push();
+    w.write("match self {");
+    w.push();
+    w.write("DeepCloneSource::Current => f(current),");
+    w.write("DeepCloneSource::Store(source) => f(source),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn kind(self, current: &AstStore, node: Node) -> Kind {");
+    w.push();
+    w.write("self.with_store(current, |source| source.kind(node))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn flags(self, current: &AstStore, node: Node) -> NodeFlags {");
+    w.push();
+    w.write("self.with_store(current, |source| source.flags(node))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn loc(self, current: &AstStore, node: Node) -> core::TextRange {");
+    w.push();
+    w.write("self.with_store(current, |source| source.loc(node))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn payload_tag(self, current: &AstStore, node: Node) -> NodePayloadTag {");
+    w.push();
+    w.write("self.with_store(current, |source| source.header(node).payload.tag())");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn node_from_id(self, current: &AstStore, id: AstNodeId) -> Node {");
+    w.push();
+    w.write("self.with_store(current, |source| source.node_from_id(id))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn optional_node_from_id(self, current: &AstStore, id: OptionalAstNodeId) -> Option<Node> {");
+    w.push();
+    w.write("self.with_store(current, |source| source.optional_node_from_id(id))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn new_node_map<T>(self, current: &AstStore) -> StoreNodeMap<T> {");
+    w.push();
+    w.write("self.with_store(current, |source| source.new_node_map::<T>())");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn new_node_map_with_capacity<T>(self, current: &AstStore, capacity: usize) -> StoreNodeMap<T> {");
+    w.push();
+    w.write("self.with_store(current, |source| source.new_node_map_with_capacity(capacity))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn len(self, current: &AstStore) -> usize {");
+    w.push();
+    w.write("self.with_store(current, |source| source.len())");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn binary_expression_left(self, current: &AstStore, node: Node) -> OptionalAstNodeId {");
+    w.push();
+    w.write("self.with_store(current, |source| source.as_binary_expression(node).left)");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn binary_expression_right(self, current: &AstStore, node: Node) -> OptionalAstNodeId {");
+    w.push();
+    w.write("self.with_store(current, |source| source.as_binary_expression(node).right)");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn node_list_snapshot(self, current: &AstStore, id: NodeListId) -> (Vec<Node>, core::TextRange, core::TextRange, bool) {");
+    w.push();
+    w.write("self.with_store(current, |source| {");
+    w.push();
+    w.write("let list = source.node_list(id);");
+    w.write("(list.iter().collect::<Vec<_>>(), list.loc(), list.range(), list.has_trailing_comma())");
+    w.pop();
+    w.write("})");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn modifier_list_snapshot(self, current: &AstStore, id: ModifierListId) -> (Vec<Node>, core::TextRange, core::TextRange, bool, crate::modifierflags::ModifierFlags) {");
+    w.push();
+    w.write("self.with_store(current, |source| {");
+    w.push();
+    w.write("let modifiers = source.modifier_list(id);");
+    w.write("let nodes = modifiers.nodes();");
+    w.write("(nodes.iter().collect::<Vec<_>>(), nodes.loc(), nodes.range(), nodes.has_trailing_comma(), modifiers.modifier_flags())");
+    w.pop();
+    w.write("})");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn raw_node_slice_snapshot(self, current: &AstStore, id: RawNodeSliceId) -> Vec<Option<Node>> {");
+    w.push();
+    w.write("self.with_store(current, |source| source.raw_node_slice(id).iter().collect::<Vec<_>>())");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn raw_string_slice_snapshot(self, current: &AstStore, id: RawStringSliceId) -> Vec<String> {");
+    w.push();
+    w.write("self.with_store(current, |source| source.raw_string_slice(id).iter().map(str::to_owned).collect::<Vec<_>>())");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn source_file_snapshot(self, current: &AstStore, node: Node) -> (crate::parseoptions::SourceFileParseOptions, std::sync::Arc<str>, NodeListId, Option<Node>, SourceFileCopyMetadata) {");
+    w.push();
+    w.write("self.with_store(current, |source| {");
+    w.push();
+    w.write("let source_data = source.as_source_file(node);");
+    w.write("(source_data.parse_options.clone(), source_data.text.clone(), source_data.statements, source_data.end_of_file_token, SourceFileCopyMetadata::from_source(source_data))");
+    w.pop();
+    w.write("})");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    emitGeneratedChildFieldValueHelpers(w);
+    w.write("");
     w.write("impl NodeFactory {");
     w.push();
     w.write("pub fn deep_clone_reparse(&mut self, source: impl AsRef<AstStore>, node: Option<&Node>) -> Option<Node> {");
@@ -1504,29 +2740,10 @@ function generateDeepClone(w: CodeWriter): void {
     w.push();
     w.write("let node = *node?;");
     w.write("assert_eq!(node.store_id(), self.store.store_id(), \"reparse clone must come from the current factory store\");");
-    w.write("let cloned = self.deep_clone_node_in_current_store_with_location(node, false);");
+    w.write("let cloned = self.deep_clone_node_from_clone_source_with_location(DeepCloneSource::Current, node, false);");
     w.write("self.store.set_parent_recursive(cloned);");
     w.write("self.store.add_flags(cloned, NodeFlags::REPARSED);");
     w.write("Some(cloned)");
-    w.pop();
-    w.write("}");
-    w.write("");
-    w.write("fn deep_clone_local_node_id_from_store(&mut self, source: &AstStore, synthetic_location: bool, node: Node) -> Node {");
-    w.push();
-    w.write("let cloned = self.deep_clone_node_from_store_with_location(source, node, synthetic_location);");
-    w.write("self.store.local_node_id(cloned)");
-    w.pop();
-    w.write("}");
-    w.write("");
-    w.write("fn deep_clone_optional_local_node_id_from_store(&mut self, source: &AstStore, synthetic_location: bool, id: OptionalAstNodeId) -> OptionalAstNodeId {");
-    w.push();
-    w.write("let Some(node) = source.optional_node_from_id(id) else {");
-    w.push();
-    w.write("return OptionalAstNodeId::none();");
-    w.pop();
-    w.write("};");
-    w.write("let cloned = self.deep_clone_node_from_store_with_location(source, node, synthetic_location);");
-    w.write("OptionalAstNodeId::some(self.store.local_node_id(cloned))");
     w.pop();
     w.write("}");
     w.write("");
@@ -1547,20 +2764,14 @@ function generateDeepClone(w: CodeWriter): void {
     w.write("pub fn deep_clone_node_in_current_store(&mut self, node: Node) -> Node {");
     w.push();
     w.write("assert_eq!(node.store_id(), self.store.store_id(), \"current-store clone must come from the current factory store\");");
-    w.write("self.deep_clone_node_in_current_store_with_location(node, true)");
+    w.write("self.deep_clone_node_from_clone_source_with_location(DeepCloneSource::Current, node, true)");
     w.pop();
     w.write("}");
     w.write("");
     w.write("pub fn deep_clone_node_in_current_store_preserve_location(&mut self, node: Node) -> Node {");
     w.push();
     w.write("assert_eq!(node.store_id(), self.store.store_id(), \"current-store clone must come from the current factory store\");");
-    w.write("self.deep_clone_node_in_current_store_with_location(node, false)");
-    w.pop();
-    w.write("}");
-    w.write("");
-    w.write("fn clone_optional_node_from_store(&mut self, source: &AstStore, node: Option<Node>) -> Option<Node> {");
-    w.push();
-    w.write("self.import_update_node_from_store(source, node)");
+    w.write("self.deep_clone_node_from_clone_source_with_location(DeepCloneSource::Current, node, false)");
     w.pop();
     w.write("}");
     w.write("");
@@ -1716,75 +2927,250 @@ function generateDeepClone(w: CodeWriter): void {
     w.pop();
     w.write("}");
     w.write("");
-    w.write("fn deep_clone_local_node_id_in_current_store(&mut self, synthetic_location: bool, node: Node) -> Node {");
+    w.write("fn deep_clone_local_node_id_from_clone_source(&mut self, source: DeepCloneSource<'_>, synthetic_location: bool, id: AstNodeId) -> Node {");
     w.push();
-    w.write("let cloned = self.deep_clone_node_in_current_store_with_location(node, synthetic_location);");
+    w.write("let node = source.node_from_id(&self.store, id);");
+    w.write("let cloned = self.deep_clone_node_from_clone_source_with_location(source, node, synthetic_location);");
     w.write("self.store.local_node_id(cloned)");
     w.pop();
     w.write("}");
     w.write("");
-    w.write("fn deep_clone_optional_local_node_id_in_current_store(&mut self, synthetic_location: bool, id: OptionalAstNodeId) -> OptionalAstNodeId {");
+    w.write("fn deep_clone_optional_local_node_id_from_clone_source(&mut self, source: DeepCloneSource<'_>, synthetic_location: bool, id: OptionalAstNodeId) -> OptionalAstNodeId {");
     w.push();
-    w.write("let Some(node) = self.store.optional_node_from_id(id) else {");
+    w.write("let Some(node) = source.optional_node_from_id(&self.store, id) else {");
     w.push();
     w.write("return OptionalAstNodeId::none();");
     w.pop();
     w.write("};");
-    w.write("let cloned = self.deep_clone_node_in_current_store_with_location(node, synthetic_location);");
+    w.write("let cloned = self.deep_clone_node_from_clone_source_with_location(source, node, synthetic_location);");
     w.write("OptionalAstNodeId::some(self.store.local_node_id(cloned))");
     w.pop();
     w.write("}");
     w.write("");
-    w.write("fn deep_clone_node_in_current_store_with_location(&mut self, node: Node, synthetic_location: bool) -> Node {");
+    w.write("fn deep_clone_optional_node_from_clone_source(&mut self, source: DeepCloneSource<'_>, synthetic_location: bool, id: OptionalAstNodeId) -> Option<Node> {");
     w.push();
-    w.write("let kind = self.store.kind(node);");
-    w.write("let flags = self.store.flags(node);");
-    w.write("let loc = self.store.loc(node);");
-    w.write("let cloned = match self.store.header(node).payload.tag() {");
+    w.write("let node = source.optional_node_from_id(&self.store, id)?;");
+    w.write("Some(self.deep_clone_node_from_clone_source_with_location(source, node, synthetic_location))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn deep_clone_node_list_handle_from_clone_source(&mut self, source: DeepCloneSource<'_>, synthetic_location: bool, id: NodeListId) -> NodeList {");
     w.push();
-    w.write("NodePayloadTag::SourceFile => {");
+    w.write("NodeList::from_id(self.deep_clone_node_list_from_clone_source_with_location(source, id, synthetic_location))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn deep_clone_optional_node_list_from_clone_source(&mut self, source: DeepCloneSource<'_>, synthetic_location: bool, id: OptionalNodeListId) -> Option<NodeList> {");
     w.push();
-    w.write("let source_data = self.store.as_source_file(node);");
-    w.write("let parse_options = source_data.parse_options.clone();");
-    w.write("let text = source_data.text.clone();");
-    w.write("let source_statements = source_data.statements;");
-    w.write("let source_end_of_file_token = source_data.end_of_file_token;");
-    w.write("let source_metadata = SourceFileCopyMetadata::from_source(source_data);");
-    w.write("let statements = self.deep_clone_node_list_in_current_store_with_location(source_statements, synthetic_location);");
-    w.write("let end_of_file_token = source_end_of_file_token.map(|token| self.deep_clone_node_in_current_store_with_location(token, synthetic_location));");
-    w.write("let source_metadata = source_metadata.map_nodes(node, |node| self.deep_clone_node_in_current_store_with_location(node, synthetic_location));");
+    w.write("id.get().map(|id| self.deep_clone_node_list_handle_from_clone_source(source, synthetic_location, id))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn deep_clone_modifier_list_handle_from_clone_source(&mut self, source: DeepCloneSource<'_>, synthetic_location: bool, id: ModifierListId) -> ModifierList {");
+    w.push();
+    w.write("ModifierList::from_id(self.deep_clone_modifier_list_from_clone_source_with_location(source, id, synthetic_location))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn deep_clone_optional_modifier_list_from_clone_source(&mut self, source: DeepCloneSource<'_>, synthetic_location: bool, id: OptionalModifierListId) -> Option<ModifierList> {");
+    w.push();
+    w.write("id.get().map(|id| self.deep_clone_modifier_list_handle_from_clone_source(source, synthetic_location, id))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn deep_clone_raw_node_slice_handle_from_clone_source(&mut self, source: DeepCloneSource<'_>, synthetic_location: bool, id: RawNodeSliceId) -> RawNodeSlice {");
+    w.push();
+    w.write("RawNodeSlice::from_id(self.deep_clone_raw_node_slice_from_clone_source_with_location(source, id, synthetic_location))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn deep_clone_optional_raw_node_slice_from_clone_source(&mut self, source: DeepCloneSource<'_>, synthetic_location: bool, id: OptionalRawNodeSliceId) -> Option<RawNodeSlice> {");
+    w.push();
+    w.write("id.get().map(|id| self.deep_clone_raw_node_slice_handle_from_clone_source(source, synthetic_location, id))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn deep_clone_raw_string_slice_handle_from_clone_source(&mut self, source: DeepCloneSource<'_>, id: RawStringSliceId) -> RawStringSlice {");
+    w.push();
+    w.write("RawStringSlice::from_id(self.deep_clone_raw_string_slice_from_clone_source(source, id))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn deep_clone_optional_raw_string_slice_from_clone_source(&mut self, source: DeepCloneSource<'_>, id: OptionalRawStringSliceId) -> Option<RawStringSlice> {");
+    w.push();
+    w.write("id.get().map(|id| self.deep_clone_raw_string_slice_handle_from_clone_source(source, id))");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn deep_clone_child_field_from_clone_source_with_location(&mut self, source: DeepCloneSource<'_>, node: Node, field: &AstChildFieldDescriptor, synthetic_location: bool) -> GeneratedChildFieldValue {");
+    w.push();
+    w.write("match field.kind {");
+    w.push();
+    w.write("AstChildFieldKind::Node | AstChildFieldKind::OptionalNode => {");
+    w.push();
+    w.write("let source_node = source.with_store(&self.store, |source_store| match source_store.child_field_value(node, field) {");
+    w.push();
+    w.write("AstChildFieldValue::Node(node) => node,");
+    w.write("_ => panic!(\"generated child descriptor kind should match clone node value\"),");
+    w.pop();
+    w.write("});");
+    w.write("GeneratedChildFieldValue::Node(source_node.map(|node| self.deep_clone_node_from_clone_source_with_location(source, node, synthetic_location)))");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldKind::NodeList | AstChildFieldKind::OptionalNodeList => {");
+    w.push();
+    w.write("let source_nodes = source.with_store(&self.store, |source_store| match source_store.child_field_value(node, field) {");
+    w.push();
+    w.write("AstChildFieldValue::NodeList(nodes) => nodes.map(|nodes| nodes.id()),");
+    w.write("_ => panic!(\"generated child descriptor kind should match clone node-list value\"),");
+    w.pop();
+    w.write("});");
+    w.write("GeneratedChildFieldValue::NodeList(source_nodes.map(|nodes| NodeList::from_id(self.deep_clone_node_list_from_clone_source_with_location(source, nodes, synthetic_location))))");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldKind::ModifierList | AstChildFieldKind::OptionalModifierList => {");
+    w.push();
+    w.write("let source_modifiers = source.with_store(&self.store, |source_store| match source_store.child_field_value(node, field) {");
+    w.push();
+    w.write("AstChildFieldValue::ModifierList(modifiers) => modifiers.map(|modifiers| modifiers.id()),");
+    w.write("_ => panic!(\"generated child descriptor kind should match clone modifier-list value\"),");
+    w.pop();
+    w.write("});");
+    w.write("GeneratedChildFieldValue::ModifierList(source_modifiers.map(|modifiers| ModifierList::from_id(self.deep_clone_modifier_list_from_clone_source_with_location(source, modifiers, synthetic_location))))");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldKind::RawNodeSlice | AstChildFieldKind::OptionalRawNodeSlice => {");
+    w.push();
+    w.write("let source_nodes = source.with_store(&self.store, |source_store| match source_store.child_field_value(node, field) {");
+    w.push();
+    w.write("AstChildFieldValue::RawNodeSlice(nodes) => nodes.map(|nodes| nodes.id()),");
+    w.write("_ => panic!(\"generated child descriptor kind should match clone raw-node-slice value\"),");
+    w.pop();
+    w.write("});");
+    w.write("GeneratedChildFieldValue::RawNodeSlice(source_nodes.map(|nodes| RawNodeSlice::from_id(self.deep_clone_raw_node_slice_from_clone_source_with_location(source, nodes, synthetic_location))))");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn deep_clone_child_fields_from_clone_source_with_location(&mut self, source: DeepCloneSource<'_>, node: Node, synthetic_location: bool) -> GeneratedChildFieldValues {");
+    w.push();
+    w.write("let layout = source.with_store(&self.store, |source_store| source_store.node_layout(node));");
+    w.write("let mut fields = [GeneratedChildFieldValue::Missing; GENERATED_CHILD_FIELD_CAPACITY];");
+    w.write("let mut len = 0usize;");
+    w.write("for field in layout.child_fields {");
+    w.push();
+    w.write("fields[len] = self.deep_clone_child_field_from_clone_source_with_location(source, node, field, synthetic_location);");
+    w.write("len += 1;");
+    w.pop();
+    w.write("}");
+    w.write("GeneratedChildFieldValues { fields, len }");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn deep_clone_node_from_store_with_location(&mut self, source: &AstStore, node: Node, synthetic_location: bool) -> Node {");
+    w.push();
+    w.write("self.deep_clone_node_from_clone_source_with_location(DeepCloneSource::Store(source), node, synthetic_location)");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn ensure_deep_clone_recorder(&mut self, source: DeepCloneSource<'_>) -> bool {");
+    w.push();
+    w.write("if self.clone_recorder.is_some() {");
+    w.push();
+    w.write("return false;");
+    w.pop();
+    w.write("}");
+    w.write("self.clone_recorder = Some(source.new_node_map_with_capacity(&self.store, clone_recorder_capacity(source.len(&self.store), Some(1))));");
+    w.write("true");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn finish_deep_clone_recorder(&mut self, started: bool) {");
+    w.push();
+    w.write("if started {");
+    w.push();
+    w.write("self.clone_recorder = None;");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[rustfmt::skip]");
+    w.write("fn deep_clone_source_file_from_clone_source_with_location(&mut self, source: DeepCloneSource<'_>, node: Node, synthetic_location: bool) -> Node {");
+    w.push();
+    w.write("let recorder_started = self.ensure_deep_clone_recorder(source);");
+    w.write("let kind = source.kind(&self.store, node);");
+    w.write("let flags = source.flags(&self.store, node);");
+    w.write("let loc = source.loc(&self.store, node);");
+    w.write("let (parse_options, text, source_statements, source_end_of_file_token, source_metadata) = source.source_file_snapshot(&self.store, node);");
+    w.write("let statements = self.deep_clone_node_list_from_clone_source_with_location(source, source_statements, synthetic_location);");
+    w.write("let end_of_file_token = source_end_of_file_token.map(|token| self.deep_clone_node_from_clone_source_with_location(source, token, synthetic_location));");
+    w.write("let source_metadata = source_metadata.map_nodes(node, |node| {");
+    w.push();
+    w.write("if let Some(cloned) = self.recorded_clone(node) {");
+    w.push();
+    w.write("cloned");
+    w.pop();
+    w.write("} else {");
+    w.push();
+    w.write("self.deep_clone_node_from_clone_source_with_location(source, node, synthetic_location)");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("});");
     w.write("let mut data = SourceFileData::new(parse_options, text, statements, end_of_file_token);");
     w.write("data.copy_metadata_from(source_metadata.metadata);");
     w.write("let payload_idx = self.store.payloads_mut().source_file.alloc(data);");
     w.write("let payload = NodePayloadId::new(NodePayloadTag::SourceFile, payload_idx.into_raw());");
     w.write("let cloned = self.new_node(kind, flags, payload);");
     w.write("self.restore_source_file_self_references(cloned, source_metadata.self_references);");
+    w.write("let cloned = self.finish_clone_node(cloned, node, flags, loc);");
+    w.write("if synthetic_location { self.store.set_loc(cloned, core::undefined_text_range()); }");
+    w.write("self.finish_deep_clone_recorder(recorder_started);");
     w.write("cloned");
     w.pop();
     w.write("}");
+    w.write("");
+    w.write("#[rustfmt::skip]");
+    w.write("fn deep_clone_node_from_clone_source_with_location(&mut self, source: DeepCloneSource<'_>, node: Node, synthetic_location: bool) -> Node {");
+    w.push();
+    w.write("if source.kind(&self.store, node) == Kind::BinaryExpression {");
+    w.push();
+    w.write("return self.deep_clone_binary_expression_chain_from_clone_source_with_location(source, node, synthetic_location);");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("if source.payload_tag(&self.store, node) == NodePayloadTag::SourceFile {");
+    w.push();
+    w.write("return self.deep_clone_source_file_from_clone_source_with_location(source, node, synthetic_location);");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("let kind = source.kind(&self.store, node);");
+    w.write("let flags = source.flags(&self.store, node);");
+    w.write("let loc = source.loc(&self.store, node);");
+    w.write("let cloned = match source.payload_tag(&self.store, node) {");
+    w.push();
+    w.write("NodePayloadTag::SourceFile => unreachable!(\"source file clone handled before generated payload match\"),");
     for (const node of api.nodes()) {
         if (node.handWritten) continue;
         const payloadField = snakeCase(node.name);
-        const fields = structFieldsFor(node);
-        w.write(`NodePayloadTag::${node.name} => {`);
-        w.push();
-        w.write(`let source_data = self.store.as_${payloadField}(node);`);
-        for (const field of fields) {
-            w.write(`let source_${localFieldName(field)} = ${cloneFieldExpr("source_data", field)};`);
-        }
-        w.write(`let data = ${node.name} {`);
-        w.push();
-        for (const field of fields) {
-            w.write(`${field.name}: ${cloneCurrentStoreFieldExpr(`source_${localFieldName(field)}`, field)},`);
-        }
-        w.pop();
-        w.write("};");
-        if (hasTextContent(node)) w.write("self.text_count += 1;");
-        w.write(`let payload_idx = self.store.payloads_mut().${payloadField}.alloc(data);`);
-        w.write(`let payload = NodePayloadId::new(NodePayloadTag::${node.name}, payload_idx.into_raw());`);
-        w.write("self.new_node(kind, flags, payload)");
-        w.pop();
-        w.write("}");
+        const fieldTypes = new Map(structFieldsFor(node).map(field => [field.name, field]));
+        const childFieldIndexByName = new Map<string, number>();
+        childDescriptorsForNode(node).forEach((field, index) => childFieldIndexByName.set(field.name, index));
+        const args = schemaMembers(node).map((member: MemberInfo) => {
+            const field = fieldTypes.get(fieldName(member.name));
+            const childIndex = field ? childFieldIndexByName.get(localFieldName(field)) : undefined;
+            return cloneSourceFactoryArgExpr(member, field, "source_data", childIndex);
+        });
+        const needsSourceData = args.some(arg => arg.includes("source_data"));
+        const needsClonedChildren = args.some(arg => arg.startsWith("cloned_children."));
+        const sourceClause = needsSourceData ? `with_source(as_${payloadField}, source_data), ` : "";
+        const childrenClause = needsClonedChildren ? "with_children(cloned_children), " : "";
+        w.write(`NodePayloadTag::${node.name} => generated_clone_node!(self, source, node, synthetic_location, ${sourceClause}${childrenClause}${updateNewFactoryName(node)}(${args.join(", ")})),`);
     }
     w.pop();
     w.write("};");
@@ -1794,71 +3180,10 @@ function generateDeepClone(w: CodeWriter): void {
     w.pop();
     w.write("}");
     w.write("");
-    w.write("fn deep_clone_node_from_store_with_location(&mut self, source: &AstStore, node: Node, synthetic_location: bool) -> Node {");
-    w.push();
-    w.write("if source.kind(node) == Kind::BinaryExpression {");
-    w.push();
-    w.write("return self.deep_clone_binary_expression_chain_from_store_with_location(source, node, synthetic_location);");
-    w.pop();
-    w.write("}");
-    w.write("");
-    w.write("let kind = source.kind(node);");
-    w.write("let flags = source.flags(node);");
-    w.write("let loc = source.loc(node);");
-    w.write("let cloned = match source.header(node).payload.tag() {");
-    w.push();
-    w.write("NodePayloadTag::SourceFile => {");
-    w.push();
-    w.write("let source_data = source.as_source_file(node);");
-    w.write("let source_metadata = SourceFileCopyMetadata::from_source(source_data).map_nodes(node, |node| {");
-    w.push();
-    w.write("self.deep_clone_node_from_store_with_location(source, node, synthetic_location)");
-    w.pop();
-    w.write("});");
-    w.write("let statements = self.deep_clone_node_list_from_store_with_location(source, source_data.statements, synthetic_location);");
-    w.write("let end_of_file_token = source_data.end_of_file_token.map(|token| self.deep_clone_node_from_store_with_location(source, token, synthetic_location));");
-    w.write("let mut data = SourceFileData::new(source_data.parse_options.clone(), source_data.text.clone(), statements, end_of_file_token);");
-    w.write("data.copy_metadata_from(source_metadata.metadata);");
-    w.write("let payload_idx = self.store.payloads_mut().source_file.alloc(data);");
-    w.write("let payload = NodePayloadId::new(NodePayloadTag::SourceFile, payload_idx.into_raw());");
-    w.write("let cloned = self.new_node(kind, flags, payload);");
-    w.write("self.restore_source_file_self_references(cloned, source_metadata.self_references);");
-    w.write("cloned");
-    w.pop();
-    w.write("}");
-    for (const node of api.nodes()) {
-        if (node.handWritten) continue;
-        const payloadField = snakeCase(node.name);
-        const fields = structFieldsFor(node);
-        w.write(`NodePayloadTag::${node.name} => {`);
-        w.push();
-        w.write(`let source_data = source.as_${payloadField}(node);`);
-        w.write(`let data = ${node.name} {`);
-        w.push();
-        for (const field of fields) {
-            w.write(`${field.name}: ${cloneStoredFieldExpr("source_data", field)},`);
-        }
-        w.pop();
-        w.write("};");
-        if (hasTextContent(node)) w.write("self.text_count += 1;");
-        w.write(`let payload_idx = self.store.payloads_mut().${payloadField}.alloc(data);`);
-        w.write(`let payload = NodePayloadId::new(NodePayloadTag::${node.name}, payload_idx.into_raw());`);
-        w.write("self.new_node(kind, flags, payload)");
-        w.pop();
-        w.write("}");
-    }
-    w.pop();
-    w.write("};");
-    w.write("let cloned = self.finish_clone_node(cloned, node, flags, loc);");
-    w.write("if synthetic_location { self.store.set_loc(cloned, core::undefined_text_range()); }");
-    w.write("cloned");
-    w.pop();
-    w.write("}");
-    w.write("");
-    w.write("fn deep_clone_binary_expression_chain_from_store_with_location(&mut self, source: &AstStore, node: Node, synthetic_location: bool) -> Node {");
+    w.write("fn deep_clone_binary_expression_chain_from_clone_source_with_location(&mut self, source: DeepCloneSource<'_>, node: Node, synthetic_location: bool) -> Node {");
     w.push();
     w.write("let mut stack = vec![(node, false)];");
-    w.write("let mut cloned_nodes = source.new_node_map::<Node>();");
+    w.write("let mut cloned_nodes = source.new_node_map::<Node>(&self.store);");
     w.write("");
     w.write("while let Some((current, expanded)) = stack.pop() {");
     w.push();
@@ -1870,18 +3195,18 @@ function generateDeepClone(w: CodeWriter): void {
     w.write("if !expanded {");
     w.push();
     w.write("stack.push((current, true));");
-    w.write("if let Some(right) = source.right(current) {");
+    w.write("if let Some(right) = source.optional_node_from_id(&self.store, source.binary_expression_right(&self.store, current)) {");
     w.push();
-    w.write("if source.kind(right) == Kind::BinaryExpression {");
+    w.write("if source.kind(&self.store, right) == Kind::BinaryExpression {");
     w.push();
     w.write("stack.push((right, false));");
     w.pop();
     w.write("}");
     w.pop();
     w.write("}");
-    w.write("if let Some(left) = source.left(current) {");
+    w.write("if let Some(left) = source.optional_node_from_id(&self.store, source.binary_expression_left(&self.store, current)) {");
     w.push();
-    w.write("if source.kind(left) == Kind::BinaryExpression {");
+    w.write("if source.kind(&self.store, left) == Kind::BinaryExpression {");
     w.push();
     w.write("stack.push((left, false));");
     w.pop();
@@ -1892,15 +3217,15 @@ function generateDeepClone(w: CodeWriter): void {
     w.pop();
     w.write("}");
     w.write("");
-    w.write("let source_data = source.as_binary_expression(current);");
-    w.write("let modifiers = source_data.modifiers.get().map(|id| self.deep_clone_modifier_list_from_store_with_location(source, id, synthetic_location));");
-    w.write("let left = self.deep_clone_binary_expression_child_from_store_with_location(source, source.optional_node_from_id(source_data.left), synthetic_location, &cloned_nodes);");
-    w.write("let type_node = self.deep_clone_binary_expression_child_from_store_with_location(source, source.optional_node_from_id(source_data.r#type), synthetic_location, &cloned_nodes);");
-    w.write("let operator_token = self.deep_clone_binary_expression_child_from_store_with_location(source, source.optional_node_from_id(source_data.operator_token), synthetic_location, &cloned_nodes);");
-    w.write("let right = self.deep_clone_binary_expression_child_from_store_with_location(source, source.optional_node_from_id(source_data.right), synthetic_location, &cloned_nodes);");
+    w.write("let source_data = clone_source_data!(self, source, current, as_binary_expression);");
+    w.write("let modifiers = source_data.modifiers.get().map(|id| self.deep_clone_modifier_list_from_clone_source_with_location(source, id, synthetic_location));");
+    w.write("let left = self.deep_clone_binary_expression_child_from_clone_source_with_location(source, source_data.left.get(), synthetic_location, &cloned_nodes);");
+    w.write("let type_node = self.deep_clone_binary_expression_child_from_clone_source_with_location(source, source_data.r#type.get(), synthetic_location, &cloned_nodes);");
+    w.write("let operator_token = self.deep_clone_binary_expression_child_from_clone_source_with_location(source, source_data.operator_token.get(), synthetic_location, &cloned_nodes);");
+    w.write("let right = self.deep_clone_binary_expression_child_from_clone_source_with_location(source, source_data.right.get(), synthetic_location, &cloned_nodes);");
     w.write("");
     w.write("let cloned = self.new_binary_expression(modifiers.map(ModifierList::from_id), left, type_node, operator_token, right);");
-    w.write("let cloned = self.finish_clone_node(cloned, current, source.flags(current), source.loc(current));");
+    w.write("let cloned = self.finish_clone_node(cloned, current, source.flags(&self.store, current), source.loc(&self.store, current));");
     w.write("if synthetic_location {");
     w.push();
     w.write("self.store.set_loc(cloned, core::undefined_text_range());");
@@ -1914,15 +3239,15 @@ function generateDeepClone(w: CodeWriter): void {
     w.pop();
     w.write("}");
     w.write("");
-    w.write("fn deep_clone_binary_expression_child_from_store_with_location(&mut self, source: &AstStore, node: Option<Node>, synthetic_location: bool, cloned_nodes: &StoreNodeMap<Node>) -> Option<Node> {");
+    w.write("fn deep_clone_binary_expression_child_from_clone_source_with_location(&mut self, source: DeepCloneSource<'_>, node: Option<Node>, synthetic_location: bool, cloned_nodes: &StoreNodeMap<Node>) -> Option<Node> {");
     w.push();
     w.write("let node = node?;");
-    w.write("if source.kind(node) == Kind::BinaryExpression {");
+    w.write("if source.kind(&self.store, node) == Kind::BinaryExpression {");
     w.push();
     w.write("return cloned_nodes.get_copied(node);");
     w.pop();
     w.write("}");
-    w.write("Some(self.deep_clone_node_from_store_with_location(source, node, synthetic_location))");
+    w.write("Some(self.deep_clone_node_from_clone_source_with_location(source, node, synthetic_location))");
     w.pop();
     w.write("}");
     w.write("");
@@ -1935,11 +3260,16 @@ function generateDeepClone(w: CodeWriter): void {
     w.write("");
     w.write("fn deep_clone_node_list_from_store_with_location(&mut self, source: &AstStore, id: NodeListId, synthetic_location: bool) -> NodeListId {");
     w.push();
-    w.write("let list = source.node_list(id);");
-    w.write("let loc = if synthetic_location { core::undefined_text_range() } else { list.loc() };");
-    w.write("let range = if synthetic_location { core::undefined_text_range() } else { list.range() };");
-    w.write("let has_trailing_comma = list.has_trailing_comma();");
-    w.write("let nodes: Vec<_> = list.iter().map(|node| self.deep_clone_node_from_store_with_location(source, node, synthetic_location)).collect();");
+    w.write("self.deep_clone_node_list_from_clone_source_with_location(DeepCloneSource::Store(source), id, synthetic_location)");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn deep_clone_node_list_from_clone_source_with_location(&mut self, source: DeepCloneSource<'_>, id: NodeListId, synthetic_location: bool) -> NodeListId {");
+    w.push();
+    w.write("let (source_nodes, source_loc, source_range, has_trailing_comma) = source.node_list_snapshot(&self.store, id);");
+    w.write("let nodes: Vec<_> = source_nodes.iter().copied().map(|node| self.deep_clone_node_from_clone_source_with_location(source, node, synthetic_location)).collect();");
+    w.write("let loc = if synthetic_location { core::undefined_text_range() } else { source_loc };");
+    w.write("let range = if synthetic_location { core::undefined_text_range() } else { source_range };");
     w.write("if synthetic_location {");
     w.push();
     w.write("if let Some(cloned_last) = nodes.last().copied() {");
@@ -1957,33 +3287,6 @@ function generateDeepClone(w: CodeWriter): void {
     w.pop();
     w.write("}");
     w.write("");
-    w.write("fn deep_clone_node_list_in_current_store_with_location(&mut self, id: NodeListId, synthetic_location: bool) -> NodeListId {");
-    w.push();
-    w.write("let list = self.store.node_list(id);");
-    w.write("let source_nodes = list.iter().collect::<Vec<_>>();");
-    w.write("let source_loc = list.loc();");
-    w.write("let source_range = list.range();");
-    w.write("let source_has_trailing_comma = list.has_trailing_comma();");
-    w.write("let nodes: Vec<_> = source_nodes.iter().copied().map(|node| self.deep_clone_node_in_current_store_with_location(node, synthetic_location)).collect();");
-    w.write("let loc = if synthetic_location { core::undefined_text_range() } else { source_loc };");
-    w.write("let range = if synthetic_location { core::undefined_text_range() } else { source_range };");
-    w.write("if synthetic_location {");
-    w.push();
-    w.write("if let Some(cloned_last) = nodes.last().copied() {");
-    w.push();
-    w.write("if source_has_trailing_comma {");
-    w.push();
-    w.write("self.store.set_loc(cloned_last, core::new_text_range(-2, -2));");
-    w.pop();
-    w.write("}");
-    w.pop();
-    w.write("}");
-    w.pop();
-    w.write("}");
-    w.write("self.new_node_list_with_trailing_comma(loc, range, nodes, source_has_trailing_comma).id()");
-    w.pop();
-    w.write("}");
-    w.write("");
     w.write("pub(crate) fn deep_clone_modifier_list_from_store(&mut self, source: impl AsRef<AstStore>, id: ModifierListId) -> ModifierListId {");
     w.push();
     w.write("let source = source.as_ref();");
@@ -1993,46 +3296,21 @@ function generateDeepClone(w: CodeWriter): void {
     w.write("");
     w.write("fn deep_clone_modifier_list_from_store_with_location(&mut self, source: &AstStore, id: ModifierListId, synthetic_location: bool) -> ModifierListId {");
     w.push();
-    w.write("let modifiers = source.modifier_list(id);");
-    w.write("let nodes = modifiers.nodes();");
-    w.write("let loc = if synthetic_location { core::undefined_text_range() } else { nodes.loc() };");
-    w.write("let range = if synthetic_location { core::undefined_text_range() } else { nodes.range() };");
-    w.write("let has_trailing_comma = nodes.has_trailing_comma();");
-    w.write("let modifier_flags = modifiers.modifier_flags();");
-    w.write("let cloned: Vec<_> = nodes.iter().map(|node| self.deep_clone_node_from_store_with_location(source, node, synthetic_location)).collect();");
-    w.write("if synthetic_location {");
-    w.push();
-    w.write("if let Some(cloned_last) = cloned.last().copied() {");
-    w.push();
-    w.write("if has_trailing_comma {");
-    w.push();
-    w.write("self.store.set_loc(cloned_last, core::new_text_range(-2, -2));");
-    w.pop();
-    w.write("}");
-    w.pop();
-    w.write("}");
-    w.pop();
-    w.write("}");
-    w.write("self.new_modifier_list(loc, range, cloned, modifier_flags).id()");
+    w.write("self.deep_clone_modifier_list_from_clone_source_with_location(DeepCloneSource::Store(source), id, synthetic_location)");
     w.pop();
     w.write("}");
     w.write("");
-    w.write("fn deep_clone_modifier_list_in_current_store_with_location(&mut self, id: ModifierListId, synthetic_location: bool) -> ModifierListId {");
+    w.write("fn deep_clone_modifier_list_from_clone_source_with_location(&mut self, source: DeepCloneSource<'_>, id: ModifierListId, synthetic_location: bool) -> ModifierListId {");
     w.push();
-    w.write("let modifiers = self.store.modifier_list(id);");
-    w.write("let source_nodes = modifiers.nodes().iter().collect::<Vec<_>>();");
-    w.write("let source_loc = modifiers.nodes().loc();");
-    w.write("let source_range = modifiers.nodes().range();");
-    w.write("let source_has_trailing_comma = modifiers.nodes().has_trailing_comma();");
-    w.write("let modifier_flags = modifiers.modifier_flags();");
-    w.write("let cloned: Vec<_> = source_nodes.iter().copied().map(|node| self.deep_clone_node_in_current_store_with_location(node, synthetic_location)).collect();");
+    w.write("let (source_nodes, source_loc, source_range, has_trailing_comma, modifier_flags) = source.modifier_list_snapshot(&self.store, id);");
+    w.write("let cloned: Vec<_> = source_nodes.iter().copied().map(|node| self.deep_clone_node_from_clone_source_with_location(source, node, synthetic_location)).collect();");
     w.write("let loc = if synthetic_location { core::undefined_text_range() } else { source_loc };");
     w.write("let range = if synthetic_location { core::undefined_text_range() } else { source_range };");
     w.write("if synthetic_location {");
     w.push();
     w.write("if let Some(cloned_last) = cloned.last().copied() {");
     w.push();
-    w.write("if source_has_trailing_comma {");
+    w.write("if has_trailing_comma {");
     w.push();
     w.write("self.store.set_loc(cloned_last, core::new_text_range(-2, -2));");
     w.pop();
@@ -2054,15 +3332,14 @@ function generateDeepClone(w: CodeWriter): void {
     w.write("");
     w.write("fn deep_clone_raw_node_slice_from_store_with_location(&mut self, source: &AstStore, id: RawNodeSliceId, synthetic_location: bool) -> RawNodeSliceId {");
     w.push();
-    w.write("let nodes = source.raw_node_slice(id).iter().map(|node| node.map(|node| self.deep_clone_node_from_store_with_location(source, node, synthetic_location))).collect::<Vec<_>>();");
-    w.write("self.new_raw_node_slice(nodes).id()");
+    w.write("self.deep_clone_raw_node_slice_from_clone_source_with_location(DeepCloneSource::Store(source), id, synthetic_location)");
     w.pop();
     w.write("}");
     w.write("");
-    w.write("fn deep_clone_raw_node_slice_in_current_store_with_location(&mut self, id: RawNodeSliceId, synthetic_location: bool) -> RawNodeSliceId {");
+    w.write("fn deep_clone_raw_node_slice_from_clone_source_with_location(&mut self, source: DeepCloneSource<'_>, id: RawNodeSliceId, synthetic_location: bool) -> RawNodeSliceId {");
     w.push();
-    w.write("let source_nodes = self.store.raw_node_slice(id).iter().collect::<Vec<_>>();");
-    w.write("let nodes = source_nodes.iter().map(|node| node.map(|node| self.deep_clone_node_in_current_store_with_location(node, synthetic_location))).collect::<Vec<_>>();");
+    w.write("let source_nodes = source.raw_node_slice_snapshot(&self.store, id);");
+    w.write("let nodes = source_nodes.iter().map(|node| node.map(|node| self.deep_clone_node_from_clone_source_with_location(source, node, synthetic_location))).collect::<Vec<_>>();");
     w.write("self.new_raw_node_slice(nodes).id()");
     w.pop();
     w.write("}");
@@ -2070,17 +3347,17 @@ function generateDeepClone(w: CodeWriter): void {
     w.write("pub(crate) fn deep_clone_raw_string_slice_from_store(&mut self, source: impl AsRef<AstStore>, id: RawStringSliceId) -> RawStringSliceId {");
     w.push();
     w.write("let source = source.as_ref();");
-    w.write("let strings = source.raw_string_slice(id).iter().map(str::to_owned).collect::<Vec<_>>();");
+    w.write("self.deep_clone_raw_string_slice_from_clone_source(DeepCloneSource::Store(source), id)");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn deep_clone_raw_string_slice_from_clone_source(&mut self, source: DeepCloneSource<'_>, id: RawStringSliceId) -> RawStringSliceId {");
+    w.push();
+    w.write("let strings = source.raw_string_slice_snapshot(&self.store, id);");
     w.write("self.new_raw_string_slice(strings).id()");
     w.pop();
     w.write("}");
     w.write("");
-    w.write("fn deep_clone_raw_string_slice_in_current_store(&mut self, id: RawStringSliceId) -> RawStringSliceId {");
-    w.push();
-    w.write("let strings = self.store.raw_string_slice(id).iter().map(str::to_owned).collect::<Vec<_>>();");
-    w.write("self.new_raw_string_slice(strings).id()");
-    w.pop();
-    w.write("}");
     w.pop();
     w.write("}");
     w.write("");
@@ -2138,15 +3415,7 @@ function generateStructs(w: CodeWriter): void {
         const needsManualClone = fields.some(field => field.type === "AtomicU32" || field.type === "AtomicI32");
         const canDefault = fields.every(field => canDefaultField(field.type));
         w.write(needsManualClone ? (canDefault ? "#[derive(Default)]" : "") : (canDefault ? "#[derive(Clone, Default)]" : "#[derive(Clone)]"));
-        w.write(`pub(crate) struct ${base.key} {`);
-        w.push();
-        for (const field of fields) {
-            const comment = field.comment ? ` // ${field.comment}` : "";
-            w.write(`pub(crate) ${field.name}: ${field.type},${comment}`);
-        }
-        w.pop();
-        w.write("}");
-        w.write("");
+        emitRustfmtSkippedStruct(w, base.key, fields);
         if (needsManualClone) {
             emitManualClone(w, base.key, fields);
         }
@@ -2156,19 +3425,25 @@ function generateStructs(w: CodeWriter): void {
         const fields = structFieldsFor(node);
         const needsManualClone = fields.some(field => field.type === "AtomicU32" || field.type === "AtomicI32");
         if (!needsManualClone) w.write("#[derive(Clone)]");
-        w.write(`pub(crate) struct ${node.name} {`);
-        w.push();
-        for (const field of fields) {
-            const comment = field.comment ? ` // ${field.comment}` : "";
-            w.write(`pub(crate) ${field.name}: ${field.type},${comment}`);
-        }
-        w.pop();
-        w.write("}");
-        w.write("");
+        emitRustfmtSkippedStruct(w, node.name, fields);
         if (needsManualClone) {
             emitManualClone(w, node.name, fields);
         }
     }
+}
+
+function rustBlockComment(comment: string): string {
+    return comment.replace(/\*\//g, "* /");
+}
+
+function emitRustfmtSkippedStruct(w: CodeWriter, name: string, fields: StructField[]): void {
+    const structFields = fields.map(field => {
+        const comment = field.comment ? ` /* ${rustBlockComment(field.comment)} */` : "";
+        return `pub(crate) ${field.name}: ${field.type},${comment}`;
+    });
+    w.write("#[rustfmt::skip]");
+    w.write(`pub(crate) struct ${name} { ${structFields.join(" ")} }`);
+    w.write("");
 }
 
 function canDefaultField(type: string): boolean {
@@ -2213,33 +3488,35 @@ function structFieldsForBase(base: NodeType): StructField[] {
 }
 
 function emitManualClone(w: CodeWriter, name: string, fields: { name: string; type: string; }[]): void {
-    w.write(`impl Clone for ${name} {`);
-    w.push();
-    w.write("fn clone(&self) -> Self {");
-    w.push();
-    w.write("Self {");
-    w.push();
-    for (const field of fields) {
+    const cloneFields = fields.map(field => {
         if (field.type === "AtomicU32") {
-            w.write(`${field.name}: AtomicU32::new(self.${field.name}.load(Ordering::Relaxed)),`);
+            return `${field.name}: AtomicU32::new(self.${field.name}.load(Ordering::Relaxed)),`;
         }
-        else if (field.type === "AtomicI32") {
-            w.write(`${field.name}: AtomicI32::new(self.${field.name}.load(Ordering::Relaxed)),`);
+        if (field.type === "AtomicI32") {
+            return `${field.name}: AtomicI32::new(self.${field.name}.load(Ordering::Relaxed)),`;
         }
-        else {
-            w.write(`${field.name}: self.${field.name}.clone(),`);
-        }
-    }
-    w.pop();
-    w.write("}");
-    w.pop();
-    w.write("}");
-    w.pop();
-    w.write("}");
+        return `${field.name}: self.${field.name}.clone(),`;
+    });
+    w.write("#[rustfmt::skip]");
+    w.write(`impl Clone for ${name} { fn clone(&self) -> Self { Self { ${cloneFields.join(" ")} } } }`);
     w.write("");
 }
 
 function generateIsFunctions(w: CodeWriter): void {
+    w.write("macro_rules! generated_is_node_kind_fn {");
+    w.push();
+    w.write("($name:ident, $($kind:pat_param)|+ $(,)?) => {");
+    w.push();
+    w.write("pub fn $name(store: &AstStore, node: Node) -> bool {");
+    w.push();
+    w.write("matches!(store.kind(node), $($kind)|+)");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.pop();
+    w.write("}");
+    w.write("");
     const emitted = new Set<string>();
     const skip = new Set([
         "is_for_of_statement",
@@ -2248,36 +3525,55 @@ function generateIsFunctions(w: CodeWriter): void {
         "is_logical_or_coalescing_assignment_operator",
         "is_question_token",
     ]);
-    const emit = (name: string, expression: string) => {
+    const emit = (name: string, pattern: string) => {
         if (skip.has(name)) return;
         if (emitted.has(name)) return;
         emitted.add(name);
-        w.write(`pub fn ${name}(store: &AstStore, node: Node) -> bool {`);
-        w.push();
-        w.write(expression);
-        w.pop();
-        w.write("}");
-        w.write("");
+        w.write(`generated_is_node_kind_fn!(${name}, ${pattern});`);
     };
     for (const node of api.nodes()) {
         const kindTypes = node.kindTypes().filter((kind: any) => !isJSDocKindReference(kind.value));
         if (node.isMultiKind()) {
             for (const kind of kindTypes) {
-                emit(`is_${snakeCase(kind.name)}`, `matches!(store.kind(node), ${rustKindConstant(kind.value)})`);
+                emit(`is_${snakeCase(kind.name)}`, rustKindConstant(kind.value));
             }
             continue;
         }
         emit(
             `is_${snakeCase(node.name)}`,
-            `matches!(store.kind(node), ${rustKindConstant(`SyntaxKind.${node.syntaxKindName}`)})`,
+            rustKindConstant(`SyntaxKind.${node.syntaxKindName}`),
         );
         for (const alias of node.kindAliases) {
-            emit(`is_${snakeCase(alias)}`, `matches!(store.kind(node), Kind::${alias})`);
+            emit(`is_${snakeCase(alias)}`, `Kind::${alias}`);
         }
     }
+    w.write("");
 }
 
 function generateKindGuards(w: CodeWriter): void {
+    w.write("macro_rules! generated_kind_guard_fn {");
+    w.push();
+    w.write("($name:ident, range $first:expr, $last:expr) => {");
+    w.push();
+    w.write("pub fn $name(kind: Kind) -> bool {");
+    w.push();
+    w.write("kind >= $first && kind <= $last");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.write("($name:ident, matches $($kind:pat_param)|+ $(,)?) => {");
+    w.push();
+    w.write("pub fn $name(kind: Kind) -> bool {");
+    w.push();
+    w.write("matches!(kind, $($kind)|+)");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.pop();
+    w.write("}");
+    w.write("");
     const skipGuards = new Set([
         "isJSDocKind",
         "isAssignmentOperator",
@@ -2286,35 +3582,542 @@ function generateKindGuards(w: CodeWriter): void {
     for (const guard of api.kindGuards()) {
         const funcName = kindGuardName(guard.aliasName);
         if (skipGuards.has(funcName)) continue;
-        w.write(`pub fn ${snakeCase(funcName)}(kind: Kind) -> bool {`);
-        w.push();
         if (guard.type === "range") {
-            w.write(`kind >= ${rustKindConstant(guard.first)} && kind <= ${rustKindConstant(guard.last)}`);
+            w.write(`generated_kind_guard_fn!(${snakeCase(funcName)}, range ${rustKindConstant(guard.first)}, ${rustKindConstant(guard.last)});`);
         }
         else {
             const expanded = expandKindMembers(guard.members);
-            w.write("matches!(");
-            w.push();
-            w.write("kind,");
-            w.write(expanded.map(member => `Kind::${member}`).join(" | "));
-            w.pop();
-            w.write(")");
+            w.write(`generated_kind_guard_fn!(${snakeCase(funcName)}, matches ${expanded.map(member => `Kind::${member}`).join(" | ")});`);
         }
-        w.pop();
-        w.write("}");
-        w.write("");
+    }
+    w.write("");
+}
+
+type AstViewCategory = {
+    name: string;
+    nodeNames?: string[];
+    baseName?: string;
+    kindPredicate?: string;
+};
+
+function kindPatternForNodes(nodes: NodeType[]): string {
+    const kinds = [...new Set(nodes.flatMap(kindConstantsForNode))];
+    return kinds.length === 0 ? "_" : kinds.join(" | ");
+}
+
+function payloadPatternForNodes(nodes: NodeType[]): string {
+    return nodes.map(node => `NodePayloadTag::${node.name}`).join(" | ");
+}
+
+function nodesForBase(baseName: string): NodeType[] {
+    return api.nodes()
+        .filter((node: NodeType) => !node.handWritten)
+        .filter((node: NodeType) => nodeExtendsBase(node, baseName));
+}
+
+function nodesByName(names: string[]): NodeType[] {
+    const wanted = new Set(names);
+    return api.nodes()
+        .filter((node: NodeType) => !node.handWritten)
+        .filter((node: NodeType) => wanted.has(node.name));
+}
+
+function astViewName(name: string): string {
+    return `${name}View`;
+}
+
+function astViewChildMethodName(fieldName: string): string {
+    return fieldName === "type" ? "r#type" : fieldName;
+}
+
+function astViewFindChildMethodName(fieldName: string): string {
+    return `find_${fieldName}`;
+}
+
+function astViewChildNodeMethodName(fieldName: string): string {
+    return fieldName === "type" ? "type_node" : `${fieldName}_node`;
+}
+
+function astViewChildMethodLines(field: AstChildDescriptor): string[] {
+    const method = astViewChildMethodName(field.name);
+    switch (field.kind) {
+        case "Node":
+        case "OptionalNode":
+            return [
+                `pub fn ${astViewChildNodeMethodName(field.name)}(self) -> Option<Node> { self.child_node(AstChildFieldId::${field.id}) }`,
+                `pub fn ${method}<U: AstViewNode>(self) -> Option<AstRef<'a, U>> { self.child_view::<U>(AstChildFieldId::${field.id}) }`,
+            ];
+        case "NodeList":
+        case "OptionalNodeList":
+        case "ModifierList":
+        case "OptionalModifierList":
+        case "RawNodeSlice":
+        case "OptionalRawNodeSlice":
+            return [
+                `pub fn ${method}<U: AstViewNode>(self) -> impl Iterator<Item = AstRef<'a, U>> + 'a { self.child_list_views::<U>(AstChildFieldId::${field.id}) }`,
+                `pub fn ${astViewFindChildMethodName(field.name)}<U: AstViewNode>(self, predicate: impl FnMut(AstRef<'a, U>) -> bool) -> Option<AstRef<'a, U>> { self.find_child_list_view::<U>(AstChildFieldId::${field.id}, predicate) }`,
+            ];
     }
 }
 
+function emitAstViewChildMethods(w: CodeWriter, nodes: NodeType[]): void {
+    for (const node of nodes) {
+        const childFields = childDescriptorsForNode(node);
+        if (childFields.length === 0) continue;
+        const methods = childFields.flatMap(astViewChildMethodLines);
+        emitRustfmtSkippedItem(w, `impl<'a> AstRef<'a, ${astViewName(node.name)}> { ${methods.join(" ")} }`);
+    }
+    w.write("");
+}
+
+function generateAstViews(w: CodeWriter): void {
+    const nodes = api.nodes().filter((node: NodeType) => !node.handWritten);
+    const categories: AstViewCategory[] = [
+        { name: "AstDeclarationView", baseName: "DeclarationBase" },
+        { name: "AstStatementView", baseName: "StatementBase" },
+        { name: "AstExpressionView", baseName: "ExpressionBase" },
+        { name: "AstTypeNodeView", baseName: "TypeNodeBase" },
+        { name: "AstNameView", nodeNames: ["Identifier", "PrivateIdentifier", "QualifiedName", "ComputedPropertyName"] },
+        { name: "AstTokenView", kindPredicate: "is_token_kind" },
+    ];
+    w.write("pub trait AstViewNode: Copy {");
+    w.push();
+    w.write("fn can_cast_kind(kind: Kind) -> bool;");
+    w.write("fn can_cast(store: &AstStore, node: Node) -> bool {");
+    w.push();
+    w.write("Self::can_cast_kind(store.kind(node))");
+    w.pop();
+    w.write("}");
+    w.write("fn cast(store: &AstStore, node: Node) -> Option<Self> {");
+    w.push();
+    w.write("Self::can_cast(store, node).then(|| Self::from_node_unchecked(node))");
+    w.pop();
+    w.write("}");
+    w.write("fn from_node_unchecked(node: Node) -> Self;");
+    w.write("fn node(self) -> Node;");
+    w.write("fn kind(self, store: &AstStore) -> Kind {");
+    w.push();
+    w.write("store.kind(self.node())");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[derive(Clone, Copy)]");
+    w.write("pub struct AstRef<'a, T: AstViewNode> {");
+    w.push();
+    w.write("store: &'a AstStore,");
+    w.write("view: T,");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("impl<'a, T: AstViewNode> AstRef<'a, T> {");
+    w.push();
+    w.write("pub fn store(self) -> &'a AstStore {");
+    w.push();
+    w.write("self.store");
+    w.pop();
+    w.write("}");
+    w.write("pub fn view(self) -> T {");
+    w.push();
+    w.write("self.view");
+    w.pop();
+    w.write("}");
+    w.write("pub fn node(self) -> Node {");
+    w.push();
+    w.write("self.view.node()");
+    w.pop();
+    w.write("}");
+    w.write("pub fn kind(self) -> Kind {");
+    w.push();
+    w.write("self.store.kind(self.node())");
+    w.pop();
+    w.write("}");
+    w.write("pub(crate) fn child_fields(self) -> &'static [AstChildFieldDescriptor] {");
+    w.push();
+    w.write("self.store.node_layout(self.node()).child_fields");
+    w.pop();
+    w.write("}");
+    w.write("pub(crate) fn child_field_value(self, field: &AstChildFieldDescriptor) -> AstChildFieldValue<'a> {");
+    w.push();
+    w.write("self.store.child_field_value(self.node(), field)");
+    w.pop();
+    w.write("}");
+    w.write("pub(crate) fn child_field(self, field_id: AstChildFieldId) -> Option<&'static AstChildFieldDescriptor> {");
+    w.push();
+    w.write("self.store.node_layout(self.node()).child_fields.iter().find(|field| field.id == field_id)");
+    w.pop();
+    w.write("}");
+    w.write("pub fn child_node(self, field_id: AstChildFieldId) -> Option<Node> {");
+    w.push();
+    w.write("let field = self.child_field(field_id)?;");
+    w.write("match self.child_field_value(field) {");
+    w.push();
+    w.write("AstChildFieldValue::Node(node) => node,");
+    w.write("_ => None,");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("pub fn child_view<U: AstViewNode>(self, field_id: AstChildFieldId) -> Option<AstRef<'a, U>> {");
+    w.push();
+    w.write("self.child_node(field_id).and_then(|node| self.store.ast_ref::<U>(node))");
+    w.pop();
+    w.write("}");
+    w.write("pub fn child_list_nodes(self, field_id: AstChildFieldId) -> Vec<Node> {");
+    w.push();
+    w.write("let Some(field) = self.child_field(field_id) else {");
+    w.push();
+    w.write("return Vec::new();");
+    w.pop();
+    w.write("};");
+    w.write("match self.child_field_value(field) {");
+    w.push();
+    w.write("AstChildFieldValue::NodeList(Some(nodes)) => nodes.iter().collect(),");
+    w.write("AstChildFieldValue::ModifierList(Some(modifiers)) => modifiers.iter().collect(),");
+    w.write("AstChildFieldValue::RawNodeSlice(Some(nodes)) => nodes.iter().flatten().collect(),");
+    w.write("_ => Vec::new(),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("pub fn for_each_child_list_node<F>(self, field_id: AstChildFieldId, mut visit: F) -> ControlFlow<()> where F: FnMut(Node) -> ControlFlow<()> {");
+    w.push();
+    w.write("let Some(field) = self.child_field(field_id) else {");
+    w.push();
+    w.write("return ControlFlow::Continue(());");
+    w.pop();
+    w.write("};");
+    w.write("match self.child_field_value(field) {");
+    w.push();
+    w.write("AstChildFieldValue::NodeList(Some(nodes)) => {");
+    w.push();
+    w.write("for node in nodes.iter() {");
+    w.push();
+    w.write("if let ControlFlow::Break(()) = visit(node) {");
+    w.push();
+    w.write("return ControlFlow::Break(());");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldValue::ModifierList(Some(modifiers)) => {");
+    w.push();
+    w.write("for node in modifiers.iter() {");
+    w.push();
+    w.write("if let ControlFlow::Break(()) = visit(node) {");
+    w.push();
+    w.write("return ControlFlow::Break(());");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldValue::RawNodeSlice(Some(nodes)) => {");
+    w.push();
+    w.write("for node in nodes.iter().flatten() {");
+    w.push();
+    w.write("if let ControlFlow::Break(()) = visit(node) {");
+    w.push();
+    w.write("return ControlFlow::Break(());");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("_ => {}");
+    w.pop();
+    w.write("}");
+    w.write("ControlFlow::Continue(())");
+    w.pop();
+    w.write("}");
+    w.write("pub fn find_child_list_view<U: AstViewNode>(self, field_id: AstChildFieldId, mut predicate: impl FnMut(AstRef<'a, U>) -> bool) -> Option<AstRef<'a, U>> {");
+    w.push();
+    w.write("let store = self.store;");
+    w.write("let mut found = None;");
+    w.write("let _ = self.for_each_child_list_node(field_id, |node| {");
+    w.push();
+    w.write("let Some(child) = store.ast_ref::<U>(node) else {");
+    w.push();
+    w.write("return ControlFlow::Continue(());");
+    w.pop();
+    w.write("};");
+    w.write("if predicate(child) {");
+    w.push();
+    w.write("found = Some(child);");
+    w.write("ControlFlow::Break(())");
+    w.pop();
+    w.write("} else {");
+    w.push();
+    w.write("ControlFlow::Continue(())");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("});");
+    w.write("found");
+    w.pop();
+    w.write("}");
+    w.write("pub fn child_list_views<U: AstViewNode>(self, field_id: AstChildFieldId) -> impl Iterator<Item = AstRef<'a, U>> + 'a {");
+    w.push();
+    w.write("let store = self.store;");
+    w.write("self.child_list_nodes(field_id).into_iter().filter_map(move |node| store.ast_ref::<U>(node))");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("impl AstStore {");
+    w.push();
+    w.write("pub fn view<T: AstViewNode>(&self, node: Node) -> Option<T> {");
+    w.push();
+    w.write("T::cast(self, node)");
+    w.pop();
+    w.write("}");
+    w.write("pub fn ast_ref<T: AstViewNode>(&self, node: Node) -> Option<AstRef<'_, T>> {");
+    w.push();
+    w.write("self.view(node).map(|view| AstRef { store: self, view })");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_ast_payload_view {");
+    w.push();
+    w.write("($view:ident, $tag:ident, $($kind:pat_param)|+ $(,)?) => {");
+    w.push();
+    w.write("#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]");
+    w.write("pub struct $view { node: Node }");
+    w.write("impl $view { pub fn node(self) -> Node { self.node } }");
+    w.write("impl AstViewNode for $view {");
+    w.push();
+    w.write("fn can_cast_kind(kind: Kind) -> bool { matches!(kind, $($kind)|+) }");
+    w.write("fn can_cast(store: &AstStore, node: Node) -> bool { store.header(node).payload.tag() == NodePayloadTag::$tag && Self::can_cast_kind(store.kind(node)) }");
+    w.write("fn from_node_unchecked(node: Node) -> Self { Self { node } }");
+    w.write("fn node(self) -> Node { self.node }");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_ast_category_view {");
+    w.push();
+    w.write("($view:ident, tags [$($tag:pat_param)|+], kinds [$($kind:pat_param)|+]) => {");
+    w.push();
+    w.write("#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]");
+    w.write("pub struct $view { node: Node }");
+    w.write("impl $view { pub fn node(self) -> Node { self.node } }");
+    w.write("impl AstViewNode for $view {");
+    w.push();
+    w.write("fn can_cast_kind(kind: Kind) -> bool { matches!(kind, $($kind)|+) }");
+    w.write("fn can_cast(store: &AstStore, node: Node) -> bool { matches!(store.header(node).payload.tag(), $($tag)|+) && Self::can_cast_kind(store.kind(node)) }");
+    w.write("fn from_node_unchecked(node: Node) -> Self { Self { node } }");
+    w.write("fn node(self) -> Node { self.node }");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_ast_kind_category_view {");
+    w.push();
+    w.write("($view:ident, $predicate:ident) => {");
+    w.push();
+    w.write("#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]");
+    w.write("pub struct $view { node: Node }");
+    w.write("impl $view { pub fn node(self) -> Node { self.node } }");
+    w.write("impl AstViewNode for $view {");
+    w.push();
+    w.write("fn can_cast_kind(kind: Kind) -> bool { $predicate(kind) }");
+    w.write("fn from_node_unchecked(node: Node) -> Self { Self { node } }");
+    w.write("fn node(self) -> Node { self.node }");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    for (const node of nodes) {
+        const pattern = kindPatternForNodes([node]);
+        emitRustfmtSkippedItem(w, `generated_ast_payload_view!(${astViewName(node.name)}, ${node.name}, ${pattern});`);
+    }
+    w.write("");
+    for (const category of categories) {
+        if (category.kindPredicate) {
+            emitRustfmtSkippedItem(w, `generated_ast_kind_category_view!(${category.name}, ${category.kindPredicate});`);
+            continue;
+        }
+        const categoryNodes = category.baseName ? nodesForBase(category.baseName) : nodesByName(category.nodeNames ?? []);
+        if (categoryNodes.length === 0) continue;
+        emitRustfmtSkippedItem(w, `generated_ast_category_view!(${category.name}, tags [${payloadPatternForNodes(categoryNodes)}], kinds [${kindPatternForNodes(categoryNodes)}]);`);
+    }
+    w.write("");
+    emitAstViewChildMethods(w, nodes);
+    w.write("#[cfg(test)]");
+    w.write("mod generated_ast_view_tests {");
+    w.push();
+    w.write("use super::*;");
+    w.write("");
+    w.write("fn empty_node_list(factory: &mut NodeFactory) -> NodeList {");
+    w.push();
+    w.write("factory.new_node_list(core::TextRange::new(0, 0), core::TextRange::new(0, 0), std::iter::empty::<Node>())");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[test]");
+    w.write("fn payload_views_should_cast_by_payload_tag_and_kind() {");
+    w.push();
+    w.write("let mut factory = NodeFactory::default();");
+    w.write("let identifier = factory.new_identifier(\"value\");");
+    w.write("let identifier_view = factory.store().view::<IdentifierView>(identifier).unwrap();");
+    w.write("assert_eq!(identifier_view.node(), identifier);");
+    w.write("assert!(factory.store().view::<TokenView>(identifier).is_none());");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[test]");
+    w.write("fn category_views_should_cast_from_generated_payload_sets() {");
+    w.push();
+    w.write("let mut factory = NodeFactory::default();");
+    w.write("let name = factory.new_identifier(\"fn_name\");");
+    w.write("let type_node = factory.new_keyword_type_node(Kind::StringKeyword);");
+    w.write("let value = factory.new_numeric_literal(\"1\", TokenFlags::NONE);");
+    w.write("let statements = empty_node_list(&mut factory);");
+    w.write("let block = factory.new_block(statements, false);");
+    w.write("let parameters = empty_node_list(&mut factory);");
+    w.write("let function = factory.new_function_declaration(None::<ModifierList>, None::<Node>, Some(name), None::<NodeList>, parameters, Some(type_node), None::<Node>, Some(block));");
+    w.write("assert!(factory.store().view::<AstNameView>(name).is_some());");
+    w.write("assert!(factory.store().view::<AstTypeNodeView>(type_node).is_some());");
+    w.write("assert!(factory.store().view::<AstExpressionView>(value).is_some());");
+    w.write("assert!(factory.store().view::<AstStatementView>(block).is_some());");
+    w.write("assert!(factory.store().view::<AstDeclarationView>(function).is_some());");
+    w.write("assert!(factory.store().view::<AstExpressionView>(function).is_none());");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[test]");
+    w.write("fn ast_ref_should_delegate_to_descriptor_children() {");
+    w.push();
+    w.write("let mut factory = NodeFactory::default();");
+    w.write("let name = factory.new_identifier(\"fn_name\");");
+    w.write("let parameters = empty_node_list(&mut factory);");
+    w.write("let function = factory.new_function_declaration(None::<ModifierList>, None::<Node>, Some(name), None::<NodeList>, parameters, None::<Node>, None::<Node>, None::<Node>);");
+    w.write("let function_ref = factory.store().ast_ref::<FunctionDeclarationView>(function).unwrap();");
+    w.write("assert_eq!(function_ref.kind(), Kind::FunctionDeclaration);");
+    w.write("let name_field = function_ref.child_fields().iter().find(|field| field.name == \"name\").unwrap();");
+    w.write("match function_ref.child_field_value(name_field) {");
+    w.push();
+    w.write("AstChildFieldValue::Node(Some(child)) => assert_eq!(child, name),");
+    w.write("AstChildFieldValue::Node(None) => panic!(\"expected generated name child\"),");
+    w.write("_ => panic!(\"expected generated name child descriptor to be a node field\"),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[test]");
+    w.write("fn ast_ref_child_helpers_should_cast_descriptor_children() {");
+    w.push();
+    w.write("let mut factory = NodeFactory::default();");
+    w.write("let name = factory.new_identifier(\"fn_name\");");
+    w.write("let parameter_name = factory.new_identifier(\"param\");");
+    w.write("let parameter = factory.new_parameter_declaration(None::<ModifierList>, None::<Node>, Some(parameter_name), None::<Node>, None::<Node>, None::<Node>);");
+    w.write("let parameters = factory.new_node_list(core::TextRange::new(0, 0), core::TextRange::new(0, 0), [parameter]);");
+    w.write("let function = factory.new_function_declaration(None::<ModifierList>, None::<Node>, Some(name), None::<NodeList>, parameters, None::<Node>, None::<Node>, None::<Node>);");
+    w.write("let function_ref = factory.store().ast_ref::<FunctionDeclarationView>(function).unwrap();");
+    w.write("let name_ref = function_ref.name::<IdentifierView>().unwrap();");
+    w.write("assert_eq!(name_ref.node(), name);");
+    w.write("assert!(function_ref.name::<AstStatementView>().is_none());");
+    w.write("let parameter_nodes = function_ref.parameters::<ParameterDeclarationView>().map(|child| child.node()).collect::<Vec<_>>();");
+    w.write("assert_eq!(parameter_nodes, vec![parameter]);");
+    w.write("let mut visited_parameter = None;");
+    w.write("let result = function_ref.for_each_child_list_node(AstChildFieldId::Parameters, |child| { visited_parameter = Some(child); ControlFlow::Break(()) });");
+    w.write("assert_eq!(result, ControlFlow::Break(()));");
+    w.write("assert_eq!(visited_parameter, Some(parameter));");
+    w.write("let found_parameter = function_ref.find_parameters::<ParameterDeclarationView>(|child| child.node() == parameter).unwrap();");
+    w.write("assert_eq!(found_parameter.node(), parameter);");
+    w.write("let expression_nodes = function_ref.parameters::<AstExpressionView>().map(|child| child.node()).collect::<Vec<_>>();");
+    w.write("assert!(expression_nodes.is_empty());");
+    w.write("let expression = function_ref.find_parameters::<AstExpressionView>(|_| true);");
+    w.write("assert!(expression.is_none());");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+}
+
 function generateFactories(w: CodeWriter): void {
+    w.write("macro_rules! generated_alloc_payload {");
+    w.push();
+    w.write("($factory:expr, $payload_field:ident, $payload_tag:ident, $data:expr) => {{");
+    w.push();
+    w.write("let payload_idx = ($factory).store.payloads_mut().$payload_field.alloc($data);");
+    w.write("NodePayloadId::new(NodePayloadTag::$payload_tag, payload_idx.into_raw())");
+    w.pop();
+    w.write("}};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_update_node {");
+    w.push();
+    w.write("($factory:expr, $node:expr, $original_metadata:expr, $changed:expr, $constructor:ident($($arg:expr),* $(,)?)) => {{");
+    w.push();
+    w.write("if !$changed { return $node; }");
+    w.write("let updated = ($factory).$constructor($($arg),*);");
+    w.write("($factory).finish_update_node(updated, $node, $original_metadata)");
+    w.pop();
+    w.write("}};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_update_node_from_store {");
+    w.push();
+    w.write("($factory:expr, $source:expr, $node:expr, $original_metadata:expr, $changed:expr, imports($($arg_name:ident = $arg:expr),* $(,)?), $constructor:ident($($factory_arg:expr),* $(,)?)) => {{");
+    w.push();
+    w.write("if !$changed { return ($factory).finish_unchanged_update_from_store($source, $node); }");
+    w.write("$(let $arg_name = $arg;)*");
+    w.write("let updated = ($factory).$constructor($($factory_arg),*);");
+    w.write("($factory).finish_update_node(updated, $node, $original_metadata)");
+    w.pop();
+    w.write("}};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[derive(Clone, Copy)]");
+    w.write("pub(crate) struct NodeUpdateMetadata {");
+    w.push();
+    w.write("flags: NodeFlags,");
+    w.write("loc: core::TextRange,");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("impl AstStore {");
+    w.push();
+    w.write("pub(crate) fn update_metadata(&self, node: Node) -> NodeUpdateMetadata {");
+    w.push();
+    w.write("NodeUpdateMetadata { flags: self.flags(node), loc: self.loc(node) }");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
     w.write("impl NodeFactory {");
     w.push();
-    w.write("pub(crate) fn finish_update_node(&mut self, updated: Node, original: Node, original_flags: NodeFlags, original_loc: core::TextRange) -> Node {");
+    emitFromStoreChangeHelpers(w);
+    w.write("pub(crate) fn finish_update_node(&mut self, updated: Node, original: Node, original_metadata: NodeUpdateMetadata) -> Node {");
     w.push();
     w.write("if updated != original {");
     w.push();
-    w.write("self.store.set_flags(updated, original_flags);");
-    w.write("self.store.set_loc(updated, original_loc);");
+    w.write("self.store.set_flags(updated, original_metadata.flags);");
+    w.write("self.store.set_loc(updated, original_metadata.loc);");
     w.write("if let Some(on_update) = &self.hooks.on_update {");
     w.push();
     w.write("on_update(&self.store, updated, original);");
@@ -2328,7 +4131,7 @@ function generateFactories(w: CodeWriter): void {
     w.write("");
     w.write("pub(crate) fn finish_clone_node(&mut self, cloned: Node, original: Node, original_flags: NodeFlags, original_loc: core::TextRange) -> Node {");
     w.push();
-    w.write("let cloned = self.finish_update_node(cloned, original, original_flags, original_loc);");
+    w.write("let cloned = self.finish_update_node(cloned, original, NodeUpdateMetadata { flags: original_flags, loc: original_loc });");
     w.write("if let Some(recorder) = &mut self.clone_recorder {");
     w.push();
     w.write("recorder.insert_same_store(original, cloned);");
@@ -2363,31 +4166,67 @@ function generateFactories(w: CodeWriter): void {
     w.write("");
 }
 
+function emitRustfmtSkippedFunction(w: CodeWriter, signature: string, body: string[]): void {
+    w.write(`#[rustfmt::skip] ${signature} { ${body.join(" ")} }`);
+    w.write("");
+}
+
+function emitRustfmtSkippedItem(w: CodeWriter, item: string): void {
+    w.write(`#[rustfmt::skip] ${item}`);
+}
+
+function emitFromStoreChangeHelpers(w: CodeWriter): void {
+    w.write("fn finish_unchanged_update_from_store(&mut self, source: &AstStore, node: Node) -> Node {");
+    w.push();
+    w.write("if source.store_id() == self.store.store_id() {");
+    w.push();
+    w.write("node");
+    w.pop();
+    w.write("} else {");
+    w.push();
+    w.write("self.deep_clone_node_from_store_with_location(source, node, false)");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[rustfmt::skip] fn chg_node_id(&self, value: AstNodeId, original: AstNodeId) -> bool { value != original }");
+    w.write("#[rustfmt::skip] fn chg_opt_node(&self, value: Option<Node>, original: OptionalAstNodeId) -> bool { value != original.get() }");
+    w.write("#[rustfmt::skip] fn chg_node_list(&self, value: NodeList, original: NodeListId) -> bool { value.id() != original }");
+    w.write("#[rustfmt::skip] fn chg_opt_node_list(&self, value: Option<NodeList>, original: OptionalNodeListId) -> bool { value.map(|list| list.id()) != original.get() }");
+    w.write("#[rustfmt::skip] fn chg_mod_list(&self, value: ModifierList, original: ModifierListId) -> bool { value.id() != original }");
+    w.write("#[rustfmt::skip] fn chg_opt_mod_list(&self, value: Option<ModifierList>, original: OptionalModifierListId) -> bool { value.map(|list| list.id()) != original.get() }");
+    w.write("#[rustfmt::skip] fn chg_raw_nodes(&self, value: RawNodeSlice, original: RawNodeSliceId) -> bool { value.id() != original }");
+    w.write("#[rustfmt::skip] fn chg_opt_raw_nodes(&self, value: Option<RawNodeSlice>, original: OptionalRawNodeSliceId) -> bool { value.map(|slice| slice.id()) != original.get() }");
+    w.write("#[rustfmt::skip] fn chg_raw_strings(&self, value: RawStringSlice, original: RawStringSliceId) -> bool { value.id() != original }");
+    w.write("#[rustfmt::skip] fn chg_opt_raw_strings(&self, value: Option<RawStringSlice>, original: OptionalRawStringSliceId) -> bool { value.map(|slice| slice.id()) != original.get() }");
+    w.write("");
+    w.write("#[rustfmt::skip] fn src_chg_node(&self, source: &AstStore, value: Node, original: AstNodeId) -> bool { value != source.node_from_id(original) }");
+    w.write("#[rustfmt::skip] fn src_chg_opt_node(&self, source: &AstStore, value: Option<Node>, original: OptionalAstNodeId) -> bool { value != source.optional_node_from_id(original) }");
+    w.write("#[rustfmt::skip] fn src_chg_node_list(&self, source: &AstStore, value: NodeList, original: NodeListId) -> bool { value.store_id() != source.store_id() || value.id() != original }");
+    w.write("#[rustfmt::skip] fn src_chg_opt_node_list(&self, source: &AstStore, value: Option<NodeList>, original: OptionalNodeListId) -> bool { match value { Some(list) => original.get().map_or(true, |original| self.src_chg_node_list(source, list, original)), None => original.get().is_some(), } }");
+    w.write("#[rustfmt::skip] fn src_chg_mod_list(&self, source: &AstStore, value: ModifierList, original: ModifierListId) -> bool { value.store_id() != source.store_id() || value.id() != original }");
+    w.write("#[rustfmt::skip] fn src_chg_opt_mod_list(&self, source: &AstStore, value: Option<ModifierList>, original: OptionalModifierListId) -> bool { match value { Some(list) => original.get().map_or(true, |original| self.src_chg_mod_list(source, list, original)), None => original.get().is_some(), } }");
+    w.write("#[rustfmt::skip] fn src_chg_raw_nodes(&self, source: &AstStore, value: RawNodeSlice, original: RawNodeSliceId) -> bool { value.store_id() != source.store_id() || value.id() != original }");
+    w.write("#[rustfmt::skip] fn src_chg_opt_raw_nodes(&self, source: &AstStore, value: Option<RawNodeSlice>, original: OptionalRawNodeSliceId) -> bool { match value { Some(slice) => original.get().map_or(true, |original| self.src_chg_raw_nodes(source, slice, original)), None => original.get().is_some(), } }");
+    w.write("#[rustfmt::skip] fn src_chg_raw_strings(&self, source: &AstStore, value: RawStringSlice, original: RawStringSliceId) -> bool { value.id().store_id() != source.store_id() || value.id() != original }");
+    w.write("#[rustfmt::skip] fn src_chg_opt_raw_strings(&self, source: &AstStore, value: Option<RawStringSlice>, original: OptionalRawStringSliceId) -> bool { match value { Some(slice) => original.get().map_or(true, |original| self.src_chg_raw_strings(source, slice, original)), None => original.get().is_some(), } }");
+}
+
 function emitNewFactory(w: CodeWriter, node: NodeType, fnSuffix: string, kindName: string): void {
     if (node.name === "SyntaxList") {
-        w.write("pub fn new_syntax_list(&mut self, children: impl IntoIterator<Item = Node>) -> Node {");
-        w.push();
-        w.write("let children = self.new_raw_node_slice(children.into_iter().map(Some));");
-        w.write("self.new_syntax_list_from_raw(children)");
-        w.pop();
-        w.write("}");
-        w.write("");
-        w.write("pub(crate) fn new_syntax_list_from_raw(&mut self, children: impl IntoRawNodeSlice) -> Node {");
-        w.push();
-        w.write("let children = children.into_raw_node_slice();");
-        w.write("children.assert_store(self.store.store_id());");
-        w.write("let children = children.id();");
-        w.write("let data = SyntaxList {");
-        w.push();
-        w.write("children: children,");
-        w.pop();
-        w.write("};");
-        w.write("let payload_idx = self.store.payloads_mut().syntax_list.alloc(data);");
-        w.write("let payload = NodePayloadId::new(NodePayloadTag::SyntaxList, payload_idx.into_raw());");
-        w.write("self.new_node(Kind::SyntaxList, NodeFlags::NONE, payload)");
-        w.pop();
-        w.write("}");
-        w.write("");
+        emitRustfmtSkippedFunction(w, "pub fn new_syntax_list(&mut self, children: impl IntoIterator<Item = Node>) -> Node", [
+            "let children = self.new_raw_node_slice(children.into_iter().map(Some));",
+            "self.new_syntax_list_from_raw(children)",
+        ]);
+        emitRustfmtSkippedFunction(w, "pub(crate) fn new_syntax_list_from_raw(&mut self, children: impl IntoRawNodeSlice) -> Node", [
+            "let children = children.into_raw_node_slice();",
+            "children.assert_store(self.store.store_id());",
+            "let children = children.id();",
+            "let data = SyntaxList { children: children, };",
+            "let payload = generated_alloc_payload!(self, syntax_list, SyntaxList, data);",
+            "self.new_node(Kind::SyntaxList, NodeFlags::NONE, payload)",
+        ]);
         return;
     }
     const members = schemaMembers(node);
@@ -2395,57 +4234,51 @@ function emitNewFactory(w: CodeWriter, node: NodeType, fnSuffix: string, kindNam
     const fieldTypes = new Map(structFieldsFor(node).map(field => [field.name, field.type]));
     const membersByField = new Map(members.filter(member => !member.isKindParam() && !isNodeFlagsMember(member)).map(member => [fieldName(member.name), member]));
     const visibility = factoryVisibility(members, fieldTypes);
-    w.write(`${visibility} fn new_${snakeCase(fnSuffix)}(&mut self${params ? `, ${params}` : ""}) -> Node {`);
-    w.push();
+    const body: string[] = [];
     for (const member of members) {
         if (member.isKindParam() || isNodeFlagsMember(member)) continue;
         const targetType = fieldTypes.get(fieldName(member.name));
         if (!targetType) continue;
         for (const line of aggregateAssertLines("self.store", paramName(member), targetType)) {
-            w.write(line);
+            body.push(line);
         }
     }
-    w.write(`let data = ${node.name} {`);
-    w.push();
+    const dataFields: string[] = [];
     for (const [name, targetType] of fieldTypes) {
         const member = membersByField.get(name);
         if (member) {
-            w.write(`${name}: ${storageExpr(member, targetType)},`);
+            dataFields.push(`${name}: ${storageExpr(member, targetType)},`);
         }
         else {
-            w.write(`${name}: ${defaultExprForField({ name, type: targetType })},`);
+            dataFields.push(`${name}: ${defaultExprForField({ name, type: targetType })},`);
         }
     }
-    w.pop();
-    w.write("};");
-    if (hasTextContent(node)) w.write("self.text_count += 1;");
+    body.push(`let data = ${node.name} { ${dataFields.join(" ")} };`);
+    if (hasTextContent(node)) body.push("self.text_count += 1;");
     const kindMember = members.find(member => member.isKindParam());
     const kindArg = kindMember ? paramName(kindMember) : `Kind::${kindName}`;
     const nodeFlagsMembers = members.filter(member => isNodeFlagsMember(member));
     const payloadField = snakeCase(node.name);
-    w.write(`let payload_idx = self.store.payloads_mut().${payloadField}.alloc(data);`);
-    w.write(`let payload = NodePayloadId::new(NodePayloadTag::${node.name}, payload_idx.into_raw());`);
+    body.push(`let payload = generated_alloc_payload!(self, ${payloadField}, ${node.name}, data);`);
     if (nodeFlagsMembers.length === 0) {
-        w.write(`self.new_node(${kindArg}, NodeFlags::NONE, payload)`);
+        body.push(`self.new_node(${kindArg}, NodeFlags::NONE, payload)`);
     }
     else if (!isOptionalChainFactory(node) && nodeFlagsMembers.length === 1) {
-        w.write(`self.new_node(${kindArg}, ${paramName(nodeFlagsMembers[0])}, payload)`);
+        body.push(`self.new_node(${kindArg}, ${paramName(nodeFlagsMembers[0])}, payload)`);
     }
     else {
-        w.write("let mut node_flags = NodeFlags::NONE;");
+        body.push("let mut node_flags = NodeFlags::NONE;");
         for (const member of nodeFlagsMembers) {
             if (isOptionalChainFactory(node)) {
-                w.write(`node_flags |= ${paramName(member)} & NodeFlags::OPTIONAL_CHAIN;`);
+                body.push(`node_flags |= ${paramName(member)} & NodeFlags::OPTIONAL_CHAIN;`);
             }
             else {
-                w.write(`node_flags = ${paramName(member)};`);
+                body.push(`node_flags = ${paramName(member)};`);
             }
         }
-        w.write(`self.new_node(${kindArg}, node_flags, payload)`);
+        body.push(`self.new_node(${kindArg}, node_flags, payload)`);
     }
-    w.pop();
-    w.write("}");
-    w.write("");
+    emitRustfmtSkippedFunction(w, `${visibility} fn new_${snakeCase(fnSuffix)}(&mut self${params ? `, ${params}` : ""}) -> Node`, body);
 }
 
 function updateMembers(node: NodeType): MemberInfo[] {
@@ -2458,155 +4291,335 @@ function shouldEmitUpdateFactory(node: NodeType): boolean {
     return members.some(member => member.isChild());
 }
 
+function updateChildFieldEntries(node: NodeType, fieldTypes: Map<string, string>): { descriptor: AstChildDescriptor; field: StructField }[] {
+    const fieldsByName = new Map(structFieldsFor(node).map(field => [localFieldName(field), field]));
+    return childDescriptorsForNode(node).map(descriptor => {
+        const field = fieldsByName.get(descriptor.name);
+        if (!field) throw new Error(`Missing update child field ${node.name}.${descriptor.name}`);
+        if (!fieldTypes.has(field.name)) throw new Error(`Missing update child field type ${node.name}.${field.name}`);
+        return { descriptor, field };
+    });
+}
+
+function updateChildFieldDifferArg(field: StructField, param: string, sameStore: boolean): string {
+    switch (field.type) {
+        case "AstNodeId":
+            return sameStore
+                ? `Node Some(self.store.node_from_id(${param}))`
+                : `Node Some(${param})`;
+        case "OptionalAstNodeId":
+        case "Option<Node>":
+            return `Node ${param}`;
+        case "NodeListId":
+            return `NodeList Some(${param})`;
+        case "OptionalNodeListId":
+            return `NodeList ${param}`;
+        case "ModifierListId":
+            return `ModifierList Some(${param})`;
+        case "OptionalModifierListId":
+            return `ModifierList ${param}`;
+        case "RawNodeSliceId":
+            return `RawNodeSlice Some(${param})`;
+        case "OptionalRawNodeSliceId":
+            return `RawNodeSlice ${param}`;
+        default:
+            throw new Error(`Unsupported generated update child field ${field.name}: ${field.type}`);
+    }
+}
+
+function updateChildFieldsDifferExpr(node: NodeType, fieldTypes: Map<string, string>, sameStore: boolean, sourceExpr: string): string | undefined {
+    const entries = updateChildFieldEntries(node, fieldTypes);
+    if (entries.length === 0) return undefined;
+    const args = entries.map(({ field }) => updateChildFieldDifferArg(field, paramName({ name: field.name }), sameStore));
+    return `generated_update_children_differ!(${sourceExpr}, node, ${args.join(", ")})`;
+}
+
+function updateChildFieldValuesExpr(node: NodeType, fieldTypes: Map<string, string>, sameStore: boolean): string | undefined {
+    const entries = updateChildFieldEntries(node, fieldTypes);
+    if (entries.length === 0) return undefined;
+    const args = entries.map(({ field }) => updateChildFieldDifferArg(field, paramName({ name: field.name }), sameStore));
+    return `generated_update_child_values!(${args.join(", ")})`;
+}
+
+function shouldUseDescriptorUpdateChildValues(node: NodeType): boolean {
+    return updateChildFieldSpecs(node).length > 0;
+}
+
+function updateChildFieldNameSet(node: NodeType, fieldTypes: Map<string, string>): Set<string> {
+    return new Set(updateChildFieldEntries(node, fieldTypes).map(({ field }) => field.name));
+}
+
+function updateChildFieldIndexByName(node: NodeType, fieldTypes: Map<string, string>): Map<string, number> {
+    const result = new Map<string, number>();
+    updateChildFieldEntries(node, fieldTypes).forEach(({ field }, index) => result.set(field.name, index));
+    return result;
+}
+
+function updateChildFieldImportFromStoreExpr(field: StructField, index: number): string {
+    switch (field.type) {
+        case "AstNodeId":
+            return `update_children.import_required_node_from_store(self, source, ${index})`;
+        case "OptionalAstNodeId":
+        case "Option<Node>":
+            return `update_children.import_optional_node_from_store(self, source, ${index})`;
+        case "NodeListId":
+            return `update_children.import_required_node_list_from_store(self, source, ${index})`;
+        case "OptionalNodeListId":
+            return `update_children.import_optional_node_list_from_store(self, source, ${index})`;
+        case "ModifierListId":
+            return `update_children.import_required_modifier_list_from_store(self, source, ${index})`;
+        case "OptionalModifierListId":
+            return `update_children.import_optional_modifier_list_from_store(self, source, ${index})`;
+        case "RawNodeSliceId":
+            return `update_children.import_required_raw_node_slice_from_store(self, source, ${index})`;
+        case "OptionalRawNodeSliceId":
+            return `update_children.import_optional_raw_node_slice_from_store(self, source, ${index})`;
+        default:
+            throw new Error(`Unsupported generated update child import field ${field.name}: ${field.type}`);
+    }
+}
+
+function updateSourceDataComparisonMembers(
+    members: MemberInfo[],
+    fieldTypes: Map<string, string>,
+    childFieldNames: Set<string>,
+): MemberInfo[] {
+    return members.filter(member => {
+        if (isNodeFlagsMember(member)) return false;
+        const targetType = fieldTypes.get(fieldName(member.name));
+        if (!targetType) return false;
+        return !childFieldNames.has(fieldName(member.name));
+    });
+}
+
 function emitUpdateFactory(w: CodeWriter, node: NodeType): void {
     if (!shouldEmitUpdateFactory(node)) return;
     const members = updateMembers(node);
     const params = members.map(member => `${paramName(member)}: ${paramType(member)}`).join(", ");
-    const kindMember = schemaMembers(node).find(member => member.isKindParam());
-    const kindArg = kindMember ? "original_kind" : `Kind::${node.syntaxKindName}`;
     const fieldTypes = new Map(structFieldsFor(node).map(field => [field.name, field.type]));
     const fromStoreParams = members.map(member => `${paramName(member)}: ${fromStoreParamType(member, fieldTypes.get(fieldName(member.name)))}`).join(", ");
-    const membersByField = new Map(members.filter(member => !isNodeFlagsMember(member)).map(member => [fieldName(member.name), member]));
     const fnName = `update_${snakeCase(node.name)}`;
     const visibility = factoryVisibility(members, fieldTypes);
-    w.write(`${visibility} fn ${fnName}(&mut self, node: Node${params ? `, ${params}` : ""}) -> Node {`);
-    w.push();
-    w.write("let original_kind = self.store.kind(node);");
-    w.write("let original_flags = self.store.flags(node);");
-    w.write("let original_loc = self.store.loc(node);");
-    w.write(`let source_data = self.store.as_${snakeCase(node.name)}(node).clone();`);
-    w.write(`self.${fnName}_with_metadata(node, &source_data, original_kind, original_flags, original_loc${params ? `, ${members.map(paramName).join(", ")}` : ""})`);
-    w.pop();
-    w.write("}");
-    w.write("");
-    w.write(`${visibility} fn ${fnName}_from_store(&mut self, source: &AstStore, node: Node${fromStoreParams ? `, ${fromStoreParams}` : ""}) -> Node {`);
-    w.push();
-    w.write("let original_kind = source.kind(node);");
-    w.write("let original_flags = source.flags(node);");
-    w.write("let original_loc = source.loc(node);");
-    w.write(`let source_data = source.as_${snakeCase(node.name)}(node).clone();`);
+    const usedWrappers = getUsedGeneratedUpdateWrappers();
+    const usesUpdateWrapper = usedWrappers.has(fnName);
+    const usesFromStoreWrapper = usedWrappers.has(`${fnName}_from_store`);
+    if (!usesUpdateWrapper && !usesFromStoreWrapper) return;
+    const needsOriginalKind = updateFactoryNeedsOriginalKind(node);
+    const structFieldsByName = new Map(structFieldsFor(node).map(field => [field.name, field]));
+    if (usesUpdateWrapper) {
+        const body: string[] = [];
+        if (needsOriginalKind) body.push("let original_kind = self.store.kind(node);");
+        body.push("let original_metadata = self.store.update_metadata(node);");
+        body.push(...sameStoreUpdateBodyStatements(node, members, fieldTypes, "original_metadata"));
+        emitRustfmtSkippedFunction(w, `${visibility} fn ${fnName}(&mut self, node: Node${params ? `, ${params}` : ""}) -> Node`, body);
+    }
+    if (usesFromStoreWrapper) {
+        const body: string[] = [];
+        if (needsOriginalKind) body.push("let original_kind = source.kind(node);");
+        body.push("let original_metadata = source.update_metadata(node);");
+        for (const member of members) {
+            if (isNodeFlagsMember(member)) continue;
+            const targetType = fieldTypes.get(fieldName(member.name));
+            const param = paramName(member);
+            const normalizeLine = fromStoreParamNormalizeLine(member, targetType, param);
+            if (normalizeLine) {
+                body.push(normalizeLine);
+            }
+        }
+        const childValuesExpr = shouldUseDescriptorUpdateChildValues(node)
+            ? updateChildFieldValuesExpr(node, fieldTypes, false)
+            : undefined;
+        if (childValuesExpr) {
+            body.push(`let update_children = ${childValuesExpr};`);
+            body.push("let child_fields_changed = update_children.differs_from_source(source, node);");
+        }
+        const childFieldNames = childValuesExpr ? updateChildFieldNameSet(node, fieldTypes) : new Set<string>();
+        const childFieldIndexByName = childValuesExpr ? updateChildFieldIndexByName(node, fieldTypes) : new Map<string, number>();
+        const sourceDataMembers = updateSourceDataComparisonMembers(members, fieldTypes, childFieldNames);
+        if (sourceDataMembers.length > 0) {
+            body.push(`let source_data = source.as_${snakeCase(node.name)}(node);`);
+        }
+        const fromStoreComparisons: string[] = [];
+        for (const member of members) {
+            if (isNodeFlagsMember(member)) {
+                fromStoreComparisons.push(`${paramName(member)} != original_metadata.flags`);
+                continue;
+            }
+            const targetType = fieldTypes.get(fieldName(member.name));
+            if (!targetType) continue;
+            if (childFieldNames.has(fieldName(member.name))) continue;
+            fromStoreComparisons.push(fromStoreParamChangedExpr(member, targetType, paramName(member), `source_data.${fieldName(member.name)}`));
+        }
+        if (childValuesExpr) {
+            fromStoreComparisons.push("child_fields_changed");
+        }
+        body.push(`let changed = { ${fromStoreComparisons.length ? fromStoreComparisons.join(" || ") : "false"} };`);
+        const imports: string[] = [];
+        for (const member of members) {
+            if (isNodeFlagsMember(member)) continue;
+            const targetType = fieldTypes.get(fieldName(member.name));
+            const param = paramName(member);
+            const field = structFieldsByName.get(fieldName(member.name));
+            const childIndex = field ? childFieldIndexByName.get(field.name) : undefined;
+            const importExpr = field && childIndex !== undefined
+                ? updateChildFieldImportFromStoreExpr(field, childIndex)
+                : fromStoreParamImportExpr(member, targetType, param);
+            if (importExpr) {
+                imports.push(`${param} = ${importExpr}`);
+            }
+        }
+        body.push(`generated_update_node_from_store!(self, source, node, original_metadata, changed, imports(${imports.join(", ")}), ${updateNewFactoryName(node)}(${updateNewFactoryArgs(node).join(", ")}))`);
+        emitRustfmtSkippedFunction(w, `${visibility} fn ${fnName}_from_store(&mut self, source: &AstStore, node: Node${fromStoreParams ? `, ${fromStoreParams}` : ""}) -> Node`, body);
+    }
+}
+
+function sameStoreUpdateBodyStatements(
+    node: NodeType,
+    members: MemberInfo[],
+    fieldTypes: Map<string, string>,
+    originalMetadataExpr: string,
+): string[] {
+    const body: string[] = [];
     for (const member of members) {
         if (isNodeFlagsMember(member)) continue;
-        const targetType = fieldTypes.get(fieldName(member.name));
-        const param = paramName(member);
-        const normalizeLine = fromStoreParamNormalizeLine(member, targetType, param);
-        if (normalizeLine) {
-            w.write(normalizeLine);
-        }
-    }
-    const fromStoreComparisons: string[] = [];
-    for (const member of members) {
-        if (isNodeFlagsMember(member)) {
-            fromStoreComparisons.push(`${paramName(member)} != original_flags`);
-            continue;
-        }
         const targetType = fieldTypes.get(fieldName(member.name));
         if (!targetType) continue;
-        fromStoreComparisons.push(fromStoreParamChangedExpr(member, targetType, paramName(member), `source_data.${fieldName(member.name)}`));
-    }
-    w.write(`let changed = { ${fromStoreComparisons.length ? fromStoreComparisons.join(" || ") : "false"} };`);
-    w.write("if !changed {");
-    w.push();
-    w.write("return if source.store_id() == self.store.store_id() {");
-    w.push();
-    w.write("node");
-    w.pop();
-    w.write("} else {");
-    w.push();
-    w.write("self.deep_clone_node_from_store_with_location(source, node, false)");
-    w.pop();
-    w.write("};");
-    w.pop();
-    w.write("}");
-    for (const member of members) {
-        if (isNodeFlagsMember(member)) continue;
-        const targetType = fieldTypes.get(fieldName(member.name));
         const param = paramName(member);
-        const importExpr = fromStoreParamImportExpr(member, targetType, param);
-        if (importExpr) {
-            w.write(`let ${param} = ${importExpr};`);
+        for (const line of updateParamNormalizeLines(member, targetType, param)) {
+            body.push(line);
         }
     }
-    const fromStoreArgs = members.map(member => fromStoreUpdateArgExpr(member, fieldTypes.get(fieldName(member.name)), paramName(member)));
-    w.write(`self.${fnName}_with_metadata(node, &source_data, original_kind, original_flags, original_loc${params ? `, ${fromStoreArgs.join(", ")}` : ""})`);
-    w.pop();
-    w.write("}");
-    w.write("");
-    w.write(`fn ${fnName}_with_metadata(&mut self, node: Node, source_data: &${node.name}, original_kind: Kind, original_flags: NodeFlags, original_loc: core::TextRange${params ? `, ${params}` : ""}) -> Node {`);
-    w.push();
-    for (const member of members) {
-        if (isNodeFlagsMember(member)) continue;
-        const targetType = fieldTypes.get(fieldName(member.name));
-        if (!targetType) continue;
-        const param = paramName(member);
-        for (const line of aggregateAssertLines("self.store", param, targetType)) {
-            w.write(line);
-        }
-        const stored = storageExpr(member, targetType);
-        if (stored !== param) {
-            w.write(`let ${param} = ${stored};`);
-        }
+    const childValuesExpr = shouldUseDescriptorUpdateChildValues(node)
+        ? updateChildFieldsDifferExpr(node, fieldTypes, true, "&self.store")
+        : undefined;
+    if (childValuesExpr) {
+        body.push(`let child_fields_changed = ${childValuesExpr};`);
     }
-    const nodeFlagsMembers = members.filter(member => isNodeFlagsMember(member));
-    w.write("let changed = {");
-    w.push();
+    const childFieldNames = childValuesExpr ? updateChildFieldNameSet(node, fieldTypes) : new Set<string>();
+    const sourceDataMembers = updateSourceDataComparisonMembers(members, fieldTypes, childFieldNames);
+    const changedBody: string[] = [];
+    if (sourceDataMembers.length > 0) {
+        changedBody.push(`let source_data = self.store.as_${snakeCase(node.name)}(node);`);
+    }
     const comparisons: string[] = [];
     for (const member of members) {
         if (isNodeFlagsMember(member)) {
-            comparisons.push(`${paramName(member)} != original_flags`);
+            comparisons.push(`${paramName(member)} != ${originalMetadataExpr}.flags`);
             continue;
         }
         const targetType = fieldTypes.get(fieldName(member.name));
         if (!targetType) continue;
-        comparisons.push(`${paramName(member)} != source_data.${fieldName(member.name)}`);
+        if (childFieldNames.has(fieldName(member.name))) continue;
+        comparisons.push(updateParamChangedExpr(member, targetType, paramName(member), `source_data.${fieldName(member.name)}`));
     }
-    w.write(comparisons.length ? comparisons.join(" || ") : "false");
-    w.pop();
-    w.write("};");
-    w.write("if changed {");
-    w.push();
-    w.write(`let data = ${node.name} {`);
-    w.push();
-    for (const [name, targetType] of fieldTypes) {
-        const member = membersByField.get(name);
-        if (member) {
-            w.write(`${name}: ${paramName(member)},`);
+    if (childValuesExpr) {
+        comparisons.push("child_fields_changed");
+    }
+    changedBody.push(comparisons.length ? comparisons.join(" || ") : "false");
+    body.push(`let changed = { ${changedBody.join(" ")} };`);
+    body.push(`generated_update_node!(self, node, ${originalMetadataExpr}, changed, ${updateNewFactoryName(node)}(${updateNewFactoryArgs(node).join(", ")}))`);
+    return body;
+}
+
+function getUsedGeneratedUpdateWrappers(): Set<string> {
+    if (usedGeneratedUpdateWrappers) return usedGeneratedUpdateWrappers;
+    usedGeneratedUpdateWrappers = new Set();
+    for (const file of rustFilesUnder(path.join(repoRoot, "crates"))) {
+        if (file.endsWith(path.join("ts-ast", "src", "ast_generated.rs"))) continue;
+        const source = fs.readFileSync(file, "utf-8");
+        for (const match of source.matchAll(/\bupdate_[a-z0-9_]+(?:_from_store)?\b/g)) {
+            usedGeneratedUpdateWrappers.add(match[0]);
         }
-        else {
-            w.write(`${name}: ${defaultExprForField({ name, type: targetType })},`);
+    }
+    return usedGeneratedUpdateWrappers;
+}
+
+function rustFilesUnder(dir: string): string[] {
+    const files: string[] = [];
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            files.push(...rustFilesUnder(fullPath));
+        }
+        else if (entry.isFile() && entry.name.endsWith(".rs")) {
+            files.push(fullPath);
         }
     }
-    w.pop();
-    w.write("};");
-    if (hasTextContent(node)) w.write("self.text_count += 1;");
-    const payloadField = snakeCase(node.name);
-    w.write(`let payload_idx = self.store.payloads_mut().${payloadField}.alloc(data);`);
-    w.write(`let payload = NodePayloadId::new(NodePayloadTag::${node.name}, payload_idx.into_raw());`);
-    if (nodeFlagsMembers.length === 0) {
-        w.write(`let updated = self.new_node(${kindArg}, NodeFlags::NONE, payload);`);
+    return files;
+}
+
+function updateNewFactoryName(node: NodeType): string {
+    return node.name === "SyntaxList" ? "new_syntax_list_from_raw" : `new_${snakeCase(node.name)}`;
+}
+
+function updateFactoryNeedsOriginalKind(node: NodeType): boolean {
+    return schemaMembers(node).some((member: MemberInfo) => member.isKindParam());
+}
+
+function updateNewFactoryArgs(node: NodeType): string[] {
+    return schemaMembers(node).map((member: MemberInfo) => {
+        if (member.isKindParam()) return "original_kind";
+        return paramName(member);
+    });
+}
+
+function updateParamNormalizeLines(member: MemberInfo, targetType: string, param: string): string[] {
+    if (isStringType(member.type)) return [`let ${param} = ${param}.into();`];
+    if (isForeignNodeHandleMember(member) || member.type.baseKind() === "node" || targetType === "OptionalAstNodeId") {
+        return [`let ${param} = self.store.local_optional_node(${param});`];
     }
-    else if (!isOptionalChainFactory(node) && nodeFlagsMembers.length === 1) {
-        w.write(`let updated = self.new_node(${kindArg}, ${paramName(nodeFlagsMembers[0])}, payload);`);
+    switch (targetType) {
+        case "AstNodeId":
+            return [`let ${param} = self.store.local_node_id(${param});`];
+        case "NodeListId":
+            return [`let ${param} = self.store.local_node_list(${param});`];
+        case "OptionalNodeListId":
+            return [`let ${param} = self.store.optional_local_node_list(${param});`];
+        case "ModifierListId":
+            return [`let ${param} = self.store.local_modifier_list(${param});`];
+        case "OptionalModifierListId":
+            return [`let ${param} = self.store.optional_local_modifier_list(${param});`];
+        case "RawNodeSliceId":
+            return [`let ${param} = self.store.local_raw_node_slice(${param});`];
+        case "OptionalRawNodeSliceId":
+            return [`let ${param} = self.store.optional_local_raw_node_slice(${param});`];
+        case "RawStringSliceId":
+            return [`let ${param} = self.store.local_raw_string_slice(${param});`];
+        case "OptionalRawStringSliceId":
+            return [`let ${param} = self.store.optional_local_raw_string_slice(${param});`];
+        default:
+            if (member.optional) return [`let ${param} = ${param}.into();`];
+            return [];
     }
-    else {
-        w.write("let mut node_flags = NodeFlags::NONE;");
-        for (const member of nodeFlagsMembers) {
-            if (isOptionalChainFactory(node)) {
-                w.write(`node_flags |= ${paramName(member)} & NodeFlags::OPTIONAL_CHAIN;`);
-            }
-            else {
-                w.write(`node_flags = ${paramName(member)};`);
-            }
-        }
-        w.write(`let updated = self.new_node(${kindArg}, node_flags, payload);`);
+}
+
+function updateParamChangedExpr(member: MemberInfo, targetType: string, param: string, sourceField: string): string {
+    if (isForeignNodeHandleMember(member)) return `${param} != ${sourceField}`;
+    if (member.type.baseKind() === "node" || targetType === "OptionalAstNodeId") {
+        return `self.chg_opt_node(${param}, ${sourceField})`;
     }
-    w.write("return self.finish_update_node(updated, node, original_flags, original_loc);");
-    w.pop();
-    w.write("}");
-    w.write("node");
-    w.pop();
-    w.write("}");
-    w.write("");
+    switch (targetType) {
+        case "AstNodeId":
+            return `self.chg_node_id(${param}, ${sourceField})`;
+        case "NodeListId":
+            return `self.chg_node_list(${param}, ${sourceField})`;
+        case "ModifierListId":
+            return `self.chg_mod_list(${param}, ${sourceField})`;
+        case "RawNodeSliceId":
+            return `self.chg_raw_nodes(${param}, ${sourceField})`;
+        case "RawStringSliceId":
+            return `self.chg_raw_strings(${param}, ${sourceField})`;
+        case "OptionalNodeListId":
+            return `self.chg_opt_node_list(${param}, ${sourceField})`;
+        case "OptionalModifierListId":
+            return `self.chg_opt_mod_list(${param}, ${sourceField})`;
+        case "OptionalRawNodeSliceId":
+            return `self.chg_opt_raw_nodes(${param}, ${sourceField})`;
+        case "OptionalRawStringSliceId":
+            return `self.chg_opt_raw_strings(${param}, ${sourceField})`;
+        default:
+            return `${param} != ${sourceField}`;
+    }
 }
 
 function fromStoreParamType(member: MemberInfo, targetType: string | undefined): string {
@@ -2708,36 +4721,31 @@ function fromStoreParamChangedExpr(member: MemberInfo, targetType: string, param
         return `${param} != ${sourceField}`;
     }
     if (member.type.baseKind() === "node" || targetType === "AstNodeId" || targetType === "OptionalAstNodeId") {
-        const sourceNode = targetType === "AstNodeId"
-            ? `Some(source.node_from_id(${sourceField}))`
-            : `source.optional_node_from_id(${sourceField})`;
-        const paramExpr = targetType === "AstNodeId" ? `Some(${param})` : param;
-        return `${paramExpr} != ${sourceNode}`;
+        if (targetType === "AstNodeId") {
+            return `self.src_chg_node(source, ${param}, ${sourceField})`;
+        }
+        return `self.src_chg_opt_node(source, ${param}, ${sourceField})`;
     }
     switch (targetType) {
         case "NodeListId":
-            return `${param}.store_id() != source.store_id() || ${param}.id() != ${sourceField}`;
+            return `self.src_chg_node_list(source, ${param}, ${sourceField})`;
         case "OptionalNodeListId":
-            return `(match ${param} { Some(list) => list.store_id() != source.store_id() || Some(list.id()) != ${sourceField}.get(), None => ${sourceField}.get().is_some() })`;
+            return `self.src_chg_opt_node_list(source, ${param}, ${sourceField})`;
         case "ModifierListId":
-            return `${param}.store_id() != source.store_id() || ${param}.id() != ${sourceField}`;
+            return `self.src_chg_mod_list(source, ${param}, ${sourceField})`;
         case "OptionalModifierListId":
-            return `(match ${param} { Some(list) => list.store_id() != source.store_id() || Some(list.id()) != ${sourceField}.get(), None => ${sourceField}.get().is_some() })`;
+            return `self.src_chg_opt_mod_list(source, ${param}, ${sourceField})`;
         case "RawNodeSliceId":
-            return `${param}.store_id() != source.store_id() || ${param}.id() != ${sourceField}`;
+            return `self.src_chg_raw_nodes(source, ${param}, ${sourceField})`;
         case "OptionalRawNodeSliceId":
-            return `(match ${param} { Some(slice) => slice.store_id() != source.store_id() || Some(slice.id()) != ${sourceField}.get(), None => ${sourceField}.get().is_some() })`;
+            return `self.src_chg_opt_raw_nodes(source, ${param}, ${sourceField})`;
         case "RawStringSliceId":
-            return `${param}.id().store_id() != source.store_id() || ${param}.id() != ${sourceField}`;
+            return `self.src_chg_raw_strings(source, ${param}, ${sourceField})`;
         case "OptionalRawStringSliceId":
-            return `(match ${param} { Some(slice) => slice.id().store_id() != source.store_id() || Some(slice.id()) != ${sourceField}.get(), None => ${sourceField}.get().is_some() })`;
+            return `self.src_chg_opt_raw_strings(source, ${param}, ${sourceField})`;
         default:
             return `${param} != ${sourceField}`;
     }
-}
-
-function fromStoreUpdateArgExpr(_member: MemberInfo, targetType: string | undefined, param: string): string {
-    return param;
 }
 
 function getGoVisitRoutes(): Map<string, string[]> {
@@ -2793,210 +4801,510 @@ function rustVisitMethod(goRoute: string): string {
     }
 }
 
-function sourceFieldExpr(sourceExpr: string, field: StructField): string {
-    return sourceExpr === "$locals" ? `source_${localFieldName(field)}` : `${sourceExpr}.${field.name}`;
-}
-
 function localFieldName(field: StructField): string {
     return field.name.replace(/^r#/, "");
 }
 
-function localFieldNodeName(field: StructField): string {
-    return `source_${localFieldName(field)}_node`;
+function emitGeneratedVisitedFieldHelpers(w: CodeWriter): void {
+    w.write("struct GeneratedVisitedChildField {");
+    w.push();
+    w.write("value: GeneratedChildFieldValue,");
+    w.write("unchanged: bool,");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("struct GeneratedVisitedChildFields {");
+    w.push();
+    w.write("values: GeneratedChildFieldValues,");
+    w.write("unchanged: bool,");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("impl GeneratedVisitedChildFields {");
+    w.push();
+    w.write("fn unchanged(&self) -> bool {");
+    w.push();
+    w.write("self.unchanged");
+    w.pop();
+    w.write("}");
+    w.write("#[rustfmt::skip] fn optional_node<'source, T>(&self, runtime: &mut T, index: usize) -> Option<Node> where T: AstVisitEachChildRuntime<'source> + ?Sized { self.values.import_optional_node(runtime, index) }");
+    w.write("#[rustfmt::skip] fn required_node<'source, T>(&self, runtime: &mut T, index: usize) -> Node where T: AstVisitEachChildRuntime<'source> + ?Sized { self.values.import_required_node(runtime, index) }");
+    w.write("#[rustfmt::skip] fn optional_node_list<'source, T>(&self, runtime: &mut T, index: usize) -> Option<NodeList> where T: AstVisitEachChildRuntime<'source> + ?Sized { self.values.import_optional_node_list(runtime, index) }");
+    w.write("#[rustfmt::skip] fn required_node_list<'source, T>(&self, runtime: &mut T, index: usize) -> NodeList where T: AstVisitEachChildRuntime<'source> + ?Sized { self.values.import_required_node_list(runtime, index) }");
+    w.write("#[rustfmt::skip] fn optional_modifier_list<'source, T>(&self, runtime: &mut T, index: usize) -> Option<ModifierList> where T: AstVisitEachChildRuntime<'source> + ?Sized { self.values.import_optional_modifier_list(runtime, index) }");
+    w.write("#[rustfmt::skip] fn required_modifier_list<'source, T>(&self, runtime: &mut T, index: usize) -> ModifierList where T: AstVisitEachChildRuntime<'source> + ?Sized { self.values.import_required_modifier_list(runtime, index) }");
+    w.write("#[rustfmt::skip] fn optional_raw_node_slice<'source, T>(&self, runtime: &mut T, index: usize) -> Option<RawNodeSlice> where T: AstVisitEachChildRuntime<'source> + ?Sized { self.values.import_optional_raw_node_slice(runtime, index) }");
+    w.write("#[rustfmt::skip] fn required_raw_node_slice<'source, T>(&self, runtime: &mut T, index: usize) -> RawNodeSlice where T: AstVisitEachChildRuntime<'source> + ?Sized { self.values.import_required_raw_node_slice(runtime, index) }");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn generated_visit_node_by_route<'source, T>(runtime: &mut T, route: AstVisitRoute, node: Option<Node>) -> Option<Node>");
+    w.write("where");
+    w.push();
+    w.write("T: AstVisitEachChildRuntime<'source> + ?Sized,");
+    w.pop();
+    w.write("{");
+    w.push();
+    w.write("match route {");
+    w.push();
+    w.write("AstVisitRoute::VisitToken => runtime.visit_token(node),");
+    w.write("AstVisitRoute::VisitFunctionBody => runtime.visit_function_body(node),");
+    w.write("AstVisitRoute::VisitIterationBody => runtime.visit_iteration_body(node),");
+    w.write("AstVisitRoute::VisitEmbeddedStatement => runtime.visit_embedded_statement(node),");
+    w.write("_ => runtime.visit_node(node),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn generated_visit_node_list_by_route<'source, T>(runtime: &mut T, route: AstVisitRoute, nodes: Option<SourceNodeListInput>) -> Option<NodeList>");
+    w.write("where");
+    w.push();
+    w.write("T: AstVisitEachChildRuntime<'source> + ?Sized,");
+    w.pop();
+    w.write("{");
+    w.push();
+    w.write("match route {");
+    w.push();
+    w.write("AstVisitRoute::VisitParameters => runtime.visit_parameters_input(nodes),");
+    w.write("AstVisitRoute::VisitTopLevelStatements => runtime.visit_top_level_statements_input(nodes),");
+    w.write("_ => runtime.visit_nodes_input(nodes),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn generated_visit_child_field<'source, T>(runtime: &mut T, node: Node, field: &AstChildFieldDescriptor) -> GeneratedVisitedChildField");
+    w.write("where");
+    w.push();
+    w.write("T: AstVisitEachChildRuntime<'source> + ?Sized,");
+    w.pop();
+    w.write("{");
+    w.push();
+    w.write("match field.kind {");
+    w.push();
+    w.write("AstChildFieldKind::Node | AstChildFieldKind::OptionalNode => {");
+    w.push();
+    w.write("let source_node = {");
+    w.push();
+    w.write("let source = runtime.source_store_for_node(node);");
+    w.write("match source.child_field_value(node, field) {");
+    w.push();
+    w.write("AstChildFieldValue::Node(node) => node,");
+    w.write("_ => panic!(\"generated child descriptor kind should match source node value\"),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.write("let visited = generated_visit_node_by_route(runtime, field.visit_route, source_node);");
+    w.write("GeneratedVisitedChildField {");
+    w.push();
+    w.write("value: GeneratedChildFieldValue::Node(visited),");
+    w.write("unchanged: runtime.preserved_source_node_matches(source_node, visited),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldKind::NodeList | AstChildFieldKind::OptionalNodeList => {");
+    w.push();
+    w.write("let source_nodes = {");
+    w.push();
+    w.write("let source = runtime.source_store_for_node(node);");
+    w.write("match source.child_field_value(node, field) {");
+    w.push();
+    w.write("AstChildFieldValue::NodeList(nodes) => nodes.map(SourceNodeListInput::from_source),");
+    w.write("_ => panic!(\"generated child descriptor kind should match source node-list value\"),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.write("let visited = generated_visit_node_list_by_route(runtime, field.visit_route, source_nodes.clone());");
+    w.write("GeneratedVisitedChildField {");
+    w.push();
+    w.write("value: GeneratedChildFieldValue::NodeList(visited),");
+    w.write("unchanged: runtime.preserved_source_node_list_input_matches(source_nodes.as_ref(), visited),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldKind::ModifierList | AstChildFieldKind::OptionalModifierList => {");
+    w.push();
+    w.write("let source_modifiers = {");
+    w.push();
+    w.write("let source = runtime.source_store_for_node(node);");
+    w.write("match source.child_field_value(node, field) {");
+    w.push();
+    w.write("AstChildFieldValue::ModifierList(modifiers) => modifiers.map(SourceModifierListInput::from_source),");
+    w.write("_ => panic!(\"generated child descriptor kind should match source modifier-list value\"),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.write("let visited = runtime.visit_modifiers_input(source_modifiers.clone());");
+    w.write("GeneratedVisitedChildField {");
+    w.push();
+    w.write("value: GeneratedChildFieldValue::ModifierList(visited),");
+    w.write("unchanged: runtime.preserved_source_modifier_list_input_matches(source_modifiers.as_ref(), visited),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("AstChildFieldKind::RawNodeSlice | AstChildFieldKind::OptionalRawNodeSlice => {");
+    w.push();
+    w.write("let source_nodes = {");
+    w.push();
+    w.write("let source = runtime.source_store_for_node(node);");
+    w.write("match source.child_field_value(node, field) {");
+    w.push();
+    w.write("AstChildFieldValue::RawNodeSlice(nodes) => nodes.map(SourceRawNodeSliceInput::from_source),");
+    w.write("_ => panic!(\"generated child descriptor kind should match source raw-node-slice value\"),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("};");
+    w.write("let visited = runtime.visit_raw_node_slice_input(source_nodes.clone());");
+    w.write("GeneratedVisitedChildField {");
+    w.push();
+    w.write("value: GeneratedChildFieldValue::RawNodeSlice(visited),");
+    w.write("unchanged: runtime.preserved_source_raw_node_slice_input_matches(source_nodes.as_ref(), visited),");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("fn generated_visit_child_fields<'source, T>(runtime: &mut T, node: Node) -> GeneratedVisitedChildFields");
+    w.write("where");
+    w.push();
+    w.write("T: AstVisitEachChildRuntime<'source> + ?Sized,");
+    w.pop();
+    w.write("{");
+    w.push();
+    w.write("let layout = {");
+    w.push();
+    w.write("let source = runtime.source_store_for_node(node);");
+    w.write("source.node_layout(node)");
+    w.pop();
+    w.write("};");
+    w.write("let mut fields = [GeneratedChildFieldValue::Missing; GENERATED_CHILD_FIELD_CAPACITY];");
+    w.write("let mut len = 0usize;");
+    w.write("let mut unchanged = true;");
+    w.write("for field in layout.child_fields {");
+    w.push();
+    w.write("let visited = generated_visit_child_field(runtime, node, field);");
+    w.write("unchanged &= visited.unchanged;");
+    w.write("fields[len] = visited.value;");
+    w.write("len += 1;");
+    w.pop();
+    w.write("}");
+    w.write("GeneratedVisitedChildFields { values: GeneratedChildFieldValues { fields, len }, unchanged }");
+    w.pop();
+    w.write("}");
+    w.write("");
 }
 
-function localFieldInputName(field: StructField): string {
-    return `source_${localFieldName(field)}_input`;
-}
-
-function localFieldVisitSourceExpr(field: StructField): string {
-    switch (field.type) {
-        case "AstNodeId":
-        case "OptionalAstNodeId":
-            return localFieldNodeName(field);
-        case "NodeListId":
-        case "OptionalNodeListId":
-        case "ModifierListId":
-        case "OptionalModifierListId":
-        case "RawNodeSliceId":
-        case "OptionalRawNodeSliceId":
-            return localFieldInputName(field);
-        default:
-            return `source_${localFieldName(field)}`;
-    }
-}
-
-function localFieldSnapshotLine(field: StructField): string | undefined {
-    const local = `source_${localFieldName(field)}`;
-    switch (field.type) {
-        case "AstNodeId":
-            return `let ${localFieldNodeName(field)} = { let source = self.source_store_for_node(*node); source.node_from_id(${local}) };`;
-        case "OptionalAstNodeId":
-            return `let ${localFieldNodeName(field)} = { let source = self.source_store_for_node(*node); source.optional_node_from_id(${local}) };`;
-        case "NodeListId":
-            return `let ${localFieldInputName(field)} = { let source = self.source_store_for_node(*node); SourceNodeListInput::from_source(SourceNodeList::new(source, ${local})) };`;
-        case "OptionalNodeListId":
-            return `let ${localFieldInputName(field)} = { let source = self.source_store_for_node(*node); ${local}.get().map(|id| SourceNodeListInput::from_source(SourceNodeList::new(source, id))) };`;
-        case "ModifierListId":
-            return `let ${localFieldInputName(field)} = { let source = self.source_store_for_node(*node); SourceModifierListInput::from_source(SourceModifierList::new(source, ${local})) };`;
-        case "OptionalModifierListId":
-            return `let ${localFieldInputName(field)} = { let source = self.source_store_for_node(*node); ${local}.get().map(|id| SourceModifierListInput::from_source(SourceModifierList::new(source, id))) };`;
-        case "RawNodeSliceId":
-            return `let ${localFieldInputName(field)} = { let source = self.source_store_for_node(*node); SourceRawNodeSliceInput::from_source(SourceRawNodeSlice::new(source, ${local})) };`;
-        case "OptionalRawNodeSliceId":
-            return `let ${localFieldInputName(field)} = { let source = self.source_store_for_node(*node); ${local}.get().map(|id| SourceRawNodeSliceInput::from_source(SourceRawNodeSlice::new(source, id))) };`;
-        default:
-            return undefined;
-    }
-}
-
-function visitEachChildArgExpr(member: MemberInfo, field: StructField | undefined, route: string, sourceExpr = "source_data"): string {
-    if (isNodeFlagsMember(member)) return sourceExpr === "$locals" ? "source_flags" : "source.flags(*node)";
+function visitEachChildSourceArgExpr(member: MemberInfo, field: StructField | undefined): string {
+    if (isNodeFlagsMember(member)) return "original_metadata.flags";
     if (!field) return paramName(member);
-    if (sourceExpr === "$locals") {
-        const local = localFieldVisitSourceExpr(field);
-        if (field.type === "RawStringSliceId") {
-            return `SourceRawStringSlice::new(source, source_${localFieldName(field)})`;
-        }
-        if (field.type === "OptionalRawStringSliceId") {
-            return `source_${localFieldName(field)}.get().map(|id| SourceRawStringSlice::new(source, id))`;
-        }
-        if (member.isChild()) {
-            switch (field.type) {
-            case "AstNodeId":
-                return `self.${rustVisitMethod(route)}(Some(${local})).expect("required child removed by visitor")`;
-            case "OptionalAstNodeId":
-            case "Option<Node>":
-                return `self.${rustVisitMethod(route)}(${local})`;
-            case "NodeListId":
-                return `self.${route === "visitParameters" ? "visit_parameters_input" : route === "visitTopLevelStatements" ? "visit_top_level_statements_input" : "visit_nodes_input"}(Some(${local}.clone())).expect("required node list removed by visitor")`;
-            case "OptionalNodeListId":
-                return `self.${route === "visitParameters" ? "visit_parameters_input" : route === "visitTopLevelStatements" ? "visit_top_level_statements_input" : "visit_nodes_input"}(${local}.clone())`;
-            case "ModifierListId":
-                return `self.visit_modifiers_input(Some(${local}.clone())).expect("required modifier list removed by visitor")`;
-            case "OptionalModifierListId":
-                return `self.visit_modifiers_input(${local}.clone())`;
-            case "RawNodeSliceId":
-                return `self.visit_raw_node_slice_input(Some(${local}.clone())).expect("required raw node slice removed by visitor")`;
-            case "OptionalRawNodeSliceId":
-                return `self.visit_raw_node_slice_input(${local}.clone())`;
-            default:
-                break;
-            }
-        }
-        return `source_${localFieldName(field)}`;
-    }
-    if (field.type === "RawStringSliceId") {
-        return `SourceRawStringSlice::new(source, ${sourceFieldExpr(sourceExpr, field)})`;
-    }
-    if (field.type === "OptionalRawStringSliceId") {
-        return `${sourceFieldExpr(sourceExpr, field)}.get().map(|id| SourceRawStringSlice::new(source, id))`;
-    }
-    if (member.isChild()) {
-        switch (field.type) {
-        case "AstNodeId":
-            return `self.${rustVisitMethod(route)}(Some(&source.node_from_id(${sourceFieldExpr(sourceExpr, field)}))).expect("required child removed by visitor")`;
-        case "OptionalAstNodeId":
-            return `self.${rustVisitMethod(route)}(source.optional_node_from_id(${sourceFieldExpr(sourceExpr, field)}))`;
-        case "Option<Node>":
-            return `self.${rustVisitMethod(route)}(${sourceFieldExpr(sourceExpr, field)})`;
-        case "NodeListId":
-            return `self.${route === "visitParameters" ? "visit_parameters_input" : route === "visitTopLevelStatements" ? "visit_top_level_statements_input" : "visit_nodes_input"}(Some(SourceNodeListInput::from_source(SourceNodeList::new(source, ${sourceFieldExpr(sourceExpr, field)})))).expect("required node list removed by visitor")`;
-        case "OptionalNodeListId":
-            return `self.${route === "visitParameters" ? "visit_parameters_input" : route === "visitTopLevelStatements" ? "visit_top_level_statements_input" : "visit_nodes_input"}(${sourceFieldExpr(sourceExpr, field)}.get().map(|id| SourceNodeListInput::from_source(SourceNodeList::new(source, id))))`;
-        case "ModifierListId":
-            return `self.visit_modifiers_input(Some(SourceModifierListInput::from_source(SourceModifierList::new(source, ${sourceFieldExpr(sourceExpr, field)})))).expect("required modifier list removed by visitor")`;
-        case "OptionalModifierListId":
-            return `self.visit_modifiers_input(${sourceFieldExpr(sourceExpr, field)}.get().map(|id| SourceModifierListInput::from_source(SourceModifierList::new(source, id))))`;
-        case "RawNodeSliceId":
-            return `self.visit_raw_node_slice_input(Some(SourceRawNodeSliceInput::from_source(SourceRawNodeSlice::new(source, ${sourceFieldExpr(sourceExpr, field)})))).expect("required raw node slice removed by visitor")`;
-        case "OptionalRawNodeSliceId":
-            return `self.visit_raw_node_slice_input(${sourceFieldExpr(sourceExpr, field)}.get().map(|id| SourceRawNodeSliceInput::from_source(SourceRawNodeSlice::new(source, id))))`;
-        default:
-            break;
-        }
-    }
-    return sourceFieldExpr(sourceExpr, field);
+    return cloneFieldExpr("source_data", field);
 }
 
-function visitEachChildUnchangedExpr(member: MemberInfo, field: StructField | undefined, arg: string, sourceExpr = "$locals"): string | undefined {
-    if (!field) return undefined;
-    const source = sourceExpr === "$locals" ? localFieldVisitSourceExpr(field) : sourceFieldExpr(sourceExpr, field);
-    if (field.type === "RawStringSliceId") {
-        return "true";
-    }
-    if (field.type === "OptionalRawStringSliceId") {
-        return "true";
-    }
-    if (!member.isChild()) return undefined;
+function visitEachChildVisitedUpdateArgExpr(field: StructField, index: number): string | undefined {
     switch (field.type) {
         case "AstNodeId":
-            return sourceExpr === "$locals"
-                ? `self.preserved_source_node_matches(Some(${source}), Some(${arg}))`
-                : `self.preserved_source_node_matches(Some(source.node_from_id(${source})), Some(${arg}))`;
+            return `visited.required_node(self, ${index})`;
         case "OptionalAstNodeId":
-            return sourceExpr === "$locals"
-                ? `self.preserved_source_node_matches(${source}, ${arg})`
-                : `self.preserved_source_node_matches(source.optional_node_from_id(${source}), ${arg})`;
         case "Option<Node>":
-            return `self.preserved_source_node_matches(${source}, ${arg})`;
+            return `visited.optional_node(self, ${index})`;
         case "NodeListId":
-            return sourceExpr === "$locals"
-                ? `self.preserved_source_node_list_input_matches(Some(&${source}), Some(${arg}))`
-                : `self.preserved_source_node_list_input_matches(Some(&SourceNodeListInput::from_source(SourceNodeList::new(source, ${source}))), Some(${arg}))`;
+            return `visited.required_node_list(self, ${index})`;
         case "OptionalNodeListId":
-            return sourceExpr === "$locals"
-                ? `self.preserved_source_node_list_input_matches(${source}.as_ref(), ${arg})`
-                : `self.preserved_source_node_list_input_matches(${source}.get().map(|id| SourceNodeListInput::from_source(SourceNodeList::new(source, id))).as_ref(), ${arg})`;
+            return `visited.optional_node_list(self, ${index})`;
         case "ModifierListId":
-            return sourceExpr === "$locals"
-                ? `self.preserved_source_modifier_list_input_matches(Some(&${source}), Some(${arg}))`
-                : `self.preserved_source_modifier_list_input_matches(Some(&SourceModifierListInput::from_source(SourceModifierList::new(source, ${source}))), Some(${arg}))`;
+            return `visited.required_modifier_list(self, ${index})`;
         case "OptionalModifierListId":
-            return sourceExpr === "$locals"
-                ? `self.preserved_source_modifier_list_input_matches(${source}.as_ref(), ${arg})`
-                : `self.preserved_source_modifier_list_input_matches(${source}.get().map(|id| SourceModifierListInput::from_source(SourceModifierList::new(source, id))).as_ref(), ${arg})`;
+            return `visited.optional_modifier_list(self, ${index})`;
         case "RawNodeSliceId":
-            return sourceExpr === "$locals"
-                ? `self.preserved_source_raw_node_slice_input_matches(Some(&${source}), Some(${arg}))`
-                : `self.preserved_source_raw_node_slice_input_matches(Some(&SourceRawNodeSliceInput::from_source(SourceRawNodeSlice::new(source, ${source}))), Some(${arg}))`;
+            return `visited.required_raw_node_slice(self, ${index})`;
         case "OptionalRawNodeSliceId":
-            return sourceExpr === "$locals"
-                ? `self.preserved_source_raw_node_slice_input_matches(${source}.as_ref(), ${arg})`
-                : `self.preserved_source_raw_node_slice_input_matches(${source}.get().map(|id| SourceRawNodeSliceInput::from_source(SourceRawNodeSlice::new(source, id))).as_ref(), ${arg})`;
+            return `visited.optional_raw_node_slice(self, ${index})`;
         default:
             return undefined;
     }
 }
 
-function visitEachChildUpdateArgExpr(member: MemberInfo, field: StructField | undefined, arg: string): string {
-    if (!field || !member.isChild()) return arg;
+function visitEachChildVisitedArgToken(field: StructField, index: number): string | undefined {
     switch (field.type) {
         case "AstNodeId":
-            return `self.import_update_node(Some(${arg})).expect("required child missing")`;
+            return `rn(${index})`;
         case "OptionalAstNodeId":
         case "Option<Node>":
-            return `self.import_update_node(${arg})`;
+            return `n(${index})`;
         case "NodeListId":
-            return `self.import_update_node_list(${arg})`;
+            return `rl(${index})`;
         case "OptionalNodeListId":
-            return `${arg}.map(|list| self.import_update_node_list(list))`;
+            return `l(${index})`;
         case "ModifierListId":
-            return `self.import_update_modifier_list(${arg})`;
+            return `rm(${index})`;
         case "OptionalModifierListId":
-            return `${arg}.map(|list| self.import_update_modifier_list(list))`;
+            return `m(${index})`;
         case "RawNodeSliceId":
-            return `self.import_update_raw_node_slice(${arg})`;
+            return `rr(${index})`;
         case "OptionalRawNodeSliceId":
-            return `${arg}.map(|slice| self.import_update_raw_node_slice(slice))`;
+            return `r(${index})`;
         default:
-            return arg;
+            return undefined;
     }
+}
+
+function visitEachChildSourceArgToken(field: StructField): string {
+    const sourceField = `source_data.${field.name}`;
+    const sourceExpr = cloneFieldExpr("source_data", field);
+    if (sourceExpr === sourceField) {
+        return `s(${field.name})`;
+    }
+    if (sourceExpr === `${sourceField}.clone()`) {
+        return `sc(${field.name})`;
+    }
+    if (sourceExpr === `AtomicU32::new(${sourceField}.load(Ordering::Relaxed))`) {
+        return `sa(${field.name})`;
+    }
+    throw new Error(`Unsupported visit_each_child source arg ${field.name}: ${sourceExpr}`);
+}
+
+function visitEachChildReconstructionArgToken(arg: VisitEachChildReconstructionArgPlan): string {
+    switch (arg.source) {
+        case "OriginalKind":
+            return "k";
+        case "OriginalFlags":
+            return "f";
+        case "VisitedChild": {
+            if (!arg.field || arg.childIndex === undefined) {
+                throw new Error(`Missing visited-child reconstruction arg data for ${arg.member.name}`);
+            }
+            const token = visitEachChildVisitedArgToken(arg.field, arg.childIndex);
+            if (!token) {
+                throw new Error(`Unsupported visit_each_child visited arg ${arg.member.name}: ${arg.field.type}`);
+            }
+            return token;
+        }
+        case "SourceField":
+            if (!arg.field) {
+                throw new Error(`Missing source-field reconstruction arg data for ${arg.member.name}`);
+            }
+            return visitEachChildSourceArgToken(arg.field);
+    }
+}
+
+function visitEachChildReconstructionArgName(index: number): string {
+    const names = "abcdefghijklmnopqrstuvwxyz";
+    return index < names.length ? names[index] : `a${index}`;
+}
+
+function visitEachChildUpdateArgPlan(
+    member: MemberInfo,
+    field: StructField | undefined,
+    childIndex: number | undefined,
+): { updateArg: string | undefined; needsSourceData: boolean; childIndex: number | undefined } {
+    const updateArg = field && childIndex !== undefined
+        ? visitEachChildVisitedUpdateArgExpr(field, childIndex)
+        : undefined;
+    const needsSourceData = !member.isKindParam() && !isNodeFlagsMember(member) && updateArg === undefined && field !== undefined;
+    return { updateArg, needsSourceData, childIndex };
+}
+
+function visitEachChildReconstructionPlan(node: NodeType): VisitEachChildReconstructionPlan {
+    const fieldTypes = new Map(structFieldsFor(node).map(field => [field.name, field]));
+    const childDescriptors = childDescriptorsForNode(node);
+    const childDescriptorByName = new Map(childDescriptors.map(descriptor => [descriptor.name, descriptor]));
+    const childFieldIndexByName = new Map<string, number>();
+    childDescriptors.forEach((field, index) => childFieldIndexByName.set(field.name, index));
+    const updateArgPlanByParameter = new Map<string, ReturnType<typeof visitEachChildUpdateArgPlan>>();
+    for (const member of updateMembers(node)) {
+        const field = fieldTypes.get(fieldName(member.name));
+        const childIndex = field ? childFieldIndexByName.get(localFieldName(field)) : undefined;
+        updateArgPlanByParameter.set(paramName(member), visitEachChildUpdateArgPlan(member, field, childIndex));
+    }
+
+    const args = schemaMembers(node).map((member: MemberInfo): VisitEachChildReconstructionArgPlan => {
+        const parameter = paramName(member);
+        if (member.isKindParam()) {
+            return {
+                member,
+                parameter,
+                field: undefined,
+                source: "OriginalKind",
+                expression: "original_kind",
+                childIndex: undefined,
+                childDescriptor: undefined,
+            };
+        }
+        if (isNodeFlagsMember(member)) {
+            return {
+                member,
+                parameter,
+                field: undefined,
+                source: "OriginalFlags",
+                expression: "original_metadata.flags",
+                childIndex: undefined,
+                childDescriptor: undefined,
+            };
+        }
+
+        const field = fieldTypes.get(fieldName(member.name));
+        if (!field) {
+            throw new Error(`Missing generated visitor rebuild field for ${node.name}.${member.name}`);
+        }
+        const updateArgPlan = updateArgPlanByParameter.get(parameter);
+        if (updateArgPlan?.updateArg !== undefined) {
+            const childDescriptor = childDescriptorByName.get(localFieldName(field));
+            if (!childDescriptor) {
+                throw new Error(`Missing child descriptor for generated visitor rebuild field ${node.name}.${field.name}`);
+            }
+            return {
+                member,
+                parameter,
+                field,
+                source: "VisitedChild",
+                expression: updateArgPlan.updateArg,
+                childIndex: updateArgPlan.childIndex,
+                childDescriptor,
+            };
+        }
+
+        return {
+            member,
+            parameter,
+            field,
+            source: "SourceField",
+            expression: cloneFieldExpr("source_data", field),
+            childIndex: undefined,
+            childDescriptor: undefined,
+        };
+    });
+
+    return {
+        node,
+        factoryName: updateNewFactoryName(node),
+        args,
+        needsOriginalKind: args.some(arg => arg.source === "OriginalKind"),
+        needsSourceData: args.some(arg => arg.source === "SourceField"),
+    };
 }
 
 function generateVisitEachChild(w: CodeWriter): void {
+    const generatedNodes = api.nodes().filter((node: NodeType) => !node.handWritten);
+    w.write("macro_rules! generated_visit_metadata {");
+    w.push();
+    w.write("($runtime:expr, $node:expr) => {{");
+    w.push();
+    w.write("let source = ($runtime).source_store_for_node($node);");
+    w.write("source.update_metadata($node)");
+    w.pop();
+    w.write("}};");
+    w.write("($runtime:expr, $node:expr, kind) => {{");
+    w.push();
+    w.write("let source = ($runtime).source_store_for_node($node);");
+    w.write("(source.kind($node), source.update_metadata($node))");
+    w.pop();
+    w.write("}};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("macro_rules! generated_visit_update {");
+    w.push();
+    w.write("($runtime:expr, $node:expr, $original_metadata:expr, $visited:expr, $factory:ident($($arg_name:ident = $arg:expr),* $(,)?)) => {{");
+    w.push();
+    w.write("if $visited.unchanged() {");
+    w.push();
+    w.write("$node");
+    w.pop();
+    w.write("} else {");
+    w.push();
+    w.write("$(let $arg_name = $arg;)*");
+    w.write("let updated = ($runtime).factory_mut().$factory($($arg_name),*);");
+    w.write("($runtime).factory_mut().finish_update_node(updated, $node, $original_metadata)");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}};");
+    w.write("($runtime:expr, $node:expr, $original_metadata:expr, $visited:expr, with_source($accessor:ident, $source_data:ident), $factory:ident($($arg_name:ident = $arg:expr),* $(,)?)) => {{");
+    w.push();
+    w.write("if $visited.unchanged() {");
+    w.push();
+    w.write("$node");
+    w.pop();
+    w.write("} else {");
+    w.push();
+    w.write("let $source_data = {");
+    w.push();
+    w.write("let source = ($runtime).source_store_for_node($node);");
+    w.write("source.$accessor($node).clone()");
+    w.pop();
+    w.write("};");
+    w.write("$(let $arg_name = $arg;)*");
+    w.write("let updated = ($runtime).factory_mut().$factory($($arg_name),*);");
+    w.write("($runtime).factory_mut().finish_update_node(updated, $node, $original_metadata)");
+    w.pop();
+    w.write("}");
+    w.pop();
+    w.write("}};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[rustfmt::skip]");
+    w.write("macro_rules! generated_visit_arg {");
+    w.push();
+    w.write("($runtime:expr, $visited:ident, $original_kind:ident, $original_metadata:ident, $source_data:ident, k) => { $original_kind };");
+    w.write("($runtime:expr, $visited:ident, $original_kind:ident, $original_metadata:ident, $source_data:ident, f) => { $original_metadata.flags };");
+    w.write("($runtime:expr, $visited:ident, $original_kind:ident, $original_metadata:ident, $source_data:ident, n($index:literal)) => { $visited.optional_node($runtime, $index) };");
+    w.write("($runtime:expr, $visited:ident, $original_kind:ident, $original_metadata:ident, $source_data:ident, rn($index:literal)) => { $visited.required_node($runtime, $index) };");
+    w.write("($runtime:expr, $visited:ident, $original_kind:ident, $original_metadata:ident, $source_data:ident, l($index:literal)) => { $visited.optional_node_list($runtime, $index) };");
+    w.write("($runtime:expr, $visited:ident, $original_kind:ident, $original_metadata:ident, $source_data:ident, rl($index:literal)) => { $visited.required_node_list($runtime, $index) };");
+    w.write("($runtime:expr, $visited:ident, $original_kind:ident, $original_metadata:ident, $source_data:ident, m($index:literal)) => { $visited.optional_modifier_list($runtime, $index) };");
+    w.write("($runtime:expr, $visited:ident, $original_kind:ident, $original_metadata:ident, $source_data:ident, rm($index:literal)) => { $visited.required_modifier_list($runtime, $index) };");
+    w.write("($runtime:expr, $visited:ident, $original_kind:ident, $original_metadata:ident, $source_data:ident, r($index:literal)) => { $visited.optional_raw_node_slice($runtime, $index) };");
+    w.write("($runtime:expr, $visited:ident, $original_kind:ident, $original_metadata:ident, $source_data:ident, rr($index:literal)) => { $visited.required_raw_node_slice($runtime, $index) };");
+    w.write("($runtime:expr, $visited:ident, $original_kind:ident, $original_metadata:ident, $source_data:ident, s($field:ident)) => { $source_data.$field };");
+    w.write("($runtime:expr, $visited:ident, $original_kind:ident, $original_metadata:ident, $source_data:ident, sc($field:ident)) => { $source_data.$field.clone() };");
+    w.write("($runtime:expr, $visited:ident, $original_kind:ident, $original_metadata:ident, $source_data:ident, sa($field:ident)) => { AtomicU32::new($source_data.$field.load(Ordering::Relaxed)) };");
+    w.pop();
+    w.write("}");
+    w.write("");
+    w.write("#[rustfmt::skip]");
+    w.write("macro_rules! generated_visit_reconstruct {");
+    w.push();
+    w.write("($runtime:expr, $node:expr, $factory:ident($($arg_name:ident = $arg:ident $(($arg_data:tt))?),* $(,)?)) => {{");
+    w.push();
+    w.write("let original_metadata = generated_visit_metadata!($runtime, $node);");
+    w.write("let visited = generated_visit_child_fields($runtime, $node);");
+    w.write("generated_visit_update!($runtime, $node, original_metadata, visited, $factory($($arg_name = generated_visit_arg!($runtime, visited, original_kind, original_metadata, source_data, $arg $(($arg_data))?)),*))");
+    w.pop();
+    w.write("}};");
+    w.write("($runtime:expr, $node:expr, kind, $factory:ident($($arg_name:ident = $arg:ident $(($arg_data:tt))?),* $(,)?)) => {{");
+    w.push();
+    w.write("let (original_kind, original_metadata) = generated_visit_metadata!($runtime, $node, kind);");
+    w.write("let visited = generated_visit_child_fields($runtime, $node);");
+    w.write("generated_visit_update!($runtime, $node, original_metadata, visited, $factory($($arg_name = generated_visit_arg!($runtime, visited, original_kind, original_metadata, source_data, $arg $(($arg_data))?)),*))");
+    w.pop();
+    w.write("}};");
+    w.write("($runtime:expr, $node:expr, source($accessor:ident), $factory:ident($($arg_name:ident = $arg:ident $(($arg_data:tt))?),* $(,)?)) => {{");
+    w.push();
+    w.write("let original_metadata = generated_visit_metadata!($runtime, $node);");
+    w.write("let visited = generated_visit_child_fields($runtime, $node);");
+    w.write("generated_visit_update!($runtime, $node, original_metadata, visited, with_source($accessor, source_data), $factory($($arg_name = generated_visit_arg!($runtime, visited, original_kind, original_metadata, source_data, $arg $(($arg_data))?)),*))");
+    w.pop();
+    w.write("}};");
+    w.pop();
+    w.write("}");
+    w.write("");
+    emitGeneratedVisitedFieldHelpers(w);
     w.write("pub trait AstGeneratedVisitEachChild<'source>: AstVisitEachChildRuntime<'source> {");
     w.push();
+    w.write("#[rustfmt::skip]");
     w.write("fn generated_visit_each_child(&mut self, node: &Node) -> Node {");
     w.push();
     w.write("if let Some(imported) = self.preserved_node(*node) {");
@@ -3004,112 +5312,34 @@ function generateVisitEachChild(w: CodeWriter): void {
     w.write("return imported;");
     w.pop();
     w.write("}");
-    w.write("let source_payload_tag = {");
+    w.write("let (source_payload_tag, has_child_fields) = {");
     w.push();
     w.write("let source = self.source_store_for_node(*node);");
-    w.write("source.header(*node).payload.tag()");
+    w.write("let payload_tag = source.header(*node).payload.tag();");
+    w.write("(payload_tag, !source.node_layout(*node).child_fields.is_empty())");
     w.pop();
     w.write("};");
-    w.write("match source_payload_tag {");
+    w.write("if !has_child_fields {");
     w.push();
-    w.write("NodePayloadTag::SourceFile => {");
-    w.push();
-    w.write("let (source_statements_input, source_end_of_file_token) = {");
-    w.push();
-    w.write("let source = self.source_store_for_node(*node);");
-    w.write("let source_data = source.as_source_file(*node);");
-    w.write("(SourceNodeListInput::from_source(SourceNodeList::new(source, source_data.statements)), source_data.end_of_file_token)");
+    w.write("return *node;");
     w.pop();
-    w.write("};");
-    w.write("let statements = self.visit_top_level_statements_input(Some(source_statements_input.clone()));");
-    w.write("let end_of_file_token = self.visit_token(source_end_of_file_token);");
-    w.write("let source_unchanged = self.preserved_source_node_list_input_matches(Some(&source_statements_input), statements) && self.preserved_source_node_matches(source_end_of_file_token, end_of_file_token);");
-    w.write("if source_unchanged { *node } else { self.update_source_file_from_visited(*node, statements, end_of_file_token, false) }");
-    w.pop();
-    w.write("},");
-    for (const node of api.nodes()) {
-        if (node.handWritten) continue;
+    w.write("}");
+    w.write("use self::NodePayloadTag::*; match source_payload_tag {");
+    w.push();
+    w.write("SourceFile => { let visited = generated_visit_child_fields(self, *node); let statements = Some(visited.required_node_list(self, 0)); let end_of_file_token = visited.optional_node(self, 1); self.update_source_file_from_visited(*node, statements, end_of_file_token, visited.unchanged()) },");
+    for (const node of generatedNodes) {
+        if (!shouldEmitUpdateFactory(node)) continue;
         const payloadField = snakeCase(node.name);
-        if (!shouldEmitUpdateFactory(node)) {
-            w.write(`NodePayloadTag::${node.name} => {`);
-            w.push();
-            w.write("*node");
-            w.pop();
-            w.write("},");
-            continue;
-        }
-        const members = updateMembers(node);
-        const fieldTypes = new Map(structFieldsFor(node).map(field => [field.name, field]));
-        const routes = getGoVisitRoutes().get(node.name) ?? [];
-        const args = members.map((member, index) => {
-            const field = fieldTypes.get(fieldName(member.name));
-            return visitEachChildArgExpr(member, field, routes[index] ?? "visitNode", "$locals");
-        });
-        w.write(`NodePayloadTag::${node.name} => {`);
-        w.push();
-        w.write(`let source_data = {`);
-        w.push();
-        w.write("let source = self.source_store_for_node(*node);");
-        w.write(`source.as_${payloadField}(*node).clone()`);
-        w.pop();
-        w.write("};");
-        w.write("let source_flags = {");
-        w.push();
-        w.write("let source = self.source_store_for_node(*node);");
-        w.write("source.flags(*node)");
-        w.pop();
-        w.write("};");
-        w.write("let original_kind = {");
-        w.push();
-        w.write("let source = self.source_store_for_node(*node);");
-        w.write("source.kind(*node)");
-        w.pop();
-        w.write("};");
-        w.write("let original_loc = {");
-        w.push();
-        w.write("let source = self.source_store_for_node(*node);");
-        w.write("source.loc(*node)");
-        w.pop();
-        w.write("};");
-        const seenFields = new Set<string>();
-        for (const member of members) {
-            const field = fieldTypes.get(fieldName(member.name));
-            if (!field || seenFields.has(field.name)) continue;
-            seenFields.add(field.name);
-            w.write(`let source_${localFieldName(field)} = ${cloneFieldExpr("source_data", field)};`);
-            const snapshotLine = localFieldSnapshotLine(field);
-            if (snapshotLine) {
-                w.write(snapshotLine);
-            }
-        }
-        args.forEach((arg, index) => w.write(`let arg_${index} = ${arg};`));
-        const unchangedExprs = members
-            .map((member, index) => visitEachChildUnchangedExpr(member, fieldTypes.get(fieldName(member.name)), `arg_${index}`))
-            .filter((expr): expr is string => expr !== undefined);
-        w.write(`let source_unchanged = ${unchangedExprs.length ? unchangedExprs.join(" && ") : "true"};`);
-        w.write("if source_unchanged {");
-        w.push();
-        w.write("*node");
-        w.pop();
-        w.write("} else {");
-        w.push();
-        const argNames = members.map((member, index) => {
-            const arg = `arg_${index}`;
-            const field = fieldTypes.get(fieldName(member.name));
-            const updateArg = visitEachChildUpdateArgExpr(member, field, arg);
-            if (updateArg !== arg) {
-                const updateArgName = `update_${arg}`;
-                w.write(`let ${updateArgName} = ${updateArg};`);
-                return updateArgName;
-            }
-            return arg;
-        });
-        w.write(`self.factory_mut().update_${payloadField}_with_metadata(*node, &source_data, original_kind, source_flags, original_loc${argNames.length ? `, ${argNames.join(", ")}` : ""})`);
-        w.pop();
-        w.write("}");
-        w.pop();
-        w.write("},");
+        const reconstruction = visitEachChildReconstructionPlan(node);
+        const generatedArgs = reconstruction.args.map((arg, index) => `${visitEachChildReconstructionArgName(index)}=${visitEachChildReconstructionArgToken(arg)}`);
+        const reconstructionKind = reconstruction.needsOriginalKind
+            ? "kind,"
+            : reconstruction.needsSourceData
+                ? `source(as_${payloadField}),`
+                : "";
+        w.write(`${node.name}=>generated_visit_reconstruct!(self,*node,${reconstructionKind}${reconstruction.factoryName}(${generatedArgs.join(",")})),`);
     }
+    w.write("_=>unreachable!(\"descriptor/update mismatch\"),");
     w.pop();
     w.write("}");
     w.pop();
@@ -3127,16 +5357,16 @@ function storageExpr(member: MemberInfo, targetOverride?: string): string {
         return `self.store.optional_local_node_id(${param}.into())`;
     }
     if (target === "OptionalModifierListId") {
-        return member.optional ? `OptionalModifierListId::from_option(${param}.into())` : `OptionalModifierListId::some(${param})`;
+        return param;
     }
     if (target === "OptionalNodeListId") {
-        return member.optional ? `OptionalNodeListId::from_option(${param}.into())` : `OptionalNodeListId::some(${param})`;
+        return param;
     }
     if (target === "OptionalRawNodeSliceId") {
-        return member.optional ? `OptionalRawNodeSliceId::from_option(${param}.into())` : `OptionalRawNodeSliceId::some(${param})`;
+        return param;
     }
     if (target === "OptionalRawStringSliceId") {
-        return member.optional ? `OptionalRawStringSliceId::from_option(${param}.into())` : `OptionalRawStringSliceId::some(${param})`;
+        return param;
     }
     if (member.optional) {
         return `${param}.into()`;
@@ -3145,19 +5375,49 @@ function storageExpr(member: MemberInfo, targetOverride?: string): string {
     return param;
 }
 
+function normalizeGeneratedContent(content: string): string {
+    return `${content.trimEnd()}\n`;
+}
+
 function writeFile(file: string, content: string): void {
     fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, `${content.trimEnd()}\n`, "utf-8");
-    const result = Bun.spawnSync(["rustfmt", file], { cwd: repoRoot, stdout: "inherit", stderr: "inherit" });
+    fs.writeFileSync(file, normalizeGeneratedContent(content), "utf-8");
+    const result = Bun.spawnSync(["rustfmt", "--edition", "2024", file], { cwd: repoRoot, stdout: "inherit", stderr: "inherit" });
     if (!result.success) {
         throw new Error(`rustfmt failed for ${file}`);
     }
     console.log(`Wrote ${path.relative(repoRoot, file)}`);
 }
 
+function generatedFiles(): GeneratedFile[] {
+    return [
+        { relativePath: "kind_generated.rs", content: generateKind() },
+        { relativePath: "kind_aliases_generated.rs", content: generateKindAliases() },
+        { relativePath: "kind_stringer_generated.rs", content: generateKindStringer() },
+        { relativePath: "ast_generated.rs", content: generateAst() },
+    ];
+}
+
+function writeGeneratedFiles(outputDir: string, files: GeneratedFile[]): void {
+    for (const file of files) {
+        writeFile(path.join(outputDir, file.relativePath), file.content);
+    }
+}
+
+function usage(): string {
+    return [
+        "Usage: bun generate-go-ast.ts [--schema <file>] [--output <dir>]",
+        "",
+        "Options:",
+        "  --schema <file>  Read AST schema JSON from a custom path.",
+        "  --output <dir>  Write generated files to a custom directory.",
+        "  --help          Print this message.",
+    ].join("\n");
+}
+
 async function main(): Promise<void> {
-    await loadSchemaApi();
     const args = process.argv.slice(2);
+    let schemaPath = defaultSchemaPath;
     let outputDir = defaultOutputDir;
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
@@ -3166,14 +5426,25 @@ async function main(): Promise<void> {
             if (!next) throw new Error("--output requires a path");
             outputDir = path.resolve(next);
         }
+        else if (arg === "--schema") {
+            const next = args[++i];
+            if (!next) throw new Error("--schema requires a path");
+            schemaPath = path.resolve(next);
+        }
+        else if (arg === "--help") {
+            console.log(usage());
+            return;
+        }
         else {
             throw new Error(`Unknown argument: ${arg}`);
         }
     }
-    writeFile(path.join(outputDir, "kind_generated.rs"), generateKind());
-    writeFile(path.join(outputDir, "kind_aliases_generated.rs"), generateKindAliases());
-    writeFile(path.join(outputDir, "kind_stringer_generated.rs"), generateKindStringer());
-    writeFile(path.join(outputDir, "ast_generated.rs"), generateAst());
+    if (!fs.existsSync(schemaPath)) {
+        throw new Error(`Schema file does not exist: ${schemaPath}`);
+    }
+    await loadSchemaApi(schemaPath);
+
+    writeGeneratedFiles(outputDir, generatedFiles());
 }
 
 if (import.meta.main) {

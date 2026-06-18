@@ -4339,13 +4339,13 @@ impl Printer {
         let store = self.store_for_node(original);
         if ast::is_let(store, original) {
             writer.write_keyword("let");
-        } else if ast::is_var_const(store, original) {
+        } else if ast::is_var_const(store, *original) {
             writer.write_keyword("const");
+        } else if ast::is_var_using(store, *original) {
+            writer.write_keyword("using");
         } else if ast::is_var_await_using(store, *original) {
             writer.write_keyword("await");
             writer.write_space(" ");
-            writer.write_keyword("using");
-        } else if ast::is_var_using(store, *original) {
             writer.write_keyword("using");
         } else {
             writer.write_keyword("var");

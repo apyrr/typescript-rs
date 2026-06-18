@@ -404,17 +404,20 @@ fn visit_document_symbol_node(
         }
         ast::Kind::BinaryExpression | ast::Kind::CallExpression => {
             match ast::get_assignment_declaration_kind(store, *node) {
-                ast::JSDeclarationKind::None
-                | ast::JSDeclarationKind::ThisProperty
-                | ast::JSDeclarationKind::ModuleExports
-                | ast::JSDeclarationKind::ExportsProperty
-                | ast::JSDeclarationKind::Prototype
-                | ast::JSDeclarationKind::PrototypeProperty
-                | ast::JSDeclarationKind::ObjectDefinePropertyExports => {
+                None
+                | Some(
+                    ast::JSDeclarationKind::ThisProperty
+                    | ast::JSDeclarationKind::ModuleExports
+                    | ast::JSDeclarationKind::ExportsProperty
+                    | ast::JSDeclarationKind::PrototypeProperty
+                    | ast::JSDeclarationKind::ObjectDefinePropertyExports,
+                ) => {
                     visit_children(ls, ctx, node, file, symbols, expando_targets);
                 }
-                ast::JSDeclarationKind::Property
-                | ast::JSDeclarationKind::ObjectDefinePropertyValue => {
+                Some(
+                    ast::JSDeclarationKind::Property
+                    | ast::JSDeclarationKind::ObjectDefinePropertyValue,
+                ) => {
                     let (target, mut target_function, definition, property_name) =
                         if ast::is_binary_expression(store, *node) {
                             let target = store.left(*node).unwrap();
@@ -985,11 +988,11 @@ pub(crate) fn get_symbol_kind_from_node(
         }
         ast::Kind::BinaryExpression | ast::Kind::CallExpression => {
             match ast::get_assignment_declaration_kind(store, node) {
-                ast::JSDeclarationKind::ThisProperty
-                | ast::JSDeclarationKind::Property
-                | ast::JSDeclarationKind::ObjectDefinePropertyValue => {
-                    lsproto::SymbolKind::PROPERTY
-                }
+                Some(
+                    ast::JSDeclarationKind::ThisProperty
+                    | ast::JSDeclarationKind::Property
+                    | ast::JSDeclarationKind::ObjectDefinePropertyValue,
+                ) => lsproto::SymbolKind::PROPERTY,
                 _ => lsproto::SymbolKind::VARIABLE,
             }
         }

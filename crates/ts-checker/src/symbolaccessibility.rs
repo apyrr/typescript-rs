@@ -1566,7 +1566,7 @@ fn update_alias_declaration_facts(
     declaration: ast::Node,
 ) {
     facts.has_external_module_import_equals |=
-        ast::is_external_module_import_equals_declaration(store, &declaration);
+        ast::is_external_module_import_equals_declaration(store, declaration);
     facts.has_namespace_reexport |= is_namespace_reexport_declaration(store, declaration);
     facts.has_export_specifier |= store.kind(declaration) == ast::Kind::ExportSpecifier;
 }

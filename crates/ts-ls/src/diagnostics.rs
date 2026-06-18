@@ -47,7 +47,6 @@ impl LanguageService<'_> {
         uri: lsproto::DocumentUri,
     ) -> Result<lsproto::DocumentDiagnosticResponse, core::Error> {
         let (program, file) = self.get_program_and_file(uri);
-
         let diagnostics = get_all_diagnostics(ctx, program, file);
 
         Ok(
@@ -56,7 +55,7 @@ impl LanguageService<'_> {
                     lsproto::RelatedFullDocumentDiagnosticReport {
                         kind: lsproto::StringLiteralFull,
                         result_id: None,
-                        items: self.to_lsp_diagnostics(ctx, &[diagnostics]),
+                        items: self.to_lsp_diagnostics(ctx, std::slice::from_ref(&diagnostics)),
                         related_documents: None,
                     },
                 ),

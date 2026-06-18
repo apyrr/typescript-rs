@@ -245,13 +245,13 @@ impl LanguageService<'_> {
                 }
                 Vec::new()
             }
-            ast::Kind::ReturnKeyword => self.use_parent(
+            ast::Kind::ReturnKeyword => self.use_parent_ranges(
                 source_file.store().parent(node),
                 ast::is_return_statement,
                 get_return_occurrences,
                 source_file,
             ),
-            ast::Kind::ThrowKeyword => self.use_parent(
+            ast::Kind::ThrowKeyword => self.use_parent_ranges(
                 source_file.store().parent(node),
                 ast::is_throw_statement,
                 get_throw_occurrences,
@@ -592,7 +592,7 @@ pub fn get_if_else_keywords(
 pub(crate) fn get_return_occurrences(
     node: ast::Node,
     source_file: &ast::SourceFile,
-) -> Vec<ast::Node> {
+) -> Vec<core::TextRange> {
     let store = source_file.store();
     let parent = store.parent(node);
     let func_node = ast::find_ancestor(store, parent, |store, node| {
@@ -606,9 +606,10 @@ pub(crate) fn get_return_occurrences(
     let body = store.body(func_node);
     if let Some(body) = body {
         ast::for_each_return_statement(store, &body, |ret| {
-            let keyword = astnav::find_child_of_kind(ret, ast::Kind::ReturnKeyword, source_file);
+            let keyword =
+                astnav::find_child_of_kind_info(ret, ast::Kind::ReturnKeyword, source_file);
             if let Some(keyword) = keyword {
-                keywords.push(keyword);
+                keywords.push(astnav::range_from_token_info(keyword, source_file));
             }
             false // continue traversal
         });
@@ -616,9 +617,10 @@ pub(crate) fn get_return_occurrences(
         // Get all throw statements not in a try block
         let throw_statements = aggregate_owned_throw_statements(body, source_file);
         for throw in throw_statements {
-            let keyword = astnav::find_child_of_kind(throw, ast::Kind::ThrowKeyword, source_file);
+            let keyword =
+                astnav::find_child_of_kind_info(throw, ast::Kind::ThrowKeyword, source_file);
             if let Some(keyword) = keyword {
-                keywords.push(keyword);
+                keywords.push(astnav::range_from_token_info(keyword, source_file));
             }
         }
     }
@@ -677,7 +679,7 @@ pub fn flat_map_children<T>(
 pub(crate) fn get_throw_occurrences(
     node: ast::Node,
     source_file: &ast::SourceFile,
-) -> Vec<ast::Node> {
+) -> Vec<core::TextRange> {
     let owner = get_throw_statement_owner(source_file.store(), node);
     let Some(owner) = owner else {
         return Vec::new();
@@ -688,9 +690,9 @@ pub(crate) fn get_throw_occurrences(
     // Aggregate all throw statements "owned" by this owner.
     let throw_statements = aggregate_owned_throw_statements(owner, source_file);
     for throw in throw_statements {
-        let keyword = astnav::find_child_of_kind(throw, ast::Kind::ThrowKeyword, source_file);
+        let keyword = astnav::find_child_of_kind_info(throw, ast::Kind::ThrowKeyword, source_file);
         if let Some(keyword) = keyword {
-            keywords.push(keyword);
+            keywords.push(astnav::range_from_token_info(keyword, source_file));
         }
     }
 
@@ -698,9 +700,10 @@ pub(crate) fn get_throw_occurrences(
     // ability to "jump out" of the function, and include occurrences for both
     if ast::is_function_block(source_file.store(), Some(owner)) {
         ast::for_each_return_statement(source_file.store(), &owner, |ret| {
-            let keyword = astnav::find_child_of_kind(ret, ast::Kind::ReturnKeyword, source_file);
+            let keyword =
+                astnav::find_child_of_kind_info(ret, ast::Kind::ReturnKeyword, source_file);
             if let Some(keyword) = keyword {
-                keywords.push(keyword);
+                keywords.push(astnav::range_from_token_info(keyword, source_file));
             }
             false // continue traversal
         });
@@ -757,17 +760,17 @@ pub fn get_try_catch_finally_occurrence_ranges(
 
     if store.catch_clause(node).is_some() {
         if let Some(catch_token) =
-            astnav::find_child_of_kind(node, ast::Kind::CatchKeyword, source_file)
+            astnav::find_child_of_kind_info(node, ast::Kind::CatchKeyword, source_file)
         {
-            keywords.push(range_from_node_token(catch_token, source_file));
+            keywords.push(astnav::range_from_token_info(catch_token, source_file));
         }
     }
 
     if store.finally_block(node).is_some() {
         if let Some(finally_keyword) =
-            astnav::find_child_of_kind(node, ast::Kind::FinallyKeyword, source_file)
+            astnav::find_child_of_kind_info(node, ast::Kind::FinallyKeyword, source_file)
         {
-            keywords.push(range_from_node_token(finally_keyword, source_file));
+            keywords.push(astnav::range_from_token_info(finally_keyword, source_file));
         }
     }
 

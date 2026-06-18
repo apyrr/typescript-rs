@@ -99,15 +99,13 @@ pub fn with_token_start(loc: &ast::Node, file: &ast::SourceFile) -> core::TextRa
 impl FormattingContext {
     pub fn block_is_on_one_line(&self, node: &ast::Node) -> core::Tristate {
         let open_brace =
-            astnav::find_child_of_kind(*node, ast::Kind::OpenBraceToken, &self.source_file);
+            astnav::find_child_of_kind_info(*node, ast::Kind::OpenBraceToken, &self.source_file);
         let close_brace =
-            astnav::find_child_of_kind(*node, ast::Kind::CloseBraceToken, &self.source_file);
+            astnav::find_child_of_kind_info(*node, ast::Kind::CloseBraceToken, &self.source_file);
         if let (Some(open_brace), Some(close_brace)) = (open_brace, close_brace) {
-            let close_brace_start =
-                scanner::get_token_pos_of_node(&close_brace, &self.source_file, false);
             return self.range_is_on_one_line(core::new_text_range(
-                self.source_file.store().loc(open_brace).end(),
-                close_brace_start as i32,
+                open_brace.loc.end(),
+                astnav::get_start_of_token_info(close_brace, &self.source_file),
             ));
         }
         core::TS_FALSE

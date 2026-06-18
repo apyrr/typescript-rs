@@ -884,12 +884,11 @@ impl LanguageService<'_> {
                                         if node_parent(store, &previous_token)
                                             .is_none_or(|previous_parent| parent != previous_parent)
                                             && node_initializer(store, parent).is_none()
-                                            && astnav::find_child_of_kind(
+                                            && astnav::has_child_of_kind(
                                                 parent,
                                                 ast::Kind::EqualsToken,
                                                 file,
                                             )
-                                            .is_some()
                                         {
                                             jsx_initializer.initializer = Some(previous_token);
                                         }
@@ -914,9 +913,8 @@ impl LanguageService<'_> {
         let mut symbol_to_sort_text_map = HashMap::new();
         let mut seen_property_symbols = collections::Set::new();
         let is_type_only_location = import_statement_completion.as_ref().is_some_and(|_| {
-            node_parent(store, location).is_some_and(|parent| {
-                ast::is_type_only_import_or_export_declaration(store, &parent)
-            })
+            node_parent(store, location)
+                .is_some_and(|parent| ast::is_type_only_import_or_export_declaration(store, parent))
         }) || !is_context_token_value_location(
             store,
             context_token.as_ref(),
@@ -2143,7 +2141,7 @@ impl LanguageService<'_> {
                                     if decl.store_id() != store.store_id() {
                                         return false;
                                     }
-                                    ast::is_type_only_import_declaration(store, decl)
+                                    ast::is_type_only_import_declaration(store, *decl)
                                 });
                         if let Some(type_only_alias_declaration) = type_only_alias_declaration {
                             let origin = SymbolOriginInfo {
@@ -2810,10 +2808,13 @@ impl LanguageService<'_> {
                 insert_text = "?.".to_string() + &insert_text;
             }
 
-            let mut dot =
-                astnav::find_child_of_kind(property_access_to_convert, ast::Kind::DotToken, file);
+            let mut dot = astnav::find_child_of_kind_info(
+                property_access_to_convert,
+                ast::Kind::DotToken,
+                file,
+            );
             if dot.is_none() {
-                dot = astnav::find_child_of_kind(
+                dot = astnav::find_child_of_kind_info(
                     property_access_to_convert,
                     ast::Kind::QuestionDotToken,
                     file,
@@ -2827,10 +2828,10 @@ impl LanguageService<'_> {
             let end = if name.starts_with(&node_text(store, property_access_name)) {
                 store.loc(property_access_to_convert).end()
             } else {
-                store.loc(dot).end()
+                dot.loc.end()
             };
             replacement_span = Some(self.create_lsp_range_from_bounds(
-                astnav::get_start_of_node(dot, file),
+                astnav::get_start_of_token_info(dot, file),
                 end,
                 file,
             ));
@@ -5409,8 +5410,7 @@ pub fn try_get_object_type_declaration_completion_container<'a>(
                 if !stmt_list.is_empty() {
                     let cls = stmt_list.last().expect("non-empty statement list");
                     if ast::is_object_type_declaration(store, cls)
-                        && astnav::find_child_of_kind(cls, ast::Kind::CloseBraceToken, file)
-                            .is_none()
+                        && !astnav::has_child_of_kind(cls, ast::Kind::CloseBraceToken, file)
                     {
                         return Some(cls);
                     }
@@ -7388,17 +7388,15 @@ pub fn try_get_object_like_completion_container(
                 let mut ancestor_node = parent;
                 while let Some(ancestor) = ancestor_node {
                     if ast::is_property_assignment(store, ancestor) {
-                        if lsutil::get_last_token_info(Some(ancestor), file)
-                            .is_some_and(|token| {
-                                context_token
-                                    .node
-                                    .is_some_and(|node| token.matches_node(store, node))
-                                    || token.kind == context_token.kind
-                                        && token.loc == context_token.loc
-                            })
-                            && node_parent(store, ancestor).as_ref().is_some_and(|parent| {
-                                ast::is_object_literal_expression(store, *parent)
-                            })
+                        if lsutil::get_last_token_info(Some(ancestor), file).is_some_and(|token| {
+                            context_token
+                                .node
+                                .is_some_and(|node| token.matches_node(store, node))
+                                || token.kind == context_token.kind
+                                    && token.loc == context_token.loc
+                        }) && node_parent(store, ancestor)
+                            .as_ref()
+                            .is_some_and(|parent| ast::is_object_literal_expression(store, *parent))
                         {
                             return node_parent(store, &ancestor);
                         }
@@ -7431,14 +7429,13 @@ pub fn try_get_object_like_completion_container(
             while let Some(ancestor) = ancestor_node {
                 if ast::is_property_assignment(store, ancestor) {
                     if context_token.kind != ast::Kind::ColonToken
-                        && lsutil::get_last_token_info(Some(ancestor), file)
-                            .is_some_and(|token| {
-                                context_token
-                                    .node
-                                    .is_some_and(|node| token.matches_node(store, node))
-                                    || token.kind == context_token.kind
-                                        && token.loc == context_token.loc
-                            })
+                        && lsutil::get_last_token_info(Some(ancestor), file).is_some_and(|token| {
+                            context_token
+                                .node
+                                .is_some_and(|node| token.matches_node(store, node))
+                                || token.kind == context_token.kind
+                                    && token.loc == context_token.loc
+                        })
                         && node_parent(store, ancestor)
                             .as_ref()
                             .is_some_and(|parent| ast::is_object_literal_expression(store, *parent))
@@ -8037,8 +8034,7 @@ impl LanguageService<'_> {
         //     var y = <MainComponent.Child> </   /*2*/   MainComponent >
         // the completion list at "1" and "2" will contain "MainComponent.Child" with a replacement span of closing tag name
         let has_closing_angle_bracket =
-            astnav::find_child_of_kind(jsx_closing_element, ast::Kind::GreaterThanToken, file)
-                .is_some();
+            astnav::has_child_of_kind(jsx_closing_element, ast::Kind::GreaterThanToken, file);
         let store = file.store();
         let jsx_element = node_parent(store, jsx_closing_element)?;
         let opening_element = store.opening_element(jsx_element)?;

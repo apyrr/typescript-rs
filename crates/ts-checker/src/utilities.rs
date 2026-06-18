@@ -308,16 +308,14 @@ pub(crate) fn is_side_effect_import(store: &ast::AstStore, node: ast::Node) -> b
     ancestor.is_some() && store.import_clause(ancestor.unwrap()).is_none()
 }
 
-pub(crate) fn get_external_module_require_argument<'a>(
-    store: &'a ast::AstStore,
+pub(crate) fn get_external_module_require_argument(
+    store: &ast::AstStore,
     node: ast::Node,
 ) -> Option<ast::Node> {
-    if ast::is_variable_declaration_initialized_to_require(store, node) {
-        return store
-            .initializer(node_handle(node))
-            .and_then(|initializer| store.arguments(initializer).and_then(|args| args.first()));
-    }
-    None
+    let declaration = ast::variable_declaration_for_binding_element(store, node).unwrap_or(node);
+    ast::is_variable_declaration_initialized_to_require(store, declaration)
+        .then(|| ast::get_module_specifier_of_bare_or_accessed_require(store, declaration))
+        .flatten()
 }
 
 pub(crate) fn is_right_side_of_access_expression(store: &ast::AstStore, node: ast::Node) -> bool {
@@ -347,7 +345,7 @@ pub(crate) fn is_top_level_in_external_module_augmentation(
     ast::is_module_block(store, parent)
         && store
             .parent(parent)
-            .is_some_and(|parent| ast::is_external_module_augmentation(store, &parent))
+            .is_some_and(|parent| ast::is_external_module_augmentation(store, parent))
 }
 
 pub(crate) fn is_syntactic_default(store: &ast::AstStore, node: ast::Node) -> bool {
@@ -1587,13 +1585,13 @@ pub(crate) fn is_this_type_parameter<'a>(checker: &Checker<'a, '_>, t: TypeHandl
 }
 
 pub(crate) fn is_class_instance_property(store: &ast::AstStore, node: ast::Node) -> bool {
-    if ast::is_in_js_file(store, node) && ast::is_expando_property_declaration(store, Some(node)) {
+    if ast::is_in_js_file(store, node) && ast::is_expando_property_declaration(store, node) {
         let left = store.left(node_handle(node)).unwrap();
         return (!ast::is_bindable_static_access_expression(
             store, left, false, /*excludeThisKeyword*/
         ) || !store
             .expression(node_handle(left))
-            .is_some_and(|expression| ast::is_prototype_access(store, &expression)))
+            .is_some_and(|expression| ast::is_prototype_access(store, expression)))
             && !ast::is_bindable_static_name_expression(
                 store, left, true, /*excludeThisKeyword*/
             );

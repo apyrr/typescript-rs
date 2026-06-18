@@ -392,7 +392,8 @@ impl<'a> NameResolver<'a> {
                 // (it refers to the constant type of the expression instead)
                 return None;
             }
-            if ast::is_module_or_enum_declaration(self.store, current_location_node)
+            if (ast::is_module_declaration(self.store, current_location_node)
+                || ast::is_enum_declaration(self.store, current_location_node))
                 && last_location.is_some()
                 && optional_node_eq(
                     last_location.as_ref(),
@@ -1025,9 +1026,7 @@ impl<'a> NameResolver<'a> {
                     .store
                     .parent(*original_location.as_ref().unwrap())
                     .unwrap();
-                if ast::is_require_call(
-                    self.store, parent, false, /*requireStringLiteralLikeArgument*/
-                ) {
+                if ast::is_require_call(self.store, parent, false) {
                     return self.require_symbol;
                 }
             }

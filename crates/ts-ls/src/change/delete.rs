@@ -35,8 +35,7 @@ pub fn delete_declaration<'a>(
                     .expect("arrow function should have parameters")
                     .len()
                     == 1
-                && astnav::find_child_of_kind(old_function, ast::Kind::OpenParenToken, source_file)
-                    .is_none()
+                && !astnav::has_child_of_kind(old_function, ast::Kind::OpenParenToken, source_file)
             {
                 // Lambdas with exactly one parameter are special because, after removal, there
                 // must be an empty parameter list (i.e. `()`) and this won't necessarily be the
@@ -56,10 +55,7 @@ pub fn delete_declaration<'a>(
 
         ast::Kind::ImportDeclaration | ast::Kind::ImportEqualsDeclaration => {
             let imports = source_file.imports();
-            let first_statement_import = source_file
-                .statements_view()
-                .iter()
-                .find(|statement| ast::is_any_import_syntax(store, statement));
+            let first_statement_import = first_source_file_import_syntax_statement(source_file);
             let is_first_import = (!imports.is_empty()
                 && store
                     .parent(imports[0])
@@ -340,14 +336,15 @@ pub fn delete_variable_declaration<'a>(
 
     if store.kind(parent) == ast::Kind::CatchClause {
         // TODO: There's currently no unused diagnostic for this, could be a suggestion
-        let open_paren = astnav::find_child_of_kind(parent, ast::Kind::OpenParenToken, source_file);
+        let open_paren =
+            astnav::find_child_of_kind_info(parent, ast::Kind::OpenParenToken, source_file);
         let close_paren =
-            astnav::find_child_of_kind(parent, ast::Kind::CloseParenToken, source_file);
+            astnav::find_child_of_kind_info(parent, ast::Kind::CloseParenToken, source_file);
         debug::assert(
             open_paren.is_some() && close_paren.is_some(),
             Some("catch clause should have parens".to_string()),
         );
-        t.delete_node_range(
+        t.delete_token_info_range(
             source_file,
             open_paren.unwrap(),
             close_paren.unwrap(),
@@ -577,6 +574,14 @@ impl<'a> Tracker<'a> {
     }
 }
 
+fn first_source_file_import_syntax_statement(source_file: &ast::SourceFile) -> Option<ast::Node> {
+    let store = source_file.store();
+    source_file
+        .statements_view()
+        .iter()
+        .find(|statement| ast::is_any_import_syntax(store, *statement))
+}
+
 pub(crate) fn positions_are_on_same_line(
     pos1: i32,
     pos2: i32,
@@ -607,4 +612,32 @@ fn find_ancestor_kind_ref(
         current = store.parent(node);
     }
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse_options(path: &str) -> ast::SourceFileParseOptions {
+        ast::SourceFileParseOptions {
+            file_name: path.to_string(),
+            path: path.to_string(),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn first_source_file_import_syntax_statement_should_return_first_top_level_import() {
+        let file = ts_parser::parse_source_file(
+            parse_options("/delete.ts"),
+            "sideEffect();\nimport 'esm';\nimport legacy = require('legacy');",
+            core::ScriptKind::TS,
+        );
+        let statements = file.statements_view().iter().collect::<Vec<_>>();
+
+        assert_eq!(
+            first_source_file_import_syntax_statement(&file),
+            Some(statements[1])
+        );
+    }
 }

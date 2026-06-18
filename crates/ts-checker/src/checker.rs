@@ -15895,10 +15895,8 @@ impl<'a, 'state> Checker<'a, 'state> {
                 if exported_declarations_count > 1
                     && !symbol_declarations.iter().all(|node| {
                         let declaration = *node;
-                        ast::get_assignment_declaration_kind(
-                            self.store_for_node(declaration),
-                            declaration,
-                        ) == ast::JSDeclarationKind::ExportsProperty
+                        self.assignment_declaration_kind(declaration)
+                            == Some(ast::JSDeclarationKind::ExportsProperty)
                     })
                 {
                     for declaration in symbol_declarations.iter() {
@@ -17957,7 +17955,7 @@ impl<'a, 'state> Checker<'a, 'state> {
                 let mut specifier_text = "...".to_string();
                 if let Some(import_declaration) =
                     ast::find_ancestor(store, Some(node), |store, n| {
-                        ast::is_import_or_import_equals_declaration(store, n)
+                        ast::is_any_import_syntax(store, n)
                             || ast::is_variable_declaration(store, n)
                     })
                 {
@@ -19231,9 +19229,7 @@ impl<'a, 'state> Checker<'a, 'state> {
         // signature where we can just fetch the return type without checking the arguments.
         if ast::is_call_expression(expr_store, expr)
             && expr_store.kind(expr_store.expression(expr).unwrap()) != ast::Kind::SuperKeyword
-            && !ast::is_require_call(
-                expr_store, expr, true, /*requireStringLiteralLikeArgument*/
-            )
+            && !ast::is_require_call(expr_store, expr, true)
             && !self.is_symbol_or_symbol_for_call(expr)
             && !ast::is_import_call(expr_store, expr)
         {
@@ -26114,7 +26110,7 @@ impl<'a, 'state> Checker<'a, 'state> {
             } else if ast::is_binary_expression(declaration_store, declaration)
                 || (ast::is_in_js_file(declaration_store, declaration)
                     && (ast::is_call_expression(declaration_store, declaration)
-                        || (ast::is_property_access_expression(declaration_store, declaration)
+                        || ((ast::is_property_access_expression(declaration_store, declaration)
                             || ast::is_bindable_static_access_expression(
                                 declaration_store,
                                 declaration,
@@ -26122,7 +26118,7 @@ impl<'a, 'state> Checker<'a, 'state> {
                             ))
                             && declaration_store.parent(declaration).is_some_and(|parent| {
                                 ast::is_binary_expression(self.store_for_node(parent), parent)
-                            })))
+                            }))))
             {
                 result = Some(self.get_widened_type_for_assignment_declaration(symbol_identity));
             } else if ast::is_property_access_expression(declaration_store, declaration)
@@ -29998,8 +29994,8 @@ impl<'a, 'state> Checker<'a, 'state> {
             let left_store = self.store_for_node(left);
             let left_parent = left_store.parent(left).unwrap();
             if ast::is_declaration_node(left_store, left_parent)
-                && ast::get_assignment_declaration_kind(left_store, left_parent)
-                    == ast::JSDeclarationKind::ExportsProperty
+                && self.assignment_declaration_kind(left_parent)
+                    == Some(ast::JSDeclarationKind::ExportsProperty)
             {
                 if let Some(symbol) = self.node_resolved_symbol(left) {
                     if self.symbol_identity_declaration_count(symbol) > 1
@@ -31750,8 +31746,8 @@ impl<'a, 'state> Checker<'a, 'state> {
                     let declaration = *declaration;
                     let declaration_store = self.store_for_node(declaration);
                     ast::is_binary_expression(declaration_store, declaration)
-                        && ast::get_assignment_declaration_kind(declaration_store, declaration)
-                            == ast::JSDeclarationKind::ThisProperty
+                        && self.assignment_declaration_kind(declaration)
+                            == Some(ast::JSDeclarationKind::ThisProperty)
                 })
     }
 
@@ -35705,15 +35701,15 @@ impl<'a, 'state> Checker<'a, 'state> {
             } else if ast::is_literal_import_type_node(location_store, location) {
                 let argument = location_store.argument(location).unwrap();
                 context_specifier = Some(location_store.literal(argument).unwrap());
-            } else if ast::is_variable_declaration_initialized_to_bare_or_accessed_require(
-                location_store,
-                location,
-            ) {
-                context_specifier =
-                    ast::get_module_specifier_of_bare_or_accessed_require(location_store, location);
+            } else if let Some(module_specifier) =
+                ast::get_module_specifier_of_bare_or_accessed_require(location_store, location)
+            {
+                context_specifier = Some(module_specifier);
             } else {
                 let mut ancestor =
-                    ast::find_ancestor(location_store, Some(location), ast::is_import_call);
+                    ast::find_ancestor(location_store, Some(location), |store, node| {
+                        ast::is_import_call(store, node)
+                    });
                 if let Some(import_call) = ancestor {
                     context_specifier = Some(
                         location_store
@@ -35724,11 +35720,9 @@ impl<'a, 'state> Checker<'a, 'state> {
                     );
                 }
                 if ancestor.is_none() {
-                    ancestor = ast::find_ancestor(
-                        location_store,
-                        Some(location),
-                        ast::is_import_declaration_or_js_import_declaration,
-                    );
+                    ancestor = ast::find_ancestor(location_store, Some(location), |store, node| {
+                        ast::is_import_declaration_like(store, node)
+                    });
                     if let Some(import_decl) = ancestor {
                         context_specifier = location_store.module_specifier(import_decl);
                     }
@@ -35842,11 +35836,9 @@ impl<'a, 'state> Checker<'a, 'state> {
                     {
                         if {
                             let location_store = self.store_for_output_node(location);
-                            ast::find_ancestor(
-                                location_store,
-                                Some(location),
-                                ast::is_emittable_import,
-                            )
+                            ast::find_ancestor(location_store, Some(location), |store, node| {
+                                ast::is_emittable_import(store, node)
+                            })
                             .is_some()
                         } {
                             let ts_extension = tspath::try_extract_ts_extension(module_reference);
@@ -35870,11 +35862,9 @@ impl<'a, 'state> Checker<'a, 'state> {
                             .allow_importing_ts_extensions_from(&importing_source_file.file_name())
                         && {
                             let location_store = self.store_for_output_node(location);
-                            ast::find_ancestor(
-                                location_store,
-                                Some(location),
-                                ast::is_emittable_import,
-                            )
+                            ast::find_ancestor(location_store, Some(location), |store, node| {
+                                ast::is_emittable_import(store, node)
+                            })
                             .is_some()
                         }
                     {
@@ -35906,10 +35896,11 @@ impl<'a, 'state> Checker<'a, 'state> {
                             let location_store = self.store_for_output_node(location);
                             location_store.flags(location) & ast::NodeFlags::Ambient == 0
                                 && !ast::is_literal_import_type_node(location_store, location)
-                                && !ast::is_part_of_type_only_import_or_export_declaration(
+                                && ast::containing_type_only_import_or_export_declaration(
                                     location_store,
                                     location,
                                 )
+                                .is_none()
                         }
                     {
                         let should_rewrite = core::should_rewrite_module_specifier(
@@ -36774,12 +36765,12 @@ impl<'a, 'state> Checker<'a, 'state> {
 
     pub(crate) fn is_common_js_require(&mut self, node: ast::Node) -> bool {
         let node_store = self.store_for_node(node);
-        if !ast::is_require_call(
-            node_store, node, true, /*requireStringLiteralLikeArgument*/
-        ) {
+        if !ast::is_require_call(node_store, node, true) {
             return false;
         }
-        let expression = node_store.expression(node).unwrap();
+        let expression = node_store
+            .expression(node)
+            .expect("require call should have a callee expression");
         if !ast::is_identifier(self.store_for_node(expression), expression) {
             panic!("Expected identifier for require call");
         }
@@ -40996,24 +40987,13 @@ impl<'a, 'state> Checker<'a, 'state> {
                     );
                     break;
                 }
-                let kind = expression
-                    .map(|expression| {
-                        let expression_store = self.store_for_node(expression);
-                        if ast::is_access_expression(expression_store, expression) {
-                            ast::get_assignment_declaration_property_access_kind(
-                                expression_store,
-                                expression,
-                            )
-                        } else {
-                            ast::get_assignment_declaration_kind(expression_store, expression)
-                        }
-                    })
-                    .unwrap_or(ast::JSDeclarationKind::None);
+                let kind =
+                    expression.and_then(|expression| self.assignment_declaration_kind(expression));
                 if let Some(assigned_type) =
                     self.get_assignment_declaration_initializer_type(declaration)
                 {
                     // We ignore initial assignments of undefined to CommonJS exports when there are multiple assignment declarations
-                    if kind != ast::JSDeclarationKind::ExportsProperty
+                    if kind != Some(ast::JSDeclarationKind::ExportsProperty)
                         || i != 0
                         || declarations.len() == 1
                         || self.type_flags(assigned_type) & TYPE_FLAGS_UNDEFINED == 0
@@ -41069,11 +41049,7 @@ impl<'a, 'state> Checker<'a, 'state> {
     ) -> Option<TypeHandle> {
         let node_store = self.store_for_node(node);
         let node = Self::assignment_declaration_expression(node_store, node)?;
-        let kind = if ast::is_access_expression(self.store_for_node(node), node) {
-            ast::get_assignment_declaration_property_access_kind(self.store_for_node(node), node)
-        } else {
-            ast::get_assignment_declaration_kind(self.store_for_node(node), node)
-        };
+        let kind = self.assignment_declaration_kind(node)?;
         self.get_initializer_type_from_assignment_declaration_handle(
             self.node_symbol(node)?,
             node,
@@ -41153,6 +41129,14 @@ impl<'a, 'state> Checker<'a, 'state> {
         None
     }
 
+    fn assignment_declaration_kind(&self, node: ast::Node) -> Option<ast::JSDeclarationKind> {
+        let store = self.store_for_node(node);
+        if ast::is_access_expression(store, node) {
+            return ast::get_assignment_declaration_property_access_kind(store, node);
+        }
+        ast::get_assignment_declaration_kind(store, node)
+    }
+
     pub(crate) fn contains_same_named_this_property(
         &mut self,
         this_property: ast::Node,
@@ -41193,7 +41177,6 @@ impl<'a, 'state> Checker<'a, 'state> {
             ast::JSDeclarationKind::ModuleExports => true,
             ast::JSDeclarationKind::ExportsProperty
             | ast::JSDeclarationKind::Property
-            | ast::JSDeclarationKind::Prototype
             | ast::JSDeclarationKind::PrototypeProperty
             | ast::JSDeclarationKind::ThisProperty => {
                 let Some(init) = self.get_assigned_expando_initializer(left, right) else {
@@ -41348,8 +41331,8 @@ impl<'a, 'state> Checker<'a, 'state> {
                     break;
                 }
                 let left = declaration_store.left(declaration).unwrap();
-                if ast::get_assignment_declaration_kind(declaration_store, declaration)
-                    == ast::JSDeclarationKind::ThisProperty
+                if self.assignment_declaration_kind(declaration)
+                    == Some(ast::JSDeclarationKind::ThisProperty)
                     && (declaration_store.kind(left) != ast::Kind::ElementAccessExpression
                         || declaration_store
                             .argument_expression(left)
@@ -47872,10 +47855,8 @@ impl<'a, 'state> Checker<'a, 'state> {
                                 .collect_symbol_identity_declarations(immediate_module_symbol)
                                 .iter()
                                 .any(|d| {
-                                    ast::get_assignment_declaration_kind(
-                                        self.store_for_node(*d),
-                                        *d,
-                                    ) == ast::JSDeclarationKind::ModuleExports
+                                    self.assignment_declaration_kind(*d)
+                                        == Some(ast::JSDeclarationKind::ModuleExports)
                                 })
                             {
                                 let parent = self
@@ -50890,7 +50871,8 @@ impl<'a, 'state> Checker<'a, 'state> {
         if promise_type == self.semantic_state.semantic_handles().unknown_type {
             self.error(
                 Some(fn_node),
-                if ast::is_import_call(fn_store, fn_node) {
+                if ast::is_import_call(fn_store, fn_node)
+                {
                     &diagnostics::A_DYNAMIC_IMPORT_CALL_RETURNS_A_PROMISE_MAKE_SURE_YOU_HAVE_A_DECLARATION_FOR_PROMISE_OR_INCLUDE_ES2015_IN_YOUR_LIB_OPTION
                 } else {
                     &diagnostics::AN_ASYNC_FUNCTION_OR_METHOD_MUST_RETURN_A_PROMISE_MAKE_SURE_YOU_HAVE_A_DECLARATION_FOR_PROMISE_OR_INCLUDE_ES2015_IN_YOUR_LIB_OPTION
@@ -50907,7 +50889,8 @@ impl<'a, 'state> Checker<'a, 'state> {
         {
             self.error(
                 Some(fn_node),
-                if ast::is_import_call(fn_store, fn_node) {
+                if ast::is_import_call(fn_store, fn_node)
+                {
                     &diagnostics::A_DYNAMIC_IMPORT_CALL_IN_ES5_REQUIRES_THE_PROMISE_CONSTRUCTOR_MAKE_SURE_YOU_HAVE_A_DECLARATION_FOR_THE_PROMISE_CONSTRUCTOR_OR_INCLUDE_ES2015_IN_YOUR_LIB_OPTION
                 } else {
                     &diagnostics::AN_ASYNC_FUNCTION_OR_METHOD_IN_ES5_REQUIRES_THE_PROMISE_CONSTRUCTOR_MAKE_SURE_YOU_HAVE_A_DECLARATION_FOR_THE_PROMISE_CONSTRUCTOR_OR_INCLUDE_ES2015_IN_YOUR_LIB_OPTION
@@ -61352,7 +61335,7 @@ impl<'a, 'state> Checker<'a, 'state> {
                     return;
                 }
                 if ast::is_import_equals_declaration(store, location) {
-                    if is_internal_module_import_equals_declaration(store, location)
+                    if ast::is_internal_module_import_equals_declaration(store, location)
                         || self.check_external_import_or_export_declaration(location)
                     {
                         self.mark_import_equals_alias_referenced(location);
@@ -61440,15 +61423,6 @@ fn should_mark_identifier_alias_referenced(store: &ast::AstStore, node: ast::Nod
         }
     }
     true
-}
-
-fn is_internal_module_import_equals_declaration(store: &ast::AstStore, node: ast::Node) -> bool {
-    store.kind(node) == ast::Kind::ImportEqualsDeclaration
-        && store
-            .module_reference(node)
-            .is_some_and(|module_reference| {
-                store.kind(module_reference) != ast::Kind::ExternalModuleReference
-            })
 }
 
 impl<'a, 'state> Checker<'a, 'state> {
@@ -64043,19 +64017,19 @@ impl<'a, 'state> Checker<'a, 'state> {
     ) -> Option<TypeHandle> {
         let binary_store = self.store_for_node(binary_node);
         let left = binary_store.left(binary_node).unwrap();
-        let assignment_declaration_kind =
-            ast::get_assignment_declaration_kind(binary_store, binary_node);
+        let assignment_declaration_kind = self.assignment_declaration_kind(binary_node);
         if matches!(
             assignment_declaration_kind,
-            ast::JSDeclarationKind::PrototypeProperty
-                | ast::JSDeclarationKind::Prototype
-                | ast::JSDeclarationKind::ExportsProperty
-                | ast::JSDeclarationKind::ModuleExports
+            Some(
+                ast::JSDeclarationKind::PrototypeProperty
+                    | ast::JSDeclarationKind::ExportsProperty
+                    | ast::JSDeclarationKind::ModuleExports
+            )
         ) {
             let value_declaration = self
                 .node_symbol(left)
                 .and_then(|symbol| {
-                    if assignment_declaration_kind == ast::JSDeclarationKind::ModuleExports {
+                    if assignment_declaration_kind == Some(ast::JSDeclarationKind::ModuleExports) {
                         None
                     } else {
                         self.symbol_handle_value_declaration(symbol)
@@ -67344,10 +67318,7 @@ impl<'a, 'state> Checker<'a, 'state> {
                 // 2). External module name in an import declaration
                 // 3). Require in Javascript
                 // 4). type A = import("./f/*gotToDefinitionHere*/oo")
-                if (ast::is_external_module_import_equals_declaration(
-                    self.store_for_node(grand_parent),
-                    grand_parent,
-                ) && ast::get_external_module_import_equals_declaration_expression(
+                if (ast::get_external_module_import_equals_declaration_expression(
                     self.store_for_node(grand_parent),
                     grand_parent,
                 )
@@ -67376,19 +67347,11 @@ impl<'a, 'state> Checker<'a, 'state> {
                 {
                     return self.resolve_external_module_name(node, node, ignore_errors);
                 }
-                if ast::is_call_expression(self.store_for_node(parent), parent)
-                    && ast::is_bindable_object_define_property_call(
-                        self.store_for_node(parent),
-                        parent,
-                    )
-                    && self
-                        .store_for_node(parent)
-                        .arguments(parent)
-                        .unwrap()
-                        .iter()
-                        .nth(1)
-                        .unwrap()
-                        == node
+                if ast::bindable_object_define_property_call_property_name_argument(
+                    self.store_for_node(parent),
+                    parent,
+                )
+                .is_some_and(|property_name| property_name == node)
                 {
                     return self
                         .get_symbol_of_declaration(parent)

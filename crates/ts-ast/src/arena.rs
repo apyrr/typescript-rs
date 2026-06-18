@@ -1767,8 +1767,8 @@ impl AstStore {
     where
         F: FnMut(Node) -> ControlFlow<()>,
     {
-        self.for_each_child(node, |child| {
-            let Some(child) = child else {
+        self.for_each_child_node_source_span(node, |span| {
+            let Some(child) = span.node() else {
                 return ControlFlow::Continue(());
             };
             visitor(child)
@@ -2075,6 +2075,77 @@ mod tests {
 
         assert_eq!(store.lists.foreign_node_entries, 0);
         assert!(store.foreign_nodes_in_aggregate_storage().is_empty());
+    }
+
+    #[test]
+    fn descriptor_child_parent_issues_should_report_foreign_raw_slice_children() {
+        let mut store = AstStore::new();
+        let mut source = AstStore::new();
+        let foreign = alloc_token(&mut source);
+        let slice = store.lists.alloc_raw_node_slice(
+            store.store_id,
+            [OptionalAstNodeId::some(foreign), OptionalAstNodeId::none()],
+        );
+        let payload_idx = store
+            .payloads_mut()
+            .syntax_list
+            .alloc(SyntaxList { children: slice });
+        let parent = store.alloc_header(
+            Kind::SyntaxList,
+            NodeFlags::NONE,
+            core::undefined_text_range(),
+            NodePayloadId::new(NodePayloadTag::SyntaxList, payload_idx.into_raw()),
+        );
+
+        let mut present_children = Vec::new();
+        let result = store.for_each_present_child(parent, |child| {
+            present_children.push(child);
+            ControlFlow::Continue(())
+        });
+        let issues = store.child_parent_issues(parent);
+
+        assert_eq!(result, ControlFlow::Continue(()));
+        assert_eq!(present_children, vec![foreign]);
+        assert_eq!(issues.len(), 1);
+        let issue = issues[0];
+        assert_eq!(issue.parent(), parent);
+        assert_eq!(issue.child(), foreign);
+        assert_eq!(issue.field_name(), "children");
+        assert_eq!(
+            issue.child_span_kind(),
+            crate::ast::AstChildSourceSpanKind::RawNodeSliceElement
+        );
+        assert_eq!(issue.index(), Some(0));
+        assert_eq!(
+            issue.kind(),
+            crate::ast::AstChildParentIssueKind::ForeignChildStore {
+                actual_store_id: source.store_id()
+            }
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "node belongs to a different AST store")]
+    fn set_parent_in_children_should_reject_foreign_raw_slice_children() {
+        let mut store = AstStore::new();
+        let mut source = AstStore::new();
+        let foreign = alloc_token(&mut source);
+        let slice = store.lists.alloc_raw_node_slice(
+            store.store_id,
+            [OptionalAstNodeId::some(foreign), OptionalAstNodeId::none()],
+        );
+        let payload_idx = store
+            .payloads_mut()
+            .syntax_list
+            .alloc(SyntaxList { children: slice });
+        let parent = store.alloc_header(
+            Kind::SyntaxList,
+            NodeFlags::NONE,
+            core::undefined_text_range(),
+            NodePayloadId::new(NodePayloadTag::SyntaxList, payload_idx.into_raw()),
+        );
+
+        store.set_parent_in_children(parent);
     }
 
     #[test]

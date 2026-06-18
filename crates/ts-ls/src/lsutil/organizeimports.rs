@@ -25,15 +25,14 @@ pub fn organize_imports_comparers() -> Vec<fn(&str, &str) -> i32> {
     ]
 }
 
-// FilterImportDeclarations filters out non-import declarations from a list of statements.
-pub fn filter_import_declarations<'a>(
-    store: &ast::AstStore,
-    statements: &'a [ast::Statement],
+pub fn collect_import_declarations_from_source_file(
+    source_file: &ast::SourceFile,
 ) -> Vec<ast::Statement> {
-    statements
+    let store = source_file.store();
+    source_file
+        .statements_view()
         .iter()
-        .copied()
-        .filter(|stmt| store.kind(*stmt) == ast::Kind::ImportDeclaration)
+        .filter(|statement| ast::is_import_declaration(store, *statement))
         .collect()
 }
 
@@ -774,8 +773,7 @@ pub fn get_named_import_specifier_sorting_with_detection(
         };
         let detect_from_file = if detect_from_decl.is_none() {
             source_file.and_then(|source_file| {
-                let statements: Vec<_> = source_file.statements_view().iter().collect();
-                let all_imports = filter_import_declarations(store, &statements);
+                let all_imports = collect_import_declarations_from_source_file(source_file);
                 let comparer_refs = comparers_to_test
                     .iter()
                     .map(|comparer| comparer.as_ref() as &dyn Fn(&str, &str) -> i32)

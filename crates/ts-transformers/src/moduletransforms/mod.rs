@@ -4396,7 +4396,7 @@ fn get_import_needs_import_star_helper(source: &ast::AstStore, statement: ast::N
         .count();
     // Import star is required if there's default named refs mixed with non-default refs, or if theres non-default refs and it has a default import
     (default_ref_count > 0 && default_ref_count != elements.len())
-        || ((elements.len() - default_ref_count) != 0 && ast::is_default_import(source, statement))
+        || ((elements.len() - default_ref_count) != 0 && ast::has_default_import(source, statement))
 }
 
 fn get_export_needs_import_star_helper(source: &ast::AstStore, statement: ast::Node) -> bool {
@@ -4406,7 +4406,7 @@ fn get_export_needs_import_star_helper(source: &ast::AstStore, statement: ast::N
 fn get_import_needs_import_default_helper(source: &ast::AstStore, statement: ast::Node) -> bool {
     // Import default is needed if there's a default import or a default ref and no other refs (meaning an import star helper wasn't requested)
     !get_import_needs_import_star_helper(source, statement)
-        && (ast::is_default_import(source, statement)
+        && (ast::has_default_import(source, statement)
             || source
                 .import_clause(statement)
                 .is_some_and(|import_clause| {

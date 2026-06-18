@@ -207,5 +207,5 @@ fn has_child_of_kind(
     kind: ast::Kind,
     source_file: &ast::SourceFile,
 ) -> bool {
-    astnav::find_child_of_kind(containing_node, kind, source_file).is_some()
+    astnav::has_child_of_kind(containing_node, kind, source_file)
 }

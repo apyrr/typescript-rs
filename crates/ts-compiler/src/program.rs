@@ -671,7 +671,7 @@ impl Eq for ProgramSourceFile {}
 
 impl Hash for ProgramSourceFile {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.as_source_file().hash(state);
+        Hash::hash(self.as_source_file(), state);
     }
 }
 
@@ -1291,6 +1291,7 @@ impl Program {
             .map(ProgramSourceFile::share_source_file)
             .collect()
     }
+
     pub fn source_files_for_auto_imports(&self) -> Vec<ast::SourceFile> {
         self.source_files()
     }

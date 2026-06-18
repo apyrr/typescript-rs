@@ -2206,7 +2206,7 @@ impl<'a> DeclarationTransformer<'a> {
         let is_expando_assignment = is_expression_statement
             && source.expression(*statement).is_some_and(|expression| {
                 ast::get_assignment_declaration_kind(source, expression)
-                    == ast::JSDeclarationKind::Property
+                    == Some(ast::JSDeclarationKind::Property)
             });
         let is_commonjs_export_assignment = is_expression_statement
             && source.expression(*statement).is_some_and(|expression| {
@@ -2215,9 +2215,11 @@ impl<'a> DeclarationTransformer<'a> {
                     .is_some()
                     && matches!(
                         ast::get_assignment_declaration_kind(source, expression),
-                        ast::JSDeclarationKind::ModuleExports
-                            | ast::JSDeclarationKind::ExportsProperty
-                            | ast::JSDeclarationKind::ObjectDefinePropertyExports
+                        Some(
+                            ast::JSDeclarationKind::ModuleExports
+                                | ast::JSDeclarationKind::ExportsProperty
+                                | ast::JSDeclarationKind::ObjectDefinePropertyExports
+                        )
                     )
             });
         if !ast::is_source_file_js(file)
@@ -3308,7 +3310,7 @@ impl<'a> DeclarationTransformer<'a> {
             .into_iter()
             .filter_map(|property| {
                 let value_declaration = self.host.get_symbol_value_declaration(property)?;
-                if !ast::is_expando_property_declaration(source, Some(value_declaration)) {
+                if !ast::is_expando_property_declaration(source, value_declaration) {
                     return None;
                 }
                 let error_target = if ast::is_binary_expression(source, value_declaration) {
@@ -4201,7 +4203,7 @@ impl<'a> DeclarationTransformer<'a> {
             return Vec::new();
         };
         match ast::get_assignment_declaration_kind(source, expression) {
-            ast::JSDeclarationKind::ModuleExports => {
+            Some(ast::JSDeclarationKind::ModuleExports) => {
                 if self
                     .host
                     .source_file_common_js_module_indicator(file)
@@ -4221,7 +4223,7 @@ impl<'a> DeclarationTransformer<'a> {
                     );
                 }
             }
-            ast::JSDeclarationKind::ExportsProperty => {
+            Some(ast::JSDeclarationKind::ExportsProperty) => {
                 if self
                     .host
                     .source_file_common_js_module_indicator(file)
@@ -4249,7 +4251,7 @@ impl<'a> DeclarationTransformer<'a> {
                     );
                 }
             }
-            ast::JSDeclarationKind::Property => {
+            Some(ast::JSDeclarationKind::Property) => {
                 return self.transform_expando_assignment(
                     source,
                     expression,
@@ -4258,7 +4260,7 @@ impl<'a> DeclarationTransformer<'a> {
                     enclosing_declaration,
                 );
             }
-            ast::JSDeclarationKind::ObjectDefinePropertyExports => {
+            Some(ast::JSDeclarationKind::ObjectDefinePropertyExports) => {
                 if self
                     .host
                     .source_file_common_js_module_indicator(file)
@@ -5163,7 +5165,7 @@ impl<'a> DeclarationTransformer<'a> {
                         continue;
                     }
                     if ast::get_assignment_declaration_kind(source, expr)
-                        != ast::JSDeclarationKind::ThisProperty
+                        != Some(ast::JSDeclarationKind::ThisProperty)
                     {
                         continue;
                     }

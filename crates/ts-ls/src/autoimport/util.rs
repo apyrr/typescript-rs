@@ -51,16 +51,8 @@ pub fn try_get_module_id_and_file_name_of_module_symbol(
         let source_file = store.as_source_file(decl);
         return (source_file.path(), source_file.file_name(), true);
     }
-    if ast::is_module_with_string_literal_name(store, decl) {
-        return (
-            store.text(
-                store
-                    .name(decl)
-                    .expect("module declaration should have a name"),
-            ),
-            String::new(),
-            true,
-        );
+    if let Some(name) = ast::module_string_literal_name(store, decl) {
+        return (store.text(name), String::new(), true);
     }
     (String::new(), String::new(), false)
 }

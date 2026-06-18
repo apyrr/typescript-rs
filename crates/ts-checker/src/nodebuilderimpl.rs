@@ -10093,7 +10093,7 @@ fn try_get_module_specifier_from_declaration_worker<'a>(
         ast::KIND_VARIABLE_DECLARATION | ast::KIND_BINDING_ELEMENT => {
             let initializer = store.initializer(node);
             let require_call = ast::find_ancestor(store, initializer, |store, node| {
-                ast::is_require_call(store, node, true /*requireStringLiteralLikeArgument*/)
+                ast::is_require_call(store, node, true)
             });
             require_call
                 .and_then(|require_call| {

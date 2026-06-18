@@ -304,7 +304,7 @@ impl ImportElisionTransform<'_, '_> {
     fn visit_import_equals_declaration(&mut self, node: ast::Node) -> Option<ast::Node> {
         let is_external_module_import_equals_declaration = {
             let source = self.store_for(node);
-            ast::is_external_module_import_equals_declaration(source, &node)
+            ast::is_external_module_import_equals_declaration(source, node)
         };
         let should_emit = if is_external_module_import_equals_declaration {
             self.should_emit_alias_declaration(node)

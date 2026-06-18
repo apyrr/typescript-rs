@@ -336,7 +336,7 @@ fn get_call_hierarchy_item_container_name<'program>(
         {
             let class_parent = store.parent(parent).unwrap();
             if ast::is_class_expression(store, class_parent) {
-                if let Some(assigned_name) = ast::get_assigned_name(store, &class_parent) {
+                if let Some(assigned_name) = ast::get_assigned_name(store, class_parent) {
                     return get_text_of_call_hierarchy_name(
                         program,
                         c,
@@ -380,7 +380,7 @@ fn get_call_hierarchy_item_container_name<'program>(
                 .is_some_and(|node| ast::is_object_literal_expression(store, node))
             {
                 if let Some(parent) = store.parent(*node)
-                    && let Some(assigned_name) = ast::get_assigned_name(store, &parent)
+                    && let Some(assigned_name) = ast::get_assigned_name(store, parent)
                 {
                     return get_text_of_call_hierarchy_name(
                         program,

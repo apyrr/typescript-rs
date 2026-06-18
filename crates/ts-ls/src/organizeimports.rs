@@ -37,10 +37,12 @@ impl LanguageService<'_> {
         let should_remove = kind == lsproto::CodeActionKind::SourceRemoveUnusedImports
             || kind == lsproto::CodeActionKind::SourceOrganizeImports;
 
-        let statement_nodes = source_file.statements_view().iter().collect::<Vec<_>>();
-        let top_level_statements = statement_nodes;
-        let top_level_import_decls =
-            lsutil::filter_import_declarations(source_file.store(), &top_level_statements);
+        let store = source_file.store();
+        let top_level_import_decls = source_file
+            .statements_view()
+            .iter()
+            .filter(|statement| ast::is_import_declaration(store, *statement))
+            .collect::<Vec<_>>();
         let top_level_import_group_decls =
             group_by_newline_contiguous(source_file, &top_level_import_decls);
 
@@ -125,22 +127,20 @@ impl LanguageService<'_> {
             }
         }
 
-        let store = source_file.store();
-        for stmt in source_file.statements_view().iter() {
+        for stmt in source_file
+            .statements_view()
+            .iter()
+            .filter(|statement| ast::is_module_declaration(store, *statement))
+        {
             if !ast::is_ambient_module(store, stmt) {
                 continue;
             }
-            let Some(body) = store.body(stmt) else {
+            let Some(statements) = ast::statement_container_statements(store, stmt) else {
                 continue;
             };
-            let statements: Vec<_> = store
-                .statements(body)
-                .map(|statements| statements.iter().collect())
-                .unwrap_or_default();
             let ambient_module_import_decls = statements
                 .iter()
-                .filter(|stmt| store.kind(**stmt) == ast::Kind::ImportDeclaration)
-                .map(|stmt| *stmt)
+                .filter(|statement| ast::is_import_declaration(store, *statement))
                 .collect::<Vec<_>>();
             let ambient_module_import_group_decls =
                 group_by_newline_contiguous(source_file, &ambient_module_import_decls);
@@ -162,8 +162,7 @@ impl LanguageService<'_> {
             if kind != lsproto::CodeActionKind::SourceRemoveUnusedImports {
                 let ambient_module_export_decls = statements
                     .iter()
-                    .filter(|stmt| store.kind(**stmt) == ast::Kind::ExportDeclaration)
-                    .map(|stmt| *stmt)
+                    .filter(|statement| ast::is_export_declaration(store, *statement))
                     .collect::<Vec<_>>();
                 organize_exports_worker(
                     &ambient_module_export_decls,
@@ -1338,23 +1337,22 @@ pub(crate) fn get_top_level_export_groups(
 ) -> Vec<Vec<ast::Statement>> {
     let mut top_level_export_groups: Vec<Vec<ast::Statement>> = Vec::new();
     let store = source_file.store();
-    let statements: Vec<_> = source_file.statements_view().iter().collect();
+    let statements = source_file.statements_view().nodes();
     let statements_len = statements.len();
 
     let mut i = 0;
     let mut group_index = 0;
     while i < statements_len {
-        if store.kind(statements[i]) == ast::Kind::ExportDeclaration {
+        if ast::is_export_declaration(store, statements[i]) {
             if group_index >= top_level_export_groups.len() {
                 top_level_export_groups.push(Vec::new());
             }
-            if store.module_specifier(statements[i]).is_some() {
-                top_level_export_groups[group_index].push(statements[i]);
+            let statement = statements[i];
+            if store.module_specifier(statement).is_some() {
+                top_level_export_groups[group_index].push(statement);
                 i += 1;
             } else {
-                while i < statements_len
-                    && store.kind(statements[i]) == ast::Kind::ExportDeclaration
-                {
+                while i < statements_len && ast::is_export_declaration(store, statements[i]) {
                     top_level_export_groups[group_index].push(statements[i]);
                     i += 1;
                 }

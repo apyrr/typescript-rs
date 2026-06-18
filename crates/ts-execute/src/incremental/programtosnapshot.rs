@@ -352,10 +352,9 @@ pub fn file_affects_global_scope(
     // they can only be consumed via importing elements from them. Regular script files cannot consume them. Therefore,
     // there are no point to rebuild all script files if these special files have changed. However, if any statement
     // in the file is not ambient external module, we treat it as a regular script file.
-    let statements = file.statements_view();
-    statements
+    file.statements_view()
         .iter()
-        .any(|stmt| !ast::is_module_with_string_literal_name(store, stmt))
+        .any(|statement| !ast::is_module_with_string_literal_name(store, statement))
 }
 
 pub fn add_referenced_files_from_symbol(
@@ -600,4 +599,45 @@ pub fn ast_diag_to_build_info_diag(d: &ast::Diagnostic) -> super::BuildInfoDiagn
         b.message_chain.push(ast_diag_to_build_info_diag(&nested));
     }
     b
+}
+
+#[cfg(test)]
+mod tests {
+    use ts_parser as parser;
+
+    use super::*;
+
+    fn parse_ts_source_file(path: &str, text: &str) -> ast::SourceFile {
+        parser::parse_source_file(
+            ast::SourceFileParseOptions {
+                file_name: path.to_string(),
+                path: tspath::to_path(path, "/", true),
+                ..Default::default()
+            },
+            text.to_string(),
+            core::ScriptKind::TS,
+        )
+    }
+
+    fn file_affects_global_scope_for_text(path: &str, text: &str) -> bool {
+        let file = parse_ts_source_file(path, text);
+        let binding_state = binder::bind_source_file(&file);
+        file_affects_global_scope(&file, binding_state.as_ref())
+    }
+
+    #[test]
+    fn file_affects_global_scope_should_ignore_script_files_with_only_ambient_external_modules() {
+        assert!(!file_affects_global_scope_for_text(
+            "/ambient-only.ts",
+            "declare module \"ambient\" {}"
+        ));
+    }
+
+    #[test]
+    fn file_affects_global_scope_should_detect_non_ambient_external_module_statements() {
+        assert!(file_affects_global_scope_for_text(
+            "/ambient-and-script.ts",
+            "declare module \"ambient\" {}\ninterface Local {}"
+        ));
+    }
 }

@@ -95,8 +95,7 @@ fn collect_module_references(
         return;
     }
 
-    if ast::is_module_declaration(store, node)
-        && ast::is_ambient_module(store, node)
+    if ast::is_ambient_module(store, node)
         && (in_ambient_module
             || ast::has_syntactic_modifier(store, node, ast::ModifierFlags::AMBIENT)
             || is_declaration_file)

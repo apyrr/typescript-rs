@@ -301,6 +301,28 @@ impl<'a> Tracker<'a> {
         )
     }
 
+    pub fn get_adjusted_token_info_range(
+        &self,
+        source_file: &ast::SourceFile,
+        start_token: astnav::TokenInfo,
+        end_token: astnav::TokenInfo,
+        leading_option: LeadingTriviaOption,
+        trailing_option: TrailingTriviaOption,
+    ) -> lsproto::Range {
+        self.converters.to_lsp_range(
+            source_file,
+            core::new_text_range(
+                self.get_adjusted_token_info_start_position(
+                    source_file,
+                    start_token,
+                    leading_option,
+                    false,
+                ),
+                self.get_adjusted_token_info_end_position(source_file, end_token, trailing_option),
+            ),
+        )
+    }
+
     // method on the changeTracker because use of converters
     pub fn get_adjusted_start_position(
         &self,
@@ -391,6 +413,86 @@ impl<'a> Tracker<'a> {
             as i32
     }
 
+    pub fn get_adjusted_token_info_start_position(
+        &self,
+        source_file: &ast::SourceFile,
+        token: astnav::TokenInfo,
+        leading_option: LeadingTriviaOption,
+        has_trailing_comment: bool,
+    ) -> i32 {
+        if let Some(node) = token.node {
+            return self.get_adjusted_start_position(
+                source_file,
+                node,
+                leading_option,
+                has_trailing_comment,
+            );
+        }
+
+        let start = astnav::get_start_of_token_info(token, source_file);
+        let start_of_line_pos = format::get_line_start_position_for_position(start, source_file);
+
+        match leading_option {
+            LEADING_TRIVIA_OPTION_EXCLUDE => return start,
+            LEADING_TRIVIA_OPTION_START_LINE => {
+                if token.loc.contains_inclusive(start_of_line_pos) {
+                    return start_of_line_pos;
+                }
+                return start;
+            }
+            _ => {}
+        }
+
+        let full_start = token.loc.pos();
+        if full_start == start {
+            return start;
+        }
+        let line_starts = core::compute_ecma_line_starts(source_file.text());
+        let full_start_line_index =
+            scanner::compute_line_of_position(&line_starts, full_start as usize);
+        let full_start_line_pos = line_starts[full_start_line_index] as i32;
+        if start_of_line_pos == full_start_line_pos {
+            if leading_option == LEADING_TRIVIA_OPTION_INCLUDE_ALL {
+                return full_start;
+            }
+            return start;
+        }
+
+        if has_trailing_comment {
+            let mut comments = scanner::get_leading_comment_ranges(source_file.text(), full_start);
+            if comments.is_empty() {
+                comments = scanner::get_trailing_comment_ranges(source_file.text(), full_start);
+            }
+            if !comments.is_empty() {
+                let options = scanner::SkipTriviaOptions {
+                    stop_after_line_break: true,
+                    stop_at_comments: true,
+                };
+                return scanner::skip_trivia_ex(
+                    source_file.text(),
+                    comments[0].end() as usize,
+                    Some(&options),
+                ) as i32;
+            }
+        }
+
+        let next_line_start = if full_start > 0 { 1 } else { 0 };
+        let mut adjusted_start_position =
+            line_starts[full_start_line_index + next_line_start] as i32;
+        let options = scanner::SkipTriviaOptions {
+            stop_after_line_break: false,
+            stop_at_comments: true,
+        };
+        adjusted_start_position = scanner::skip_trivia_ex(
+            source_file.text(),
+            adjusted_start_position as usize,
+            Some(&options),
+        ) as i32;
+        line_starts
+            [scanner::compute_line_of_position(&line_starts, adjusted_start_position as usize)]
+            as i32
+    }
+
     // method on the changeTracker because of converters
     // Return the end position of a multiline comment of it is on another line; otherwise returns `undefined`;
     pub fn get_end_position_of_multiline_trailing_comment(
@@ -399,18 +501,26 @@ impl<'a> Tracker<'a> {
         node: ast::Node,
         trailing_opt: TrailingTriviaOption,
     ) -> i32 {
+        self.get_end_position_of_multiline_trailing_comment_after_position(
+            source_file,
+            source_file.store().loc(node).end(),
+            trailing_opt,
+        )
+    }
+
+    fn get_end_position_of_multiline_trailing_comment_after_position(
+        &self,
+        source_file: &ast::SourceFile,
+        end_position: i32,
+        trailing_opt: TrailingTriviaOption,
+    ) -> i32 {
         if trailing_opt == TRAILING_TRIVIA_OPTION_INCLUDE {
             // If the trailing comment is a multiline comment that extends to the next lines,
             // return the end of the comment and track it for the next nodes to adjust.
             let line_starts = core::compute_ecma_line_starts(source_file.text());
-            let node_end_line = scanner::compute_line_of_position(
-                &line_starts,
-                source_file.store().loc(node).end() as usize,
-            );
-            for comment in scanner::get_trailing_comment_ranges(
-                source_file.text(),
-                source_file.store().loc(node).end(),
-            ) {
+            let node_end_line =
+                scanner::compute_line_of_position(&line_starts, end_position as usize);
+            for comment in scanner::get_trailing_comment_ranges(source_file.text(), end_position) {
                 // Single line can break the loop as trivia will only be this line.
                 // Comments on subsequent lines are also ignored.
                 if comment.kind() == ast::Kind::SingleLineCommentTrivia
@@ -498,6 +608,63 @@ impl<'a> Tracker<'a> {
             return new_end;
         }
         source_file.store().loc(node).end()
+    }
+
+    pub fn get_adjusted_token_info_end_position(
+        &self,
+        source_file: &'a ast::SourceFile,
+        token: astnav::TokenInfo,
+        trailing_trivia_option: TrailingTriviaOption,
+    ) -> i32 {
+        if let Some(node) = token.node {
+            return self.get_adjusted_end_position(source_file, node, trailing_trivia_option);
+        }
+
+        let token_end = token.loc.end();
+        if trailing_trivia_option == TRAILING_TRIVIA_OPTION_EXCLUDE {
+            return token_end;
+        }
+        if trailing_trivia_option == TRAILING_TRIVIA_OPTION_EXCLUDE_WHITESPACE {
+            let mut comments = scanner::get_trailing_comment_ranges(source_file.text(), token_end);
+            comments.extend(scanner::get_leading_comment_ranges(
+                source_file.text(),
+                token_end,
+            ));
+            if !comments.is_empty() {
+                let real_end = comments[comments.len() - 1].end();
+                if real_end != 0 {
+                    return real_end;
+                }
+            }
+            return token_end;
+        }
+
+        let multiline_end_position = self
+            .get_end_position_of_multiline_trailing_comment_after_position(
+                source_file,
+                token_end,
+                trailing_trivia_option,
+            );
+        if multiline_end_position != 0 {
+            return multiline_end_position;
+        }
+
+        let options = scanner::SkipTriviaOptions {
+            stop_after_line_break: true,
+            stop_at_comments: false,
+        };
+        let new_end =
+            scanner::skip_trivia_ex(source_file.text(), token_end as usize, Some(&options)) as i32;
+
+        if new_end != token_end
+            && (trailing_trivia_option == TRAILING_TRIVIA_OPTION_INCLUDE
+                || stringutil::is_line_break(
+                    source_file.text().as_bytes()[new_end as usize - 1] as char,
+                ))
+        {
+            return new_end;
+        }
+        token_end
     }
 
     pub fn get_insertion_position_at_source_file_top(

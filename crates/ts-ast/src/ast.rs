@@ -13,13 +13,14 @@ use ts_tspath as tspath;
 
 use crate::OuterExpressionKinds;
 use crate::arena::{
-    AstStore, ModifierListId, ModifierListView, Node, NodeListId, NodeListIter, NodeListView,
-    NodePayloadId, NodePayloadTag, OptionalModifierListId, RawNodeSliceId, RawNodeSliceView,
-    RawStringSliceId, RawStringSliceView, StoreId,
+    AstNodeId, AstStore, ModifierListId, ModifierListView, Node, NodeListId, NodeListIter,
+    NodeListView, NodePayloadId, NodePayloadTag, NodeSideTable, OptionalAstNodeId,
+    OptionalModifierListId, OptionalNodeListId, OptionalRawNodeSliceId, OptionalRawStringSliceId,
+    RawNodeSliceId, RawNodeSliceView, RawStringSliceId, RawStringSliceView, StoreId,
 };
 use crate::ast_generated::*;
 use crate::diagnostic::Diagnostic;
-use crate::ids::NodeId;
+use crate::ids::{LocalAstId, NodeId, SourceId, SourceSnapshotId, StableNodeId};
 use crate::kind_generated::Kind;
 use crate::modifierflags::ModifierFlags;
 use crate::nodeflags::NodeFlags;
@@ -2240,6 +2241,123 @@ where
     None
 }
 
+pub(crate) fn visit_source_node_from_id<'source, T>(runtime: &T, node: Node, id: AstNodeId) -> Node
+where
+    T: AstVisitEachChildRuntime<'source> + ?Sized,
+{
+    runtime.source_store_for_node(node).node_from_id(id)
+}
+
+pub(crate) fn visit_optional_source_node_from_id<'source, T>(
+    runtime: &T,
+    node: Node,
+    id: OptionalAstNodeId,
+) -> Option<Node>
+where
+    T: AstVisitEachChildRuntime<'source> + ?Sized,
+{
+    runtime
+        .source_store_for_node(node)
+        .optional_node_from_id(id)
+}
+
+pub(crate) fn visit_source_node_list_input_from_id<'source, T>(
+    runtime: &T,
+    node: Node,
+    id: NodeListId,
+) -> SourceNodeListInput
+where
+    T: AstVisitEachChildRuntime<'source> + ?Sized,
+{
+    let source = runtime.source_store_for_node(node);
+    SourceNodeListInput::from_source(SourceNodeList::new(source, id))
+}
+
+pub(crate) fn visit_optional_source_node_list_input_from_id<'source, T>(
+    runtime: &T,
+    node: Node,
+    id: OptionalNodeListId,
+) -> Option<SourceNodeListInput>
+where
+    T: AstVisitEachChildRuntime<'source> + ?Sized,
+{
+    id.get()
+        .map(|id| visit_source_node_list_input_from_id(runtime, node, id))
+}
+
+pub(crate) fn visit_source_modifier_list_input_from_id<'source, T>(
+    runtime: &T,
+    node: Node,
+    id: ModifierListId,
+) -> SourceModifierListInput
+where
+    T: AstVisitEachChildRuntime<'source> + ?Sized,
+{
+    let source = runtime.source_store_for_node(node);
+    SourceModifierListInput::from_source(SourceModifierList::new(source, id))
+}
+
+pub(crate) fn visit_optional_source_modifier_list_input_from_id<'source, T>(
+    runtime: &T,
+    node: Node,
+    id: OptionalModifierListId,
+) -> Option<SourceModifierListInput>
+where
+    T: AstVisitEachChildRuntime<'source> + ?Sized,
+{
+    id.get()
+        .map(|id| visit_source_modifier_list_input_from_id(runtime, node, id))
+}
+
+pub(crate) fn visit_source_raw_node_slice_input_from_id<'source, T>(
+    runtime: &T,
+    node: Node,
+    id: RawNodeSliceId,
+) -> SourceRawNodeSliceInput
+where
+    T: AstVisitEachChildRuntime<'source> + ?Sized,
+{
+    let source = runtime.source_store_for_node(node);
+    SourceRawNodeSliceInput::from_source(SourceRawNodeSlice::new(source, id))
+}
+
+pub(crate) fn visit_optional_source_raw_node_slice_input_from_id<'source, T>(
+    runtime: &T,
+    node: Node,
+    id: OptionalRawNodeSliceId,
+) -> Option<SourceRawNodeSliceInput>
+where
+    T: AstVisitEachChildRuntime<'source> + ?Sized,
+{
+    id.get()
+        .map(|id| visit_source_raw_node_slice_input_from_id(runtime, node, id))
+}
+
+pub(crate) fn visit_source_raw_string_slice_from_id<'source, T>(
+    runtime: &T,
+    node: Node,
+    id: RawStringSliceId,
+) -> RawStringSlice
+where
+    T: AstVisitEachChildRuntime<'source> + ?Sized,
+{
+    let source = runtime.source_store_for_node(node);
+    id.assert_store(source.store_id());
+    RawStringSlice::from_id(id)
+}
+
+pub(crate) fn visit_optional_source_raw_string_slice_from_id<'source, T>(
+    runtime: &T,
+    node: Node,
+    id: OptionalRawStringSliceId,
+) -> Option<RawStringSlice>
+where
+    T: AstVisitEachChildRuntime<'source> + ?Sized,
+{
+    id.get()
+        .map(|id| visit_source_raw_string_slice_from_id(runtime, node, id))
+}
+
 pub trait AstVisitEachChildRuntime<'source> {
     fn source_store(&self) -> &AstStore;
     fn factory(&self) -> &NodeFactory;
@@ -2614,15 +2732,6 @@ pub fn get_source_file_of_node(store: &AstStore, node: Option<Node>) -> Option<N
     get_source_file_node_of_node(store, node)
 }
 
-pub fn is_module_with_string_literal_name(store: &AstStore, node: Node) -> bool {
-    if !is_module_declaration(store, node) {
-        return false;
-    }
-    store
-        .name(node)
-        .is_some_and(|name| store.kind(name) == Kind::StringLiteral)
-}
-
 pub fn is_in_json_file(store: &AstStore, node: Node) -> bool {
     store.flags(node).intersects(NodeFlags::JSON_FILE)
 }
@@ -2688,32 +2797,6 @@ pub fn is_unterminated_literal(store: &AstStore, node: Node) -> bool {
             .template_flags
             .contains(TokenFlags::UNTERMINATED),
         _ => false,
-    }
-}
-
-pub fn get_non_assigned_name_of_declaration(store: &AstStore, declaration: Node) -> Option<Node> {
-    match store.kind(declaration) {
-        Kind::BinaryExpression | Kind::CallExpression => {
-            match get_assignment_declaration_kind(store, declaration) {
-                JSDeclarationKind::Property
-                | JSDeclarationKind::ThisProperty
-                | JSDeclarationKind::PrototypeProperty
-                | JSDeclarationKind::ExportsProperty => {
-                    let left = store.left(declaration)?;
-                    get_element_or_property_access_name(store, left).or(Some(left))
-                }
-                JSDeclarationKind::ObjectDefinePropertyValue
-                | JSDeclarationKind::ObjectDefinePropertyExports => store
-                    .arguments(declaration)
-                    .and_then(|arguments| arguments.iter().nth(1)),
-                _ => None,
-            }
-        }
-        Kind::ExportAssignment => {
-            let expression = store.expression(declaration)?;
-            is_identifier(store, expression).then_some(expression)
-        }
-        _ => store.name(declaration),
     }
 }
 
@@ -3016,6 +3099,766 @@ pub(crate) fn same_optional_node(left: Option<Node>, right: Option<Node>) -> boo
         (None, None) => true,
         _ => false,
     }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AstChildSourceSpanKind {
+    Node,
+    NodeList,
+    NodeListElement,
+    ModifierList,
+    ModifierListElement,
+    RawNodeSliceElement,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AstChildSourceSpan {
+    pub(crate) field_id: AstChildFieldId,
+    pub(crate) field_name: &'static str,
+    pub(crate) kind: AstChildSourceSpanKind,
+    pub(crate) index: Option<usize>,
+    pub(crate) node: Option<Node>,
+    pub(crate) loc: Option<core::TextRange>,
+    pub(crate) range: Option<core::TextRange>,
+}
+
+impl AstChildSourceSpan {
+    pub fn field_name(self) -> &'static str {
+        self.field_name
+    }
+
+    pub fn kind(self) -> AstChildSourceSpanKind {
+        self.kind
+    }
+
+    pub fn index(self) -> Option<usize> {
+        self.index
+    }
+
+    pub fn node(self) -> Option<Node> {
+        self.node
+    }
+
+    pub fn loc(self) -> Option<core::TextRange> {
+        self.loc
+    }
+
+    pub fn range(self) -> Option<core::TextRange> {
+        self.range
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AstChildParentIssueKind {
+    ForeignChildStore { actual_store_id: StoreId },
+    MissingOriginalParent,
+    WrongOriginalParent { actual_parent: Node },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AstChildParentIssue {
+    parent: Node,
+    child: Node,
+    field_name: &'static str,
+    child_span_kind: AstChildSourceSpanKind,
+    index: Option<usize>,
+    kind: AstChildParentIssueKind,
+}
+
+impl AstChildParentIssue {
+    pub fn parent(self) -> Node {
+        self.parent
+    }
+
+    pub fn child(self) -> Node {
+        self.child
+    }
+
+    pub fn field_name(self) -> &'static str {
+        self.field_name
+    }
+
+    pub fn child_span_kind(self) -> AstChildSourceSpanKind {
+        self.child_span_kind
+    }
+
+    pub fn index(self) -> Option<usize> {
+        self.index
+    }
+
+    pub fn kind(self) -> AstChildParentIssueKind {
+        self.kind
+    }
+}
+
+pub struct StableNodeIdMap {
+    source_snapshot_id: SourceSnapshotId,
+    root: Node,
+    local_ids: NodeSideTable<LocalAstId>,
+    nodes_by_local_id: HashMap<LocalAstId, Node>,
+    len: usize,
+}
+
+impl StableNodeIdMap {
+    pub fn source_id(&self) -> SourceId {
+        self.source_snapshot_id.source_id()
+    }
+
+    pub fn source_hash(&self) -> xxh3::Uint128 {
+        self.source_snapshot_id.source_hash()
+    }
+
+    pub fn source_snapshot_id(&self) -> SourceSnapshotId {
+        self.source_snapshot_id
+    }
+
+    pub fn is_current_for_source_snapshot(&self, source_snapshot_id: SourceSnapshotId) -> bool {
+        self.source_snapshot_id == source_snapshot_id
+    }
+
+    pub fn root(&self) -> Node {
+        self.root
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn local_id(&self, node: Node) -> Option<LocalAstId> {
+        self.local_ids.get_copied(node)
+    }
+
+    pub fn stable_id(&self, node: Node) -> Option<StableNodeId> {
+        self.local_id(node)
+            .map(|local_id| StableNodeId::new(self.source_id(), local_id))
+    }
+
+    pub fn contains_node(&self, node: Node) -> bool {
+        self.local_id(node).is_some()
+    }
+
+    pub fn node_for_local_id(&self, local_id: LocalAstId) -> Option<Node> {
+        self.nodes_by_local_id.get(&local_id).copied()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (Node, StableNodeId)> + '_ {
+        let source_id = self.source_id();
+        self.local_ids
+            .iter()
+            .map(move |(node, local_id)| (node, StableNodeId::new(source_id, *local_id)))
+    }
+
+    fn new(source_snapshot_id: SourceSnapshotId, root: Node) -> Self {
+        Self {
+            source_snapshot_id,
+            root,
+            local_ids: NodeSideTable::default(),
+            nodes_by_local_id: HashMap::new(),
+            len: 0,
+        }
+    }
+
+    fn insert(&mut self, node: Node, local_id: LocalAstId) {
+        if self.local_ids.insert(node, local_id).is_none() {
+            self.nodes_by_local_id.insert(local_id, node);
+            self.len += 1;
+        }
+    }
+
+    fn next_available_local_id(&self, mut local_id: LocalAstId) -> LocalAstId {
+        while self.nodes_by_local_id.contains_key(&local_id) {
+            local_id = LocalAstId::from_u32(local_id.as_u32().wrapping_add(1));
+        }
+        local_id
+    }
+}
+
+const STABLE_AST_ID_FNV_OFFSET: u64 = 0xcbf29ce484222325;
+const STABLE_AST_ID_FNV_PRIME: u64 = 0x100000001b3;
+
+fn stable_ast_id_hash_add_byte(hash: u64, byte: u8) -> u64 {
+    (hash ^ u64::from(byte)).wrapping_mul(STABLE_AST_ID_FNV_PRIME)
+}
+
+fn stable_ast_id_hash_add_bytes(mut hash: u64, bytes: &[u8]) -> u64 {
+    for byte in bytes {
+        hash = stable_ast_id_hash_add_byte(hash, *byte);
+    }
+    stable_ast_id_hash_add_byte(hash, 0)
+}
+
+fn stable_ast_id_hash_add_u16(hash: u64, value: u16) -> u64 {
+    stable_ast_id_hash_add_bytes(hash, &value.to_le_bytes())
+}
+
+fn stable_ast_id_hash_add_i32(hash: u64, value: i32) -> u64 {
+    stable_ast_id_hash_add_bytes(hash, &value.to_le_bytes())
+}
+
+fn stable_ast_id_hash_add_u32(hash: u64, value: u32) -> u64 {
+    stable_ast_id_hash_add_bytes(hash, &value.to_le_bytes())
+}
+
+fn stable_ast_id_hash_to_local_id(hash: u64) -> LocalAstId {
+    LocalAstId::from_u32(((hash >> 32) as u32) ^ (hash as u32))
+}
+
+impl AstStore {
+    pub fn build_stable_node_ids(&self, source_file: Node, source_id: SourceId) -> StableNodeIdMap {
+        assert_eq!(self.kind(source_file), Kind::SourceFile);
+
+        let mut stable_ids =
+            StableNodeIdMap::new(self.source_snapshot_id(source_file, source_id), source_file);
+        let mut visited = self.new_node_map::<()>();
+        let mut stack = vec![(source_file, STABLE_AST_ID_FNV_OFFSET)];
+
+        while let Some((node, container_hash)) = stack.pop() {
+            if node.store_id() != self.store_id() {
+                continue;
+            }
+            if visited.insert_same_store(node, ()).is_some() {
+                continue;
+            }
+
+            let mut child_container_hash = container_hash;
+            if self.participates_in_stable_node_ids(source_file, node) {
+                let local_id =
+                    self.stable_node_local_id_candidate(source_file, node, container_hash);
+                let local_id = stable_ids.next_available_local_id(local_id);
+                stable_ids.insert(node, local_id);
+                child_container_hash = self.stable_node_child_container_hash(
+                    source_file,
+                    node,
+                    container_hash,
+                    local_id,
+                );
+            }
+
+            let mut children = Vec::new();
+            let result = self.for_each_present_child(node, |child| {
+                if child.store_id() == self.store_id() {
+                    children.push(child);
+                }
+                ControlFlow::Continue(())
+            });
+            debug_assert_eq!(result, ControlFlow::Continue(()));
+
+            for child in children.into_iter().rev() {
+                stack.push((child, child_container_hash));
+            }
+        }
+
+        stable_ids
+    }
+
+    pub fn source_snapshot_id(&self, source_file: Node, source_id: SourceId) -> SourceSnapshotId {
+        assert_eq!(self.kind(source_file), Kind::SourceFile);
+        SourceSnapshotId::new(source_id, self.as_source_file(source_file).hash())
+    }
+
+    fn stable_node_local_id_candidate(
+        &self,
+        source_file: Node,
+        node: Node,
+        container_hash: u64,
+    ) -> LocalAstId {
+        if node == source_file {
+            return LocalAstId::from_u32(0);
+        }
+
+        let mut hash = stable_ast_id_hash_add_bytes(container_hash, b"node");
+        hash = stable_ast_id_hash_add_u16(hash, self.kind(node) as i16 as u16);
+
+        if let Some(name) = self.name(node) {
+            hash = stable_ast_id_hash_add_bytes(hash, b"name");
+            hash = stable_ast_id_hash_add_bytes(hash, self.text(name).as_bytes());
+        } else {
+            let loc = self.loc(node);
+            hash = stable_ast_id_hash_add_bytes(hash, b"range");
+            hash = stable_ast_id_hash_add_i32(hash, loc.pos());
+            hash = stable_ast_id_hash_add_i32(hash, loc.end());
+        }
+
+        stable_ast_id_hash_to_local_id(hash)
+    }
+
+    fn stable_node_child_container_hash(
+        &self,
+        source_file: Node,
+        node: Node,
+        container_hash: u64,
+        local_id: LocalAstId,
+    ) -> u64 {
+        if !self.stable_node_establishes_container(source_file, node) {
+            return container_hash;
+        }
+
+        let hash = stable_ast_id_hash_add_bytes(container_hash, b"container");
+        stable_ast_id_hash_add_u32(hash, local_id.as_u32())
+    }
+
+    fn stable_node_establishes_container(&self, source_file: Node, node: Node) -> bool {
+        node == source_file
+            || self.view::<AstDeclarationView>(node).is_some() && self.name(node).is_some()
+    }
+
+    fn participates_in_stable_node_ids(&self, source_file: Node, node: Node) -> bool {
+        if node == source_file {
+            return true;
+        }
+        if node_is_synthesized(self, node) || node_is_missing(self, Some(node)) {
+            return false;
+        }
+
+        self.view::<AstDeclarationView>(node).is_some()
+            || self.view::<AstStatementView>(node).is_some()
+            || self.view::<AstExpressionView>(node).is_some()
+            || self.view::<AstTypeNodeView>(node).is_some()
+            || self.view::<AstNameView>(node).is_some()
+    }
+
+    pub(crate) fn debug_tree(&self, node: Node) -> String {
+        let mut output = String::new();
+        self.debug_tree_node(node, 0, &mut output, None);
+        output
+    }
+
+    pub(crate) fn debug_tree_with_stable_node_ids(
+        &self,
+        node: Node,
+        stable_ids: &StableNodeIdMap,
+    ) -> String {
+        let mut output = String::new();
+        self.debug_tree_node(node, 0, &mut output, Some(stable_ids));
+        output
+    }
+
+    fn debug_tree_node(
+        &self,
+        node: Node,
+        depth: usize,
+        output: &mut String,
+        stable_ids: Option<&StableNodeIdMap>,
+    ) {
+        debug_tree_push_line(output, depth, &self.debug_tree_node_label(node, stable_ids));
+        for field in self.node_layout(node).child_fields {
+            self.debug_tree_child_field(node, field, depth + 1, output, stable_ids);
+        }
+    }
+
+    fn debug_tree_node_label(&self, node: Node, stable_ids: Option<&StableNodeIdMap>) -> String {
+        let mut label = format!("{:?}", self.kind(node));
+        if let Some(stable_id) = stable_ids.and_then(|stable_ids| stable_ids.stable_id(node)) {
+            label.push_str(" stable=");
+            label.push_str(&stable_id.to_string());
+        }
+        label
+    }
+
+    fn debug_tree_child_field(
+        &self,
+        node: Node,
+        field: &AstChildFieldDescriptor,
+        depth: usize,
+        output: &mut String,
+        stable_ids: Option<&StableNodeIdMap>,
+    ) {
+        match self.child_field_value(node, field) {
+            AstChildFieldValue::Node(Some(child)) => {
+                debug_tree_push_line(output, depth, &format!("{}:", field.name));
+                self.debug_tree_node(child, depth + 1, output, stable_ids);
+            }
+            AstChildFieldValue::Node(None) => {
+                debug_tree_push_line(output, depth, &format!("{}: <none>", field.name));
+            }
+            AstChildFieldValue::NodeList(Some(nodes)) => {
+                self.debug_tree_node_sequence(field.name, nodes.iter(), depth, output, stable_ids);
+            }
+            AstChildFieldValue::NodeList(None) => {
+                debug_tree_push_line(output, depth, &format!("{}: <none>", field.name));
+            }
+            AstChildFieldValue::ModifierList(Some(modifiers)) => {
+                self.debug_tree_node_sequence(
+                    field.name,
+                    modifiers.iter(),
+                    depth,
+                    output,
+                    stable_ids,
+                );
+            }
+            AstChildFieldValue::ModifierList(None) => {
+                debug_tree_push_line(output, depth, &format!("{}: <none>", field.name));
+            }
+            AstChildFieldValue::RawNodeSlice(Some(nodes)) => {
+                self.debug_tree_optional_node_sequence(
+                    field.name,
+                    nodes.iter(),
+                    depth,
+                    output,
+                    stable_ids,
+                );
+            }
+            AstChildFieldValue::RawNodeSlice(None) => {
+                debug_tree_push_line(output, depth, &format!("{}: <none>", field.name));
+            }
+        }
+    }
+
+    fn debug_tree_node_sequence<I>(
+        &self,
+        name: &str,
+        children: I,
+        depth: usize,
+        output: &mut String,
+        stable_ids: Option<&StableNodeIdMap>,
+    ) where
+        I: IntoIterator<Item = Node>,
+    {
+        let mut children = children.into_iter().peekable();
+        if children.peek().is_none() {
+            debug_tree_push_line(output, depth, &format!("{name}: []"));
+            return;
+        }
+        debug_tree_push_line(output, depth, &format!("{name}:"));
+        for (index, child) in children.enumerate() {
+            debug_tree_push_line(output, depth + 1, &format!("[{index}]"));
+            self.debug_tree_node(child, depth + 2, output, stable_ids);
+        }
+    }
+
+    fn debug_tree_optional_node_sequence<I>(
+        &self,
+        name: &str,
+        children: I,
+        depth: usize,
+        output: &mut String,
+        stable_ids: Option<&StableNodeIdMap>,
+    ) where
+        I: IntoIterator<Item = Option<Node>>,
+    {
+        let mut children = children.into_iter().peekable();
+        if children.peek().is_none() {
+            debug_tree_push_line(output, depth, &format!("{name}: []"));
+            return;
+        }
+        debug_tree_push_line(output, depth, &format!("{name}:"));
+        for (index, child) in children.enumerate() {
+            match child {
+                Some(child) => {
+                    debug_tree_push_line(output, depth + 1, &format!("[{index}]"));
+                    self.debug_tree_node(child, depth + 2, output, stable_ids);
+                }
+                None => {
+                    debug_tree_push_line(output, depth + 1, &format!("[{index}]: <none>"));
+                }
+            }
+        }
+    }
+
+    pub fn child_source_spans(&self, node: Node) -> Vec<AstChildSourceSpan> {
+        let mut spans = Vec::new();
+        self.for_each_child_source_span(node, |span| spans.push(span));
+        spans
+    }
+
+    pub fn for_each_child_source_span(
+        &self,
+        node: Node,
+        mut visit: impl FnMut(AstChildSourceSpan),
+    ) {
+        for field in self.node_layout(node).child_fields {
+            self.for_each_child_source_span_for_field(node, field, &mut visit);
+        }
+    }
+
+    pub fn for_each_child_node_source_span<F>(&self, node: Node, mut visit: F) -> ControlFlow<()>
+    where
+        F: FnMut(AstChildSourceSpan) -> ControlFlow<()>,
+    {
+        for field in self.node_layout(node).child_fields {
+            self.for_each_child_node_source_span_for_field(node, field, &mut visit)?;
+        }
+        ControlFlow::Continue(())
+    }
+
+    pub fn child_parent_issues(&self, root: Node) -> Vec<AstChildParentIssue> {
+        let mut issues = Vec::new();
+        let result = self.for_each_child_parent_issue(root, |issue| {
+            issues.push(issue);
+            ControlFlow::Continue(())
+        });
+        debug_assert_eq!(result, ControlFlow::Continue(()));
+        issues
+    }
+
+    pub fn first_child_parent_issue(&self, root: Node) -> Option<AstChildParentIssue> {
+        let mut first = None;
+        let result = self.for_each_child_parent_issue(root, |issue| {
+            first = Some(issue);
+            ControlFlow::Break(())
+        });
+        debug_assert_eq!(
+            result,
+            if first.is_some() {
+                ControlFlow::Break(())
+            } else {
+                ControlFlow::Continue(())
+            }
+        );
+        first
+    }
+
+    pub fn for_each_child_parent_issue<F>(&self, root: Node, mut visit: F) -> ControlFlow<()>
+    where
+        F: FnMut(AstChildParentIssue) -> ControlFlow<()>,
+    {
+        self.assert_same_store(root);
+        let mut visited = self.new_node_map::<()>();
+        self.walk_child_parent_issues(root, &mut visited, &mut visit)
+    }
+
+    fn walk_child_parent_issues<F>(
+        &self,
+        parent: Node,
+        visited: &mut crate::arena::StoreNodeMap<()>,
+        visit: &mut F,
+    ) -> ControlFlow<()>
+    where
+        F: FnMut(AstChildParentIssue) -> ControlFlow<()>,
+    {
+        if visited.insert_same_store(parent, ()).is_some() {
+            return ControlFlow::Continue(());
+        }
+
+        let mut same_store_children = Vec::new();
+        self.for_each_child_node_source_span(parent, |span| {
+            let Some(child) = span.node() else {
+                return ControlFlow::Continue(());
+            };
+
+            if let Some(issue) = self.child_parent_issue(parent, span) {
+                visit(issue)?;
+            }
+            if child.store_id() == self.store_id() {
+                same_store_children.push(child);
+            }
+            ControlFlow::Continue(())
+        })?;
+
+        for child in same_store_children {
+            self.walk_child_parent_issues(child, visited, visit)?;
+        }
+        ControlFlow::Continue(())
+    }
+
+    fn child_parent_issue(
+        &self,
+        parent: Node,
+        span: AstChildSourceSpan,
+    ) -> Option<AstChildParentIssue> {
+        let child = span.node()?;
+        let kind = if child.store_id() != self.store_id() {
+            AstChildParentIssueKind::ForeignChildStore {
+                actual_store_id: child.store_id(),
+            }
+        } else {
+            match self.original_parent(child) {
+                Some(actual_parent) if actual_parent == parent => return None,
+                Some(actual_parent) => {
+                    AstChildParentIssueKind::WrongOriginalParent { actual_parent }
+                }
+                None => AstChildParentIssueKind::MissingOriginalParent,
+            }
+        };
+
+        Some(AstChildParentIssue {
+            parent,
+            child,
+            field_name: span.field_name(),
+            child_span_kind: span.kind(),
+            index: span.index(),
+            kind,
+        })
+    }
+
+    fn for_each_child_source_span_for_field(
+        &self,
+        node: Node,
+        field: &AstChildFieldDescriptor,
+        visit: &mut impl FnMut(AstChildSourceSpan),
+    ) {
+        match self.child_field_value(node, field) {
+            AstChildFieldValue::Node(Some(child)) => {
+                self.visit_node_child_source_span(field, child, None, visit);
+            }
+            AstChildFieldValue::Node(None) | AstChildFieldValue::NodeList(None) => {}
+            AstChildFieldValue::NodeList(Some(nodes)) => visit(AstChildSourceSpan {
+                field_id: field.id,
+                field_name: field.name,
+                kind: AstChildSourceSpanKind::NodeList,
+                index: None,
+                node: None,
+                loc: Some(nodes.loc()),
+                range: Some(nodes.range()),
+            }),
+            AstChildFieldValue::ModifierList(Some(modifiers)) => visit(AstChildSourceSpan {
+                field_id: field.id,
+                field_name: field.name,
+                kind: AstChildSourceSpanKind::ModifierList,
+                index: None,
+                node: None,
+                loc: Some(modifiers.loc()),
+                range: Some(modifiers.range()),
+            }),
+            AstChildFieldValue::ModifierList(None) | AstChildFieldValue::RawNodeSlice(None) => {}
+            AstChildFieldValue::RawNodeSlice(Some(nodes)) => {
+                for (index, child) in nodes.iter().enumerate() {
+                    match child {
+                        Some(child) => {
+                            self.visit_node_child_source_span(field, child, Some(index), visit);
+                        }
+                        None => visit(AstChildSourceSpan {
+                            field_id: field.id,
+                            field_name: field.name,
+                            kind: AstChildSourceSpanKind::RawNodeSliceElement,
+                            index: Some(index),
+                            node: None,
+                            loc: None,
+                            range: None,
+                        }),
+                    }
+                }
+            }
+        }
+    }
+
+    fn for_each_child_node_source_span_for_field<F>(
+        &self,
+        node: Node,
+        field: &AstChildFieldDescriptor,
+        visit: &mut F,
+    ) -> ControlFlow<()>
+    where
+        F: FnMut(AstChildSourceSpan) -> ControlFlow<()>,
+    {
+        match self.child_field_value(node, field) {
+            AstChildFieldValue::Node(Some(child)) => {
+                self.visit_node_child_source_span_with_kind(
+                    field,
+                    child,
+                    AstChildSourceSpanKind::Node,
+                    None,
+                    visit,
+                )?;
+            }
+            AstChildFieldValue::Node(None) | AstChildFieldValue::NodeList(None) => {}
+            AstChildFieldValue::NodeList(Some(nodes)) => {
+                for (index, child) in nodes.iter().enumerate() {
+                    self.visit_node_child_source_span_with_kind(
+                        field,
+                        child,
+                        AstChildSourceSpanKind::NodeListElement,
+                        Some(index),
+                        visit,
+                    )?;
+                }
+            }
+            AstChildFieldValue::ModifierList(Some(modifiers)) => {
+                for (index, child) in modifiers.iter().enumerate() {
+                    self.visit_node_child_source_span_with_kind(
+                        field,
+                        child,
+                        AstChildSourceSpanKind::ModifierListElement,
+                        Some(index),
+                        visit,
+                    )?;
+                }
+            }
+            AstChildFieldValue::ModifierList(None) | AstChildFieldValue::RawNodeSlice(None) => {}
+            AstChildFieldValue::RawNodeSlice(Some(nodes)) => {
+                for (index, child) in nodes.iter().enumerate() {
+                    let Some(child) = child else {
+                        continue;
+                    };
+                    self.visit_node_child_source_span_with_kind(
+                        field,
+                        child,
+                        AstChildSourceSpanKind::RawNodeSliceElement,
+                        Some(index),
+                        visit,
+                    )?;
+                }
+            }
+        }
+        ControlFlow::Continue(())
+    }
+
+    fn visit_node_child_source_span(
+        &self,
+        field: &AstChildFieldDescriptor,
+        child: Node,
+        index: Option<usize>,
+        visit: &mut impl FnMut(AstChildSourceSpan),
+    ) {
+        let kind = if index.is_some() {
+            AstChildSourceSpanKind::RawNodeSliceElement
+        } else {
+            AstChildSourceSpanKind::Node
+        };
+        let (loc, range) = self.child_same_store_source_range(child);
+        visit(AstChildSourceSpan {
+            field_id: field.id,
+            field_name: field.name,
+            kind,
+            index,
+            node: Some(child),
+            loc,
+            range,
+        });
+    }
+
+    fn visit_node_child_source_span_with_kind(
+        &self,
+        field: &AstChildFieldDescriptor,
+        child: Node,
+        kind: AstChildSourceSpanKind,
+        index: Option<usize>,
+        visit: &mut impl FnMut(AstChildSourceSpan) -> ControlFlow<()>,
+    ) -> ControlFlow<()> {
+        let (loc, range) = self.child_same_store_source_range(child);
+        visit(AstChildSourceSpan {
+            field_id: field.id,
+            field_name: field.name,
+            kind,
+            index,
+            node: Some(child),
+            loc,
+            range,
+        })
+    }
+
+    fn child_same_store_source_range(
+        &self,
+        child: Node,
+    ) -> (Option<core::TextRange>, Option<core::TextRange>) {
+        if child.store_id() != self.store_id() {
+            return (None, None);
+        }
+        let loc = self.loc(child);
+        (Some(loc), Some(loc))
+    }
+}
+
+fn debug_tree_push_line(output: &mut String, depth: usize, text: &str) {
+    for _ in 0..depth {
+        output.push_str("  ");
+    }
+    output.push_str(text);
+    output.push('\n');
 }
 
 impl AsRef<Node> for Node {
@@ -3418,6 +4261,46 @@ pub fn is_statement_but_not_declaration(store: &AstStore, node: Node) -> bool {
     is_statement_but_not_declaration_kind(store.kind(node))
 }
 
+pub fn is_declaration_statement_kind(kind: Kind) -> bool {
+    matches!(
+        kind,
+        Kind::FunctionDeclaration
+            | Kind::MissingDeclaration
+            | Kind::ClassDeclaration
+            | Kind::InterfaceDeclaration
+            | Kind::TypeAliasDeclaration
+            | Kind::JSTypeAliasDeclaration
+            | Kind::EnumDeclaration
+            | Kind::ModuleDeclaration
+            | Kind::ImportDeclaration
+            | Kind::JSImportDeclaration
+            | Kind::ImportEqualsDeclaration
+            | Kind::ExportDeclaration
+            | Kind::ExportAssignment
+            | Kind::NamespaceExportDeclaration
+    )
+}
+
+pub fn is_declaration_statement(store: &AstStore, node: Node) -> bool {
+    is_declaration_statement_kind(store.kind(node))
+}
+
+pub fn is_declaration_or_variable_statement(store: &AstStore, node: Node) -> bool {
+    is_declaration_statement(store, node) || is_variable_statement(store, node)
+}
+
+pub fn statement_container_statements(
+    store: &AstStore,
+    container: Node,
+) -> Option<SourceNodeList<'_>> {
+    let statements_container = if store.kind(container) == Kind::SourceFile {
+        container
+    } else {
+        store.body(container).unwrap_or(container)
+    };
+    store.source_statements(statements_container)
+}
+
 pub fn is_block_statement(store: &AstStore, node: Node) -> bool {
     if store.kind(node) != Kind::Block {
         return false;
@@ -3433,7 +4316,7 @@ pub fn is_block_statement(store: &AstStore, node: Node) -> bool {
 
 pub fn is_statement(store: &AstStore, node: Node) -> bool {
     is_statement_but_not_declaration_kind(store.kind(node))
-        || is_declaration_statement(store, node)
+        || is_declaration_statement_kind(store.kind(node))
         || is_block_statement(store, node)
 }
 
@@ -3571,25 +4454,6 @@ pub fn is_template_literal_token(store: &AstStore, node: impl AsRef<Node>) -> bo
     is_template_literal_kind(store.kind(*node.as_ref()))
 }
 
-pub fn is_import_meta(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    let node = *node.as_ref();
-    is_meta_property(store, node)
-        && store.keyword_token(node) == Some(Kind::ImportKeyword)
-        && store
-            .name(node)
-            .is_some_and(|name| store.text(name) == "meta")
-}
-
-pub fn is_default_import(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    let node = *node.as_ref();
-    matches!(
-        store.kind(node),
-        Kind::ImportDeclaration | Kind::JSImportDeclaration
-    ) && store
-        .import_clause(node)
-        .is_some_and(|import_clause| store.name(import_clause).is_some())
-}
-
 pub fn is_label_name(store: &AstStore, node: impl AsRef<Node>) -> bool {
     let node = *node.as_ref();
     is_identifier(store, node)
@@ -3606,6 +4470,60 @@ pub fn is_jump_statement_target(store: &AstStore, node: impl AsRef<Node>) -> boo
         && store.parent(node).is_some_and(|parent| {
             is_break_or_continue_statement(store, parent) && store.label(parent) == Some(node)
         })
+}
+
+pub fn get_non_assigned_name_of_declaration(store: &AstStore, declaration: Node) -> Option<Node> {
+    match store.kind(declaration) {
+        Kind::BinaryExpression | Kind::CallExpression => {
+            match get_assignment_declaration_kind(store, declaration)? {
+                JSDeclarationKind::Property
+                | JSDeclarationKind::ThisProperty
+                | JSDeclarationKind::PrototypeProperty
+                | JSDeclarationKind::ExportsProperty => {
+                    let left = store.left(declaration)?;
+                    get_element_or_property_access_name(store, left).or(Some(left))
+                }
+                JSDeclarationKind::ObjectDefinePropertyValue
+                | JSDeclarationKind::ObjectDefinePropertyExports => store
+                    .arguments(declaration)
+                    .and_then(|arguments| arguments.iter().nth(1)),
+                _ => None,
+            }
+        }
+        Kind::ExportAssignment => {
+            let expression = store.expression(declaration)?;
+            is_identifier(store, expression).then_some(expression)
+        }
+        _ => store.name(declaration),
+    }
+}
+
+pub fn get_assigned_name(store: &AstStore, node: Node) -> Option<Node> {
+    let parent = store.parent(node)?;
+    match store.kind(parent) {
+        Kind::PropertyAssignment | Kind::BindingElement => store.name(parent),
+        Kind::BinaryExpression => {
+            if store.right(parent) != Some(node) {
+                return None;
+            }
+            let left = store.left(parent)?;
+            match store.kind(left) {
+                Kind::Identifier => Some(left),
+                Kind::PropertyAccessExpression => store.name(left),
+                Kind::ElementAccessExpression => {
+                    let argument = store.argument_expression(left)?;
+                    let argument = skip_parentheses(store, argument);
+                    is_string_or_numeric_literal_like(store, argument).then_some(argument)
+                }
+                _ => None,
+            }
+        }
+        Kind::VariableDeclaration => {
+            let name = store.name(parent)?;
+            is_identifier(store, name).then_some(name)
+        }
+        _ => None,
+    }
 }
 
 pub fn get_declaration_name(store: &AstStore, declaration: impl AsRef<Node>) -> String {
@@ -3651,7 +4569,7 @@ pub fn get_declaration_from_name(store: &AstStore, name: Option<Node>) -> Option
             }
             if let Some(bin_exp) = store.parent(parent) {
                 if is_binary_expression(store, bin_exp)
-                    && get_assignment_declaration_kind(store, bin_exp) != JSDeclarationKind::None
+                    && get_assignment_declaration_kind(store, bin_exp).is_some()
                     && get_name_of_declaration(store, Some(bin_exp)) == Some(name)
                 {
                     return Some(bin_exp);
@@ -3666,6 +4584,143 @@ pub fn get_declaration_from_name(store: &AstStore, name: Option<Node>) -> Option
         _ => {}
     }
     None
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum JSDeclarationKind {
+    ModuleExports,
+    ExportsProperty,
+    ThisProperty,
+    Property,
+    PrototypeProperty,
+    ObjectDefinePropertyValue,
+    ObjectDefinePropertyExports,
+}
+
+pub fn get_assignment_declaration_kind(store: &AstStore, node: Node) -> Option<JSDeclarationKind> {
+    match store.kind(node) {
+        Kind::BinaryExpression => {
+            if !store
+                .operator_token(node)
+                .is_some_and(|operator| store.kind(operator) == Kind::EqualsToken)
+            {
+                return None;
+            }
+            let left = store.left(node)?;
+            let right = store.right(node)?;
+            if !is_access_expression(store, left) {
+                return None;
+            }
+            if is_in_js_file(store, left) {
+                if is_module_exports_access_expression(store, left)
+                    && !is_exports_identifier(store, right)
+                {
+                    return Some(JSDeclarationKind::ModuleExports);
+                }
+                if store.expression(left).is_some_and(|expression| {
+                    is_module_exports_access_expression(store, expression)
+                        || is_exports_identifier(store, expression)
+                }) && get_element_or_property_access_name(store, left).is_some()
+                {
+                    return Some(JSDeclarationKind::ExportsProperty);
+                }
+                if store
+                    .expression(left)
+                    .is_some_and(|expression| store.kind(expression) == Kind::ThisKeyword)
+                {
+                    return Some(JSDeclarationKind::ThisProperty);
+                }
+            }
+            if store.kind(left) == Kind::PropertyAccessExpression
+                && store.expression(left).is_some_and(|expression| {
+                    is_entity_name_expression_ex(store, expression, is_in_js_file(store, left))
+                })
+                && store
+                    .name(left)
+                    .is_some_and(|name| is_identifier(store, name))
+                || store.kind(left) == Kind::ElementAccessExpression
+                    && store.expression(left).is_some_and(|expression| {
+                        is_entity_name_expression_ex(store, expression, is_in_js_file(store, left))
+                    })
+            {
+                return Some(JSDeclarationKind::Property);
+            }
+        }
+        Kind::CallExpression => {
+            if is_in_js_file(store, node) && is_bindable_object_define_property_call(store, node) {
+                let entity_name = store
+                    .arguments(node)
+                    .and_then(|arguments| arguments.first())?;
+                if is_exports_identifier(store, entity_name)
+                    || is_module_exports_access_expression(store, entity_name)
+                {
+                    return Some(JSDeclarationKind::ObjectDefinePropertyExports);
+                }
+                return Some(JSDeclarationKind::ObjectDefinePropertyValue);
+            }
+        }
+        _ => {}
+    }
+    None
+}
+
+pub fn get_assignment_declaration_property_access_kind(
+    store: &AstStore,
+    lhs: Node,
+) -> Option<JSDeclarationKind> {
+    let expression = store.expression(lhs)?;
+    if store.kind(expression) == Kind::ThisKeyword {
+        return Some(JSDeclarationKind::ThisProperty);
+    }
+    if is_module_exports_access_expression(store, lhs) {
+        return Some(JSDeclarationKind::ModuleExports);
+    }
+    if is_bindable_static_name_expression(store, expression, true) {
+        if is_prototype_access(store, expression) {
+            return Some(JSDeclarationKind::PrototypeProperty);
+        }
+
+        let mut next_to_last = lhs;
+        while store
+            .expression(next_to_last)
+            .is_some_and(|expression| !is_identifier(store, expression))
+        {
+            next_to_last = store.expression(next_to_last).unwrap();
+        }
+        let id = store.expression(next_to_last)?;
+        if (is_exports_identifier(store, id)
+            || is_module_exports_access_expression(store, next_to_last))
+            && is_bindable_static_access_expression(store, lhs, true)
+        {
+            return Some(JSDeclarationKind::ExportsProperty);
+        }
+        if is_bindable_static_name_expression(store, lhs, true)
+            || is_element_access_expression(store, lhs) && is_dynamic_name(store, lhs)
+        {
+            return Some(JSDeclarationKind::Property);
+        }
+    }
+    None
+}
+
+pub fn assignment_declaration_target(store: &AstStore, node: Node) -> Option<Node> {
+    match store.kind(node) {
+        Kind::BinaryExpression => store.left(node),
+        Kind::CallExpression => store
+            .arguments(node)
+            .and_then(|arguments| arguments.first()),
+        _ => None,
+    }
+}
+
+pub fn assignment_declaration_initializer(store: &AstStore, node: Node) -> Option<Node> {
+    match store.kind(node) {
+        Kind::BinaryExpression => store.right(node),
+        Kind::CallExpression => store
+            .arguments(node)
+            .and_then(|arguments| arguments.iter().nth(2)),
+        _ => None,
+    }
 }
 
 pub fn is_write_access_for_reference(store: &AstStore, node: impl AsRef<Node>) -> bool {
@@ -3780,6 +4835,143 @@ pub fn is_super_call(store: &AstStore, node: Node) -> bool {
             .is_some_and(|expression| store.kind(expression) == Kind::SuperKeyword)
 }
 
+pub fn is_import_call(store: &AstStore, node: Node) -> bool {
+    if !is_call_expression(store, node) {
+        return false;
+    }
+    let Some(expression) = store.expression(node) else {
+        return false;
+    };
+    store.kind(expression) == Kind::ImportKeyword
+        || (is_meta_property(store, expression)
+            && store.keyword_token(expression) == Some(Kind::ImportKeyword)
+            && store.text(expression) == "defer")
+}
+
+pub fn require_call_argument(
+    store: &AstStore,
+    node: Node,
+    require_string_literal_like_argument: bool,
+) -> Option<Node> {
+    if !is_call_expression(store, node) {
+        return None;
+    }
+    let expression = store.expression(node)?;
+    if !is_identifier(store, expression) || store.text(expression) != "require" {
+        return None;
+    }
+    let arguments = store.arguments(node)?;
+    if arguments.len() != 1 {
+        return None;
+    }
+    let argument = arguments.first()?;
+    if require_string_literal_like_argument && !is_string_literal_like(store, argument) {
+        return None;
+    }
+    Some(argument)
+}
+
+pub fn is_require_call(
+    store: &AstStore,
+    node: Node,
+    require_string_literal_like_argument: bool,
+) -> bool {
+    require_call_argument(store, node, require_string_literal_like_argument).is_some()
+}
+
+pub fn variable_declaration_for_binding_element(
+    store: &AstStore,
+    binding_element: Node,
+) -> Option<Node> {
+    if !is_binding_element(store, binding_element) {
+        return None;
+    }
+    let binding_pattern = store.parent(binding_element)?;
+    if !is_binding_pattern(store, binding_pattern) {
+        return None;
+    }
+    let declaration = store.parent(binding_pattern)?;
+    is_variable_declaration(store, declaration).then_some(declaration)
+}
+
+fn variable_declaration_for_require_check(store: &AstStore, node: Node) -> Option<Node> {
+    match store.kind(node) {
+        Kind::VariableDeclaration => Some(node),
+        Kind::BindingElement => variable_declaration_for_binding_element(store, node),
+        _ => None,
+    }
+}
+
+fn is_variable_declaration_initialized_with_require(
+    store: &AstStore,
+    declaration: Node,
+    allow_accessed_require: bool,
+) -> bool {
+    if !is_variable_declaration(store, declaration) || !is_in_js_file(store, declaration) {
+        return false;
+    }
+    let Some(mut initializer) = store.initializer(declaration) else {
+        return false;
+    };
+    if allow_accessed_require {
+        initializer = get_leftmost_access_expression(store, initializer);
+    }
+    store
+        .parent(declaration)
+        .and_then(|parent| store.parent(parent))
+        .is_some_and(|parent| {
+            !get_combined_modifier_flags(store, parent).intersects(ModifierFlags::EXPORT)
+        })
+        && store.r#type(declaration).is_none()
+        && is_require_call(store, initializer, true)
+}
+
+pub fn is_variable_declaration_initialized_to_require(store: &AstStore, node: Node) -> bool {
+    variable_declaration_for_require_check(store, node).is_some_and(|declaration| {
+        is_variable_declaration_initialized_with_require(store, declaration, false)
+    })
+}
+
+pub fn is_variable_declaration_initialized_to_bare_or_accessed_require(
+    store: &AstStore,
+    node: Node,
+) -> bool {
+    is_variable_declaration_initialized_with_require(store, node, true)
+}
+
+pub fn get_module_specifier_of_bare_or_accessed_require(
+    store: &AstStore,
+    node: Node,
+) -> Option<Node> {
+    if is_variable_declaration_initialized_with_require(store, node, false) {
+        return store
+            .initializer(node)
+            .and_then(|initializer| require_call_argument(store, initializer, true));
+    }
+    if is_variable_declaration_initialized_with_require(store, node, true) {
+        let leftmost = get_leftmost_access_expression(store, store.initializer(node)?);
+        return require_call_argument(store, leftmost, true);
+    }
+    None
+}
+
+pub fn is_require_variable_statement(store: &AstStore, statement: Node) -> bool {
+    if !is_variable_statement(store, statement) {
+        return false;
+    }
+    let Some(declaration_list) = store.declaration_list(statement) else {
+        return false;
+    };
+    let Some(declarations) = store.declarations(declaration_list) else {
+        return false;
+    };
+    let declarations: Vec<Node> = declarations.iter().collect();
+    !declarations.is_empty()
+        && declarations
+            .into_iter()
+            .all(|declaration| is_variable_declaration_initialized_to_require(store, declaration))
+}
+
 pub fn is_primitive_literal_value(store: &AstStore, node: Node, include_big_int: bool) -> bool {
     match store.kind(node) {
         Kind::TrueKeyword
@@ -3869,6 +5061,14 @@ pub fn is_dynamic_name(store: &AstStore, name: Node) -> bool {
         && !is_signed_numeric_literal(store, expression)
 }
 
+pub fn is_import_meta(store: &AstStore, node: Node) -> bool {
+    store.kind(node) == Kind::MetaProperty
+        && store.keyword_token(node) == Some(Kind::ImportKeyword)
+        && store
+            .name(node)
+            .is_some_and(|name| store.text(name) == "meta")
+}
+
 pub fn has_dynamic_name(store: &AstStore, declaration: Node) -> bool {
     get_name_of_declaration(store, Some(declaration))
         .is_some_and(|name| is_dynamic_name(store, name))
@@ -3900,35 +5100,8 @@ pub fn is_this_parameter(store: &AstStore, node: Node) -> bool {
             .is_some_and(|name| is_this_identifier(store, name))
 }
 
-pub fn is_declaration_statement(store: &AstStore, node: Node) -> bool {
-    matches!(
-        store.kind(node),
-        Kind::FunctionDeclaration
-            | Kind::MissingDeclaration
-            | Kind::ClassDeclaration
-            | Kind::InterfaceDeclaration
-            | Kind::TypeAliasDeclaration
-            | Kind::JSTypeAliasDeclaration
-            | Kind::EnumDeclaration
-            | Kind::ModuleDeclaration
-            | Kind::ImportDeclaration
-            | Kind::JSImportDeclaration
-            | Kind::ImportEqualsDeclaration
-            | Kind::ExportDeclaration
-            | Kind::ExportAssignment
-            | Kind::NamespaceExportDeclaration
-    )
-}
-
 pub fn is_in_js_file(store: &AstStore, node: Node) -> bool {
     store.flags(node).contains(NodeFlags::JAVA_SCRIPT_FILE)
-}
-
-pub fn is_module_or_enum_declaration(store: &AstStore, node: Node) -> bool {
-    matches!(
-        store.kind(node),
-        Kind::ModuleDeclaration | Kind::EnumDeclaration
-    )
 }
 
 pub fn is_part_of_type_query(store: &AstStore, node: Node) -> bool {
@@ -3948,32 +5121,6 @@ pub fn is_part_of_parameter_declaration(store: &AstStore, node: Node) -> bool {
 
 pub fn is_enum_const(store: &AstStore, node: Node) -> bool {
     get_combined_modifier_flags(store, node).intersects(ModifierFlags::CONST)
-}
-
-pub fn expression_is_alias(store: &AstStore, node: Node) -> bool {
-    is_entity_name_expression(store, node) || is_class_expression(store, node)
-}
-
-// Of the form: `const x = require("x")` or `const { x } = require("x")` or with `var` or `let`
-// The variable must not be exported and must not have a type annotation, even a jsdoc one.
-// The initializer must be a call to `require` with a string literal or a string literal-like argument.
-pub fn is_variable_declaration_initialized_to_require(store: &AstStore, node: Node) -> bool {
-    let node = if store.kind(node) == Kind::BindingElement {
-        let Some(parent) = store.parent(node).and_then(|parent| store.parent(parent)) else {
-            return false;
-        };
-        parent
-    } else {
-        node
-    };
-    is_variable_declaration_initialized_with_require_helper(store, node, false)
-}
-
-pub fn is_implicitly_exported_js_type_alias(store: &AstStore, node: Node) -> bool {
-    is_js_type_alias_declaration(store, node)
-        && store
-            .parent(node)
-            .is_some_and(|parent| store.kind(parent) == Kind::SourceFile)
 }
 
 pub fn is_async_function(store: &AstStore, node: Node) -> bool {
@@ -4459,26 +5606,6 @@ pub fn is_type_declaration(store: &AstStore, node: impl AsRef<Node>) -> bool {
     }
 }
 
-pub fn is_type_only_import_declaration(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    let node = *node.as_ref();
-    match store.kind(node) {
-        Kind::ImportSpecifier => {
-            store.is_type_only(node).unwrap_or(false)
-                || store
-                    .parent(node)
-                    .and_then(|parent| store.parent(parent))
-                    .is_some_and(|parent| store.is_type_only(parent).unwrap_or(false))
-        }
-        Kind::NamespaceImport => store
-            .parent(node)
-            .is_some_and(|parent| store.is_type_only(parent).unwrap_or(false)),
-        Kind::ImportClause | Kind::ImportEqualsDeclaration => {
-            store.is_type_only(node).unwrap_or(false)
-        }
-        _ => false,
-    }
-}
-
 pub fn has_modifier(store: &AstStore, node: impl AsRef<Node>, flags: ModifierFlags) -> bool {
     get_combined_modifier_flags(store, *node.as_ref()).intersects(flags)
 }
@@ -4598,11 +5725,15 @@ pub fn get_combined_node_flags(store: &AstStore, node: Node) -> NodeFlags {
 }
 
 pub fn is_var_await_using(store: &AstStore, node: Node) -> bool {
-    get_combined_node_flags(store, node) & NodeFlags::AWAIT_USING == NodeFlags::AWAIT_USING
+    get_combined_node_flags(store, node) & NodeFlags::BLOCK_SCOPED == NodeFlags::AWAIT_USING
 }
 
 pub fn is_var_using(store: &AstStore, node: Node) -> bool {
-    get_combined_node_flags(store, node) & NodeFlags::AWAIT_USING == NodeFlags::USING
+    get_combined_node_flags(store, node) & NodeFlags::BLOCK_SCOPED == NodeFlags::USING
+}
+
+pub fn is_var_const(store: &AstStore, node: Node) -> bool {
+    get_combined_node_flags(store, node) & NodeFlags::BLOCK_SCOPED == NodeFlags::CONST
 }
 
 pub fn get_root_declaration(store: &AstStore, mut node: Node) -> Node {
@@ -4710,41 +5841,6 @@ pub fn get_source_file_node_of_node(store: &AstStore, node: Option<Node>) -> Opt
     }
 }
 
-pub fn is_global_scope_augmentation(store: &AstStore, node: Node) -> bool {
-    is_module_declaration(store, node)
-        && store
-            .keyword(node)
-            .is_some_and(|keyword| keyword == Kind::GlobalKeyword)
-}
-
-pub fn is_module_augmentation_external(store: &AstStore, node: Node) -> bool {
-    let Some(parent) = store.parent(node) else {
-        return false;
-    };
-    match store.kind(parent) {
-        Kind::SourceFile => store
-            .as_source_file(parent)
-            .external_module_indicator
-            .is_some(),
-        Kind::ModuleBlock => {
-            let Some(grandparent) = store.parent(parent) else {
-                return false;
-            };
-            is_ambient_module(store, grandparent)
-                && store
-                    .parent(grandparent)
-                    .is_some_and(|source| store.kind(source) == Kind::SourceFile)
-                && !store.parent(grandparent).is_some_and(|source| {
-                    store
-                        .as_source_file(source)
-                        .external_module_indicator
-                        .is_some()
-                })
-        }
-        _ => false,
-    }
-}
-
 pub fn is_in_top_level_context(store: &AstStore, node: Node) -> bool {
     let mut node = node;
     if store.kind(node) == Kind::Identifier
@@ -4825,28 +5921,6 @@ pub fn get_this_container(
     }
 }
 
-pub fn is_any_import_or_re_export(store: &AstStore, node: Node) -> bool {
-    matches!(
-        store.kind(node),
-        Kind::ImportDeclaration
-            | Kind::JSImportDeclaration
-            | Kind::ImportEqualsDeclaration
-            | Kind::ExportDeclaration
-    )
-}
-
-pub fn is_import_node(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    let node = *node.as_ref();
-    is_any_import_syntax(store, node) || store.kind(node) == Kind::JSImportDeclaration
-}
-
-pub fn is_any_import_syntax(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    matches!(
-        store.kind(*node.as_ref()),
-        Kind::ImportDeclaration | Kind::ImportEqualsDeclaration
-    )
-}
-
 pub fn get_external_module_name(store: &AstStore, node: Node) -> Option<Node> {
     match store.kind(node) {
         Kind::ImportDeclaration | Kind::JSImportDeclaration | Kind::ExportDeclaration => {
@@ -4867,6 +5941,264 @@ pub fn get_external_module_name(store: &AstStore, node: Node) -> Option<Node> {
             is_string_literal(store, name).then_some(name)
         }
         _ => panic!("Unhandled case in get_external_module_name"),
+    }
+}
+
+pub fn is_module_with_string_literal_name(store: &AstStore, node: Node) -> bool {
+    is_module_declaration(store, node)
+        && store
+            .name(node)
+            .is_some_and(|name| is_string_literal(store, name))
+}
+
+pub fn is_global_scope_augmentation(store: &AstStore, node: Node) -> bool {
+    is_module_declaration(store, node)
+        && store
+            .keyword(node)
+            .is_some_and(|keyword| keyword == Kind::GlobalKeyword)
+}
+
+pub fn is_ambient_module(store: &AstStore, node: Node) -> bool {
+    is_module_declaration(store, node)
+        && (is_module_with_string_literal_name(store, node)
+            || is_global_scope_augmentation(store, node))
+}
+
+pub fn is_module_augmentation_external(store: &AstStore, node: Node) -> bool {
+    let Some(parent) = store.parent(node) else {
+        return false;
+    };
+    match store.kind(parent) {
+        Kind::SourceFile => store
+            .as_source_file(parent)
+            .external_module_indicator()
+            .is_some(),
+        Kind::ModuleBlock => {
+            let Some(grandparent) = store.parent(parent) else {
+                return false;
+            };
+            is_ambient_module(store, grandparent)
+                && store
+                    .parent(grandparent)
+                    .is_some_and(|source| is_source_file(store, source))
+                && !store.parent(grandparent).is_some_and(|source| {
+                    store
+                        .as_source_file(source)
+                        .external_module_indicator()
+                        .is_some()
+                })
+        }
+        _ => false,
+    }
+}
+
+pub fn is_external_module_augmentation(store: &AstStore, node: Node) -> bool {
+    is_ambient_module(store, node) && is_module_augmentation_external(store, node)
+}
+
+pub fn module_string_literal_name(store: &AstStore, node: Node) -> Option<Node> {
+    is_module_with_string_literal_name(store, node)
+        .then(|| store.name(node))
+        .flatten()
+}
+
+pub fn is_any_import_syntax(store: &AstStore, node: Node) -> bool {
+    matches!(
+        store.kind(node),
+        Kind::ImportDeclaration | Kind::ImportEqualsDeclaration
+    )
+}
+
+pub fn is_import_node(store: &AstStore, node: Node) -> bool {
+    is_any_import_syntax(store, node) || store.kind(node) == Kind::JSImportDeclaration
+}
+
+pub fn is_any_import_or_re_export(store: &AstStore, node: Node) -> bool {
+    is_import_node(store, node) || is_export_declaration(store, node)
+}
+
+pub fn is_possible_import_or_export_statement(store: &AstStore, node: Node) -> bool {
+    is_import_node(store, node)
+        || is_export_declaration(store, node)
+        || is_export_assignment(store, node)
+        || is_namespace_export_declaration(store, node)
+        || is_module_declaration(store, node)
+}
+
+pub fn is_external_module_indicator(store: &AstStore, node: Node) -> bool {
+    is_any_import_or_re_export(store, node)
+        || is_export_assignment(store, node)
+        || has_syntactic_modifier(store, node, ModifierFlags::EXPORT)
+}
+
+pub fn is_import_export_syntax_kind(kind: Kind) -> bool {
+    matches!(
+        kind,
+        Kind::ImportDeclaration
+            | Kind::JSImportDeclaration
+            | Kind::ImportEqualsDeclaration
+            | Kind::ImportClause
+            | Kind::ImportSpecifier
+            | Kind::NamespaceImport
+            | Kind::ExportDeclaration
+            | Kind::ExportSpecifier
+            | Kind::NamespaceExport
+    )
+}
+
+pub fn is_import_export_syntax(store: &AstStore, node: Node) -> bool {
+    is_import_export_syntax_kind(store.kind(node)) || is_import_call(store, node)
+}
+
+pub fn is_import_declaration_like(store: &AstStore, node: Node) -> bool {
+    matches!(
+        store.kind(node),
+        Kind::ImportDeclaration | Kind::JSImportDeclaration
+    )
+}
+
+pub fn is_import_or_export_specifier(store: &AstStore, node: Node) -> bool {
+    is_import_specifier(store, node) || is_export_specifier(store, node)
+}
+
+pub fn is_type_only_import_declaration(store: &AstStore, node: Node) -> bool {
+    match store.kind(node) {
+        Kind::ImportSpecifier => {
+            store.is_type_only(node).unwrap_or(false)
+                || store
+                    .parent(node)
+                    .and_then(|parent| store.parent(parent))
+                    .is_some_and(|parent| store.is_type_only(parent).unwrap_or(false))
+        }
+        Kind::NamespaceImport => store
+            .parent(node)
+            .is_some_and(|parent| store.is_type_only(parent).unwrap_or(false)),
+        Kind::ImportClause | Kind::ImportEqualsDeclaration => {
+            store.is_type_only(node).unwrap_or(false)
+        }
+        _ => false,
+    }
+}
+
+fn is_type_only_export_declaration(store: &AstStore, node: Node) -> bool {
+    match store.kind(node) {
+        Kind::ExportSpecifier => {
+            store.is_type_only(node).unwrap_or(false)
+                || store
+                    .parent(node)
+                    .and_then(|parent| store.parent(parent))
+                    .is_some_and(|parent| store.is_type_only(parent).unwrap_or(false))
+        }
+        Kind::ExportDeclaration => {
+            store.is_type_only(node).unwrap_or(false)
+                && store.module_specifier(node).is_some()
+                && store.export_clause(node).is_none()
+        }
+        Kind::NamespaceExport => store
+            .parent(node)
+            .is_some_and(|parent| store.is_type_only(parent).unwrap_or(false)),
+        _ => false,
+    }
+}
+
+pub fn is_type_only_import_or_export_declaration(store: &AstStore, node: Node) -> bool {
+    is_type_only_import_declaration(store, node) || is_type_only_export_declaration(store, node)
+}
+
+pub fn is_exclusively_type_only_import_or_export(store: &AstStore, node: Node) -> bool {
+    match store.kind(node) {
+        Kind::ExportDeclaration => store.is_type_only(node).unwrap_or(false),
+        Kind::ImportDeclaration | Kind::JSImportDeclaration => store
+            .import_clause(node)
+            .is_some_and(|import_clause| store.is_type_only(import_clause).unwrap_or(false)),
+        _ => false,
+    }
+}
+
+pub fn is_part_of_type_only_import_or_export_declaration(store: &AstStore, node: Node) -> bool {
+    containing_type_only_import_or_export_declaration(store, node).is_some()
+}
+
+pub fn containing_type_only_import_or_export_declaration(
+    store: &AstStore,
+    node: Node,
+) -> Option<Node> {
+    find_ancestor(store, Some(node), |store, node| {
+        is_type_only_import_or_export_declaration(store, node)
+    })
+}
+
+pub fn is_emittable_import(store: &AstStore, node: Node) -> bool {
+    match store.kind(node) {
+        Kind::ImportDeclaration => store
+            .import_clause(node)
+            .is_some_and(|import_clause| !store.is_type_only(import_clause).unwrap_or(false)),
+        Kind::ExportDeclaration | Kind::ImportEqualsDeclaration => {
+            !store.is_type_only(node).unwrap_or(false)
+        }
+        Kind::CallExpression => is_import_call(store, node),
+        _ => false,
+    }
+}
+
+pub fn import_equals_module_reference(store: &AstStore, node: Node) -> Option<Node> {
+    is_import_equals_declaration(store, node)
+        .then(|| store.module_reference(node))
+        .flatten()
+}
+
+pub fn is_external_module_import_equals_declaration(store: &AstStore, node: Node) -> bool {
+    import_equals_module_reference(store, node)
+        .is_some_and(|module_reference| is_external_module_reference(store, module_reference))
+}
+
+pub fn is_internal_module_import_equals_declaration(store: &AstStore, node: Node) -> bool {
+    is_import_equals_declaration(store, node)
+        && import_equals_module_reference(store, node).is_some()
+        && !is_external_module_import_equals_declaration(store, node)
+}
+
+pub fn get_external_module_import_equals_declaration_expression(
+    store: &AstStore,
+    node: Node,
+) -> Option<Node> {
+    if !is_external_module_import_equals_declaration(store, node) {
+        return None;
+    }
+    import_equals_module_reference(store, node)
+        .and_then(|module_reference| store.expression(module_reference))
+}
+
+pub fn get_namespace_declaration_node(store: &AstStore, node: Node) -> Option<Node> {
+    match store.kind(node) {
+        Kind::ImportDeclaration | Kind::JSImportDeclaration => store
+            .import_clause(node)
+            .and_then(|import_clause| store.named_bindings(import_clause))
+            .filter(|named_bindings| is_namespace_import(store, *named_bindings)),
+        Kind::ImportEqualsDeclaration => Some(node),
+        Kind::ExportDeclaration => store
+            .export_clause(node)
+            .filter(|export_clause| is_namespace_export(store, *export_clause)),
+        _ => None,
+    }
+}
+
+pub fn has_default_import(store: &AstStore, node: Node) -> bool {
+    is_import_declaration_like(store, node)
+        && store
+            .import_clause(node)
+            .is_some_and(|import_clause| store.name(import_clause).is_some())
+}
+
+pub fn get_import_attributes(store: &AstStore, node: Node) -> Option<Node> {
+    match store.kind(node) {
+        Kind::ImportDeclaration | Kind::JSImportDeclaration => {
+            store.optional_node_from_id(store.as_import_declaration(node).attributes)
+        }
+        Kind::ExportDeclaration => {
+            store.optional_node_from_id(store.as_export_declaration(node).attributes)
+        }
+        _ => None,
     }
 }
 
@@ -4894,35 +6226,6 @@ pub fn try_get_import_from_module_specifier(
             }
             let grandparent = store.parent(parent)?;
             is_import_type_node(store, grandparent).then_some(grandparent)
-        }
-        _ => None,
-    }
-}
-
-pub fn get_assigned_name(store: &AstStore, node: impl AsRef<Node>) -> Option<Node> {
-    let node = *node.as_ref();
-    let parent = store.parent(node)?;
-    match store.kind(parent) {
-        Kind::PropertyAssignment | Kind::BindingElement => store.name(parent),
-        Kind::BinaryExpression => {
-            if store.right(parent) != Some(node) {
-                return None;
-            }
-            let left = store.left(parent)?;
-            match store.kind(left) {
-                Kind::Identifier => Some(left),
-                Kind::PropertyAccessExpression => store.name(left),
-                Kind::ElementAccessExpression => {
-                    let argument = store.argument_expression(left)?;
-                    let argument = skip_parentheses(store, argument);
-                    is_string_or_numeric_literal_like(store, argument).then_some(argument)
-                }
-                _ => None,
-            }
-        }
-        Kind::VariableDeclaration => {
-            let name = store.name(parent)?;
-            is_identifier(store, name).then_some(name)
         }
         _ => None,
     }
@@ -5085,16 +6388,6 @@ fn get_import_type_node_literal(store: &AstStore, node: Node) -> Option<Node> {
     None
 }
 
-pub fn is_ambient_module(store: &AstStore, node: Node) -> bool {
-    if !is_module_declaration(store, node) {
-        return false;
-    }
-    let Some(name) = store.name(node) else {
-        return false;
-    };
-    is_string_literal(store, name) || is_global_scope_augmentation(store, node)
-}
-
 pub fn get_external_module_indicator(
     store: &AstStore,
     root: Node,
@@ -5135,35 +6428,18 @@ fn is_file_probably_external_module(
 ) -> Option<Node> {
     let source_file = store.as_source_file(root);
     for statement in store.node_list(source_file.statements).iter() {
-        if is_external_module_indicator_node(store, statement) {
+        if is_external_module_indicator(store, statement) {
             return Some(statement);
         }
     }
     import_meta_if_necessary(store, root, source_flags)
 }
 
-pub fn is_external_module_indicator(store: &AstStore, node: Node) -> bool {
-    has_syntactic_modifier(store, node, ModifierFlags::EXPORT)
-        || (is_import_equals_declaration(store, node)
-            && store
-                .module_reference(node)
-                .is_some_and(|module_reference| {
-                    is_external_module_reference(store, module_reference)
-                }))
-        || is_import_declaration(store, node)
-        || is_export_assignment(store, node)
-        || is_export_declaration(store, node)
-}
-
-fn is_external_module_indicator_node(store: &AstStore, node: Node) -> bool {
-    is_external_module_indicator(store, node)
-}
-
 fn import_meta_if_necessary(store: &AstStore, root: Node, source_flags: NodeFlags) -> Option<Node> {
     if !(store.flags(root) | source_flags).contains(NodeFlags::POSSIBLY_CONTAINS_IMPORT_META) {
         return None;
     }
-    find_child_node(store, root, |store, node| is_import_meta(store, node))
+    find_child_node(store, root, is_import_meta)
 }
 
 fn file_module_from_using_jsx_tag(store: &AstStore, root: Node) -> Option<Node> {
@@ -5251,193 +6527,11 @@ pub fn for_each_dynamic_import_or_require_call(
     false
 }
 
-pub fn is_require_call(
-    store: &AstStore,
-    node: Node,
-    require_string_literal_like_argument: bool,
-) -> bool {
-    if store.kind(node) != Kind::CallExpression {
-        return false;
-    }
-    let Some(expression) = store.expression(node) else {
-        return false;
-    };
-    if !is_identifier(store, expression) || store.text(expression) != "require" {
-        return false;
-    }
-    let Some(arguments) = store.arguments(node) else {
-        return false;
-    };
-    arguments.len() == 1
-        && (!require_string_literal_like_argument
-            || arguments
-                .first()
-                .is_some_and(|arg| is_string_literal_like(store, arg)))
-}
-
-pub fn is_import_call(store: &AstStore, node: Node) -> bool {
-    if store.kind(node) != Kind::CallExpression {
-        return false;
-    }
-    let Some(expression) = store.expression(node) else {
-        return false;
-    };
-    store.kind(expression) == Kind::ImportKeyword
-        || (is_meta_property(store, expression)
-            && store.as_meta_property(expression).keyword_token == Kind::ImportKeyword
-            && store.text(expression) == "defer")
-}
-
 pub fn is_literal_import_type_node(store: &AstStore, node: Node) -> bool {
     if store.kind(node) != Kind::ImportType {
         return false;
     }
     get_import_type_node_literal(store, node).is_some()
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum JSDeclarationKind {
-    None,
-    ModuleExports,
-    ExportsProperty,
-    ThisProperty,
-    Property,
-    Prototype,
-    PrototypeProperty,
-    ObjectDefinePropertyValue,
-    ObjectDefinePropertyExports,
-}
-
-pub fn get_assignment_declaration_kind(store: &AstStore, node: Node) -> JSDeclarationKind {
-    match store.kind(node) {
-        Kind::BinaryExpression => {
-            let binary = store.as_binary_expression(node);
-            let operator = store.node_from_id(binary.operator_token);
-            if store.kind(operator) == Kind::EqualsToken {
-                let left = store.node_from_id(binary.left);
-                let right = store.node_from_id(binary.right);
-                if is_access_expression(store, left) {
-                    if is_in_js_file(store, left) {
-                        if is_module_exports_access_expression(store, left)
-                            && !is_exports_identifier(store, right)
-                        {
-                            return JSDeclarationKind::ModuleExports;
-                        }
-                        if (store.expression(left).is_some_and(|expression| {
-                            is_module_exports_access_expression(store, expression)
-                                || is_exports_identifier(store, expression)
-                        })) && get_element_or_property_access_name(store, left).is_some()
-                        {
-                            return JSDeclarationKind::ExportsProperty;
-                        }
-                        if store
-                            .expression(left)
-                            .is_some_and(|expression| store.kind(expression) == Kind::ThisKeyword)
-                        {
-                            return JSDeclarationKind::ThisProperty;
-                        }
-                    }
-                    if store.kind(left) == Kind::PropertyAccessExpression
-                        && store.expression(left).is_some_and(|expression| {
-                            is_entity_name_expression_ex(
-                                store,
-                                expression,
-                                is_in_js_file(store, left),
-                            )
-                        })
-                        && store
-                            .name(left)
-                            .is_some_and(|name| is_identifier(store, name))
-                        || store.kind(left) == Kind::ElementAccessExpression
-                            && store.expression(left).is_some_and(|expression| {
-                                is_entity_name_expression_ex(
-                                    store,
-                                    expression,
-                                    is_in_js_file(store, left),
-                                )
-                            })
-                    {
-                        return JSDeclarationKind::Property;
-                    }
-                }
-            }
-        }
-        Kind::CallExpression => {
-            if is_in_js_file(store, node) && is_bindable_object_define_property_call(store, node) {
-                let entity_name = store
-                    .arguments(node)
-                    .and_then(|arguments| arguments.first())
-                    .expect("Object.defineProperty call should have arguments");
-                if is_exports_identifier(store, entity_name)
-                    || is_module_exports_access_expression(store, entity_name)
-                {
-                    return JSDeclarationKind::ObjectDefinePropertyExports;
-                }
-                return JSDeclarationKind::ObjectDefinePropertyValue;
-            }
-        }
-        _ => {}
-    }
-    JSDeclarationKind::None
-}
-
-pub fn get_assignment_declaration_property_access_kind(
-    store: &AstStore,
-    lhs: Node,
-) -> JSDeclarationKind {
-    let Some(expression) = store.expression(lhs) else {
-        return JSDeclarationKind::None;
-    };
-    if store.kind(expression) == Kind::ThisKeyword {
-        return JSDeclarationKind::ThisProperty;
-    }
-    if is_module_exports_access_expression(store, lhs) {
-        return JSDeclarationKind::ModuleExports;
-    }
-    if is_bindable_static_name_expression(store, expression, true) {
-        if is_prototype_access(store, expression) {
-            return JSDeclarationKind::PrototypeProperty;
-        }
-
-        let mut next_to_last = lhs;
-        while store
-            .expression(next_to_last)
-            .is_some_and(|expression| !is_identifier(store, expression))
-        {
-            next_to_last = store.expression(next_to_last).unwrap();
-        }
-        let Some(id) = store.expression(next_to_last) else {
-            return JSDeclarationKind::None;
-        };
-        if (store.text(id) == "exports"
-            || store.text(id) == "module"
-                && get_element_or_property_access_name(store, next_to_last)
-                    .is_some_and(|name| store.text(name) == "exports"))
-            && is_bindable_static_access_expression(store, lhs, true)
-        {
-            return JSDeclarationKind::ExportsProperty;
-        }
-        if is_bindable_static_name_expression(store, lhs, true)
-            || is_element_access_expression(store, lhs) && is_dynamic_name(store, lhs)
-        {
-            return JSDeclarationKind::Property;
-        }
-    }
-    JSDeclarationKind::None
-}
-
-pub fn is_exports_identifier(store: &AstStore, node: Node) -> bool {
-    is_identifier(store, node) && store.text(node) == "exports"
-}
-
-pub fn is_module_exports_access_expression(store: &AstStore, node: Node) -> bool {
-    is_property_access_expression(store, node)
-        && store.expression(node).is_some_and(|expression| {
-            is_identifier(store, expression) && store.text(expression) == "module"
-        })
-        && store
-            .name(node)
-            .is_some_and(|name| is_identifier(store, name) && store.text(name) == "exports")
 }
 
 // Does not handle signed numeric names like `a[+0]` - handling those would require handling prefix unary expressions
@@ -5549,49 +6643,6 @@ pub fn get_declaration_container(store: &AstStore, node: Node) -> Option<Node> {
     .and_then(|ancestor| store.parent(ancestor))
 }
 
-pub fn is_alias_symbol_declaration(store: &AstStore, node: Node) -> bool {
-    match store.kind(node) {
-        Kind::ImportEqualsDeclaration
-        | Kind::NamespaceExportDeclaration
-        | Kind::NamespaceImport
-        | Kind::NamespaceExport
-        | Kind::ImportSpecifier
-        | Kind::ExportSpecifier => true,
-        Kind::ImportClause => store.name(node).is_some(),
-        Kind::ExportAssignment => store
-            .expression(node)
-            .is_some_and(|expression| expression_is_alias(store, expression)),
-        Kind::PropertyAccessExpression | Kind::ElementAccessExpression => {
-            store.parent(node).is_some_and(|parent| {
-                store.kind(parent) == Kind::BinaryExpression
-                    && store.left(parent) == Some(node)
-                    && store
-                        .operator_token(parent)
-                        .is_some_and(|operator| store.kind(operator) == Kind::EqualsToken)
-                    && store
-                        .right(parent)
-                        .is_some_and(|right| expression_is_alias(store, right))
-            })
-        }
-        Kind::ShorthandPropertyAssignment => true,
-        Kind::PropertyAssignment => store
-            .initializer(node)
-            .is_some_and(|initializer| expression_is_alias(store, initializer)),
-        Kind::VariableDeclaration | Kind::BindingElement => {
-            is_variable_declaration_initialized_to_require(store, node)
-        }
-        Kind::BinaryExpression => match get_assignment_declaration_kind(store, node) {
-            JSDeclarationKind::ModuleExports
-            | JSDeclarationKind::ExportsProperty
-            | JSDeclarationKind::Property => store
-                .right(node)
-                .is_some_and(|right| expression_is_alias(store, right)),
-            _ => false,
-        },
-        _ => false,
-    }
-}
-
 pub fn is_potentially_executable_node(store: &AstStore, node: Node) -> bool {
     let kind = store.kind(node);
     if Kind::FirstStatement <= kind && kind <= Kind::LastStatement {
@@ -5615,32 +6666,6 @@ pub fn is_potentially_executable_node(store: &AstStore, node: Node) -> bool {
         kind,
         Kind::ClassDeclaration | Kind::EnumDeclaration | Kind::ModuleDeclaration
     )
-}
-
-pub fn is_bindable_object_define_property_call(store: &AstStore, node: Node) -> bool {
-    let Some(arguments) = store.arguments(node) else {
-        return false;
-    };
-    if arguments.len() != 3 {
-        return false;
-    }
-    let Some(expression) = store.expression(node) else {
-        return false;
-    };
-    let Some(object) = store.expression(expression) else {
-        return false;
-    };
-    let Some(name) = store.name(expression) else {
-        return false;
-    };
-    is_property_access_expression(store, expression)
-        && is_identifier(store, object)
-        && store.text(object) == "Object"
-        && store.text(name) == "defineProperty"
-        && arguments
-            .iter()
-            .nth(1)
-            .is_some_and(|arg| is_string_literal_like(store, arg) || is_numeric_literal(store, arg))
 }
 
 pub fn has_same_property_access_name(store: &AstStore, node1: Node, node2: Node) -> bool {
@@ -5738,19 +6763,6 @@ pub fn is_block_scope(store: &AstStore, node: Node, parent: Option<Node>) -> boo
     }
 }
 
-pub fn is_internal_module_import_equals_declaration(
-    store: &AstStore,
-    node: impl AsRef<Node>,
-) -> bool {
-    let node = *node.as_ref();
-    is_import_equals_declaration(store, node)
-        && store
-            .module_reference(node)
-            .is_some_and(|module_reference| {
-                store.kind(module_reference) != Kind::ExternalModuleReference
-            })
-}
-
 pub fn get_first_identifier(store: &AstStore, node: impl AsRef<Node>) -> Option<Node> {
     let node = *node.as_ref();
     match store.kind(node) {
@@ -5785,74 +6797,6 @@ pub fn is_call_like_expression(store: &AstStore, node: impl AsRef<Node>) -> bool
 pub fn is_call_or_new_expression(store: &AstStore, node: impl AsRef<Node>) -> bool {
     let node = *node.as_ref();
     is_call_expression(store, node) || is_new_expression(store, node)
-}
-
-pub fn is_type_only_import_or_export_declaration(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    let node = *node.as_ref();
-    is_type_only_import_declaration(store, node) || is_type_only_export_declaration(store, node)
-}
-
-pub fn is_type_only_export_declaration(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    let node = *node.as_ref();
-    match store.kind(node) {
-        Kind::ExportSpecifier => {
-            store.is_type_only(node).unwrap_or(false)
-                || store
-                    .parent(node)
-                    .and_then(|parent| store.parent(parent))
-                    .is_some_and(|parent| store.is_type_only(parent).unwrap_or(false))
-        }
-        Kind::ExportDeclaration => {
-            store.is_type_only(node).unwrap_or(false)
-                && store.module_specifier(node).is_some()
-                && store.export_clause(node).is_none()
-        }
-        Kind::NamespaceExport => store
-            .parent(node)
-            .is_some_and(|parent| store.is_type_only(parent).unwrap_or(false)),
-        _ => false,
-    }
-}
-
-pub fn is_part_of_type_only_import_or_export_declaration(
-    store: &AstStore,
-    node: impl AsRef<Node>,
-) -> bool {
-    find_ancestor(store, Some(*node.as_ref()), |store, node| {
-        is_type_only_import_or_export_declaration(store, node)
-    })
-    .is_some()
-}
-
-pub fn is_emittable_import(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    let node = *node.as_ref();
-    match store.kind(node) {
-        Kind::ImportDeclaration => store
-            .import_clause(node)
-            .is_some_and(|import_clause| !store.is_type_only(import_clause).unwrap_or(false)),
-        Kind::ExportDeclaration | Kind::ImportEqualsDeclaration => {
-            !store.is_type_only(node).unwrap_or(false)
-        }
-        Kind::CallExpression => is_import_call(store, node),
-        _ => false,
-    }
-}
-
-pub fn is_import_or_import_equals_declaration(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    let node = *node.as_ref();
-    is_import_declaration(store, node) || is_import_equals_declaration(store, node)
-}
-
-pub fn is_exclusively_type_only_import_or_export(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    let node = *node.as_ref();
-    match store.kind(node) {
-        Kind::ExportDeclaration => store.is_type_only(node).unwrap_or(false),
-        Kind::ImportDeclaration | Kind::JSImportDeclaration => store
-            .import_clause(node)
-            .and_then(|import_clause| store.is_type_only(import_clause))
-            .unwrap_or(false),
-        _ => false,
-    }
 }
 
 pub fn is_jsx_opening_like_element(store: &AstStore, node: impl AsRef<Node>) -> bool {
@@ -6178,11 +7122,6 @@ pub fn is_declaration_name_or_import_property_name(
     }
 }
 
-pub fn is_import_or_export_specifier(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    let node = *node.as_ref();
-    is_import_specifier(store, node) || is_export_specifier(store, node)
-}
-
 pub fn is_literal_computed_property_declaration_name(
     store: &AstStore,
     node: impl AsRef<Node>,
@@ -6195,19 +7134,6 @@ pub fn is_literal_computed_property_declaration_name(
                     .parent(parent)
                     .is_some_and(|declaration| is_declaration(store, declaration))
         })
-}
-
-pub fn get_import_attributes(store: &AstStore, node: impl AsRef<Node>) -> Option<Node> {
-    let node = *node.as_ref();
-    match store.kind(node) {
-        Kind::ImportDeclaration | Kind::JSImportDeclaration => {
-            store.optional_node_from_id(store.as_import_declaration(node).attributes)
-        }
-        Kind::ExportDeclaration => {
-            store.optional_node_from_id(store.as_export_declaration(node).attributes)
-        }
-        _ => panic!("Unhandled case in get_import_attributes"),
-    }
 }
 
 pub fn is_type_reference_type(store: &AstStore, node: impl AsRef<Node>) -> bool {
@@ -6279,52 +7205,6 @@ pub fn get_type_annotation_node(store: &AstStore, node: impl AsRef<Node>) -> Opt
     store
         .function_like_data(node)
         .and_then(|data| data.r#type.get())
-}
-
-pub fn is_external_module_augmentation(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    let node = *node.as_ref();
-    is_ambient_module(store, node) && is_module_augmentation_external(store, node)
-}
-
-pub fn get_external_module_import_equals_declaration_expression(
-    store: &AstStore,
-    node: impl AsRef<Node>,
-) -> Option<Node> {
-    let node = *node.as_ref();
-    debug_assert!(is_external_module_import_equals_declaration(store, node));
-    store.module_reference(node).and_then(|module_reference| {
-        (store.kind(module_reference) == Kind::ExternalModuleReference)
-            .then(|| store.expression(module_reference))
-            .flatten()
-    })
-}
-
-pub fn is_external_module_import_equals_declaration(
-    store: &AstStore,
-    node: impl AsRef<Node>,
-) -> bool {
-    let node = *node.as_ref();
-    is_import_equals_declaration(store, node)
-        && store
-            .module_reference(node)
-            .is_some_and(|module_reference| {
-                store.kind(module_reference) == Kind::ExternalModuleReference
-            })
-}
-
-pub fn get_namespace_declaration_node(store: &AstStore, node: impl AsRef<Node>) -> Option<Node> {
-    let node = *node.as_ref();
-    match store.kind(node) {
-        Kind::ImportDeclaration | Kind::JSImportDeclaration => store
-            .import_clause(node)
-            .and_then(|import_clause| store.named_bindings(import_clause))
-            .filter(|named_bindings| is_namespace_import(store, *named_bindings)),
-        Kind::ImportEqualsDeclaration => Some(node),
-        Kind::ExportDeclaration => store
-            .export_clause(node)
-            .filter(|export_clause| is_namespace_export(store, *export_clause)),
-        _ => panic!("Unhandled case in get_namespace_declaration_node"),
-    }
 }
 
 pub fn get_invoked_expression(store: &AstStore, node: impl AsRef<Node>) -> Option<Node> {
@@ -7448,13 +8328,11 @@ impl NodeFactory {
         statements: impl IntoOptionalNodeList,
         end_of_file_token: impl Into<Option<Node>>,
     ) -> Node {
-        let original_flags = self.store.flags(node);
-        let original_loc = self.store.loc(node);
+        let original_metadata = self.store.update_metadata(node);
         self.update_source_file_with_metadata(
             node,
             source_data,
-            original_flags,
-            original_loc,
+            original_metadata,
             statements,
             end_of_file_token,
         )
@@ -7466,8 +8344,7 @@ impl NodeFactory {
         statements: impl IntoOptionalNodeList,
         end_of_file_token: impl Into<Option<Node>>,
     ) -> Node {
-        let original_flags = self.store.flags(node);
-        let original_loc = self.store.loc(node);
+        let original_metadata = self.store.update_metadata(node);
         let statements = statements.into_optional_node_list().map(|statements| {
             statements.assert_store(self.store.store_id());
             statements.id()
@@ -7494,7 +8371,7 @@ impl NodeFactory {
         let payload_idx = self.store.payloads_mut().source_file.alloc(data);
         let payload = NodePayloadId::new(NodePayloadTag::SourceFile, payload_idx.into_raw());
         let updated = self.new_node(Kind::SourceFile, NodeFlags::NONE, payload);
-        self.finish_update_node(updated, node, original_flags, original_loc)
+        self.finish_update_node(updated, node, original_metadata)
     }
 
     pub fn update_source_file_from_store(
@@ -7505,8 +8382,7 @@ impl NodeFactory {
         statements: impl IntoOptionalNodeList,
         end_of_file_token: impl Into<Option<Node>>,
     ) -> Node {
-        let original_flags = source.flags(node);
-        let original_loc = source.loc(node);
+        let original_metadata = source.update_metadata(node);
         let statements = match statements.into_optional_node_list().map(|list| {
             list.assert_store(self.store.store_id());
             list.id()
@@ -7544,7 +8420,7 @@ impl NodeFactory {
         let payload = NodePayloadId::new(NodePayloadTag::SourceFile, payload_idx.into_raw());
         let updated = self.new_node(Kind::SourceFile, NodeFlags::NONE, payload);
         self.restore_source_file_self_references(updated, self_references);
-        self.finish_update_node(updated, node, original_flags, original_loc)
+        self.finish_update_node(updated, node, original_metadata)
     }
 
     pub fn import_foreign_aggregate_nodes_from_store(
@@ -7602,7 +8478,7 @@ impl NodeFactory {
         replacements.append_store_map(&mut recorded);
     }
 
-    fn recorded_clone(&self, node: Node) -> Option<Node> {
+    pub(crate) fn recorded_clone(&self, node: Node) -> Option<Node> {
         self.clone_recorder
             .as_ref()
             .and_then(|recorder| recorder.get_copied_same_store(node))
@@ -7631,8 +8507,7 @@ impl NodeFactory {
         statements: impl IntoOptionalNodeList,
         end_of_file_token: impl Into<Option<Node>>,
     ) -> Node {
-        let original_flags = source.flags(node);
-        let original_loc = source.loc(node);
+        let original_metadata = source.update_metadata(node);
         let statements = match statements.into_optional_node_list().map(|list| {
             list.assert_store(self.store.store_id());
             list.id()
@@ -7659,15 +8534,14 @@ impl NodeFactory {
         let payload_idx = self.store.payloads_mut().source_file.alloc(data);
         let payload = NodePayloadId::new(NodePayloadTag::SourceFile, payload_idx.into_raw());
         let updated = self.new_node(Kind::SourceFile, NodeFlags::NONE, payload);
-        self.finish_update_node(updated, node, original_flags, original_loc)
+        self.finish_update_node(updated, node, original_metadata)
     }
 
     fn update_source_file_with_metadata(
         &mut self,
         node: Node,
         source_data: &SourceFileData,
-        original_flags: NodeFlags,
-        original_loc: core::TextRange,
+        original_metadata: NodeUpdateMetadata,
         statements: impl IntoOptionalNodeList,
         end_of_file_token: impl Into<Option<Node>>,
     ) -> Node {
@@ -7696,7 +8570,7 @@ impl NodeFactory {
         self.store
             .as_source_file_mut(updated)
             .copy_from(source_data);
-        self.finish_update_node(updated, node, original_flags, original_loc)
+        self.finish_update_node(updated, node, original_metadata)
     }
 
     pub fn new_comment_range(
@@ -7714,7 +8588,7 @@ impl NodeFactory {
     }
 }
 
-fn clone_recorder_capacity(source_len: usize, root_count_hint: Option<usize>) -> usize {
+pub(crate) fn clone_recorder_capacity(source_len: usize, root_count_hint: Option<usize>) -> usize {
     const DENSE_SOURCE_LIMIT: usize = 8 * 1024;
     const NODES_PER_ROOT_HINT: usize = 64;
 
@@ -8184,6 +9058,29 @@ impl<'a> SourceFileView<'a> {
         self.store.source_node_list(self.data().statements)
     }
 
+    pub fn statements<T: AstViewNode>(&self) -> impl Iterator<Item = AstRef<'a, T>> + 'a {
+        let store = self.store;
+        self.statements_view()
+            .iter()
+            .filter_map(move |node| store.ast_ref::<T>(node))
+    }
+
+    pub fn find_statements<T: AstViewNode>(
+        &self,
+        mut predicate: impl FnMut(AstRef<'a, T>) -> bool,
+    ) -> Option<AstRef<'a, T>> {
+        self.statements::<T>().find(|child| predicate(*child))
+    }
+
+    pub fn end_of_file_token_node(&self) -> Option<Node> {
+        self.data().end_of_file_token()
+    }
+
+    pub fn end_of_file_token_view<T: AstViewNode>(&self) -> Option<AstRef<'a, T>> {
+        self.end_of_file_token_node()
+            .and_then(|node| self.store.ast_ref::<T>(node))
+    }
+
     pub fn text(&self) -> &str {
         self.data().text()
     }
@@ -8202,6 +9099,18 @@ impl<'a> SourceFileView<'a> {
 
     pub fn path(&self) -> tspath::Path {
         self.data().path()
+    }
+
+    pub fn hash(&self) -> xxh3::Uint128 {
+        self.data().hash()
+    }
+
+    pub fn source_snapshot_id(&self, source_id: SourceId) -> SourceSnapshotId {
+        self.store.source_snapshot_id(self.root, source_id)
+    }
+
+    pub fn build_stable_node_ids(&self, source_id: SourceId) -> StableNodeIdMap {
+        self.store.build_stable_node_ids(self.root, source_id)
     }
 }
 
@@ -8567,6 +9476,14 @@ impl ParsedSourceFile {
     pub fn path(&self) -> tspath::Path {
         self.data().path()
     }
+
+    pub fn build_stable_node_ids(&self, source_id: SourceId) -> StableNodeIdMap {
+        self.store().build_stable_node_ids(self.root, source_id)
+    }
+
+    pub fn source_snapshot_id(&self, source_id: SourceId) -> SourceSnapshotId {
+        self.store().source_snapshot_id(self.root, source_id)
+    }
 }
 
 impl SourceFile {
@@ -8605,6 +9522,10 @@ impl SourceFile {
         files.iter().map(SourceFile::share_readonly).collect()
     }
 
+    pub fn source_file_view(&self) -> SourceFileView<'_> {
+        SourceFileView::new(self.store(), self.root)
+    }
+
     pub fn data(&self) -> &SourceFileData {
         self.store().as_source_file(self.root)
     }
@@ -8623,6 +9544,18 @@ impl SourceFile {
 
     pub fn path(&self) -> tspath::Path {
         self.data().path()
+    }
+
+    pub fn hash(&self) -> xxh3::Uint128 {
+        self.data().hash()
+    }
+
+    pub fn source_snapshot_id(&self, source_id: SourceId) -> SourceSnapshotId {
+        self.store().source_snapshot_id(self.root, source_id)
+    }
+
+    pub fn build_stable_node_ids(&self, source_id: SourceId) -> StableNodeIdMap {
+        self.store().build_stable_node_ids(self.root, source_id)
     }
 }
 
@@ -9214,10 +10147,6 @@ pub fn is_deprecated_declaration(store: &AstStore, declaration: impl AsRef<Node>
     )
 }
 
-pub fn is_var_const(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    get_combined_node_flags(store, *node.as_ref()) & NodeFlags::BLOCK_SCOPED == NodeFlags::CONST
-}
-
 fn get_source_of_assignment(store: &AstStore, node: Node) -> Option<Node> {
     if !is_expression_statement(store, node) {
         return None;
@@ -9237,7 +10166,7 @@ fn get_source_of_defaulted_assignment(store: &AstStore, node: Node) -> Option<No
     }
     let expression = store.expression(node)?;
     if !is_binary_expression(store, expression)
-        || get_assignment_declaration_kind(store, expression) == JSDeclarationKind::None
+        || get_assignment_declaration_kind(store, expression).is_none()
     {
         return None;
     }
@@ -9388,57 +10317,6 @@ pub fn is_proto_setter(store: &AstStore, node: Node) -> bool {
         && store.text(node) == "__proto__"
 }
 
-pub fn is_variable_declaration_initialized_to_bare_or_accessed_require(
-    store: &AstStore,
-    node: impl AsRef<Node>,
-) -> bool {
-    is_variable_declaration_initialized_with_require_helper(store, *node.as_ref(), true)
-}
-
-fn is_variable_declaration_initialized_with_require_helper(
-    store: &AstStore,
-    node: Node,
-    allow_accessed_require: bool,
-) -> bool {
-    if !is_in_js_file(store, node) {
-        return false;
-    }
-    if store.kind(node) != Kind::VariableDeclaration {
-        return false;
-    }
-    let Some(mut initializer) = store.initializer(node) else {
-        return false;
-    };
-    if allow_accessed_require {
-        initializer = get_leftmost_access_expression(store, initializer);
-    }
-    store
-        .parent(node)
-        .and_then(|parent| store.parent(parent))
-        .is_some_and(|parent| {
-            !get_combined_modifier_flags(store, parent).intersects(ModifierFlags::EXPORT)
-        })
-        && store.r#type(node).is_none()
-        && is_require_call(store, initializer, true)
-}
-
-pub fn get_module_specifier_of_bare_or_accessed_require(
-    store: &AstStore,
-    node: impl AsRef<Node>,
-) -> Option<Node> {
-    let node = *node.as_ref();
-    if is_variable_declaration_initialized_with_require_helper(store, node, false) {
-        return store.arguments(store.initializer(node)?)?.first();
-    }
-    if is_variable_declaration_initialized_with_require_helper(store, node, true) {
-        let leftmost = get_leftmost_access_expression(store, store.initializer(node)?);
-        if is_require_call(store, leftmost, true) {
-            return store.arguments(leftmost)?.first();
-        }
-    }
-    None
-}
-
 pub fn get_leftmost_access_expression(store: &AstStore, mut node: Node) -> Node {
     while is_access_expression(store, node) {
         let Some(expression) = store.expression(node) else {
@@ -9447,13 +10325,6 @@ pub fn get_leftmost_access_expression(store: &AstStore, mut node: Node) -> Node 
         node = expression;
     }
     node
-}
-
-pub fn is_import_declaration_or_js_import_declaration(store: &AstStore, node: Node) -> bool {
-    matches!(
-        store.kind(node),
-        Kind::ImportDeclaration | Kind::JSImportDeclaration
-    )
 }
 
 pub fn is_resolution_mode_override_host(store: &AstStore, node: Option<Node>) -> bool {
@@ -9687,14 +10558,6 @@ pub fn is_late_visibility_painted_statement(store: &AstStore, node: impl AsRef<N
     )
 }
 
-pub fn is_expando_property_declaration(store: &AstStore, node: Option<Node>) -> bool {
-    node.is_some_and(|node| {
-        is_property_access_expression(store, node)
-            || is_element_access_expression(store, node)
-            || is_binary_expression(store, node)
-    })
-}
-
 pub fn is_function_or_source_file(store: &AstStore, node: Node) -> bool {
     is_function_like(store, Some(node)) || is_source_file(store, node)
 }
@@ -9880,6 +10743,204 @@ pub fn is_module_identifier(store: &AstStore, node: impl AsRef<Node>) -> bool {
     is_identifier(store, node) && store.text(node) == "module"
 }
 
+pub fn is_exports_identifier(store: &AstStore, node: impl AsRef<Node>) -> bool {
+    let node = *node.as_ref();
+    is_identifier(store, node) && store.text(node) == "exports"
+}
+
+pub fn is_literal_like_element_access(store: &AstStore, node: impl AsRef<Node>) -> bool {
+    let node = *node.as_ref();
+    is_element_access_expression(store, node)
+        && store
+            .argument_expression(node)
+            .is_some_and(|argument| is_string_or_numeric_literal_like(store, argument))
+}
+
+pub fn is_bindable_static_element_access_expression(
+    store: &AstStore,
+    node: impl AsRef<Node>,
+    exclude_this_keyword: bool,
+) -> bool {
+    let node = *node.as_ref();
+    is_literal_like_element_access(store, node)
+        && store.expression(node).is_some_and(|expression| {
+            (!exclude_this_keyword && store.kind(expression) == Kind::ThisKeyword)
+                || is_entity_name_expression(store, expression)
+                || is_bindable_static_access_expression(store, expression, true)
+        })
+}
+
+pub fn is_bindable_static_access_expression(
+    store: &AstStore,
+    node: impl AsRef<Node>,
+    exclude_this_keyword: bool,
+) -> bool {
+    let node = *node.as_ref();
+    (is_property_access_expression(store, node)
+        && store.expression(node).is_some_and(|expression| {
+            (!exclude_this_keyword && store.kind(expression) == Kind::ThisKeyword)
+                || store
+                    .name(node)
+                    .is_some_and(|name| is_identifier(store, name))
+                    && is_bindable_static_name_expression(store, expression, true)
+        }))
+        || is_bindable_static_element_access_expression(store, node, exclude_this_keyword)
+}
+
+pub fn is_prototype_access(store: &AstStore, node: impl AsRef<Node>) -> bool {
+    let node = *node.as_ref();
+    is_bindable_static_access_expression(store, node, false)
+        && get_element_or_property_access_name(store, node)
+            .is_some_and(|name| store.text(name) == "prototype")
+}
+
+pub fn is_bindable_static_name_expression(
+    store: &AstStore,
+    node: impl AsRef<Node>,
+    exclude_this_keyword: bool,
+) -> bool {
+    let node = *node.as_ref();
+    is_entity_name_expression(store, node)
+        || is_bindable_static_access_expression(store, node, exclude_this_keyword)
+}
+
+pub fn is_module_exports_access_expression(store: &AstStore, node: impl AsRef<Node>) -> bool {
+    let node = *node.as_ref();
+    is_access_expression(store, node)
+        && store
+            .expression(node)
+            .is_some_and(|expression| is_module_identifier(store, expression))
+        && get_element_or_property_access_name(store, node)
+            .is_some_and(|name| store.text(name) == "exports")
+}
+
+pub fn is_bindable_object_define_property_call(store: &AstStore, node: impl AsRef<Node>) -> bool {
+    let node = *node.as_ref();
+    let Some(arguments) = store.arguments(node) else {
+        return false;
+    };
+    if arguments.len() != 3 {
+        return false;
+    }
+    let Some(expression) = store.expression(node) else {
+        return false;
+    };
+    if !is_property_access_expression(store, expression) {
+        return false;
+    }
+    store
+        .expression(expression)
+        .is_some_and(|object| is_identifier(store, object) && store.text(object) == "Object")
+        && store
+            .name(expression)
+            .is_some_and(|name| store.text(name) == "defineProperty")
+        && arguments
+            .iter()
+            .nth(1)
+            .is_some_and(|argument| is_string_or_numeric_literal_like(store, argument))
+        && arguments
+            .first()
+            .is_some_and(|argument| is_bindable_static_name_expression(store, argument, true))
+}
+
+pub fn object_define_property_call_property_name_argument(
+    store: &AstStore,
+    node: Node,
+) -> Option<Node> {
+    if !is_call_expression(store, node) {
+        return None;
+    }
+    let arguments = store.arguments(node)?;
+    if arguments.len() != 3 {
+        return None;
+    }
+    let expression = store.expression(node)?;
+    if !is_property_access_expression(store, expression) {
+        return None;
+    }
+    let object = store.expression(expression)?;
+    let name = store.name(expression)?;
+    if !is_identifier(store, object) || store.text(object) != "Object" {
+        return None;
+    }
+    if store.text(name) != "defineProperty" {
+        return None;
+    }
+    let property_name_argument = arguments.iter().nth(1)?;
+    (is_string_or_numeric_literal_like(store, property_name_argument))
+        .then_some(property_name_argument)
+}
+
+pub fn bindable_object_define_property_call_property_name_argument(
+    store: &AstStore,
+    node: Node,
+) -> Option<Node> {
+    if !is_bindable_object_define_property_call(store, node) {
+        return None;
+    }
+    store
+        .arguments(node)
+        .and_then(|arguments| arguments.iter().nth(1))
+}
+
+pub fn is_object_define_property_call(store: &AstStore, node: Node) -> bool {
+    object_define_property_call_property_name_argument(store, node).is_some()
+}
+
+pub fn expression_is_alias(store: &AstStore, node: impl AsRef<Node>) -> bool {
+    let node = *node.as_ref();
+    is_entity_name_expression(store, node) || is_class_expression(store, node)
+}
+
+pub fn is_alias_declaration(store: &AstStore, node: Node) -> bool {
+    match store.kind(node) {
+        Kind::ImportEqualsDeclaration
+        | Kind::NamespaceImport
+        | Kind::ImportSpecifier
+        | Kind::ExportSpecifier => true,
+        Kind::ImportClause => store.name(node).is_some(),
+        _ => false,
+    }
+}
+
+pub fn is_alias_symbol_declaration(store: &AstStore, node: Node) -> bool {
+    match store.kind(node) {
+        Kind::ImportEqualsDeclaration
+        | Kind::NamespaceExportDeclaration
+        | Kind::NamespaceImport
+        | Kind::NamespaceExport
+        | Kind::ImportSpecifier
+        | Kind::ExportSpecifier => true,
+        Kind::ImportClause => store.name(node).is_some(),
+        Kind::ExportAssignment => store
+            .expression(node)
+            .is_some_and(|expression| expression_is_alias(store, expression)),
+        Kind::VariableDeclaration | Kind::BindingElement => {
+            is_variable_declaration_initialized_to_require(store, node)
+        }
+        Kind::BinaryExpression => {
+            matches!(
+                get_assignment_declaration_kind(store, node),
+                Some(JSDeclarationKind::ModuleExports | JSDeclarationKind::ExportsProperty)
+            ) && store
+                .right(node)
+                .is_some_and(|right| expression_is_alias(store, right))
+        }
+        _ => false,
+    }
+}
+
+pub fn is_expando_property_declaration(store: &AstStore, node: Node) -> bool {
+    is_binary_expression(store, node)
+}
+
+pub fn is_implicitly_exported_js_type_alias(store: &AstStore, node: Node) -> bool {
+    is_js_type_alias_declaration(store, node)
+        && store
+            .parent(node)
+            .is_some_and(|parent| is_source_file(store, parent))
+}
+
 pub fn is_const_type_reference(store: &AstStore, node: impl AsRef<Node>) -> bool {
     let node = *node.as_ref();
     is_type_reference_node(store, node)
@@ -10017,59 +11078,6 @@ pub fn entity_name_to_string(
         }
         _ => panic!("Unhandled case in entity_name_to_string"),
     }
-}
-
-pub fn is_bindable_static_access_expression(
-    store: &AstStore,
-    node: impl AsRef<Node>,
-    exclude_this_keyword: bool,
-) -> bool {
-    let node = *node.as_ref();
-    (is_property_access_expression(store, node)
-        && ((!exclude_this_keyword
-            && store
-                .expression(node)
-                .is_some_and(|expression| store.kind(expression) == Kind::ThisKeyword))
-            || (store
-                .name(node)
-                .is_some_and(|name| is_identifier(store, name))
-                && store.expression(node).is_some_and(|expression| {
-                    is_bindable_static_name_expression(store, expression, true)
-                }))))
-        || is_bindable_static_element_access_expression(store, node, exclude_this_keyword)
-}
-
-fn is_bindable_static_element_access_expression(
-    store: &AstStore,
-    node: Node,
-    exclude_this_keyword: bool,
-) -> bool {
-    is_element_access_expression(store, node)
-        && store
-            .argument_expression(node)
-            .is_some_and(|argument| is_string_or_numeric_literal_like(store, argument))
-        && store.expression(node).is_some_and(|expression| {
-            (!exclude_this_keyword && store.kind(expression) == Kind::ThisKeyword)
-                || is_entity_name_expression(store, expression)
-                || is_bindable_static_access_expression(store, expression, true)
-        })
-}
-
-pub fn is_prototype_access(store: &AstStore, node: impl AsRef<Node>) -> bool {
-    let node = *node.as_ref();
-    is_bindable_static_access_expression(store, node, false)
-        && get_element_or_property_access_name(store, node)
-            .is_some_and(|name| store.text(name) == "prototype")
-}
-
-pub fn is_bindable_static_name_expression(
-    store: &AstStore,
-    node: impl AsRef<Node>,
-    exclude_this_keyword: bool,
-) -> bool {
-    let node = *node.as_ref();
-    is_entity_name_expression(store, node)
-        || is_bindable_static_access_expression(store, node, exclude_this_keyword)
 }
 
 pub fn replace_modifiers(
@@ -10244,6 +11252,99 @@ mod tests {
         }
     }
 
+    fn empty_node_list(factory: &mut NodeFactory) -> NodeList {
+        factory.new_node_list(
+            core::undefined_text_range(),
+            core::undefined_text_range(),
+            std::iter::empty::<Node>(),
+        )
+    }
+
+    fn new_named_function(factory: &mut NodeFactory, name: &str, loc: core::TextRange) -> Node {
+        let name_node = factory.new_identifier(name);
+        let parameters = empty_node_list(factory);
+        let function = factory.new_function_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(name_node),
+            None::<NodeList>,
+            parameters,
+            None::<Node>,
+            None::<Node>,
+            None::<Node>,
+        );
+        factory.set_loc(function, loc);
+        factory.set_loc(
+            name_node,
+            core::TextRange::new(loc.pos() + 9, loc.pos() + 9 + name.len() as i32),
+        );
+        function
+    }
+
+    fn new_named_function_with_parameter(
+        factory: &mut NodeFactory,
+        name: &str,
+        parameter_name: &str,
+        loc: core::TextRange,
+    ) -> (Node, Node) {
+        let name_node = factory.new_identifier(name);
+        let parameter_name_node = factory.new_identifier(parameter_name);
+        let parameter = factory.new_parameter_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(parameter_name_node),
+            None::<Node>,
+            None::<Node>,
+            None::<Node>,
+        );
+        let parameters = factory.new_node_list(
+            core::TextRange::new(loc.pos() + 10, loc.pos() + 20),
+            core::TextRange::new(loc.pos() + 10, loc.pos() + 20),
+            [parameter],
+        );
+        let function = factory.new_function_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(name_node),
+            None::<NodeList>,
+            parameters,
+            None::<Node>,
+            None::<Node>,
+            None::<Node>,
+        );
+        factory.set_loc(function, loc);
+        factory.set_loc(
+            name_node,
+            core::TextRange::new(loc.pos() + 9, loc.pos() + 9 + name.len() as i32),
+        );
+        factory.set_loc(
+            parameter,
+            core::TextRange::new(
+                loc.pos() + 10 + name.len() as i32,
+                loc.pos() + 10 + name.len() as i32 + parameter_name.len() as i32,
+            ),
+        );
+        factory.set_loc(parameter_name_node, factory.store().loc(parameter));
+        (function, parameter)
+    }
+
+    fn new_source_file_with_functions(
+        factory: &mut NodeFactory,
+        path: &str,
+        functions: impl IntoIterator<Item = Node>,
+    ) -> Node {
+        let statements = factory.new_node_list(
+            core::TextRange::new(0, 100),
+            core::TextRange::new(0, 100),
+            functions,
+        );
+        let end_of_file = factory.new_token(Kind::EndOfFile);
+        let source_file =
+            factory.new_source_file(parse_options(path), "", statements, Some(end_of_file));
+        factory.set_loc(end_of_file, core::TextRange::new(100, 100));
+        source_file
+    }
+
     #[test]
     fn clone_recorder_capacity_should_stay_conservative_for_large_sparse_sources() {
         assert_eq!(clone_recorder_capacity(32, None), 33);
@@ -10304,6 +11405,46 @@ mod tests {
     }
 
     #[test]
+    fn source_file_view_typed_child_helpers_cast_statements_and_eof() {
+        let mut factory = NodeFactory::default();
+        let expression = factory.new_identifier("value");
+        let statement = factory.new_expression_statement(expression);
+        let statements = factory.new_node_list(
+            core::TextRange::new(0, 12),
+            core::TextRange::new(0, 12),
+            [statement],
+        );
+        let end_of_file = factory.new_token(Kind::EndOfFile);
+        let root = factory.new_source_file(
+            parse_options("/source.ts"),
+            "value;",
+            statements,
+            Some(end_of_file),
+        );
+        let file = factory.finish_parsed_source_file(root, ParsedSourceFileMetadata::default());
+        let view = file.source_file_view();
+
+        let statement_nodes = view
+            .statements::<AstStatementView>()
+            .map(|child| child.node())
+            .collect::<Vec<_>>();
+        assert_eq!(statement_nodes, vec![statement]);
+
+        let found_statement = view
+            .find_statements::<ExpressionStatementView>(|child| {
+                child.kind() == Kind::ExpressionStatement
+            })
+            .expect("expected expression statement");
+        assert_eq!(found_statement.node(), statement);
+
+        assert_eq!(view.end_of_file_token_node(), Some(end_of_file));
+        let eof = view
+            .end_of_file_token_view::<AstTokenView>()
+            .expect("expected EOF token");
+        assert_eq!(eof.node(), end_of_file);
+    }
+
+    #[test]
     fn traversal_preserved_lists_match_cross_store_outputs() {
         let mut source_factory = NodeFactory::default();
         let expression = source_factory.new_identifier("value");
@@ -10328,6 +11469,1006 @@ mod tests {
             Some(source_list.id()),
             Some(output_list)
         ));
+    }
+
+    fn child_descriptor<'a>(layout: &'a AstNodeLayout, name: &str) -> &'a AstChildFieldDescriptor {
+        layout
+            .child_fields
+            .iter()
+            .find(|field| field.name == name)
+            .expect("generated layout should contain child field")
+    }
+
+    #[test]
+    fn generated_layout_descriptors_capture_source_file_traversal_roles() {
+        let layout = ast_node_layout_for_payload_tag(NodePayloadTag::SourceFile)
+            .expect("SourceFile should have a generated layout");
+
+        assert_eq!(layout.kinds, &[Kind::SourceFile]);
+        assert_eq!(layout.child_fields.len(), 2);
+        assert_eq!(
+            child_descriptor(layout, "statements"),
+            &AstChildFieldDescriptor {
+                id: AstChildFieldId::Statements,
+                name: "statements",
+                kind: AstChildFieldKind::NodeList,
+                visitor_role: AstVisitorRole::Nodes,
+                visit_route: AstVisitRoute::VisitTopLevelStatements,
+            }
+        );
+        assert_eq!(
+            child_descriptor(layout, "end_of_file_token"),
+            &AstChildFieldDescriptor {
+                id: AstChildFieldId::EndOfFileToken,
+                name: "end_of_file_token",
+                kind: AstChildFieldKind::OptionalNode,
+                visitor_role: AstVisitorRole::Node,
+                visit_route: AstVisitRoute::VisitToken,
+            }
+        );
+    }
+
+    #[test]
+    fn generated_layout_descriptors_capture_special_traversal_roles() {
+        let function_layout = ast_node_layout_for_payload_tag(NodePayloadTag::FunctionDeclaration)
+            .expect("FunctionDeclaration should have a generated layout");
+        assert_eq!(
+            child_descriptor(function_layout, "parameters").visit_route,
+            AstVisitRoute::VisitParameters
+        );
+        assert_eq!(
+            child_descriptor(function_layout, "body").visit_route,
+            AstVisitRoute::VisitFunctionBody
+        );
+
+        let labeled_layout = ast_node_layout_for_payload_tag(NodePayloadTag::LabeledStatement)
+            .expect("LabeledStatement should have a generated layout");
+        assert_eq!(
+            child_descriptor(labeled_layout, "statement").visit_route,
+            AstVisitRoute::VisitEmbeddedStatement
+        );
+
+        let syntax_list_layout = ast_node_layout_for_payload_tag(NodePayloadTag::SyntaxList)
+            .expect("SyntaxList should have a generated layout");
+        assert_eq!(
+            child_descriptor(syntax_list_layout, "children"),
+            &AstChildFieldDescriptor {
+                id: AstChildFieldId::Children,
+                name: "children",
+                kind: AstChildFieldKind::RawNodeSlice,
+                visitor_role: AstVisitorRole::Node,
+                visit_route: AstVisitRoute::VisitNode,
+            }
+        );
+    }
+
+    #[test]
+    fn stable_node_ids_should_include_source_backed_nodes() {
+        let mut factory = NodeFactory::default();
+        let function_name = factory.new_identifier("f");
+        let parameter_name = factory.new_identifier("arg");
+        let parameter = factory.new_parameter_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(parameter_name),
+            None::<Node>,
+            None::<Node>,
+            None::<Node>,
+        );
+        let parameters = factory.new_node_list(
+            core::TextRange::new(11, 14),
+            core::TextRange::new(11, 14),
+            [parameter],
+        );
+        let expression = factory.new_identifier("value");
+        let statement = factory.new_expression_statement(expression);
+        let body_statements = factory.new_node_list(
+            core::TextRange::new(17, 22),
+            core::TextRange::new(17, 22),
+            [statement],
+        );
+        let body = factory.new_block(body_statements, false);
+        let function = factory.new_function_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(function_name),
+            None::<NodeList>,
+            parameters,
+            None::<Node>,
+            None::<Node>,
+            Some(body),
+        );
+        let statements = factory.new_node_list(
+            core::TextRange::new(0, 24),
+            core::TextRange::new(0, 24),
+            [function],
+        );
+        let end_of_file = factory.new_token(Kind::EndOfFile);
+        let source_file = factory.new_source_file(
+            parse_options("/stable.ts"),
+            "function f(arg) { value }",
+            statements,
+            Some(end_of_file),
+        );
+
+        factory.set_loc(function, core::TextRange::new(0, 24));
+        factory.set_loc(function_name, core::TextRange::new(9, 10));
+        factory.set_loc(parameter, core::TextRange::new(11, 14));
+        factory.set_loc(parameter_name, core::TextRange::new(11, 14));
+        factory.set_loc(body, core::TextRange::new(16, 24));
+        factory.set_loc(statement, core::TextRange::new(18, 23));
+        factory.set_loc(expression, core::TextRange::new(18, 23));
+        factory.set_loc(end_of_file, core::TextRange::new(24, 24));
+
+        let source_id = SourceId::from_u32(7);
+        let stable_ids = factory
+            .store()
+            .build_stable_node_ids(source_file, source_id);
+        let local = |node| {
+            stable_ids
+                .local_id(node)
+                .expect("node should have a stable local id")
+                .as_u32()
+        };
+
+        assert_eq!(stable_ids.source_id(), source_id);
+        assert_eq!(
+            stable_ids.source_snapshot_id(),
+            SourceSnapshotId::new(source_id, 0)
+        );
+        assert_eq!(stable_ids.source_hash(), 0);
+        assert!(stable_ids.is_current_for_source_snapshot(SourceSnapshotId::new(source_id, 0)));
+        assert_eq!(stable_ids.root(), source_file);
+        assert_eq!(stable_ids.iter().count(), stable_ids.len());
+        assert_eq!(
+            stable_ids.stable_id(source_file),
+            Some(StableNodeId::new(source_id, LocalAstId::from_u32(0)))
+        );
+        assert_eq!(
+            stable_ids.node_for_local_id(LocalAstId::from_u32(0)),
+            Some(source_file)
+        );
+        assert!(stable_ids.contains_node(function));
+        assert!(stable_ids.contains_node(function_name));
+        assert!(stable_ids.contains_node(parameter));
+        assert!(stable_ids.contains_node(parameter_name));
+        assert!(stable_ids.contains_node(body));
+        assert!(stable_ids.contains_node(statement));
+        assert!(stable_ids.contains_node(expression));
+        assert_ne!(local(function), local(function_name));
+        assert_eq!(stable_ids.stable_id(end_of_file), None);
+    }
+
+    #[test]
+    fn stable_node_ids_should_keep_named_declaration_id_when_node_is_inserted_before_it() {
+        let source_id = SourceId::from_u32(11);
+
+        let mut old_factory = NodeFactory::default();
+        let old_keep = new_named_function(&mut old_factory, "keep", core::TextRange::new(20, 35));
+        let old_source_file =
+            new_source_file_with_functions(&mut old_factory, "/stable.ts", [old_keep]);
+        let old_stable_ids = old_factory
+            .store()
+            .build_stable_node_ids(old_source_file, source_id);
+
+        let mut new_factory = NodeFactory::default();
+        let new_added = new_named_function(&mut new_factory, "added", core::TextRange::new(0, 18));
+        let new_keep = new_named_function(&mut new_factory, "keep", core::TextRange::new(40, 55));
+        let new_source_file =
+            new_source_file_with_functions(&mut new_factory, "/stable.ts", [new_added, new_keep]);
+        let new_stable_ids = new_factory
+            .store()
+            .build_stable_node_ids(new_source_file, source_id);
+
+        assert_eq!(
+            old_stable_ids.local_id(old_keep),
+            new_stable_ids.local_id(new_keep)
+        );
+    }
+
+    #[test]
+    fn stable_node_ids_should_keep_same_named_child_id_when_same_name_is_inserted_in_other_container()
+     {
+        let source_id = SourceId::from_u32(12);
+
+        let mut old_factory = NodeFactory::default();
+        let (old_left, old_left_parameter) = new_named_function_with_parameter(
+            &mut old_factory,
+            "left",
+            "value",
+            core::TextRange::new(0, 20),
+        );
+        let (old_right, old_right_parameter) = new_named_function_with_parameter(
+            &mut old_factory,
+            "right",
+            "value",
+            core::TextRange::new(25, 50),
+        );
+        let old_source_file =
+            new_source_file_with_functions(&mut old_factory, "/stable.ts", [old_left, old_right]);
+        let old_stable_ids = old_factory
+            .store()
+            .build_stable_node_ids(old_source_file, source_id);
+
+        let mut new_factory = NodeFactory::default();
+        let (new_added, _new_added_parameter) = new_named_function_with_parameter(
+            &mut new_factory,
+            "added",
+            "value",
+            core::TextRange::new(0, 20),
+        );
+        let (new_left, new_left_parameter) = new_named_function_with_parameter(
+            &mut new_factory,
+            "left",
+            "value",
+            core::TextRange::new(25, 45),
+        );
+        let (new_right, new_right_parameter) = new_named_function_with_parameter(
+            &mut new_factory,
+            "right",
+            "value",
+            core::TextRange::new(50, 75),
+        );
+        let new_source_file = new_source_file_with_functions(
+            &mut new_factory,
+            "/stable.ts",
+            [new_added, new_left, new_right],
+        );
+        let new_stable_ids = new_factory
+            .store()
+            .build_stable_node_ids(new_source_file, source_id);
+
+        assert_ne!(
+            old_stable_ids.local_id(old_left_parameter),
+            old_stable_ids.local_id(old_right_parameter)
+        );
+        assert_eq!(
+            old_stable_ids.local_id(old_left_parameter),
+            new_stable_ids.local_id(new_left_parameter)
+        );
+        assert_eq!(
+            old_stable_ids.local_id(old_right_parameter),
+            new_stable_ids.local_id(new_right_parameter)
+        );
+    }
+
+    #[test]
+    fn stable_node_ids_should_skip_synthetic_source_children() {
+        let mut factory = NodeFactory::default();
+        let synthetic_expression = factory.new_identifier("synthetic");
+        let statement = factory.new_expression_statement(synthetic_expression);
+        let statements = factory.new_node_list(
+            core::TextRange::new(0, 9),
+            core::TextRange::new(0, 9),
+            [statement],
+        );
+        let end_of_file = factory.new_token(Kind::EndOfFile);
+        let source_file = factory.new_source_file(
+            parse_options("/synthetic.ts"),
+            "synthetic",
+            statements,
+            Some(end_of_file),
+        );
+
+        factory.set_loc(statement, core::TextRange::new(0, 9));
+        factory.set_loc(end_of_file, core::TextRange::new(9, 9));
+
+        let stable_ids = factory
+            .store()
+            .build_stable_node_ids(source_file, SourceId::from_u32(8));
+
+        assert!(stable_ids.contains_node(source_file));
+        assert!(stable_ids.contains_node(statement));
+        assert!(!stable_ids.contains_node(synthetic_expression));
+        assert!(!stable_ids.contains_node(end_of_file));
+    }
+
+    #[test]
+    fn set_parent_in_children_should_use_descriptor_child_fields() {
+        let mut factory = NodeFactory::default();
+        let function_name = factory.new_identifier("f");
+        let parameter_name = factory.new_identifier("arg");
+        let parameter = factory.new_parameter_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(parameter_name),
+            None::<Node>,
+            None::<Node>,
+            None::<Node>,
+        );
+        let parameters = factory.new_node_list(
+            core::undefined_text_range(),
+            core::undefined_text_range(),
+            [parameter],
+        );
+        let body_statements = empty_node_list(&mut factory);
+        let body = factory.new_block(body_statements, false);
+        let function = factory.new_function_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(function_name),
+            None::<NodeList>,
+            parameters,
+            None::<Node>,
+            None::<Node>,
+            Some(body),
+        );
+
+        factory.store_mut().set_parent_in_children(function);
+
+        assert_eq!(factory.store().parent(function_name), Some(function));
+        assert_eq!(factory.store().parent(parameter), Some(function));
+        assert_eq!(factory.store().parent(body), Some(function));
+        assert_eq!(factory.store().parent(parameter_name), None);
+    }
+
+    #[test]
+    fn set_parent_recursive_should_use_descriptor_child_fields() {
+        let mut factory = NodeFactory::default();
+        let function_name = factory.new_identifier("f");
+        let parameter_name = factory.new_identifier("arg");
+        let parameter = factory.new_parameter_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(parameter_name),
+            None::<Node>,
+            None::<Node>,
+            None::<Node>,
+        );
+        let parameters = factory.new_node_list(
+            core::undefined_text_range(),
+            core::undefined_text_range(),
+            [parameter],
+        );
+        let expression = factory.new_identifier("value");
+        let statement = factory.new_expression_statement(Some(expression));
+        let body_statements = factory.new_node_list(
+            core::undefined_text_range(),
+            core::undefined_text_range(),
+            [statement],
+        );
+        let body = factory.new_block(body_statements, false);
+        let function = factory.new_function_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(function_name),
+            None::<NodeList>,
+            parameters,
+            None::<Node>,
+            None::<Node>,
+            Some(body),
+        );
+
+        factory.store_mut().set_parent_recursive(function);
+
+        assert_eq!(factory.store().parent(function_name), Some(function));
+        assert_eq!(factory.store().parent(parameter), Some(function));
+        assert_eq!(factory.store().parent(parameter_name), Some(parameter));
+        assert_eq!(factory.store().parent(body), Some(function));
+        assert_eq!(factory.store().parent(statement), Some(body));
+        assert_eq!(factory.store().parent(expression), Some(statement));
+    }
+
+    #[test]
+    fn child_parent_issues_should_be_empty_for_descriptor_wired_tree() {
+        let mut factory = NodeFactory::default();
+        let function_name = factory.new_identifier("f");
+        let parameter_name = factory.new_identifier("arg");
+        let parameter = factory.new_parameter_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(parameter_name),
+            None::<Node>,
+            None::<Node>,
+            None::<Node>,
+        );
+        let parameters = factory.new_node_list(
+            core::undefined_text_range(),
+            core::undefined_text_range(),
+            [parameter],
+        );
+        let body_statements = empty_node_list(&mut factory);
+        let body = factory.new_block(body_statements, false);
+        let function = factory.new_function_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(function_name),
+            None::<NodeList>,
+            parameters,
+            None::<Node>,
+            None::<Node>,
+            Some(body),
+        );
+
+        factory.store_mut().set_parent_recursive(function);
+
+        assert!(factory.store().child_parent_issues(function).is_empty());
+    }
+
+    #[test]
+    fn child_parent_issues_should_report_missing_original_parent() {
+        let mut factory = NodeFactory::default();
+        let function_name = factory.new_identifier("f");
+        let body_statements = empty_node_list(&mut factory);
+        let body = factory.new_block(body_statements, false);
+        let parameters = empty_node_list(&mut factory);
+        let function = factory.new_function_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(function_name),
+            None::<NodeList>,
+            parameters,
+            None::<Node>,
+            None::<Node>,
+            Some(body),
+        );
+
+        let issue = factory
+            .store()
+            .first_child_parent_issue(function)
+            .expect("function name should be missing its original parent");
+
+        assert_eq!(issue.parent(), function);
+        assert_eq!(issue.child(), function_name);
+        assert_eq!(issue.field_name(), "name");
+        assert_eq!(issue.child_span_kind(), AstChildSourceSpanKind::Node);
+        assert_eq!(issue.index(), None);
+        assert_eq!(issue.kind(), AstChildParentIssueKind::MissingOriginalParent);
+    }
+
+    #[test]
+    fn child_parent_issues_should_report_wrong_original_parent() {
+        let mut factory = NodeFactory::default();
+        let function_name = factory.new_identifier("f");
+        let parameter_name = factory.new_identifier("arg");
+        let parameter = factory.new_parameter_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(parameter_name),
+            None::<Node>,
+            None::<Node>,
+            None::<Node>,
+        );
+        let parameters = factory.new_node_list(
+            core::undefined_text_range(),
+            core::undefined_text_range(),
+            [parameter],
+        );
+        let body_statements = empty_node_list(&mut factory);
+        let body = factory.new_block(body_statements, false);
+        let function = factory.new_function_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(function_name),
+            None::<NodeList>,
+            parameters,
+            None::<Node>,
+            None::<Node>,
+            Some(body),
+        );
+
+        factory.store_mut().set_parent_recursive(function);
+        factory.store_mut().set_parent(parameter, Some(body));
+
+        let issue = factory
+            .store()
+            .first_child_parent_issue(function)
+            .expect("parameter should have the wrong original parent");
+
+        assert_eq!(issue.parent(), function);
+        assert_eq!(issue.child(), parameter);
+        assert_eq!(issue.field_name(), "parameters");
+        assert_eq!(
+            issue.child_span_kind(),
+            AstChildSourceSpanKind::NodeListElement
+        );
+        assert_eq!(issue.index(), Some(0));
+        assert_eq!(
+            issue.kind(),
+            AstChildParentIssueKind::WrongOriginalParent {
+                actual_parent: body
+            }
+        );
+    }
+
+    #[test]
+    fn deep_clone_should_use_descriptor_child_fields() {
+        let mut source_factory = NodeFactory::default();
+        let function_name = source_factory.new_identifier("f");
+        let parameter_name = source_factory.new_identifier("arg");
+        let parameter = source_factory.new_parameter_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(parameter_name),
+            None::<Node>,
+            None::<Node>,
+            None::<Node>,
+        );
+        let parameters = source_factory.new_node_list(
+            core::undefined_text_range(),
+            core::undefined_text_range(),
+            [parameter],
+        );
+        let body_statements = empty_node_list(&mut source_factory);
+        let body = source_factory.new_block(body_statements, false);
+        let function = source_factory.new_function_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(function_name),
+            None::<NodeList>,
+            parameters,
+            None::<Node>,
+            None::<Node>,
+            Some(body),
+        );
+
+        let mut target_factory = NodeFactory::default();
+        let cloned = target_factory
+            .deep_clone_node_from_store_preserve_location(source_factory.store(), function);
+        let target = target_factory.store();
+        let cloned_name = target.name(cloned).expect("function name should be cloned");
+        let cloned_parameters = target
+            .parameters(cloned)
+            .expect("function parameters should be cloned");
+        let cloned_parameter = cloned_parameters
+            .iter()
+            .next()
+            .expect("parameter should be cloned");
+        let cloned_parameter_name = target
+            .name(cloned_parameter)
+            .expect("parameter name should be cloned");
+        let cloned_body = target.body(cloned).expect("function body should be cloned");
+
+        assert_ne!(cloned, function);
+        assert_eq!(cloned.store_id(), target.store_id());
+        assert_eq!(cloned_name.store_id(), target.store_id());
+        assert_eq!(cloned_parameter.store_id(), target.store_id());
+        assert_eq!(cloned_parameter_name.store_id(), target.store_id());
+        assert_eq!(cloned_body.store_id(), target.store_id());
+        assert_eq!(target.text(cloned_name), "f");
+        assert_eq!(target.text(cloned_parameter_name), "arg");
+    }
+
+    #[test]
+    fn update_for_statement_should_use_descriptor_child_fields_for_noop_comparison() {
+        let mut factory = NodeFactory::default();
+        let initializer = factory.new_identifier("i");
+        let condition = factory.new_identifier("condition");
+        let incrementor = factory.new_identifier("next");
+        let statement_expression = factory.new_identifier("body");
+        let statement = factory.new_expression_statement(statement_expression);
+        let for_statement = factory.new_for_statement(
+            Some(initializer),
+            Some(condition),
+            Some(incrementor),
+            Some(statement),
+        );
+
+        let unchanged = factory.update_for_statement(
+            for_statement,
+            Some(initializer),
+            Some(condition),
+            Some(incrementor),
+            Some(statement),
+        );
+
+        assert_eq!(unchanged, for_statement);
+
+        let replacement_initializer = factory.new_identifier("replacement");
+        let changed = factory.update_for_statement(
+            for_statement,
+            Some(replacement_initializer),
+            Some(condition),
+            Some(incrementor),
+            Some(statement),
+        );
+
+        assert_ne!(changed, for_statement);
+        assert_eq!(
+            factory.store().initializer(changed),
+            Some(replacement_initializer)
+        );
+    }
+
+    #[test]
+    fn debug_tree_should_use_descriptor_child_fields() {
+        let mut factory = NodeFactory::default();
+        let initializer = factory.new_identifier("i");
+        let condition = factory.new_identifier("condition");
+        let incrementor = factory.new_identifier("next");
+        let statement_expression = factory.new_identifier("body");
+        let statement = factory.new_expression_statement(statement_expression);
+        let for_statement = factory.new_for_statement(
+            Some(initializer),
+            Some(condition),
+            Some(incrementor),
+            Some(statement),
+        );
+
+        assert_eq!(
+            factory.store().debug_tree(for_statement),
+            "\
+ForStatement
+  initializer:
+    Identifier
+  condition:
+    Identifier
+  incrementor:
+    Identifier
+  statement:
+    ExpressionStatement
+      expression:
+        Identifier
+"
+        );
+    }
+
+    #[test]
+    fn debug_tree_should_preserve_raw_node_slice_empty_slots() {
+        let mut factory = NodeFactory::default();
+        let first = factory.new_identifier("first");
+        let second = factory.new_identifier("second");
+        let children = factory.new_raw_node_slice([Some(first), None, Some(second)]);
+        let syntax_list = factory.new_syntax_list_from_raw(children);
+
+        assert_eq!(
+            factory.store().debug_tree(syntax_list),
+            "\
+SyntaxList
+  children:
+    [0]
+      Identifier
+    [1]: <none>
+    [2]
+      Identifier
+"
+        );
+    }
+
+    #[test]
+    fn debug_tree_with_stable_node_ids_should_label_source_backed_nodes() {
+        let mut factory = NodeFactory::default();
+        let expression = factory.new_identifier("value");
+        let statement = factory.new_expression_statement(expression);
+        let statements = factory.new_node_list(
+            core::TextRange::new(0, 5),
+            core::TextRange::new(0, 5),
+            [statement],
+        );
+        let end_of_file = factory.new_token(Kind::EndOfFile);
+        let source_file = factory.new_source_file(
+            parse_options("/stable.ts"),
+            "value",
+            statements,
+            Some(end_of_file),
+        );
+        factory.set_loc(statement, core::TextRange::new(0, 5));
+        factory.set_loc(expression, core::TextRange::new(0, 5));
+        factory.set_loc(end_of_file, core::TextRange::new(5, 5));
+
+        let stable_ids = factory
+            .store()
+            .build_stable_node_ids(source_file, SourceId::from_u32(9));
+        let statement_id = stable_ids
+            .stable_id(statement)
+            .expect("statement should have a stable id");
+        let expression_id = stable_ids
+            .stable_id(expression)
+            .expect("expression should have a stable id");
+
+        assert_eq!(
+            factory
+                .store()
+                .debug_tree_with_stable_node_ids(source_file, &stable_ids),
+            format!(
+                "\
+SourceFile stable=9:0
+  statements:
+    [0]
+      ExpressionStatement stable={statement_id}
+        expression:
+          Identifier stable={expression_id}
+  end_of_file_token:
+    EndOfFile
+"
+            )
+        );
+    }
+
+    #[test]
+    fn child_source_spans_should_use_descriptor_child_fields() {
+        let mut factory = NodeFactory::default();
+        let initializer = factory.new_identifier("i");
+        let condition = factory.new_identifier("condition");
+        let incrementor = factory.new_identifier("next");
+        let statement_expression = factory.new_identifier("body");
+        let statement = factory.new_expression_statement(statement_expression);
+        let for_statement = factory.new_for_statement(
+            Some(initializer),
+            Some(condition),
+            Some(incrementor),
+            Some(statement),
+        );
+        factory.set_loc(initializer, core::TextRange::new(1, 2));
+        factory.set_loc(condition, core::TextRange::new(3, 4));
+        factory.set_loc(incrementor, core::TextRange::new(5, 6));
+        factory.set_loc(statement, core::TextRange::new(7, 10));
+
+        assert_eq!(
+            factory.store().child_source_spans(for_statement),
+            vec![
+                AstChildSourceSpan {
+                    field_id: AstChildFieldId::Initializer,
+                    field_name: "initializer",
+                    kind: AstChildSourceSpanKind::Node,
+                    index: None,
+                    node: Some(initializer),
+                    loc: Some(core::TextRange::new(1, 2)),
+                    range: Some(core::TextRange::new(1, 2)),
+                },
+                AstChildSourceSpan {
+                    field_id: AstChildFieldId::Condition,
+                    field_name: "condition",
+                    kind: AstChildSourceSpanKind::Node,
+                    index: None,
+                    node: Some(condition),
+                    loc: Some(core::TextRange::new(3, 4)),
+                    range: Some(core::TextRange::new(3, 4)),
+                },
+                AstChildSourceSpan {
+                    field_id: AstChildFieldId::Incrementor,
+                    field_name: "incrementor",
+                    kind: AstChildSourceSpanKind::Node,
+                    index: None,
+                    node: Some(incrementor),
+                    loc: Some(core::TextRange::new(5, 6)),
+                    range: Some(core::TextRange::new(5, 6)),
+                },
+                AstChildSourceSpan {
+                    field_id: AstChildFieldId::Statement,
+                    field_name: "statement",
+                    kind: AstChildSourceSpanKind::Node,
+                    index: None,
+                    node: Some(statement),
+                    loc: Some(core::TextRange::new(7, 10)),
+                    range: Some(core::TextRange::new(7, 10)),
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn child_source_spans_should_report_list_ranges() {
+        let mut factory = NodeFactory::default();
+        let function_name = factory.new_identifier("f");
+        let parameter_name = factory.new_identifier("arg");
+        let parameter = factory.new_parameter_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(parameter_name),
+            None::<Node>,
+            None::<Node>,
+            None::<Node>,
+        );
+        let parameters = factory.new_node_list(
+            core::TextRange::new(10, 20),
+            core::TextRange::new(11, 19),
+            [parameter],
+        );
+        let body_statements = empty_node_list(&mut factory);
+        let body = factory.new_block(body_statements, false);
+        let function = factory.new_function_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(function_name),
+            None::<NodeList>,
+            parameters,
+            None::<Node>,
+            None::<Node>,
+            Some(body),
+        );
+        factory.set_loc(function_name, core::TextRange::new(1, 2));
+        factory.set_loc(body, core::TextRange::new(21, 30));
+
+        assert_eq!(
+            factory.store().child_source_spans(function),
+            vec![
+                AstChildSourceSpan {
+                    field_id: AstChildFieldId::Name,
+                    field_name: "name",
+                    kind: AstChildSourceSpanKind::Node,
+                    index: None,
+                    node: Some(function_name),
+                    loc: Some(core::TextRange::new(1, 2)),
+                    range: Some(core::TextRange::new(1, 2)),
+                },
+                AstChildSourceSpan {
+                    field_id: AstChildFieldId::Parameters,
+                    field_name: "parameters",
+                    kind: AstChildSourceSpanKind::NodeList,
+                    index: None,
+                    node: None,
+                    loc: Some(core::TextRange::new(10, 20)),
+                    range: Some(core::TextRange::new(11, 19)),
+                },
+                AstChildSourceSpan {
+                    field_id: AstChildFieldId::Body,
+                    field_name: "body",
+                    kind: AstChildSourceSpanKind::Node,
+                    index: None,
+                    node: Some(body),
+                    loc: Some(core::TextRange::new(21, 30)),
+                    range: Some(core::TextRange::new(21, 30)),
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn child_node_source_spans_should_report_list_elements() {
+        let mut factory = NodeFactory::default();
+        let function_name = factory.new_identifier("f");
+        let parameter_name = factory.new_identifier("arg");
+        let parameter = factory.new_parameter_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(parameter_name),
+            None::<Node>,
+            None::<Node>,
+            None::<Node>,
+        );
+        let parameters = factory.new_node_list(
+            core::TextRange::new(10, 20),
+            core::TextRange::new(11, 19),
+            [parameter],
+        );
+        let body_statements = empty_node_list(&mut factory);
+        let body = factory.new_block(body_statements, false);
+        let function = factory.new_function_declaration(
+            None::<ModifierList>,
+            None::<Node>,
+            Some(function_name),
+            None::<NodeList>,
+            parameters,
+            None::<Node>,
+            None::<Node>,
+            Some(body),
+        );
+        factory.set_loc(function_name, core::TextRange::new(1, 2));
+        factory.set_loc(parameter, core::TextRange::new(12, 18));
+        factory.set_loc(body, core::TextRange::new(21, 30));
+
+        let mut spans = Vec::new();
+        let result = factory
+            .store()
+            .for_each_child_node_source_span(function, |span| {
+                spans.push(span);
+                ControlFlow::Continue(())
+            });
+
+        assert_eq!(result, ControlFlow::Continue(()));
+        assert_eq!(
+            spans,
+            vec![
+                AstChildSourceSpan {
+                    field_id: AstChildFieldId::Name,
+                    field_name: "name",
+                    kind: AstChildSourceSpanKind::Node,
+                    index: None,
+                    node: Some(function_name),
+                    loc: Some(core::TextRange::new(1, 2)),
+                    range: Some(core::TextRange::new(1, 2)),
+                },
+                AstChildSourceSpan {
+                    field_id: AstChildFieldId::Parameters,
+                    field_name: "parameters",
+                    kind: AstChildSourceSpanKind::NodeListElement,
+                    index: Some(0),
+                    node: Some(parameter),
+                    loc: Some(core::TextRange::new(12, 18)),
+                    range: Some(core::TextRange::new(12, 18)),
+                },
+                AstChildSourceSpan {
+                    field_id: AstChildFieldId::Body,
+                    field_name: "body",
+                    kind: AstChildSourceSpanKind::Node,
+                    index: None,
+                    node: Some(body),
+                    loc: Some(core::TextRange::new(21, 30)),
+                    range: Some(core::TextRange::new(21, 30)),
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn for_each_present_child_should_match_child_node_source_spans() {
+        let mut factory = NodeFactory::default();
+        let first = factory.new_identifier("first");
+        let second = factory.new_identifier("second");
+        let children = factory.new_raw_node_slice([Some(first), None, Some(second)]);
+        let syntax_list = factory.new_syntax_list_from_raw(children);
+
+        let mut present_children = Vec::new();
+        let result = factory
+            .store()
+            .for_each_present_child(syntax_list, |child| {
+                present_children.push(child);
+                ControlFlow::Continue(())
+            });
+
+        let mut span_children = Vec::new();
+        let span_result = factory
+            .store()
+            .for_each_child_node_source_span(syntax_list, |span| {
+                if let Some(child) = span.node() {
+                    span_children.push(child);
+                }
+                ControlFlow::Continue(())
+            });
+
+        assert_eq!(result, ControlFlow::Continue(()));
+        assert_eq!(span_result, ControlFlow::Continue(()));
+        assert_eq!(present_children, vec![first, second]);
+        assert_eq!(present_children, span_children);
+    }
+
+    #[test]
+    fn child_source_spans_should_preserve_raw_node_slice_empty_slots() {
+        let mut factory = NodeFactory::default();
+        let first = factory.new_identifier("first");
+        let second = factory.new_identifier("second");
+        let children = factory.new_raw_node_slice([Some(first), None, Some(second)]);
+        let syntax_list = factory.new_syntax_list_from_raw(children);
+        factory.set_loc(first, core::TextRange::new(1, 2));
+        factory.set_loc(second, core::TextRange::new(3, 4));
+
+        assert_eq!(
+            factory.store().child_source_spans(syntax_list),
+            vec![
+                AstChildSourceSpan {
+                    field_id: AstChildFieldId::Children,
+                    field_name: "children",
+                    kind: AstChildSourceSpanKind::RawNodeSliceElement,
+                    index: Some(0),
+                    node: Some(first),
+                    loc: Some(core::TextRange::new(1, 2)),
+                    range: Some(core::TextRange::new(1, 2)),
+                },
+                AstChildSourceSpan {
+                    field_id: AstChildFieldId::Children,
+                    field_name: "children",
+                    kind: AstChildSourceSpanKind::RawNodeSliceElement,
+                    index: Some(1),
+                    node: None,
+                    loc: None,
+                    range: None,
+                },
+                AstChildSourceSpan {
+                    field_id: AstChildFieldId::Children,
+                    field_name: "children",
+                    kind: AstChildSourceSpanKind::RawNodeSliceElement,
+                    index: Some(2),
+                    node: Some(second),
+                    loc: Some(core::TextRange::new(3, 4)),
+                    range: Some(core::TextRange::new(3, 4)),
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn set_parent_in_children_should_ignore_empty_raw_slice_slots() {
+        let mut factory = NodeFactory::default();
+        let first = factory.new_identifier("first");
+        let second = factory.new_identifier("second");
+        let children = factory.new_raw_node_slice([Some(first), None, Some(second)]);
+        let syntax_list = factory.new_syntax_list_from_raw(children);
+
+        factory.store_mut().set_parent_in_children(syntax_list);
+
+        assert_eq!(factory.store().parent(first), Some(syntax_list));
+        assert_eq!(factory.store().parent(second), Some(syntax_list));
     }
 
     struct TestTraversal<'a> {

@@ -22,8 +22,8 @@ pub(crate) use completednode::position_belongs_to_node;
 pub(crate) use organizeimports::{
     compare_import_or_export_specifiers, compare_imports_or_require_statements,
     compare_module_specifiers, detect_module_specifier_case_by_sort,
-    detect_named_import_organization_by_sort, filter_import_declarations, get_comparers,
-    get_detection_lists, get_external_module_name, get_module_specifier_expression,
+    detect_named_import_organization_by_sort, get_comparers, get_detection_lists,
+    get_external_module_name, get_module_specifier_expression,
     get_named_import_specifier_sorting_with_detection,
     get_organize_imports_string_comparer_with_detection,
 };

@@ -225,10 +225,20 @@ pub(crate) fn for_each_possible_import_or_export_statement(
     source_file_like: ast::Node,
     mut action: impl FnMut(ast::Node) -> bool,
 ) -> bool {
-    for statement in get_statements_of_source_file_like(store, source_file_like) {
+    for_each_possible_import_or_export_statement_worker(store, source_file_like, &mut action)
+}
+
+fn for_each_possible_import_or_export_statement_worker(
+    store: &ast::AstStore,
+    source_file_like: ast::Node,
+    action: &mut dyn FnMut(ast::Node) -> bool,
+) -> bool {
+    for statement in
+        get_possible_import_or_export_statements_of_source_file_like(store, source_file_like)
+    {
         if action(statement)
             || (is_ambient_module_declaration(store, statement)
-                && for_each_possible_import_or_export_statement(store, statement, &mut action))
+                && for_each_possible_import_or_export_statement_worker(store, statement, action))
         {
             return true;
         }
@@ -272,20 +282,18 @@ pub(crate) fn is_ambient_module_declaration(store: &ast::AstStore, node: ast::No
             .is_some_and(|name| ast::is_string_literal(store, *name))
 }
 
-pub(crate) fn get_statements_of_source_file_like(
+pub(crate) fn get_possible_import_or_export_statements_of_source_file_like(
     store: &ast::AstStore,
     node: ast::Node,
 ) -> Vec<ast::Node> {
-    if ast::is_source_file(store, node) {
-        return store.parser_access().source_file_statement_nodes(node);
-    }
-    if let Some(body) = store.body(node) {
-        return store
-            .statements(body)
-            .map(|statements| statements.iter().collect())
-            .unwrap_or_default();
-    }
-    Vec::new()
+    ast::statement_container_statements(store, node)
+        .map(|statements| {
+            statements
+                .iter()
+                .filter(|statement| ast::is_possible_import_or_export_statement(store, *statement))
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 pub(crate) fn get_importers_for_export<'a>(
@@ -446,7 +454,7 @@ pub(crate) fn get_importers_for_export<'a>(
                             }
                         }
                     }
-                    if !is_available_through_global && ast::is_default_import(direct_store, &direct)
+                    if !is_available_through_global && ast::has_default_import(direct_store, direct)
                     {
                         let source_file_like =
                             get_source_file_like_for_import_declaration(direct_store, direct);
@@ -519,7 +527,7 @@ pub(crate) fn get_importers_for_export<'a>(
         if let Some(exporting_module_symbol) = export_info.exporting_module_symbol {
             for decl in checker.collect_symbol_declarations_public(exporting_module_symbol) {
                 let store = store_for_node(source_files, decl);
-                if ast::is_external_module_augmentation(store, &decl)
+                if ast::is_external_module_augmentation(store, decl)
                     && source_files_set.has(
                         &ast::get_source_file_of_node(store, Some(decl))
                             .map(|source_file| {
@@ -1066,8 +1074,8 @@ fn get_special_property_export(
     checker: &mut checker::Checker,
 ) -> Option<ImportExportSymbol> {
     let kind = match ast::get_assignment_declaration_kind(store, *node) {
-        ast::JSDeclarationKind::ExportsProperty => ExportKind::Named,
-        ast::JSDeclarationKind::ModuleExports => ExportKind::ExportEquals,
+        Some(ast::JSDeclarationKind::ExportsProperty) => ExportKind::Named,
+        Some(ast::JSDeclarationKind::ModuleExports) => ExportKind::ExportEquals,
         _ => return None,
     };
     if use_lhs_symbol {
@@ -1176,16 +1184,14 @@ pub(crate) fn is_node_import(store: &ast::AstStore, node: ast::Node) -> bool {
         }
         ast::Kind::BindingElement => {
             ast::is_in_js_file(store, node)
-                && store
-                    .parent(parent)
-                    .and_then(|parent| store.parent(parent))
-                    .as_ref()
-                    .is_some_and(|declaration| {
+                && ast::variable_declaration_for_binding_element(store, parent).is_some_and(
+                    |declaration| {
                         ast::is_variable_declaration_initialized_to_bare_or_accessed_require(
                             store,
                             declaration,
                         )
-                    })
+                    },
+                )
         }
         _ => false,
     }
@@ -1248,7 +1254,7 @@ pub(crate) fn skip_export_specifier_symbol<'a>(
                             .parent(declaration)
                             .and_then(|parent| store.parent(parent))
                             .unwrap(),
-                    ) == ast::JSDeclarationKind::ModuleExports =>
+                    ) == Some(ast::JSDeclarationKind::ModuleExports) =>
             {
                 let name = store.name(declaration).unwrap();
                 return checker.get_export_specifier_local_target_symbol_public(name);
@@ -1432,4 +1438,91 @@ pub(crate) fn get_property_symbol_of_object_binding_pattern_without_property_nam
         return get_property_symbol_from_binding_element(checker, store, *binding_element);
     }
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse_options(path: &str) -> ast::SourceFileParseOptions {
+        ast::SourceFileParseOptions {
+            file_name: path.to_owned(),
+            path: path.to_owned(),
+            ..Default::default()
+        }
+    }
+
+    fn source_file_with_statements(
+        mut factory: ast::NodeFactory,
+        path: &str,
+        text: &str,
+        statements: impl ast::IntoNodeList,
+    ) -> ast::SourceFile {
+        let end_of_file = factory.new_token(ast::Kind::EndOfFile);
+        let root =
+            factory.new_source_file(parse_options(path), text, statements, Some(end_of_file));
+        factory.finish_parsed_source_file(root, ast::ParsedSourceFileMetadata::default())
+    }
+
+    #[test]
+    fn for_each_possible_import_or_export_statement_should_use_statement_candidates() {
+        let mut factory = ast::NodeFactory::default();
+        let import = factory.new_import_declaration(
+            None::<ast::ModifierList>,
+            None::<ast::Node>,
+            None::<ast::Node>,
+            None::<ast::Node>,
+        );
+        let expression_name = factory.new_identifier("sideEffect");
+        let expression = factory.new_expression_statement(expression_name);
+        let nested_export = factory.new_export_declaration(
+            None::<ast::ModifierList>,
+            false,
+            None::<ast::Node>,
+            None::<ast::Node>,
+            None::<ast::Node>,
+        );
+        let nested_statements = factory.new_node_list(
+            core::undefined_text_range(),
+            core::undefined_text_range(),
+            [nested_export],
+        );
+        let module_block = factory.new_module_block(nested_statements);
+        let module_name = factory.new_string_literal("ambient", ast::TokenFlags::NONE);
+        let ambient_module = factory.new_module_declaration(
+            None::<ast::ModifierList>,
+            ast::Kind::ModuleKeyword,
+            Some(module_name),
+            Some(module_block),
+        );
+        let top_export = factory.new_export_declaration(
+            None::<ast::ModifierList>,
+            false,
+            None::<ast::Node>,
+            None::<ast::Node>,
+            None::<ast::Node>,
+        );
+        let statements = factory.new_node_list(
+            core::undefined_text_range(),
+            core::undefined_text_range(),
+            [import, expression, ambient_module, top_export],
+        );
+        let file = source_file_with_statements(
+            factory,
+            "/imports.ts",
+            "import 'a';\nsideEffect;\ndeclare module 'ambient' { export {}; }\nexport {};",
+            statements,
+        );
+        let mut visited = Vec::new();
+
+        for_each_possible_import_or_export_statement(file.store(), file.as_node(), |statement| {
+            visited.push(statement);
+            false
+        });
+
+        assert_eq!(
+            visited,
+            vec![import, ambient_module, nested_export, top_export]
+        );
+    }
 }

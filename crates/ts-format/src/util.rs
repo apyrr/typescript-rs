@@ -201,7 +201,7 @@ pub fn find_immediately_preceding_token_of_kind(
  * and whose end does not exceed `node.end`.
  *
  * Consider typing the following
- * ```
+ * ```text
  * let x = 1;
  * while (true) {
  * }

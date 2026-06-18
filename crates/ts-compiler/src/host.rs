@@ -7,6 +7,7 @@ use ts_parser as parser;
 use ts_tsoptions as tsoptions;
 use ts_tspath as tspath;
 use ts_vfs as vfs;
+use xxhash_rust::xxh3;
 
 pub type DiagnosticArgs = [diagnostics::Any];
 pub type Trace = dyn Fn(&'static diagnostics::Message, &DiagnosticArgs) + Send + Sync;
@@ -29,7 +30,13 @@ pub trait CompilerHost: Send + Sync {
             return None;
         }
         let script_kind = core::get_script_kind_from_file_name(&opts.file_name);
-        Some(parser::parse_source_file_as_parsed(opts, text, script_kind))
+        let source_hash = xxh3::xxh3_128(text.as_bytes());
+        Some(parser::parse_source_file_as_parsed_with_hash(
+            opts,
+            text,
+            script_kind,
+            source_hash,
+        ))
     }
     fn get_source_file(&self, opts: ast::SourceFileParseOptions) -> Option<ast::SourceFile> {
         self.get_parsed_source_file(opts)

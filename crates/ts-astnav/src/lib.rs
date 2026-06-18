@@ -165,7 +165,7 @@ fn get_token_at_position_from_node(
     // We zero in on the node that contains the target position by visiting each
     // child of the current node.
     let mut result = None;
-    let _ = store.for_each_present_child(node, |child| {
+    let _ = for_each_navigation_child(store, node, |child, _| {
         if let Some(found) = get_token_at_position_from_node(
             source_file,
             child,
@@ -189,6 +189,108 @@ fn get_position(
         return source_file.store().loc(node).pos();
     }
     scanner::get_token_pos_of_node(&node, source_file, true /*includeJSDoc*/) as i32
+}
+
+fn for_each_navigation_child<F>(
+    store: &ast::AstStore,
+    node: ast::Node,
+    mut visit: F,
+) -> ControlFlow<()>
+where
+    F: FnMut(ast::Node, core::TextRange) -> ControlFlow<()>,
+{
+    store.for_each_child_node_source_span(node, |span| {
+        let Some(child) = span.node() else {
+            return ControlFlow::Continue(());
+        };
+        if store.flags(child).intersects(ast::NodeFlags::REPARSED) {
+            return ControlFlow::Continue(());
+        }
+        visit(child, span.loc().unwrap_or_else(|| store.loc(child)))
+    })
+}
+
+fn find_function_declaration_typed_child_of_kind(
+    store: &ast::AstStore,
+    node: ast::Node,
+    kind: ast::Kind,
+) -> Option<ast::Node> {
+    let function = store.ast_ref::<ast::FunctionDeclarationView>(node)?;
+    function
+        .find_modifiers::<ast::AstTokenView>(|child| child.kind() == kind)
+        .map(|child| child.node())
+        .or_else(|| {
+            function
+                .asterisk_token::<ast::AstTokenView>()
+                .filter(|child| child.kind() == kind)
+                .map(|child| child.node())
+        })
+        .or_else(|| {
+            function
+                .name::<ast::AstNameView>()
+                .filter(|child| child.kind() == kind)
+                .map(|child| child.node())
+        })
+        .or_else(|| {
+            function
+                .find_type_parameters::<ast::TypeParameterDeclarationView>(|child| {
+                    child.kind() == kind
+                })
+                .map(|child| child.node())
+        })
+        .or_else(|| {
+            function
+                .find_parameters::<ast::ParameterDeclarationView>(|child| child.kind() == kind)
+                .map(|child| child.node())
+        })
+        .or_else(|| {
+            function
+                .r#type::<ast::AstTypeNodeView>()
+                .filter(|child| child.kind() == kind)
+                .map(|child| child.node())
+        })
+        .or_else(|| {
+            function
+                .full_signature_node()
+                .filter(|child| store.kind(*child) == kind)
+        })
+        .or_else(|| {
+            function
+                .body::<ast::BlockView>()
+                .filter(|child| child.kind() == kind)
+                .map(|child| child.node())
+        })
+}
+
+fn find_source_file_typed_child_of_kind(
+    source_file: ast::SourceFileView<'_>,
+    kind: ast::Kind,
+) -> Option<ast::Node> {
+    source_file
+        .find_statements::<ast::AstStatementView>(|child| child.kind() == kind)
+        .map(|child| child.node())
+        .or_else(|| {
+            source_file
+                .end_of_file_token_view::<ast::AstTokenView>()
+                .filter(|child| child.kind() == kind)
+                .map(|child| child.node())
+        })
+}
+
+fn find_typed_navigation_child_of_kind(
+    store: &ast::AstStore,
+    node: ast::Node,
+    kind: ast::Kind,
+) -> Option<ast::Node> {
+    match store.kind(node) {
+        ast::Kind::SourceFile => {
+            find_source_file_typed_child_of_kind(store.source_file_view(node), kind)
+        }
+        ast::Kind::FunctionDeclaration => {
+            find_function_declaration_typed_child_of_kind(store, node, kind)
+        }
+        _ => None,
+    }
 }
 
 // Finds the leftmost token satisfying `position < token.End()`.
@@ -261,16 +363,11 @@ fn find_preceding_token_in_node(
     // `prevChild` is the last visited child of the current node.
     let mut found_child = None;
     let mut prev_child = None;
-    let _ = store.for_each_present_child(node, |child| {
-        // skip synthesized nodes (that will exist now because of jsdoc handling)
-        if store.flags(child).intersects(ast::NodeFlags::REPARSED) {
-            return ControlFlow::Continue(());
-        }
+    let _ = for_each_navigation_child(store, node, |child, child_loc| {
         if found_child.is_some() {
             // We cannot abort visiting children, so once the desired child is found, we do nothing.
             return ControlFlow::Continue(());
         }
-        let child_loc = store.loc(child);
         if position < child_loc.end()
             && prev_child.is_none_or(|prev_child| store.loc(prev_child).end() <= position)
         {
@@ -333,14 +430,10 @@ fn find_preceding_token_info_in_node(
 
     let mut found_child = None;
     let mut prev_child = None;
-    let _ = store.for_each_present_child(node, |child| {
-        if store.flags(child).intersects(ast::NodeFlags::REPARSED) {
-            return ControlFlow::Continue(());
-        }
+    let _ = for_each_navigation_child(store, node, |child, child_loc| {
         if found_child.is_some() {
             return ControlFlow::Continue(());
         }
-        let child_loc = store.loc(child);
         if position < child_loc.end()
             && prev_child.is_none_or(|prev_child| store.loc(prev_child).end() <= position)
         {
@@ -406,11 +499,10 @@ fn find_next_token_in_node(
     // Node that contains `previousToken` or occurs immediately after it.
     let previous_end = store.loc(previous_token).end();
     let mut found_node = None;
-    let _ = store.for_each_present_child(parent, |child| {
-        if store.flags(child).intersects(ast::NodeFlags::REPARSED) || found_node.is_some() {
+    let _ = for_each_navigation_child(store, parent, |child, child_loc| {
+        if found_node.is_some() {
             return ControlFlow::Continue(());
         }
-        let child_loc = store.loc(child);
         if child_loc.pos() <= previous_end && child_loc.end() > previous_end {
             found_node = Some(child);
         } else if child_loc.pos() >= previous_end {
@@ -433,22 +525,74 @@ pub fn find_child_of_kind(
     kind: ast::Kind,
     source_file: &ast::SourceFile,
 ) -> Option<ast::Node> {
+    find_child_of_kind_info(node, kind, source_file).and_then(|child| child.node)
+}
+
+pub fn find_child_of_kind_info(
+    node: ast::Node,
+    kind: ast::Kind,
+    source_file: &ast::SourceFile,
+) -> Option<TokenInfo> {
     let store = source_file.store();
     if store.kind(node) == kind {
-        return Some(node);
+        return Some(TokenInfo::from_node(store, node));
     }
+    if let Some(child) = find_typed_navigation_child_of_kind(store, node, kind) {
+        return Some(TokenInfo::from_node(store, child));
+    }
+
+    let containing_loc = store.loc(node);
+    let mut last_node_pos = containing_loc.pos();
+    let mut scan = scanner::get_scanner_for_source_file(source_file, last_node_pos.max(0) as usize);
     let mut found_child = None;
-    let _ = store.for_each_present_child(node, |child| {
-        if store.flags(child).intersects(ast::NodeFlags::REPARSED) {
-            return ControlFlow::Continue(());
-        }
-        if store.kind(child) == kind {
-            found_child = Some(child);
+    let _ = for_each_navigation_child(store, node, |child, child_loc| {
+        if let Some(token) = find_scanned_child_token_of_kind(
+            source_file,
+            node,
+            &mut scan,
+            &mut last_node_pos,
+            child_loc.pos(),
+            kind,
+        ) {
+            found_child = Some(token);
             return ControlFlow::Break(());
         }
+        if store.kind(child) == kind {
+            found_child = Some(TokenInfo::from_node(store, child));
+            return ControlFlow::Break(());
+        }
+
+        last_node_pos = child_loc.end();
+        scan.reset_pos(last_node_pos);
+        scan.scan();
         ControlFlow::Continue(())
     });
-    found_child
+
+    found_child.or_else(|| {
+        find_scanned_child_token_of_kind(
+            source_file,
+            node,
+            &mut scan,
+            &mut last_node_pos,
+            containing_loc.end(),
+            kind,
+        )
+    })
+}
+
+pub fn has_child_of_kind(node: ast::Node, kind: ast::Kind, source_file: &ast::SourceFile) -> bool {
+    find_child_of_kind_info(node, kind, source_file).is_some()
+}
+
+pub fn get_start_of_token_info(token: TokenInfo, file: &ast::SourceFile) -> i32 {
+    if let Some(node) = token.node {
+        return get_start_of_node(node, file);
+    }
+    scanner::skip_trivia(file.text(), token.loc.pos().max(0) as usize) as i32
+}
+
+pub fn range_from_token_info(token: TokenInfo, file: &ast::SourceFile) -> core::TextRange {
+    core::new_text_range(get_start_of_token_info(token, file), token.loc.end())
 }
 
 pub fn get_start_of_node(node: ast::Node, file: &ast::SourceFile) -> i32 {
@@ -497,10 +641,9 @@ fn find_rightmost_valid_token_in_node(
 
     let mut rightmost_valid_node = None;
     let mut has_children = false;
-    let _ = store.for_each_present_child(node, |child| {
+    let _ = for_each_navigation_child(store, node, |child, child_loc| {
         has_children = true;
-        if store.flags(child).intersects(ast::NodeFlags::REPARSED)
-            || store.loc(child).end() > end_pos
+        if child_loc.end() > end_pos
             || get_start_of_node_with_include_jsdoc(child, source_file, true /*includeJSDoc*/)
                 >= position
         {
@@ -574,11 +717,10 @@ fn find_rightmost_valid_token_info_in_node(
     // Nodes after the last valid node.
     let mut rightmost_visited_nodes = Vec::new();
     let mut has_children = false;
-    let _ = store.for_each_present_child(node, |child| {
+    let _ = for_each_navigation_child(store, node, |child, child_loc| {
         has_children = true;
         // Node is synthetic or out of the desired range: don't visit it.
-        if store.flags(child).intersects(ast::NodeFlags::REPARSED)
-            || store.loc(child).end() > end_pos
+        if child_loc.end() > end_pos
             || get_start_of_node_with_include_jsdoc(child, source_file, true /*includeJSDoc*/)
                 >= position
         {
@@ -683,6 +825,38 @@ fn collect_scanned_tokens(
     }
 }
 
+fn find_scanned_child_token_of_kind(
+    source_file: &ast::SourceFile,
+    parent: ast::Node,
+    scan: &mut scanner::Scanner,
+    start_pos: &mut i32,
+    end_pos: i32,
+    kind: ast::Kind,
+) -> Option<TokenInfo> {
+    while *start_pos < end_pos {
+        let token = scan_navigation_token(scan, source_file.store(), parent);
+        let token_start = scan.token_start();
+        if token_start >= end_pos {
+            break;
+        }
+        let token_full_start = scan.token_full_start();
+        let token_end = scan.token_end();
+        if token_end <= *start_pos {
+            break;
+        }
+        if token == kind {
+            return Some(TokenInfo::scanned(
+                token,
+                core::new_text_range(token_full_start, token_end),
+                parent,
+            ));
+        }
+        *start_pos = token_end;
+        scan.scan();
+    }
+    None
+}
+
 fn scan_navigation_token(
     scanner: &mut scanner::Scanner,
     store: &ast::AstStore,
@@ -713,8 +887,8 @@ fn find_leftmost_token(node: ast::Node, source_file: &ast::SourceFile) -> Option
         return Some(node);
     }
     let mut result = None;
-    let _ = store.for_each_present_child(node, |child| {
-        if result.is_none() && !store.flags(child).intersects(ast::NodeFlags::REPARSED) {
+    let _ = for_each_navigation_child(store, node, |child, _| {
+        if result.is_none() {
             result = find_leftmost_token(child, source_file);
         }
         ControlFlow::Continue(())
@@ -743,9 +917,11 @@ fn is_valid_preceding_node(node: ast::Node, source_file: &ast::SourceFile) -> bo
 
 pub mod tokens {
     pub use crate::{
-        TokenInfo, find_child_of_kind, find_next_token, find_preceding_token,
-        find_preceding_token_ex, find_preceding_token_ex_info, find_preceding_token_info,
-        get_start_of_node, get_token_at_position, get_touching_property_name, get_touching_token,
+        TokenInfo, find_child_of_kind, find_child_of_kind_info, find_next_token,
+        find_preceding_token, find_preceding_token_ex, find_preceding_token_ex_info,
+        find_preceding_token_info, get_start_of_node, get_start_of_token_info,
+        get_token_at_position, get_touching_property_name, get_touching_token, has_child_of_kind,
+        range_from_token_info,
     };
 }
 
@@ -755,18 +931,107 @@ mod tests {
     use ts_core as core;
     use ts_parser as parser;
 
-    #[test]
-    fn find_preceding_token_info_scans_dot_at_eof_after_incomplete_property_access() {
-        let text = "namespace testModule { export var foo = 1; }\n@\ntestModule.";
-        let file = parser::parse_source_file(
+    fn parse_ts(source: &str) -> ast::SourceFile {
+        parser::parse_source_file(
             ast::SourceFileParseOptions {
                 file_name: "/file.ts".to_string(),
                 path: "/file.ts".into(),
                 external_module_indicator_options: Default::default(),
             },
-            text.to_string(),
+            source.to_string(),
             core::ScriptKind::TS,
+        )
+    }
+
+    fn first_function_declaration(file: &ast::SourceFile) -> ast::Node {
+        super::find_child_of_kind(file.as_node(), ast::Kind::FunctionDeclaration, file)
+            .expect("expected function declaration")
+    }
+
+    #[test]
+    fn find_child_of_kind_should_find_source_file_statement_list_child() {
+        let file = parse_ts("let x = 1;");
+
+        let statement =
+            super::find_child_of_kind(file.as_node(), ast::Kind::VariableStatement, &file)
+                .expect("expected statement list child");
+
+        assert_eq!(file.store().kind(statement), ast::Kind::VariableStatement);
+    }
+
+    #[test]
+    fn find_child_of_kind_should_find_source_file_eof_through_typed_root_helper() {
+        let file = parse_ts("let x = 1;");
+
+        let eof = super::find_child_of_kind(file.as_node(), ast::Kind::EndOfFile, &file)
+            .expect("expected EOF child");
+
+        assert_eq!(file.store().kind(eof), ast::Kind::EndOfFile);
+    }
+
+    #[test]
+    fn find_child_of_kind_should_find_function_name_through_typed_field_helper() {
+        let file = parse_ts("export function f<T>(value: string): string { return value; }");
+        let function = first_function_declaration(&file);
+
+        let name = super::find_child_of_kind(function, ast::Kind::Identifier, &file)
+            .expect("expected function name");
+
+        assert_eq!(file.store().text(name), "f");
+    }
+
+    #[test]
+    fn find_child_of_kind_should_find_function_parameter_through_typed_list_helper() {
+        let file = parse_ts("function f(value: string): string { return value; }");
+        let function = first_function_declaration(&file);
+
+        let parameter = super::find_child_of_kind(function, ast::Kind::Parameter, &file)
+            .expect("expected function parameter");
+
+        assert_eq!(file.store().kind(parameter), ast::Kind::Parameter);
+    }
+
+    #[test]
+    fn find_child_of_kind_info_should_scan_keyword_before_first_child() {
+        let file = parse_ts("import { x } from \"m\";");
+        let statement =
+            super::find_child_of_kind(file.as_node(), ast::Kind::ImportDeclaration, &file)
+                .expect("expected import declaration");
+
+        let token = super::find_child_of_kind_info(statement, ast::Kind::ImportKeyword, &file)
+            .expect("expected import keyword");
+
+        assert_eq!(token.kind, ast::Kind::ImportKeyword);
+        assert_eq!(token.node, None);
+        assert_eq!(
+            super::range_from_token_info(token, &file),
+            core::new_text_range(0, 6)
         );
+    }
+
+    #[test]
+    fn find_child_of_kind_info_should_scan_punctuation_between_children() {
+        let file = parse_ts("f(a, b);");
+        let statement =
+            super::find_child_of_kind(file.as_node(), ast::Kind::ExpressionStatement, &file)
+                .expect("expected expression statement");
+        let call = super::find_child_of_kind(statement, ast::Kind::CallExpression, &file)
+            .expect("expected call expression");
+
+        let token = super::find_child_of_kind_info(call, ast::Kind::OpenParenToken, &file)
+            .expect("expected open paren");
+
+        assert_eq!(token.kind, ast::Kind::OpenParenToken);
+        assert_eq!(
+            file.text()[token.loc.pos() as usize..token.loc.end() as usize].trim(),
+            "("
+        );
+    }
+
+    #[test]
+    fn find_preceding_token_info_scans_dot_at_eof_after_incomplete_property_access() {
+        let text = "namespace testModule { export var foo = 1; }\n@\ntestModule.";
+        let file = parse_ts(text);
 
         let token = super::find_preceding_token_info(&file, text.len() as i32)
             .expect("expected preceding token");
@@ -781,15 +1046,7 @@ mod tests {
     #[test]
     fn find_preceding_token_info_scans_identifier_at_eof_after_incomplete_object_literal() {
         let text = "var person: {name:string; id: number} = { n";
-        let file = parser::parse_source_file(
-            ast::SourceFileParseOptions {
-                file_name: "/file.ts".to_string(),
-                path: "/file.ts".into(),
-                external_module_indicator_options: Default::default(),
-            },
-            text.to_string(),
-            core::ScriptKind::TS,
-        );
+        let file = parse_ts(text);
 
         let token = super::find_preceding_token_info(&file, text.len() as i32)
             .expect("expected preceding token");

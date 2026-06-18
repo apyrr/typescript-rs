@@ -1279,7 +1279,8 @@ impl EmitContext {
 
     // Walks the associated AutoGenerateInfo entries of a name to find the root Node from which the name should be generated.
     pub fn get_node_for_generated_name(&self, name: &ast::Node) -> ast::Node {
-        if let Some(auto_generate) = self.state.borrow().auto_generate.get_cloned(node_key(name)) {
+        let auto_generate = self.state.borrow().auto_generate.get_cloned(node_key(name));
+        if let Some(auto_generate) = auto_generate {
             if auto_generate.flags.is_node() {
                 return self
                     .get_node_for_generated_name_worker(&auto_generate.node, auto_generate.id);

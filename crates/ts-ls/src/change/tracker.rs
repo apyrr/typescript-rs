@@ -427,8 +427,9 @@ impl<'a> Tracker<'a> {
         let store = source_file.store();
         let mut end_pos = None;
         if ast::is_function_like(store, Some(node)) {
-            end_pos = astnav::find_child_of_kind(node, ast::Kind::CloseParenToken, source_file)
-                .map(|node| store.loc(node).end());
+            end_pos =
+                astnav::find_child_of_kind_info(node, ast::Kind::CloseParenToken, source_file)
+                    .map(|token| token.loc.end());
             if end_pos.is_none() {
                 if !ast::is_arrow_function(store, node) {
                     return false;
@@ -486,8 +487,7 @@ impl<'a> Tracker<'a> {
         source_file: &'a ast::SourceFile,
         arrow_func: ast::Node,
     ) {
-        if astnav::find_child_of_kind(arrow_func, ast::Kind::CloseParenToken, source_file).is_some()
-        {
+        if astnav::has_child_of_kind(arrow_func, ast::Kind::CloseParenToken, source_file) {
             return;
         }
         let store = source_file.store();
@@ -592,6 +592,24 @@ impl<'a> Tracker<'a> {
             },
             "",
         );
+    }
+
+    pub fn delete_token_info_range(
+        &mut self,
+        source_file: &'a ast::SourceFile,
+        start_token: astnav::TokenInfo,
+        end_token: astnav::TokenInfo,
+        leading_trivia: LeadingTriviaOption,
+        trailing_trivia: TrailingTriviaOption,
+    ) {
+        let range = self.get_adjusted_token_info_range(
+            source_file,
+            start_token,
+            end_token,
+            leading_trivia,
+            trailing_trivia,
+        );
+        self.replace_range_with_text(source_file, range, "");
     }
 
     // finishDeleteDeclarations processes all queued deletions with smart handling for lists and trailing commas.
@@ -1331,15 +1349,13 @@ fn find_child_token_or_scanned(
     position: Option<i32>,
 ) -> Option<astnav::TokenInfo> {
     let store = source_file.store();
-    astnav::find_child_of_kind(node, kind, source_file)
-        .map(|token| astnav::TokenInfo::from_node(store, token))
-        .or_else(|| {
-            let token = astnav::find_preceding_token_info(source_file, position?)?;
-            (token.kind == kind
-                && token.loc.pos() >= store.loc(node).pos()
-                && token.loc.end() <= store.loc(node).end())
-            .then_some(token)
-        })
+    astnav::find_child_of_kind_info(node, kind, source_file).or_else(|| {
+        let token = astnav::find_preceding_token_info(source_file, position?)?;
+        (token.kind == kind
+            && token.loc.pos() >= store.loc(node).pos()
+            && token.loc.end() <= store.loc(node).end())
+        .then_some(token)
+    })
 }
 
 pub fn get_members_or_properties(

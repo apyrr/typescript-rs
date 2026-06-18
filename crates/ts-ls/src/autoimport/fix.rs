@@ -806,9 +806,7 @@ pub(crate) fn insert_import_texts<'a>(
             .unwrap_or(existing_import_statements.len());
         if insertion_index == 0 {
             let first_import = existing_import_statements[0];
-            let first_statement = store
-                .statements(file.as_node())
-                .and_then(|statements| statements.first());
+            let first_statement = file.statements_view().first();
             let leading_trivia_option = if Some(first_import) == first_statement {
                 change::LEADING_TRIVIA_OPTION_EXCLUDE
             } else {
@@ -865,14 +863,11 @@ fn existing_import_or_require_statements(
     use_require: bool,
 ) -> Vec<ast::Statement> {
     let store = file.store();
-    let Some(statements) = store.statements(file.as_node()) else {
-        return Vec::new();
-    };
-    statements
+    file.statements_view()
         .iter()
         .filter(|statement| {
             if use_require {
-                is_require_variable_statement(store, *statement)
+                ast::is_require_variable_statement(store, *statement)
             } else {
                 ast::is_any_import_syntax(store, *statement)
             }
@@ -901,21 +896,6 @@ fn compare_module_specifier_names(
 
 pub(crate) fn has_existing_imports_or_requires(file: &ast::SourceFile, use_require: bool) -> bool {
     !existing_import_or_require_statements(file, use_require).is_empty()
-}
-
-fn is_require_variable_statement(store: &ast::AstStore, statement: ast::Node) -> bool {
-    if store.kind(statement) != ast::Kind::VariableStatement {
-        return false;
-    }
-    let Some(declaration_list) = store.declaration_list(statement) else {
-        return false;
-    };
-    let Some(declarations) = store.declarations(declaration_list) else {
-        return false;
-    };
-    declarations
-        .iter()
-        .any(|declaration| ast::is_variable_declaration_initialized_to_require(store, declaration))
 }
 
 fn find_byte_in_node(file: &ast::SourceFile, node: &ast::Node, byte: u8) -> Option<i32> {
@@ -1697,13 +1677,16 @@ pub fn get_import_kind(
                 return lsproto::ImportKind::Named;
             }
             let store = importing_file.store();
-            for statement in importing_file.statements_view() {
-                if ast::is_import_equals_declaration(store, statement)
-                    && store
-                        .module_reference(statement)
-                        .is_some_and(|module_reference| {
-                            !ast::node_is_missing(store, Some(module_reference))
-                        })
+            for node in importing_file
+                .statements_view()
+                .iter()
+                .filter(|statement| ast::is_import_equals_declaration(store, *statement))
+            {
+                if store
+                    .module_reference(node)
+                    .is_some_and(|module_reference| {
+                        !ast::node_is_missing(store, Some(module_reference))
+                    })
                 {
                     return lsproto::ImportKind::CommonJS;
                 }
@@ -2041,5 +2024,42 @@ impl fmt::Display for FileSyntaxKind {
             FileSyntaxKind::Esm => f.write_str("fileSyntaxKindESM"),
             FileSyntaxKind::Cjs => f.write_str("fileSyntaxKindCJS"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse_options(path: &str) -> ast::SourceFileParseOptions {
+        ast::SourceFileParseOptions {
+            file_name: path.to_string(),
+            path: path.to_string(),
+            ..Default::default()
+        }
+    }
+
+    fn parse_js_source_file(text: &str) -> ast::SourceFile {
+        ts_parser::parse_source_file(
+            parse_options("/auto-import.js"),
+            text.to_string(),
+            core::ScriptKind::JS,
+        )
+    }
+
+    #[test]
+    fn existing_import_or_require_statements_should_preserve_selection_modes() {
+        let file =
+            parse_js_source_file("import 'esm';\nconst cjs = require('cjs');\nsideEffect();");
+        let statements = file.statements_view().iter().collect::<Vec<_>>();
+
+        assert_eq!(
+            existing_import_or_require_statements(&file, false),
+            vec![statements[0]]
+        );
+        assert_eq!(
+            existing_import_or_require_statements(&file, true),
+            vec![statements[1]]
+        );
     }
 }

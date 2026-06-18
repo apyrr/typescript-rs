@@ -88,14 +88,15 @@ impl LanguageService<'_> {
         let mut current = 0;
 
         let store = source_file.store();
-        let statements: Vec<_> = source_file.statements_view().iter().collect();
+        let statements = source_file.statements_view().nodes();
         let n = statements.len();
         let mut folding_range = Vec::with_capacity(40);
         while current < n {
             while current < n && !ast::is_any_import_syntax(store, statements[current]) {
+                let statement = statements[current];
                 folding_range.extend(visit_node(
                     ctx,
-                    statements[current],
+                    statement,
                     depth_remaining,
                     source_file,
                     self,
@@ -107,9 +108,10 @@ impl LanguageService<'_> {
             }
             let first_import = current;
             while current < n && ast::is_any_import_syntax(store, statements[current]) {
+                let statement = statements[current];
                 folding_range.extend(visit_node(
                     ctx,
-                    statements[current],
+                    statement,
                     depth_remaining,
                     source_file,
                     self,
@@ -119,18 +121,20 @@ impl LanguageService<'_> {
             let last_import = current - 1;
             if last_import != first_import {
                 let folding_range_kind = lsproto::FoldingRangeKind::Imports;
+                let first_import_statement = statements[first_import];
+                let last_import_statement = statements[last_import];
                 folding_range.push(create_folding_range_from_bounds(
                     ctx,
-                    astnav::get_start_of_node(
-                        astnav::find_child_of_kind(
-                            statements[first_import],
+                    astnav::get_start_of_token_info(
+                        astnav::find_child_of_kind_info(
+                            first_import_statement,
                             ast::Kind::ImportKeyword,
                             source_file,
                         )
                         .unwrap(),
                         source_file,
                     ),
-                    store.loc(statements[last_import]).end(),
+                    store.loc(last_import_statement).end(),
                     Some(folding_range_kind),
                     source_file,
                     self,
@@ -695,14 +699,15 @@ pub fn span_for_import_export_elements(
     if elements.is_empty() {
         return None;
     }
-    let open_token = astnav::find_child_of_kind(node, ast::Kind::OpenBraceToken, source_file);
-    let close_token = astnav::find_child_of_kind(node, ast::Kind::CloseBraceToken, source_file);
+    let open_token = astnav::find_child_of_kind_info(node, ast::Kind::OpenBraceToken, source_file);
+    let close_token =
+        astnav::find_child_of_kind_info(node, ast::Kind::CloseBraceToken, source_file);
     let (Some(open_token), Some(close_token)) = (open_token, close_token) else {
         return None;
     };
     if printer::positions_are_on_same_line(
-        store.loc(open_token).pos(),
-        store.loc(close_token).pos(),
+        astnav::get_start_of_token_info(open_token, source_file),
+        astnav::get_start_of_token_info(close_token, source_file),
         source_file,
     ) {
         return None;
@@ -738,14 +743,15 @@ pub fn span_for_call_expression(
     {
         return None;
     }
-    let open_token = astnav::find_child_of_kind(node, ast::Kind::OpenParenToken, source_file);
-    let close_token = astnav::find_child_of_kind(node, ast::Kind::CloseParenToken, source_file);
+    let open_token = astnav::find_child_of_kind_info(node, ast::Kind::OpenParenToken, source_file);
+    let close_token =
+        astnav::find_child_of_kind_info(node, ast::Kind::CloseParenToken, source_file);
     let (Some(open_token), Some(close_token)) = (open_token, close_token) else {
         return None;
     };
     if printer::positions_are_on_same_line(
-        store.loc(open_token).pos(),
-        store.loc(close_token).pos(),
+        astnav::get_start_of_token_info(open_token, source_file),
+        astnav::get_start_of_token_info(close_token, source_file),
         source_file,
     ) {
         return None;
@@ -886,8 +892,8 @@ pub fn span_for_node(
     if open != ast::Kind::OpenBraceToken {
         close_brace = ast::Kind::CloseBracketToken;
     }
-    let open_token = astnav::find_child_of_kind(node, open, source_file);
-    let close_token = astnav::find_child_of_kind(node, close_brace, source_file);
+    let open_token = astnav::find_child_of_kind_info(node, open, source_file);
+    let close_token = astnav::find_child_of_kind_info(node, close_brace, source_file);
     if open_token.is_some() && close_token.is_some() {
         let open_token = open_token.unwrap();
         let close_token = close_token.unwrap();
@@ -905,22 +911,18 @@ pub fn span_for_node(
 
 pub fn range_between_tokens(
     ctx: &core::Context,
-    open_token: ast::Node,
-    close_token: ast::Node,
+    open_token: astnav::TokenInfo,
+    close_token: astnav::TokenInfo,
     source_file: &ast::SourceFile,
     use_full_start: bool,
     ls: &LanguageService<'_>,
 ) -> Option<lsproto::FoldingRange> {
     let text_range = if use_full_start {
-        ls.create_lsp_range_from_bounds(
-            source_file.store().loc(open_token).pos(),
-            source_file.store().loc(close_token).end(),
-            source_file,
-        )
+        ls.create_lsp_range_from_bounds(open_token.loc.pos(), close_token.loc.end(), source_file)
     } else {
         ls.create_lsp_range_from_bounds(
-            astnav::get_start_of_node(open_token, source_file),
-            source_file.store().loc(close_token).end(),
+            astnav::get_start_of_token_info(open_token, source_file),
+            close_token.loc.end(),
             source_file,
         )
     };
@@ -980,7 +982,8 @@ pub fn function_span(
     ls: &LanguageService<'_>,
 ) -> Option<lsproto::FoldingRange> {
     let open_token = try_get_function_open_token(node, body, source_file);
-    let close_token = astnav::find_child_of_kind(body, ast::Kind::CloseBraceToken, source_file);
+    let close_token =
+        astnav::find_child_of_kind_info(body, ast::Kind::CloseBraceToken, source_file);
     if open_token.is_some() && close_token.is_some() {
         let open_token = open_token.unwrap();
         let close_token = close_token.unwrap();
@@ -1000,15 +1003,15 @@ pub fn try_get_function_open_token(
     node: ast::Node,
     body: ast::Node,
     source_file: &ast::SourceFile,
-) -> Option<ast::Node> {
+) -> Option<astnav::TokenInfo> {
     if is_node_array_multi_line(source_file.store().parameters(node), source_file) {
         let open_paren_token =
-            astnav::find_child_of_kind(node, ast::Kind::OpenParenToken, source_file);
+            astnav::find_child_of_kind_info(node, ast::Kind::OpenParenToken, source_file);
         if open_paren_token.is_some() {
             return open_paren_token;
         }
     }
-    astnav::find_child_of_kind(body, ast::Kind::OpenBraceToken, source_file)
+    astnav::find_child_of_kind_info(body, ast::Kind::OpenBraceToken, source_file)
 }
 
 pub fn is_node_array_multi_line(

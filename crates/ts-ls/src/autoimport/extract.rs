@@ -461,7 +461,8 @@ impl SymbolExtractor<'_, '_, '_> {
                         let store = checker
                             .source_file_store(*declaration)
                             .expect("alias declaration should belong to the checker program");
-                        ast::is_part_of_type_only_import_or_export_declaration(store, declaration)
+                        ast::containing_type_only_import_or_export_declaration(store, *declaration)
+                            .is_some()
                     });
                 }
                 let (script_element_kind, script_element_kind_modifiers, mut target_module_id) = {
@@ -787,13 +788,11 @@ impl ExportExtractor<'_, '_, '_> {
             return self.extract_from_module_info(file, file_symbol);
         }
         if !file.data().ambient_module_names().is_empty() {
-            let statements: Vec<_> = store
-                .statements(file.as_node())
-                .map(|statements| statements.iter().collect())
-                .unwrap_or_default();
-            let module_declarations = core::filter(&statements, |decl| {
-                ast::is_module_with_string_literal_name(store, *decl)
-            });
+            let module_declarations = file
+                .statements_view()
+                .iter()
+                .filter(|decl| ast::is_module_with_string_literal_name(store, *decl))
+                .collect::<Vec<_>>();
             let export_count = module_declarations
                 .iter()
                 .filter_map(|decl| {
@@ -963,16 +962,17 @@ pub fn get_syntax_from_declarations(
                 );
             }
             ast::Kind::NamespaceExportDeclaration => return ExportSyntax::UMD,
-            ast::Kind::BinaryExpression => match ast::get_assignment_declaration_kind(store, *decl)
-            {
-                ast::JSDeclarationKind::ModuleExports => {
-                    return ExportSyntax::CommonJSModuleExports;
+            ast::Kind::BinaryExpression => {
+                match ast::get_assignment_declaration_kind(store, *decl) {
+                    Some(ast::JSDeclarationKind::ModuleExports) => {
+                        return ExportSyntax::CommonJSModuleExports;
+                    }
+                    Some(ast::JSDeclarationKind::ExportsProperty) => {
+                        return ExportSyntax::CommonJSExportsProperty;
+                    }
+                    _ => {}
                 }
-                ast::JSDeclarationKind::ExportsProperty => {
-                    return ExportSyntax::CommonJSExportsProperty;
-                }
-                _ => {}
-            },
+            }
             _ => {
                 if ast::get_combined_modifier_flags(store, *decl)
                     .intersects(ast::ModifierFlags::DEFAULT)

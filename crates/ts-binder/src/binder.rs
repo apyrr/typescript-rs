@@ -1786,75 +1786,24 @@ impl<'a> Binder<'a> {
             ast::Kind::PropertyDeclaration | ast::Kind::PropertySignature => {
                 self.bind_property_worker(node)
             }
-            ast::Kind::PropertyAssignment | ast::Kind::ShorthandPropertyAssignment => self
-                .bind_property_or_method_or_accessor(
-                    node,
-                    ast::SYMBOL_FLAGS_PROPERTY,
-                    ast::SYMBOL_FLAGS_PROPERTY_EXCLUDES,
-                ),
-            ast::Kind::EnumMember => self.bind_property_or_method_or_accessor(
-                node,
-                ast::SYMBOL_FLAGS_ENUM_MEMBER,
-                ast::SYMBOL_FLAGS_ENUM_MEMBER_EXCLUDES,
-            ),
+            ast::Kind::PropertyAssignment | ast::Kind::ShorthandPropertyAssignment => {
+                self.bind_object_property_declaration(node)
+            }
+            ast::Kind::EnumMember => self.bind_enum_member_declaration(node),
             ast::Kind::CallSignature
             | ast::Kind::ConstructSignature
-            | ast::Kind::IndexSignature => {
-                self.declare_symbol_and_add_to_symbol_table(
-                    node,
-                    ast::SYMBOL_FLAGS_SIGNATURE,
-                    ast::SYMBOL_FLAGS_NONE,
-                );
-            }
+            | ast::Kind::IndexSignature => self.bind_signature_declaration(node),
             ast::Kind::MethodDeclaration | ast::Kind::MethodSignature => {
-                self.bind_property_or_method_or_accessor(
-                    node,
-                    ast::SYMBOL_FLAGS_METHOD | get_optional_symbol_flag_for_node(&self.store, node),
-                    core::if_else(
-                        ast::is_object_literal_method(&self.store, Some(*node)),
-                        ast::SYMBOL_FLAGS_VALUE,
-                        ast::SYMBOL_FLAGS_METHOD_EXCLUDES,
-                    ),
-                );
+                self.bind_method_worker(node);
             }
             ast::Kind::FunctionDeclaration => self.bind_function_declaration(node),
-            ast::Kind::Constructor => {
-                self.declare_symbol_and_add_to_symbol_table(
-                    node,
-                    ast::SYMBOL_FLAGS_CONSTRUCTOR,
-                    ast::SYMBOL_FLAGS_NONE,
-                );
-            }
-            ast::Kind::GetAccessor => {
-                self.bind_property_or_method_or_accessor(
-                    node,
-                    ast::SYMBOL_FLAGS_GET_ACCESSOR,
-                    ast::SYMBOL_FLAGS_GET_ACCESSOR_EXCLUDES,
-                );
-            }
-            ast::Kind::SetAccessor => {
-                self.bind_property_or_method_or_accessor(
-                    node,
-                    ast::SYMBOL_FLAGS_SET_ACCESSOR,
-                    ast::SYMBOL_FLAGS_SET_ACCESSOR_EXCLUDES,
-                );
-            }
+            ast::Kind::Constructor => self.bind_constructor_declaration(node),
+            ast::Kind::GetAccessor | ast::Kind::SetAccessor => self.bind_accessor_declaration(node),
             ast::Kind::FunctionType | ast::Kind::ConstructorType => {
                 self.bind_function_or_constructor_type(node)
             }
-            ast::Kind::TypeLiteral | ast::Kind::MappedType => {
-                self.bind_anonymous_declaration(
-                    node,
-                    ast::SYMBOL_FLAGS_TYPE_LITERAL,
-                    ast::INTERNAL_SYMBOL_NAME_TYPE.to_owned(),
-                );
-            }
-            ast::Kind::ObjectLiteralExpression => {
-                self.bind_anonymous_declaration(
-                    node,
-                    ast::SYMBOL_FLAGS_OBJECT_LITERAL,
-                    ast::INTERNAL_SYMBOL_NAME_OBJECT.to_owned(),
-                );
+            ast::Kind::TypeLiteral | ast::Kind::MappedType | ast::Kind::ObjectLiteralExpression => {
+                self.bind_anonymous_object_or_type_declaration(node)
             }
             ast::Kind::FunctionExpression | ast::Kind::ArrowFunction => {
                 self.bind_function_expression(node)
@@ -1862,62 +1811,34 @@ impl<'a> Binder<'a> {
             ast::Kind::ClassExpression | ast::Kind::ClassDeclaration => {
                 self.bind_class_like_declaration(node)
             }
-            ast::Kind::InterfaceDeclaration => {
-                self.bind_block_scoped_declaration(
-                    node,
-                    ast::SYMBOL_FLAGS_INTERFACE,
-                    ast::SYMBOL_FLAGS_INTERFACE_EXCLUDES,
-                );
-            }
+            ast::Kind::InterfaceDeclaration => self.bind_interface_declaration(node),
             ast::Kind::CallExpression => {
-                match ast::get_assignment_declaration_kind(&self.store, *node) {
-                    ast::JSDeclarationKind::ObjectDefinePropertyValue => {
-                        self.bind_expando_property_assignment(node)
+                if let Some(kind) = ast::get_assignment_declaration_kind(&self.store, *node) {
+                    match kind {
+                        ast::JSDeclarationKind::ObjectDefinePropertyValue => {
+                            self.bind_expando_property_assignment(node)
+                        }
+                        ast::JSDeclarationKind::ObjectDefinePropertyExports => {
+                            self.bind_object_define_property_export(node)
+                        }
+                        _ => {}
                     }
-                    ast::JSDeclarationKind::ObjectDefinePropertyExports => {
-                        self.bind_object_define_property_export(node)
-                    }
-                    _ => {}
                 }
                 if ast::is_in_js_file(&self.store, *node) {
                     self.bind_call_expression(node);
                 }
             }
-            ast::Kind::TypeAliasDeclaration => {
-                self.bind_block_scoped_declaration(
-                    node,
-                    ast::SYMBOL_FLAGS_TYPE_ALIAS,
-                    ast::SYMBOL_FLAGS_TYPE_ALIAS_EXCLUDES,
-                );
-            }
-            ast::Kind::JSTypeAliasDeclaration => {
-                // Top-level JSTypeAliasDeclaration nodes are processed in bindContainer
-                if self
-                    .block_scope_container_state
-                    .as_ref()
-                    .is_some_and(|container| !container.is_source_file)
-                {
-                    self.bind_block_scoped_declaration(
-                        node,
-                        ast::SYMBOL_FLAGS_TYPE_ALIAS,
-                        ast::SYMBOL_FLAGS_TYPE_ALIAS_EXCLUDES,
-                    );
-                }
+            ast::Kind::TypeAliasDeclaration | ast::Kind::JSTypeAliasDeclaration => {
+                self.bind_type_alias_declaration(node)
             }
             ast::Kind::EnumDeclaration => self.bind_enum_declaration(node),
             ast::Kind::ModuleDeclaration => self.bind_module_declaration(node),
             ast::Kind::ImportEqualsDeclaration
             | ast::Kind::NamespaceImport
             | ast::Kind::ImportSpecifier
-            | ast::Kind::ExportSpecifier => {
-                self.declare_symbol_and_add_to_symbol_table(
-                    node,
-                    ast::SYMBOL_FLAGS_ALIAS,
-                    ast::SYMBOL_FLAGS_ALIAS_EXCLUDES,
-                );
-            }
+            | ast::Kind::ExportSpecifier
+            | ast::Kind::ImportClause => self.bind_alias_declaration(node),
             ast::Kind::NamespaceExportDeclaration => self.bind_namespace_export_declaration(node),
-            ast::Kind::ImportClause => self.bind_import_clause(node),
             ast::Kind::ExportDeclaration => self.bind_export_declaration(node),
             ast::Kind::ExportAssignment => self.bind_export_assignment(node),
             ast::Kind::SourceFile => self.bind_source_file_if_external_module(),
@@ -1960,6 +1881,12 @@ impl<'a> Binder<'a> {
     }
 
     fn bind_property_worker(&mut self, node: &mut ast::Node) {
+        if !matches!(
+            self.store.kind(*node),
+            ast::Kind::PropertyDeclaration | ast::Kind::PropertySignature
+        ) {
+            return;
+        }
         let is_auto_accessor = ast::is_auto_accessor_property_declaration(&self.store, *node);
         let includes = core::if_else(
             is_auto_accessor,
@@ -1973,8 +1900,44 @@ impl<'a> Binder<'a> {
         );
         self.bind_property_or_method_or_accessor(
             node,
-            includes | get_optional_symbol_flag_for_node(&self.store, node),
+            includes
+                | core::if_else(
+                    self.store
+                        .postfix_token(*node)
+                        .is_some_and(|postfix_token| {
+                            self.store.kind(postfix_token) == ast::Kind::QuestionToken
+                        }),
+                    ast::SYMBOL_FLAGS_OPTIONAL,
+                    ast::SYMBOL_FLAGS_NONE,
+                ),
             excludes,
+        );
+    }
+
+    fn bind_method_worker(&mut self, node: &mut ast::Node) {
+        if !matches!(
+            self.store.kind(*node),
+            ast::Kind::MethodDeclaration | ast::Kind::MethodSignature
+        ) {
+            return;
+        }
+        self.bind_property_or_method_or_accessor(
+            node,
+            ast::SYMBOL_FLAGS_METHOD
+                | core::if_else(
+                    self.store
+                        .postfix_token(*node)
+                        .is_some_and(|postfix_token| {
+                            self.store.kind(postfix_token) == ast::Kind::QuestionToken
+                        }),
+                    ast::SYMBOL_FLAGS_OPTIONAL,
+                    ast::SYMBOL_FLAGS_NONE,
+                ),
+            core::if_else(
+                ast::is_object_literal_method(&self.store, Some(*node)),
+                ast::SYMBOL_FLAGS_VALUE,
+                ast::SYMBOL_FLAGS_METHOD_EXCLUDES,
+            ),
         );
     }
 }
@@ -2010,8 +1973,12 @@ impl<'a> Binder<'a> {
 
     fn bind_module_declaration(&mut self, node: &mut ast::Node) {
         self.set_export_context_flag(node);
+        if !ast::is_module_declaration(&self.store, *node) {
+            return;
+        }
+
         if ast::is_ambient_module(&self.store, *node) {
-            if ast::has_syntactic_modifier(&self.store, *node, ast::ModifierFlags::Export) {
+            if ast::has_syntactic_modifier(&self.store, *node, ast::ModifierFlags::EXPORT) {
                 self.error_on_first_token(
                     node,
                     &diagnostics::X_EXPORT_MODIFIER_CANNOT_BE_APPLIED_TO_AMBIENT_MODULES_AND_MODULE_AUGMENTATIONS_SINCE_THEY_ARE_ALWAYS_VISIBLE,
@@ -2021,24 +1988,18 @@ impl<'a> Binder<'a> {
             if ast::is_module_augmentation_external(&self.store, *node) {
                 self.declare_module_symbol(node);
             } else {
-                let name = self.store.name(*node);
                 let symbol = self.declare_symbol_and_add_to_symbol_table(
                     node,
                     ast::SYMBOL_FLAGS_VALUE_MODULE,
                     ast::SYMBOL_FLAGS_VALUE_MODULE_EXCLUDES,
                 );
-
-                if name
-                    .as_ref()
-                    .is_some_and(|name| ast::is_string_literal(&self.store, *name))
-                {
-                    let name = name.as_ref().unwrap();
-                    let name_text = self.store.text(*name);
+                if let Some(name) = ast::module_string_literal_name(&self.store, *node) {
+                    let name_text = self.store.text(name);
                     let pattern = core::try_parse_pattern(&name_text);
                     if !pattern.is_valid() {
                         // An invalid pattern - must have multiple wildcards.
                         self.error_on_first_token(
-                            name,
+                            &name,
                             &diagnostics::PATTERN_0_CAN_HAVE_AT_MOST_ONE_ASTERISK_CHARACTER,
                             &[name_text],
                         );
@@ -2054,19 +2015,15 @@ impl<'a> Binder<'a> {
         } else {
             let state = self.declare_module_symbol(node);
             if state != ast::ModuleInstanceState::NonInstantiated {
-                let symbol_handle = self.symbol(*node).unwrap();
-                // if module was already merged with some function, class or non-const enum, treat it as non-const-enum-only
+                let symbol_handle = self
+                    .symbol(*node)
+                    .expect("module declaration should have a symbol after declaration");
                 let const_enum_only_module = !self.symbol_flags(symbol_handle).intersects(
                     ast::SYMBOL_FLAGS_FUNCTION
                         | ast::SYMBOL_FLAGS_CLASS
                         | ast::SYMBOL_FLAGS_REGULAR_ENUM,
-                )
-                    &&
-                    // Current must be `const enum` only
-                    state == ast::ModuleInstanceState::ConstEnumOnly
-                    &&
-                    // Can't have been set to 'false' in a previous merged symbol. ('undefined' OK)
-                    !self.not_const_enum_only_modules.has(&symbol_handle);
+                ) && state == ast::ModuleInstanceState::ConstEnumOnly
+                    && !self.not_const_enum_only_modules.has(&symbol_handle);
                 if const_enum_only_module {
                     self.add_symbol_flags(symbol_handle, ast::SYMBOL_FLAGS_CONST_ENUM_ONLY_MODULE);
                 } else {
@@ -2100,10 +2057,20 @@ impl<'a> Binder<'a> {
     }
 
     fn bind_namespace_export_declaration(&mut self, node: &mut ast::Node) {
+        if !ast::is_namespace_export_declaration(&self.store, *node) {
+            return;
+        }
         if self.store.modifiers(*node).is_some() {
             self.error_on_node(node, &diagnostics::MODIFIERS_CANNOT_APPEAR_HERE, &[]);
         }
-        let parent = self.store.parent(*node).unwrap();
+        let Some(parent) = self.store.parent(*node) else {
+            self.error_on_node(
+                node,
+                &diagnostics::GLOBAL_MODULE_EXPORTS_MAY_ONLY_APPEAR_AT_TOP_LEVEL,
+                &[],
+            );
+            return;
+        };
         if !ast::is_source_file(&self.store, parent) {
             self.error_on_node(
                 node,
@@ -2138,17 +2105,22 @@ impl<'a> Binder<'a> {
         }
     }
 
-    fn bind_import_clause(&mut self, node: &mut ast::Node) {
-        if self.store.name(*node).is_some() {
-            self.declare_symbol_and_add_to_symbol_table(
-                node,
-                ast::SYMBOL_FLAGS_ALIAS,
-                ast::SYMBOL_FLAGS_ALIAS_EXCLUDES,
-            );
+    fn bind_alias_declaration(&mut self, node: &mut ast::Node) {
+        if !ast::is_alias_declaration(&self.store, *node) {
+            return;
         }
+        self.declare_symbol_and_add_to_symbol_table(
+            node,
+            ast::SYMBOL_FLAGS_ALIAS,
+            ast::SYMBOL_FLAGS_ALIAS_EXCLUDES,
+        );
     }
 
     fn bind_export_declaration(&mut self, node: &mut ast::Node) {
+        if !ast::is_export_declaration(&self.store, *node) {
+            return;
+        }
+        let export_clause = self.store.export_clause(*node);
         let container = self
             .container_state
             .clone()
@@ -2160,23 +2132,24 @@ impl<'a> Binder<'a> {
                 ast::SYMBOL_FLAGS_EXPORT_STAR,
                 self.get_declaration_name(node),
             );
-        } else if self.store.export_clause(*node).is_none() {
+        } else if export_clause.is_none() {
             // All export * declarations are collected in an __export symbol
-            let parent = container.symbol.clone().unwrap();
+            let parent = container
+                .symbol
+                .expect("export container should have a symbol");
             self.declare_symbol_in_exports(
                 parent,
                 node,
                 ast::SYMBOL_FLAGS_EXPORT_STAR,
                 ast::SYMBOL_FLAGS_NONE,
             );
-        } else if self
-            .store
-            .export_clause(*node)
+        } else if export_clause
             .is_some_and(|export_clause| ast::is_namespace_export(&self.store, export_clause))
         {
-            let parent = container.symbol.clone().unwrap();
-            let export_clause = self.store.export_clause(*node).unwrap();
-            let mut export_clause = export_clause;
+            let parent = container
+                .symbol
+                .expect("export container should have a symbol");
+            let mut export_clause = export_clause.unwrap();
             self.declare_symbol_in_exports(
                 parent,
                 &mut export_clause,
@@ -2187,11 +2160,14 @@ impl<'a> Binder<'a> {
     }
 
     fn bind_export_assignment(&mut self, node: &mut ast::Node) {
+        if !ast::is_export_assignment(&self.store, *node) {
+            return;
+        }
         let container = self
             .container_state
             .clone()
             .expect("container should be active");
-        if container.symbol.is_none() && ast::is_export_assignment(&self.store, *node) {
+        if container.symbol.is_none() {
             // Incorrect export assignment in some sort of block construct
             self.bind_anonymous_declaration(
                 node,
@@ -2199,20 +2175,20 @@ impl<'a> Binder<'a> {
                 self.get_declaration_name(node),
             );
         } else {
-            // If there is an `export default x;` alias declaration, can't `export default` anything else.
-            // (In contrast, you can still have `export default function f() {}` and `export default interface I {}`.)
-            let flags = core::if_else(
-                self.store
-                    .expression(*node)
-                    .as_ref()
-                    .is_some_and(|expression| ast::expression_is_alias(&self.store, *expression)),
-                ast::SYMBOL_FLAGS_ALIAS,
-                ast::SYMBOL_FLAGS_PROPERTY,
-            );
             let parent = container
                 .symbol
                 .expect("export container should have a symbol");
-            let symbol = self.declare_symbol_in_exports(parent, node, flags, ast::SYMBOL_FLAGS_ALL);
+            let symbol_flags = if self
+                .store
+                .expression(*node)
+                .is_some_and(|expression| ast::expression_is_alias(&self.store, expression))
+            {
+                ast::SYMBOL_FLAGS_ALIAS
+            } else {
+                ast::SYMBOL_FLAGS_PROPERTY
+            };
+            let symbol =
+                self.declare_symbol_in_exports(parent, node, symbol_flags, ast::SYMBOL_FLAGS_ALL);
             if self.store.is_export_equals(*node).unwrap_or(false) {
                 // Ensure export assignments have a ValueDeclaration set.
                 self.set_value_declaration(symbol, node);
@@ -2250,34 +2226,17 @@ impl<'a> Binder<'a> {
     }
 
     fn has_export_declarations(&self, node: &ast::Node) -> bool {
-        match self.store.kind(*node) {
-            ast::Kind::SourceFile => self.node_list_has_export_declarations(
-                self.store
-                    .parser_access()
-                    .source_file_statement_list(self.file),
-            ),
-            ast::Kind::ModuleDeclaration => {
-                let Some(body) = self.store.body(*node) else {
-                    return false;
-                };
-                if ast::is_module_block(&self.store, body) {
-                    self.store.statements(body).is_some_and(|statements| {
-                        self.node_list_has_export_declarations(statements)
-                    })
-                } else {
-                    false
-                }
-            }
-            _ => false,
+        if !matches!(
+            self.store.kind(*node),
+            ast::Kind::SourceFile | ast::Kind::ModuleDeclaration
+        ) {
+            return false;
         }
-    }
-
-    fn node_list_has_export_declarations(
-        &self,
-        statements: impl IntoIterator<Item = ast::Node>,
-    ) -> bool {
-        statements.into_iter().any(|s| {
-            ast::is_export_declaration(&self.store, s) || ast::is_export_assignment(&self.store, s)
+        ast::statement_container_statements(self.store, *node).is_some_and(|statements| {
+            statements.iter().any(|statement| {
+                ast::is_export_declaration(self.store, statement)
+                    || ast::is_export_assignment(self.store, statement)
+            })
         })
     }
 
@@ -2305,11 +2264,7 @@ impl<'a> Binder<'a> {
         // We're only inspecting call expressions to detect CommonJS modules, so we can skip
         // this check if we've already seen the module indicator
         if !self.file_has_common_js_module_indicator
-            && ast::is_require_call(
-                &self.store,
-                *node,
-                false, /*requireStringLiteralLikeArgument*/
-            )
+            && ast::is_require_call(&self.store, *node, false)
         {
             self.set_common_js_module_indicator(node);
         }
@@ -2350,23 +2305,50 @@ impl<'a> Binder<'a> {
         }
     }
 
+    fn bind_type_alias_declaration(&mut self, node: &mut ast::Node) {
+        if !ast::is_type_or_js_type_alias_declaration(&self.store, *node) {
+            return;
+        }
+        let current_container_is_source_file = self
+            .block_scope_container_state
+            .as_ref()
+            .map(|container| container.is_source_file);
+        if self.store.kind(*node) == ast::Kind::TypeAliasDeclaration
+            || current_container_is_source_file.is_some_and(|is_source_file| !is_source_file)
+        {
+            self.bind_block_scoped_declaration(
+                node,
+                ast::SYMBOL_FLAGS_TYPE_ALIAS,
+                ast::SYMBOL_FLAGS_TYPE_ALIAS_EXCLUDES,
+            );
+        }
+    }
+
     fn bind_class_like_declaration(&mut self, node: &mut ast::Node) {
-        let name = self.store.name(*node);
-        match self.store.kind(*node) {
+        let kind = self.store.kind(*node);
+        if !matches!(
+            kind,
+            ast::Kind::ClassDeclaration | ast::Kind::ClassExpression
+        ) {
+            return;
+        }
+        match kind {
             ast::Kind::ClassDeclaration => self.bind_block_scoped_declaration(
                 node,
                 ast::SYMBOL_FLAGS_CLASS,
                 ast::SYMBOL_FLAGS_CLASS_EXCLUDES,
             ),
             ast::Kind::ClassExpression => {
-                let mut name_text = ast::INTERNAL_SYMBOL_NAME_CLASS.to_owned();
-                if let Some(name) = name {
-                    name_text = self.store.text(name);
+                let name = self.store.name(*node);
+                let name_text = name
+                    .map(|name| self.store.text(name))
+                    .unwrap_or_else(|| ast::INTERNAL_SYMBOL_NAME_CLASS.to_owned());
+                if name.is_some() {
                     self.classifiable_names.add(name_text.clone());
                 }
                 self.bind_anonymous_declaration(node, ast::SYMBOL_FLAGS_CLASS, name_text);
             }
-            _ => {}
+            _ => unreachable!("class-like binding only accepts class nodes"),
         }
         let symbol = self.symbol(*node).unwrap();
         // TypeScript 1.0 spec (April 2014): 8.4
@@ -2394,6 +2376,98 @@ impl<'a> Binder<'a> {
         }
         self.set_symbol_parent(prototype_symbol, Some(symbol));
         self.insert_symbol_export(symbol, prototype_name, prototype_symbol);
+    }
+
+    fn bind_interface_declaration(&mut self, node: &mut ast::Node) {
+        if !ast::is_interface_declaration(&self.store, *node) {
+            return;
+        }
+        self.bind_block_scoped_declaration(
+            node,
+            ast::SYMBOL_FLAGS_INTERFACE,
+            ast::SYMBOL_FLAGS_INTERFACE_EXCLUDES,
+        );
+    }
+
+    fn bind_anonymous_object_or_type_declaration(&mut self, node: &mut ast::Node) {
+        match self.store.kind(*node) {
+            ast::Kind::TypeLiteral | ast::Kind::MappedType => self.bind_anonymous_declaration(
+                node,
+                ast::SYMBOL_FLAGS_TYPE_LITERAL,
+                ast::INTERNAL_SYMBOL_NAME_TYPE.to_owned(),
+            ),
+            ast::Kind::ObjectLiteralExpression => self.bind_anonymous_declaration(
+                node,
+                ast::SYMBOL_FLAGS_OBJECT_LITERAL,
+                ast::INTERNAL_SYMBOL_NAME_OBJECT.to_owned(),
+            ),
+            _ => return,
+        }
+    }
+
+    fn bind_signature_declaration(&mut self, node: &mut ast::Node) {
+        if !matches!(
+            self.store.kind(*node),
+            ast::Kind::CallSignature | ast::Kind::ConstructSignature | ast::Kind::IndexSignature
+        ) {
+            return;
+        }
+        self.declare_symbol_and_add_to_symbol_table(
+            node,
+            ast::SYMBOL_FLAGS_SIGNATURE,
+            ast::SYMBOL_FLAGS_NONE,
+        );
+    }
+
+    fn bind_constructor_declaration(&mut self, node: &mut ast::Node) {
+        if !ast::is_constructor_declaration(&self.store, *node) {
+            return;
+        }
+        self.declare_symbol_and_add_to_symbol_table(
+            node,
+            ast::SYMBOL_FLAGS_CONSTRUCTOR,
+            ast::SYMBOL_FLAGS_NONE,
+        );
+    }
+
+    fn bind_accessor_declaration(&mut self, node: &mut ast::Node) {
+        let (symbol_flags, symbol_excludes) = match self.store.kind(*node) {
+            ast::Kind::GetAccessor => (
+                ast::SYMBOL_FLAGS_GET_ACCESSOR,
+                ast::SYMBOL_FLAGS_GET_ACCESSOR_EXCLUDES,
+            ),
+            ast::Kind::SetAccessor => (
+                ast::SYMBOL_FLAGS_SET_ACCESSOR,
+                ast::SYMBOL_FLAGS_SET_ACCESSOR_EXCLUDES,
+            ),
+            _ => return,
+        };
+        self.bind_property_or_method_or_accessor(node, symbol_flags, symbol_excludes);
+    }
+
+    fn bind_object_property_declaration(&mut self, node: &mut ast::Node) {
+        if !matches!(
+            self.store.kind(*node),
+            ast::Kind::PropertyAssignment | ast::Kind::ShorthandPropertyAssignment
+        ) {
+            return;
+        }
+        self.bind_property_or_method_or_accessor(
+            node,
+            ast::SYMBOL_FLAGS_PROPERTY,
+            ast::SYMBOL_FLAGS_PROPERTY_EXCLUDES,
+        );
+    }
+
+    fn bind_enum_member_declaration(&mut self, node: &mut ast::Node) {
+        if !ast::is_enum_member(&self.store, *node) {
+            return;
+        }
+        self.bind_property_or_method_or_accessor(
+            node,
+            ast::SYMBOL_FLAGS_ENUM_MEMBER,
+            ast::SYMBOL_FLAGS_ENUM_MEMBER_EXCLUDES,
+        );
     }
 
     fn bind_property_or_method_or_accessor(
@@ -2425,17 +2499,28 @@ impl<'a> Binder<'a> {
     }
 
     fn bind_function_or_constructor_type(&mut self, node: &mut ast::Node) {
+        let signature_internal_name = match self.store.kind(*node) {
+            ast::Kind::FunctionType => ast::INTERNAL_SYMBOL_NAME_CALL,
+            ast::Kind::ConstructorType => ast::INTERNAL_SYMBOL_NAME_NEW,
+            _ => {
+                return;
+            }
+        };
+        let type_literal_internal_name = ast::INTERNAL_SYMBOL_NAME_TYPE;
         // For a given function symbol "<...>(...) => T" we want to generate a symbol identical
         // to the one we would get for: { <...>(...): T }
         //
         // We do that by making an anonymous type literal symbol, and then setting the function
         // symbol as its sole member. To the rest of the system, this symbol will be indistinguishable
         // from an actual type literal symbol you would have gotten had you used the long form.
-        let symbol = self.new_symbol(ast::SYMBOL_FLAGS_SIGNATURE, self.get_declaration_name(node));
+        let symbol = self.new_symbol(
+            ast::SYMBOL_FLAGS_SIGNATURE,
+            signature_internal_name.to_owned(),
+        );
         self.add_declaration_to_symbol(symbol, node, ast::SYMBOL_FLAGS_SIGNATURE);
         let type_literal_symbol = self.new_symbol(
             ast::SYMBOL_FLAGS_TYPE_LITERAL,
-            ast::INTERNAL_SYMBOL_NAME_TYPE.to_owned(),
+            type_literal_internal_name.to_owned(),
         );
         self.add_declaration_to_symbol(type_literal_symbol, node, ast::SYMBOL_FLAGS_TYPE_LITERAL);
         {
@@ -2867,47 +2952,6 @@ impl<'a> Binder<'a> {
             excludes,
         );
     }
-
-    fn bind_prototype_assignment(&mut self, node: &mut ast::Node) {
-        let Some(lhs) = self.store.left(*node) else {
-            return;
-        };
-        let Some(constructor_function) = self.store.expression(lhs) else {
-            return;
-        };
-        let block_scope_container = self
-            .block_scope_container_state
-            .clone()
-            .expect("block scope container should be active");
-        let container = self
-            .container_state
-            .clone()
-            .expect("container should be active");
-        let mut symbol = self.lookup_entity(&constructor_function, &block_scope_container);
-        if symbol.is_none() {
-            symbol = self.lookup_entity(&constructor_function, &container);
-        }
-        let Some(symbol) = symbol else {
-            return;
-        };
-        let mut constructor_function = constructor_function;
-        self.add_declaration_to_symbol(
-            symbol,
-            &mut constructor_function,
-            ast::SYMBOL_FLAGS_MODULE | ast::SYMBOL_FLAGS_ASSIGNMENT,
-        );
-        let Some(mut value_declaration) = self.symbol_value_declaration(symbol) else {
-            return;
-        };
-        self.add_declaration_to_symbol(symbol, &mut value_declaration, ast::SYMBOL_FLAGS_CLASS);
-        let mut declaration = lhs;
-        self.declare_symbol_in_exports(
-            symbol,
-            &mut declaration,
-            ast::SYMBOL_FLAGS_PROPERTY | ast::SYMBOL_FLAGS_ASSIGNMENT,
-            ast::SYMBOL_FLAGS_PROPERTY_EXCLUDES & !ast::SYMBOL_FLAGS_ASSIGNMENT,
-        );
-    }
 }
 
 fn get_parent_of_property_assignment(store: &ast::AstStore, node: &ast::Node) -> ast::Node {
@@ -3168,83 +3212,93 @@ impl<'a> Binder<'a> {
     }
 
     fn bind_enum_declaration(&mut self, node: &mut ast::Node) {
-        if ast::is_enum_const(&self.store, *node) {
-            self.bind_block_scoped_declaration(
-                node,
+        if !ast::is_enum_declaration(&self.store, *node) {
+            return;
+        }
+        let (symbol_flags, symbol_excludes) = if ast::is_enum_const(&self.store, *node) {
+            (
                 ast::SYMBOL_FLAGS_CONST_ENUM,
                 ast::SYMBOL_FLAGS_CONST_ENUM_EXCLUDES,
-            );
+            )
         } else {
-            self.bind_block_scoped_declaration(
-                node,
+            (
                 ast::SYMBOL_FLAGS_REGULAR_ENUM,
                 ast::SYMBOL_FLAGS_REGULAR_ENUM_EXCLUDES,
-            );
-        }
+            )
+        };
+        self.bind_block_scoped_declaration(node, symbol_flags, symbol_excludes);
     }
 
     fn bind_variable_declaration_or_binding_element(&mut self, node: &mut ast::Node) {
+        if !matches!(
+            self.store.kind(*node),
+            ast::Kind::VariableDeclaration | ast::Kind::BindingElement
+        ) {
+            return;
+        }
         let name = self.store.name(*node);
         self.check_strict_mode_eval_or_arguments(node, name.as_ref());
-        if let Some(name) = name {
-            if !ast::is_binding_pattern(&self.store, name) {
-                if ast::is_variable_declaration_initialized_to_require(&self.store, *node) {
-                    self.declare_symbol_and_add_to_symbol_table(
-                        node,
-                        ast::SYMBOL_FLAGS_ALIAS,
-                        ast::SYMBOL_FLAGS_ALIAS_EXCLUDES,
-                    );
-                } else if ast::is_block_or_catch_scoped(&self.store, *node) {
-                    self.bind_block_scoped_declaration(
-                        node,
-                        ast::SYMBOL_FLAGS_BLOCK_SCOPED_VARIABLE,
-                        ast::SYMBOL_FLAGS_BLOCK_SCOPED_VARIABLE_EXCLUDES,
-                    );
-                } else if ast::is_part_of_parameter_declaration(&self.store, *node) {
-                    // It is safe to walk up parent chain to find whether the node is a destructuring parameter declaration
-                    // because its parent chain has already been set up, since parents are set before descending into children.
-                    //
-                    // If node is a binding element in parameter declaration, we need to use ParameterExcludes.
-                    // Using ParameterExcludes flag allows the compiler to report an error on duplicate identifiers in Parameter Declaration
-                    // For example:
-                    //      function foo([a,a]) {} // Duplicate Identifier error
-                    //      function bar(a,a) {}   // Duplicate Identifier error, parameter declaration in this case is handled in bindParameter
-                    //                             // which correctly set excluded symbols
-                    self.declare_symbol_and_add_to_symbol_table(
-                        node,
-                        ast::SYMBOL_FLAGS_FUNCTION_SCOPED_VARIABLE,
-                        ast::SYMBOL_FLAGS_PARAMETER_EXCLUDES,
-                    );
-                } else {
-                    self.declare_symbol_and_add_to_symbol_table(
-                        node,
-                        ast::SYMBOL_FLAGS_FUNCTION_SCOPED_VARIABLE,
-                        ast::SYMBOL_FLAGS_FUNCTION_SCOPED_VARIABLE_EXCLUDES,
-                    );
-                }
-            }
+        if name.is_none() || name.is_some_and(|name| ast::is_binding_pattern(&self.store, name)) {
+            return;
+        }
+        if ast::is_variable_declaration_initialized_to_require(&self.store, *node) {
+            self.declare_symbol_and_add_to_symbol_table(
+                node,
+                ast::SYMBOL_FLAGS_ALIAS,
+                ast::SYMBOL_FLAGS_ALIAS_EXCLUDES,
+            );
+        } else if ast::is_block_or_catch_scoped(&self.store, *node) {
+            self.bind_block_scoped_declaration(
+                node,
+                ast::SYMBOL_FLAGS_BLOCK_SCOPED_VARIABLE,
+                ast::SYMBOL_FLAGS_BLOCK_SCOPED_VARIABLE_EXCLUDES,
+            );
+        } else if ast::is_part_of_parameter_declaration(&self.store, *node) {
+            // It is safe to walk up parent chain to find whether the node is a destructuring parameter declaration
+            // because its parent chain has already been set up, since parents are set before descending into children.
+            //
+            // If node is a binding element in parameter declaration, we need to use ParameterExcludes.
+            // Using ParameterExcludes flag allows the compiler to report an error on duplicate identifiers in Parameter Declaration
+            // For example:
+            //      function foo([a,a]) {} // Duplicate Identifier error
+            //      function bar(a,a) {}   // Duplicate Identifier error, parameter declaration in this case is handled in bindParameter
+            //                             // which correctly set excluded symbols
+            self.declare_symbol_and_add_to_symbol_table(
+                node,
+                ast::SYMBOL_FLAGS_FUNCTION_SCOPED_VARIABLE,
+                ast::SYMBOL_FLAGS_PARAMETER_EXCLUDES,
+            );
+        } else {
+            self.declare_symbol_and_add_to_symbol_table(
+                node,
+                ast::SYMBOL_FLAGS_FUNCTION_SCOPED_VARIABLE,
+                ast::SYMBOL_FLAGS_FUNCTION_SCOPED_VARIABLE_EXCLUDES,
+            );
         }
     }
 
     fn bind_parameter(&mut self, node: &mut ast::Node) {
+        if !ast::is_parameter_declaration(&self.store, *node) {
+            return;
+        }
         let parameter_name = self.store.name(*node);
-        let has_question_token = self.store.question_token(*node).is_some();
         if !self.flags(*node).intersects(ast::NodeFlags::Ambient) {
             // It is a SyntaxError if the identifier eval or arguments appears within a FormalParameterList of a
             // strict mode FunctionLikeDeclaration or FunctionExpression(13.1)
             self.check_strict_mode_eval_or_arguments(node, parameter_name.as_ref());
         }
-        if parameter_name
-            .is_some_and(|parameter_name| ast::is_binding_pattern(&self.store, parameter_name))
-        {
-            let parent = self.store.parent(*node).unwrap();
-            let parameters: Vec<_> = self
+        if parameter_name.is_some_and(|name| ast::is_binding_pattern(&self.store, name)) {
+            let parent = self
+                .store
+                .parent(*node)
+                .expect("parameter should have a parent");
+            let index = self
                 .store
                 .parameters(parent)
                 .into_iter()
                 .flatten()
-                .collect();
-            let index = parameters.iter().position(|p| *p == *node).unwrap();
+                .position(|parameter| parameter == *node)
+                .expect("parameter should be in parent parameter list");
             self.bind_anonymous_declaration(
                 node,
                 ast::SYMBOL_FLAGS_FUNCTION_SCOPED_VARIABLE,
@@ -3259,11 +3313,14 @@ impl<'a> Binder<'a> {
         }
         // If this is a property-parameter, then also declare the property symbol into the
         // containing class.
-        let parent = self.store.parent(*node).unwrap();
+        let parent = self
+            .store
+            .parent(*node)
+            .expect("parameter should have a parent");
         if ast::is_parameter_property_declaration(&self.store, *node, parent) {
             let flags = ast::SYMBOL_FLAGS_PROPERTY
                 | core::if_else(
-                    has_question_token,
+                    self.store.question_token(*node).is_some(),
                     ast::SYMBOL_FLAGS_OPTIONAL,
                     ast::SYMBOL_FLAGS_NONE,
                 );
@@ -3281,6 +3338,9 @@ impl<'a> Binder<'a> {
     }
 
     fn bind_function_declaration(&mut self, node: &mut ast::Node) {
+        if !ast::is_function_declaration(&self.store, *node) {
+            return;
+        }
         if !self.file_is_declaration_file
             && !self.flags(*node).intersects(ast::NodeFlags::Ambient)
             && ast::is_async_function(&self.store, *node)
@@ -3293,22 +3353,6 @@ impl<'a> Binder<'a> {
             ast::SYMBOL_FLAGS_FUNCTION,
             ast::SYMBOL_FLAGS_FUNCTION_EXCLUDES,
         );
-    }
-
-    fn get_infer_type_container(&self, node: &ast::Node) -> Option<ast::Node> {
-        let extends_type = ast::find_ancestor(&self.store, Some(*node), |store, n| {
-            let parent = store.parent(n);
-            parent.is_some_and(|parent| {
-                ast::is_conditional_type_node(store, parent)
-                    && store
-                        .extends_type(parent)
-                        .is_some_and(|extends_type| extends_type == n)
-            })
-        });
-        if let Some(extends_type) = extends_type {
-            return self.store.parent(extends_type);
-        }
-        None
     }
 
     fn bind_anonymous_declaration(
@@ -3382,9 +3426,24 @@ impl<'a> Binder<'a> {
     }
 
     fn bind_type_parameter(&mut self, node: &mut ast::Node) {
-        let parent = self.store.parent(*node).unwrap();
-        if self.store.kind(parent) == ast::Kind::InferType {
-            let container = self.get_infer_type_container(&parent);
+        if !ast::is_type_parameter_declaration(&self.store, *node) {
+            return;
+        }
+        if self
+            .store
+            .parent(*node)
+            .is_some_and(|parent| self.store.kind(parent) == ast::Kind::InferType)
+        {
+            let infer_type = self.store.parent(*node).unwrap();
+            let container = ast::find_ancestor(&self.store, Some(infer_type), |store, node| {
+                store.parent(node).is_some_and(|parent| {
+                    ast::is_conditional_type_node(store, parent)
+                        && store
+                            .extends_type(parent)
+                            .is_some_and(|extends_type| extends_type == node)
+                })
+            })
+            .and_then(|extends_type| self.store.parent(extends_type));
             if let Some(container) = container {
                 self.declare_symbol(
                     BindingSymbolTable::Locals(container),
@@ -3705,7 +3764,7 @@ impl<'a> Binder<'a> {
         let label = self.store.label(*node);
         if statement
             .as_ref()
-            .is_some_and(|statement| ast::is_declaration_statement(&self.store, *statement))
+            .is_some_and(|statement| ast::is_declaration_statement(self.store, *statement))
             || statement
                 .as_ref()
                 .is_some_and(|statement| ast::is_variable_statement(&self.store, *statement))
@@ -3932,16 +3991,17 @@ impl<'a> Binder<'a> {
             // indicators, if any, are processed first.
             let statements = self
                 .store
-                .parser_access()
-                .source_file_statement_list(self.file);
-            for mut statement in statements {
-                if ast::is_js_type_alias_declaration(&self.store, statement) {
-                    self.bind_block_scoped_declaration(
-                        &mut statement,
-                        ast::SYMBOL_FLAGS_TYPE_ALIAS,
-                        ast::SYMBOL_FLAGS_TYPE_ALIAS_EXCLUDES,
-                    );
-                }
+                .source_statements(self.file)
+                .expect("source file should have statements");
+            for mut statement in statements
+                .iter()
+                .filter(|statement| ast::is_js_type_alias_declaration(self.store, *statement))
+            {
+                self.bind_block_scoped_declaration(
+                    &mut statement,
+                    ast::SYMBOL_FLAGS_TYPE_ALIAS,
+                    ast::SYMBOL_FLAGS_TYPE_ALIAS_EXCLUDES,
+                );
             }
             if self.file_has_common_js_module_indicator {
                 self.declare_common_js_variable("module");
@@ -4069,16 +4129,19 @@ impl<'a> Binder<'a> {
             ast::Kind::NonNullExpression => self.bind_non_null_expression_flow(node),
             ast::Kind::SourceFile => {
                 let file_data = self.store.as_source_file(*node);
-                let statements = self.store.parser_access().source_file_statement_list(*node);
                 let end_of_file_token = file_data.end_of_file_token();
-                self.bind_each_statement_functions_first(statements);
+                let statements = self
+                    .store
+                    .source_statements(*node)
+                    .expect("source file should have statements");
+                self.bind_statement_list_functions_first(&statements);
                 if let Some(mut end_of_file_token) = end_of_file_token {
                     self.bind(Some(&mut end_of_file_token));
                 }
             }
             ast::Kind::Block | ast::Kind::ModuleBlock => {
-                if let Some(statements) = self.store.statements(*node) {
-                    self.bind_each_statement_functions_first(statements);
+                if let Some(statements) = ast::statement_container_statements(self.store, *node) {
+                    self.bind_statement_list_functions_first(&statements);
                 }
             }
             ast::Kind::ClassDeclaration => {
@@ -4168,19 +4231,18 @@ impl<'a> Binder<'a> {
         }
     }
 
-    fn bind_each_statement_functions_first<T>(&mut self, statements: T)
-    where
-        T: IntoIterator<Item = ast::Node> + Clone,
-    {
-        for mut node in statements.clone() {
-            if self.store.kind(node) == ast::Kind::FunctionDeclaration {
-                self.bind(Some(&mut node));
-            }
+    fn bind_statement_list_functions_first(&mut self, statements: &ast::SourceNodeList<'_>) {
+        for mut node in statements
+            .iter()
+            .filter(|statement| ast::is_function_declaration(self.store, *statement))
+        {
+            self.bind(Some(&mut node));
         }
-        for mut node in statements {
-            if self.store.kind(node) != ast::Kind::FunctionDeclaration {
-                self.bind(Some(&mut node));
-            }
+        for mut node in statements
+            .iter()
+            .filter(|statement| !ast::is_function_declaration(self.store, *statement))
+        {
+            self.bind(Some(&mut node));
         }
     }
 }
@@ -4880,16 +4942,19 @@ impl<'a> Binder<'a> {
     }
 
     fn bind_binary_expression_worker(&mut self, node: &mut ast::Node) {
-        match ast::get_assignment_declaration_kind(&self.store, *node) {
-            ast::JSDeclarationKind::ModuleExports => self.bind_module_exports_assignment(node),
-            ast::JSDeclarationKind::ExportsProperty => self.bind_exports_property_assignment(node),
-            ast::JSDeclarationKind::PrototypeProperty => {
-                self.bind_prototype_property_assignment(node)
+        if let Some(kind) = ast::get_assignment_declaration_kind(&self.store, *node) {
+            match kind {
+                ast::JSDeclarationKind::ModuleExports => self.bind_module_exports_assignment(node),
+                ast::JSDeclarationKind::ExportsProperty => {
+                    self.bind_exports_property_assignment(node)
+                }
+                ast::JSDeclarationKind::PrototypeProperty => {
+                    self.bind_prototype_property_assignment(node)
+                }
+                ast::JSDeclarationKind::Property => self.bind_expando_property_assignment(node),
+                ast::JSDeclarationKind::ThisProperty => self.bind_this_property_assignment(node),
+                _ => {}
             }
-            ast::JSDeclarationKind::Prototype => self.bind_prototype_assignment(node),
-            ast::JSDeclarationKind::Property => self.bind_expando_property_assignment(node),
-            ast::JSDeclarationKind::ThisProperty => self.bind_this_property_assignment(node),
-            _ => {}
         }
         self.check_strict_mode_binary_expression(node);
     }
@@ -5154,20 +5219,18 @@ impl<'a> Binder<'a> {
     }
 
     fn bind_initialized_variable_flow(&mut self, node: &mut ast::Node) {
-        match self.store.kind(*node) {
-            ast::Kind::VariableDeclaration | ast::Kind::BindingElement => {
-                if let Some(name) = self.store.name(*node) {
-                    if ast::is_binding_pattern(&self.store, name) {
-                        let children: Vec<ast::Node> =
-                            self.store.elements(name).into_iter().flatten().collect();
-                        for mut child in children {
-                            self.bind_initialized_variable_flow(&mut child);
-                        }
-                        return;
-                    }
-                }
+        if matches!(
+            self.store.kind(*node),
+            ast::Kind::VariableDeclaration | ast::Kind::BindingElement
+        ) && let Some(name) = self.store.name(*node)
+            && ast::is_binding_pattern(&self.store, name)
+        {
+            let children: Vec<ast::Node> =
+                self.store.elements(name).into_iter().flatten().collect();
+            for mut child in children {
+                self.bind_initialized_variable_flow(&mut child);
             }
-            _ => {}
+            return;
         }
         self.current_flow = Some(self.create_flow_mutation(
             ast::FlowFlags::Assignment,
@@ -5861,16 +5924,6 @@ fn is_signed_numeric_literal(store: &ast::AstStore, node: &ast::Node) -> bool {
                 .is_some_and(|operand| ast::is_numeric_literal(store, operand));
     }
     false
-}
-
-fn get_optional_symbol_flag_for_node(store: &ast::AstStore, node: &ast::Node) -> ast::SymbolFlags {
-    let postfix_token = store.postfix_token(*node);
-    core::if_else(
-        postfix_token
-            .is_some_and(|postfix_token| store.kind(postfix_token) == ast::Kind::QuestionToken),
-        ast::SYMBOL_FLAGS_OPTIONAL,
-        ast::SYMBOL_FLAGS_NONE,
-    )
 }
 
 fn is_statement_condition(store: &ast::AstStore, node: &ast::Node) -> bool {

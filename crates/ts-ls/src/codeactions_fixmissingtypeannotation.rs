@@ -2313,6 +2313,15 @@ pub(crate) fn get_identifier_name_for_node(store: &ast::AstStore, node: ast::Nod
     "newLocal".to_string()
 }
 
+fn source_file_import_declaration_nodes(source_file: &ast::SourceFile) -> Vec<ast::Node> {
+    let store = source_file.store();
+    source_file
+        .statements_view()
+        .iter()
+        .filter(|statement| ast::is_import_declaration(store, *statement))
+        .collect()
+}
+
 impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
     pub(crate) fn add_symbol_to_existing_import(&mut self, sym: ast::SymbolIdentity) {
         let (module_symbol, symbol_name) = {
@@ -2325,17 +2334,7 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
             (module_symbol, symbol_name)
         };
 
-        let Some(statements) = self
-            .source_file
-            .store()
-            .statements(self.source_file.as_node())
-        else {
-            return;
-        };
-        for stmt in statements {
-            if !ast::is_import_declaration(self.source_file.store(), stmt) {
-                continue;
-            }
+        for stmt in source_file_import_declaration_nodes(self.source_file) {
             let Some(import_clause_node) = self.source_file.store().import_clause(stmt) else {
                 continue;
             };
@@ -2432,5 +2431,70 @@ impl<'a, 'checker, 'state> IsolatedDeclarationsFixer<'a, 'checker, 'state> {
             }
             return;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ts_core as core;
+
+    fn parse_options(path: &str) -> ast::SourceFileParseOptions {
+        ast::SourceFileParseOptions {
+            file_name: path.to_owned(),
+            path: path.to_owned(),
+            ..Default::default()
+        }
+    }
+
+    fn source_file_with_statements(
+        mut factory: ast::NodeFactory,
+        path: &str,
+        text: &str,
+        statements: impl ast::IntoNodeList,
+    ) -> ast::SourceFile {
+        let end_of_file = factory.new_token(ast::Kind::EndOfFile);
+        let root =
+            factory.new_source_file(parse_options(path), text, statements, Some(end_of_file));
+        factory.finish_parsed_source_file(root, ast::ParsedSourceFileMetadata::default())
+    }
+
+    #[test]
+    fn source_file_import_declaration_nodes_should_use_top_level_import_declarations() {
+        let mut factory = ast::NodeFactory::default();
+        let import = factory.new_import_declaration(
+            None::<ast::ModifierList>,
+            None::<ast::Node>,
+            None::<ast::Node>,
+            None::<ast::Node>,
+        );
+        let js_import = factory.new_js_import_declaration(
+            None::<ast::ModifierList>,
+            None::<ast::Node>,
+            None::<ast::Node>,
+            None::<ast::Node>,
+        );
+        let import_equals_name = factory.new_identifier("commonjs");
+        let import_equals = factory.new_import_equals_declaration(
+            None::<ast::ModifierList>,
+            false,
+            Some(import_equals_name),
+            None::<ast::Node>,
+        );
+        let expression_name = factory.new_identifier("sideEffect");
+        let expression = factory.new_expression_statement(expression_name);
+        let statements = factory.new_node_list(
+            core::undefined_text_range(),
+            core::undefined_text_range(),
+            [js_import, import_equals, expression, import],
+        );
+        let file = source_file_with_statements(
+            factory,
+            "/imports.ts",
+            "import 'js';\nimport commonjs = require('c');\nsideEffect;\nimport 'real';",
+            statements,
+        );
+
+        assert_eq!(source_file_import_declaration_nodes(&file), vec![import]);
     }
 }

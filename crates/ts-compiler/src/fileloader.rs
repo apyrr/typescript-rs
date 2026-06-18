@@ -1268,7 +1268,7 @@ pub(crate) fn get_mode_for_usage_location(
             || store.kind(parent) == ast::Kind::JSImportDeclaration
             || ast::is_export_declaration(store, parent)
         {
-            let is_type_only = ast::is_exclusively_type_only_import_or_export(store, &parent);
+            let is_type_only = ast::is_exclusively_type_only_import_or_export(store, parent);
             if is_type_only {
                 let attributes = match store.kind(parent) {
                     ast::Kind::ImportDeclaration

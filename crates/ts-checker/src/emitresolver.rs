@@ -625,7 +625,9 @@ pub fn is_common_js_module_exports(
             .is_some()
     {
         match ast::get_assignment_declaration_kind(store, node) {
-            ast::JSDeclarationKind::ModuleExports | ast::JSDeclarationKind::ExportsProperty => {
+            Some(
+                ast::JSDeclarationKind::ModuleExports | ast::JSDeclarationKind::ExportsProperty,
+            ) => {
                 return true;
             }
             _ => {}
@@ -725,7 +727,7 @@ impl<'a, 'state> Checker<'a, 'state> {
                     let declaration_store = checker.store_for_node(declaration);
                     if ast::is_internal_module_import_equals_declaration(
                         declaration_store,
-                        &declaration,
+                        declaration,
                     ) {
                         // Add the referenced top container visible
                         let internal_module_reference =
@@ -1478,7 +1480,7 @@ impl<'a, 'state> Checker<'a, 'state> {
                     .is_some_and(|declaration| {
                         ast::is_expando_property_declaration(
                             self.store_for_node(declaration),
-                            Some(declaration),
+                            declaration,
                         )
                     })
             })

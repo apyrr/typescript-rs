@@ -989,7 +989,7 @@ impl<'a, 'state> Checker<'a, 'state> {
                         } else {
                             store.parent(parent).unwrap()
                         };
-                        if store.kind(container) == ast::Kind::ModuleDeclaration
+                        if ast::is_module_declaration(store, container)
                             && !ast::is_ambient_module(store, container)
                         {
                             return self.grammar_error_on_node(modifier, &diagnostics::A_default_export_can_only_be_used_in_an_ECMAScript_style_module, vec![]);
@@ -3826,15 +3826,13 @@ impl<'a, 'state> Checker<'a, 'state> {
         &mut self,
         file: &ast::SourceFile,
     ) -> bool {
-        let store = file.store();
-        let statements = file.statements_view();
-        for decl in statements.iter() {
-            if ast::is_declaration_node(file.store(), decl)
-                || store.kind(decl) == ast::Kind::VariableStatement
-            {
-                if self.check_grammar_top_level_element_for_required_declare_modifier(decl) {
-                    return true;
-                }
+        for decl in file
+            .statements_view()
+            .iter()
+            .filter(|decl| ast::is_declaration_or_variable_statement(file.store(), *decl))
+        {
+            if self.check_grammar_top_level_element_for_required_declare_modifier(decl) {
+                return true;
             }
         }
         false
