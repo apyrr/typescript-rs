@@ -6746,12 +6746,20 @@ impl<'a, 'state> Checker<'a, 'state> {
         is_use: bool,
         exclude_globals: bool,
     ) -> Option<ast::SymbolHandle> {
-        let store = location
-            .map(|location| self.store_for_node(location))
-            .unwrap_or_else(|| self.files[0].store());
-        let mut resolver = self.create_name_resolver(store, location);
+        let Some(location) = location else {
+            return self.resolve_name_without_location(
+                name,
+                meaning,
+                name_not_found_message,
+                exclude_globals,
+                NameResolverLookupMode::Normal,
+                true,
+            );
+        };
+        let store = self.store_for_node(location);
+        let mut resolver = self.create_name_resolver(store, Some(location));
         resolver.resolve(
-            location,
+            Some(location),
             name,
             meaning,
             name_not_found_message,
@@ -6769,18 +6777,59 @@ impl<'a, 'state> Checker<'a, 'state> {
         is_use: bool,
         exclude_globals: bool,
     ) -> Option<ast::SymbolHandle> {
-        let store = location
-            .map(|location| self.store_for_node(location))
-            .unwrap_or_else(|| self.files[0].store());
-        let mut resolver = self.create_name_resolver_for_suggestion(store, location);
+        let Some(location) = location else {
+            return self.resolve_name_without_location(
+                name,
+                meaning,
+                name_not_found_message,
+                exclude_globals,
+                NameResolverLookupMode::Suggestion,
+                false,
+            );
+        };
+        let store = self.store_for_node(location);
+        let mut resolver = self.create_name_resolver_for_suggestion(store, Some(location));
         resolver.resolve(
-            location,
+            Some(location),
             name,
             meaning,
             name_not_found_message,
             is_use,
             exclude_globals,
         )
+    }
+
+    fn resolve_name_without_location(
+        &mut self,
+        name: &str,
+        meaning: ast::SymbolFlags,
+        name_not_found_message: Option<&'static diagnostics::Message>,
+        exclude_globals: bool,
+        lookup_mode: NameResolverLookupMode,
+        report_resolution: bool,
+    ) -> Option<ast::SymbolHandle> {
+        let mut result = None;
+        if !exclude_globals {
+            let meaning = meaning | ast::SYMBOL_FLAGS_GLOBAL_LOOKUP;
+            result = match lookup_mode {
+                NameResolverLookupMode::Normal => self.lookup_global_symbol_handle(name, meaning),
+                NameResolverLookupMode::Suggestion => {
+                    self.get_suggestion_for_global_symbol_handle_name_lookup(name, meaning)
+                }
+            };
+        }
+        if let Some(name_not_found_message) = name_not_found_message {
+            if report_resolution {
+                if let Some(result) = result {
+                    self.on_successfully_resolved_symbol_handle(
+                        None, result, meaning, None, None, false,
+                    );
+                } else {
+                    self.on_failed_to_resolve_symbol(None, name, meaning, name_not_found_message);
+                }
+            }
+        }
+        result
     }
 
     pub(crate) fn create_name_resolver(
@@ -7096,10 +7145,7 @@ impl<'a, 'state> Checker<'a, 'state> {
                 } else {
                     &diagnostics::CANNOT_FIND_NAME_0_DID_YOU_MEAN_1
                 };
-                let mut diagnostic = new_diagnostic_for_node(
-                    error_location
-                        .map(|location| self.store_for_node(location))
-                        .unwrap_or_else(|| self.files[0].store()),
+                let mut diagnostic = self.create_error_diagnostic(
                     error_location,
                     message,
                     vec![

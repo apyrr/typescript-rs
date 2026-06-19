@@ -6428,11 +6428,24 @@ fn is_file_probably_external_module(
 ) -> Option<Node> {
     let source_file = store.as_source_file(root);
     for statement in store.node_list(source_file.statements).iter() {
-        if is_external_module_indicator(store, statement) {
+        if is_an_external_module_indicator_node(store, statement) {
             return Some(statement);
         }
     }
     import_meta_if_necessary(store, root, source_flags)
+}
+
+fn is_an_external_module_indicator_node(store: &AstStore, node: Node) -> bool {
+    has_syntactic_modifier(store, node, ModifierFlags::EXPORT)
+        || (is_import_equals_declaration(store, node)
+            && store
+                .module_reference(node)
+                .is_some_and(|module_reference| {
+                    is_external_module_reference(store, module_reference)
+                }))
+        || is_import_declaration(store, node)
+        || is_export_assignment(store, node)
+        || is_export_declaration(store, node)
 }
 
 fn import_meta_if_necessary(store: &AstStore, root: Node, source_flags: NodeFlags) -> Option<Node> {
